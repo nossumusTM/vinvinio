@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { differenceInDays, eachDayOfInterval } from 'date-fns';
 import useMessenger from "@/app/hooks/useMessager";
 import Button from "@/app/components/Button";
+export const dynamic = 'force-dynamic';
 
 import useLoginModal from "@/app/hooks/useLoginModal";
 import { SafeListing, SafeReservation, SafeUser } from "@/app/types";

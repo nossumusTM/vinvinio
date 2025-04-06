@@ -3,6 +3,7 @@ import getReferralBookings from "../actions/getReferralBookings";
 import ClientOnly from "@/app/components/ClientOnly";
 import EmptyState from "@/app/components/EmptyState";
 import { redirect } from "next/navigation";
+export const dynamic = 'force-dynamic';
 
 import ProfileClient from "./ProfileClient";
 

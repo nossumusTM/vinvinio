@@ -1,6 +1,7 @@
 'use client';
 
 import { toast } from "react-hot-toast";
+export const dynamic = 'force-dynamic';
 import axios from "axios";
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";

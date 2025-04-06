@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import Loader from '@/app/components/Loader';
+export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: {

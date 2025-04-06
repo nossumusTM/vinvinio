@@ -18,6 +18,7 @@ import { CgUserlane } from "react-icons/cg";
 import { MdOutlineSecurity } from "react-icons/md";
 import { RiSecurePaymentLine } from "react-icons/ri";
 import ConfirmPopup from "../components/ConfirmPopup";
+export const dynamic = 'force-dynamic';
 
 interface ProfileClientProps {
   currentUser: SafeUser;
