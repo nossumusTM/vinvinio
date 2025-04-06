@@ -13,6 +13,4 @@ const nextConfig = {
   },
 };
 
-const withNetlify = require('@netlify/next');
-module.exports = withNetlify(nextConfig);
-// module.exports = nextConfig;
+module.exports = nextConfig;
