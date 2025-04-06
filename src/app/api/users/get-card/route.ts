@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/app/libs/prismadb';
 import getCurrentUser from '@/app/actions/getCurrentUser';
+export const dynamic = 'force-dynamic';
 import CryptoJS from 'crypto-js';
 
 const SECRET_KEY = process.env.NEXT_PUBLIC_CARD_SECRET_KEY!;

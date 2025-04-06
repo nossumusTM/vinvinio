@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 import prisma from '@/app/libs/prismadb';
 import { authOptions } from '@/pages/api/auth/[...nextauth]';
 import getCurrentUser from '@/app/actions/getCurrentUser';
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
     const currentUser = await getCurrentUser();

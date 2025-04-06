@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+export const dynamic = 'force-dynamic';
 import bcrypt from "bcrypt";
 import { v4 as uuidv4 } from "uuid";
 import prisma from "@/app/libs/prismadb";

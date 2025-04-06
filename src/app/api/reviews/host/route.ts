@@ -1,6 +1,7 @@
 // app/api/reviews/host/route.ts
 import { NextResponse } from "next/server";
 import prisma from "@/app/libs/prismadb";
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   const { hostId } = await req.json();

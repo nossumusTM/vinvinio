@@ -1,4 +1,5 @@
 import prisma from "@/app/libs/prismadb";
+export const dynamic = 'force-dynamic';
 
 interface IParams {
   listingId?: string;
@@ -6,7 +7,6 @@ interface IParams {
   authorId?: string;
 }
 
-export const dynamic = 'force-dynamic';
 export default async function getReservations(params: IParams) {
   try {
     const { listingId, userId, authorId } = params;

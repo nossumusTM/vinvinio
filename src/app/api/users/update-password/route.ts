@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
 import prisma from '@/app/libs/prismadb';
 import getCurrentUser from '@/app/actions/getCurrentUser';
+export const dynamic = 'force-dynamic';
 import { getSession } from 'next-auth/react';
 
 export async function PUT(req: Request) {

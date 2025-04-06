@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import prisma from "@/app/libs/prismadb";
+export const dynamic = 'force-dynamic';
 
 export async function DELETE() {
   const currentUser = await getCurrentUser();

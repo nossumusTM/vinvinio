@@ -1,5 +1,6 @@
 import { Nunito } from 'next/font/google';
 import Script from 'next/script';
+export const dynamic = 'force-dynamic';
 
 import NavBar from '@/app/components/navbar/NavBar';
 import LoginModal from '@/app/components/modals/LoginModal';
