@@ -29,6 +29,7 @@
 //   }
 // }
 
+export const dynamic = 'force-dynamic';
 import prisma from "@/app/libs/prismadb";
 import getCurrentUser from "./getCurrentUser";
 import { SafeListing } from "../types"; // Assuming this is defined elsewhere

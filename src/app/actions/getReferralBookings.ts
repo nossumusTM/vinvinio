@@ -1,5 +1,6 @@
 import prisma from "@/app/libs/prismadb";
 
+export const dynamic = 'force-dynamic';
 const getReferralBookings = async (refId: string) => {
   try {
     if (!refId) return { totalCount: 0, totalAmount: 0 };
