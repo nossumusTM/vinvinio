@@ -89,23 +89,40 @@ const TripsClient: React.FC<TripsClientProps> = ({
       const reviews: Record<string, { rating: number; comment: string }> = {};
   
       for (const reservation of reservations) {
+        // try {
+        //   const res = await fetch('/api/reviews/get-by-reservation', {
+        //     method: 'POST',
+        //     body: JSON.stringify({ reservationId: reservation.id }),
+        //   });
+  
+        //   const data = await res.json();
+  
+        //   if (data) {
+        //     reviews[reservation.id] = {
+        //       rating: data.rating,
+        //       comment: data.comment,
+        //     };
+        //   }
+        // } catch (err) {
+        //   console.warn(`Failed to fetch review for reservation ${reservation.id}`);
+        // }
         try {
           const res = await fetch('/api/reviews/get-by-reservation', {
             method: 'POST',
             body: JSON.stringify({ reservationId: reservation.id }),
           });
-  
+        
           const data = await res.json();
-  
-          if (data) {
+        
+          if (data && data.rating !== undefined && data.comment !== undefined) {
             reviews[reservation.id] = {
               rating: data.rating,
               comment: data.comment,
             };
           }
         } catch (err) {
-          console.warn(`Failed to fetch review for reservation ${reservation.id}`);
-        }
+          console.warn(`Failed to fetch review for reservation ${reservation.id}`, err);
+        }        
       }
   
       setSubmittedReviews(reviews);

@@ -1,6 +1,7 @@
 [build]
   command = "npm run build"
   publish = ".next" # important for SSR, App Router, etc.
+  functions = ".netlify/functions"
 
 [dev]
   command = "npm run dev"
