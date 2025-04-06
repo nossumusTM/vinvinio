@@ -1,5 +1,6 @@
 import { Nunito } from 'next/font/google';
 import Script from 'next/script';
+
 export const dynamic = 'force-dynamic';
 
 import NavBar from '@/app/components/navbar/NavBar';
@@ -19,8 +20,8 @@ import ExperienceModal from './components/modals/ExperienceModal';
 import Footer from './components/Footer';
 
 export const metadata = {
-  title: 'Vuoiaggio | Wanna Go? Let`&apos;`s Go!',
-  description: 'Wanna Go? Let`&apos;`s Go!',
+  title: 'Vuoiaggio | Wanna Go? Let\'s Go!',
+  description: 'Wanna Go? Let\'s Go!',
 };
 
 const font = Nunito({
@@ -36,6 +37,11 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" href="/favicon.ico" />
+        <title>{metadata.title}</title>
+        <meta name="description" content={metadata.description} />
+      </head>
       <body className={font.className}>
         <Script
           src="https://widget.cloudinary.com/v2.0/global/all.js"
@@ -54,12 +60,10 @@ export default async function RootLayout({
           <Messenger userId={currentUser?.id} />
         </ClientOnly>
 
-        {/* ✅ Main page content comes first */}
         <div className="pb-20 pt-28 min-h-screen">
           {children}
         </div>
 
-        {/* ✅ Footer at the bottom */}
         <div className="w-full pt-20">
           <Footer />
         </div>

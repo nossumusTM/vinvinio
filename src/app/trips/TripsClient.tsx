@@ -152,9 +152,9 @@ const TripsClient: React.FC<TripsClientProps> = ({
         mx-auto
       ">
         {reservations.map((reservation) => {
-          const host = reservation.listing.user;
-          const hostName = host?.name || 'Unknown';
-          const hostImage = host?.image;          
+          const host = reservation.listing?.user ?? {};
+          const hostName = host?.name ?? 'Unknown';
+          const hostImage = host?.image ?? '';         
 
           return (
             <div
@@ -168,11 +168,12 @@ const TripsClient: React.FC<TripsClientProps> = ({
               /> */}
               {Array.isArray(reservation.listing.imageSrc) && reservation.listing.imageSrc.length > 0 && (
                 <Image
-                  src={reservation.listing.imageSrc[0]} // or pick randomly if preferred
+                  src={reservation.listing.imageSrc[0]}
                   alt="Listing"
                   className="w-full h-48 object-cover"
                 />
               )}
+
               <div className="p-4 flex flex-col gap-2">
                 <div className="text-lg font-semibold">{reservation.listing.title}</div>
 

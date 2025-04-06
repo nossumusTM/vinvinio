@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     };
 
     const savedCard = await prisma.card.create({ data: encryptedCard });
-    console.log("Saved card", savedCard);
+    // console.log("Saved card", savedCard);
 
     return NextResponse.json({ message: 'Card saved', cardId: savedCard.id });
   } catch (err) {

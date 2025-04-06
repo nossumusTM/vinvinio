@@ -3,7 +3,10 @@ const nextConfig = {
   experimental: {
     reactStrictMode: true,
     appDir: true,
+    serverActions: true,
   },
+  productionBrowserSourceMaps: true,
+
   images: {
     domains: [
       "res.cloudinary.com",

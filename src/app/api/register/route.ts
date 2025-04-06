@@ -40,8 +40,8 @@ export async function POST(request: Request) {
       },
     });
 
-    console.log("Registering user:", { email, name, role });
-    console.log("Registered user:", user );
+    // console.log("Registering user:", { email, name, role });
+    // console.log("Registered user:", user );
 
 
     return NextResponse.json(user);

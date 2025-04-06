@@ -22,7 +22,7 @@ const ReferralLandingPage = ({ params }: PageProps) => {
 
       if (referenceId) {
         localStorage.setItem('scannedReferenceId', referenceId);
-        console.log("Local", localStorage);
+        // console.log("Local", localStorage);
 
         try {
           await axios.post('/api/analytics/increment-scan', { referenceId });

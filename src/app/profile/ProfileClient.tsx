@@ -49,7 +49,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   const [isCropping, setIsCropping] = useState(false);
   const [showConfirmDeletePayout, setShowConfirmDeletePayout] = useState(false);
 
-  console.log("Current user", currentUser);
+  // console.log("Current user", currentUser);
 
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [editingField, setEditingField] = useState<string | null>(null);
@@ -139,7 +139,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
         const res = await axios.get('/api/users/get-card');
         if (res.data) {
           setSavedCard(res.data);
-          console.log("Saved card", res.data);
+          // console.log("Saved card", res.data);
         }
       } catch (err) {
         console.error('Failed to fetch saved card', err);

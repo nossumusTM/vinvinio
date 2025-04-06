@@ -276,7 +276,7 @@ const CheckoutPage = () => {
           setCardType(detectCardType(formattedNumber));
           setInvalidFields((prev) => prev.filter((field) => field !== 'number'));
 
-          console.log('formatted number', formattedNumber);
+          // console.log('formatted number', formattedNumber);
 
       } catch (err) {
         console.error('❌ Failed to fetch card:', err);
