@@ -78,23 +78,29 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
     const checkUnreadCount = () => {
       const userId = currentUser?.id;
       if (!userId) return;
-    
+  
       const convKey = `conversations_${userId}`;
       const cached = localStorage.getItem(convKey);
-      if (cached) {
-        const conversations = JSON.parse(cached);
-        const count = conversations.reduce((acc: number, convo: any) => {
-          return convo.hasUnread ? acc + 1 : acc;
-        }, 0);
-        // setUnreadCount(count);
-        messenger.setUnreadCount(count); // ✅ this ensures badgeCount updates
+      try {
+        const parsed = JSON.parse(cached || '[]');
+        if (Array.isArray(parsed)) {
+          const count = parsed.reduce((acc: number, convo: any) => {
+            return convo.hasUnread ? acc + 1 : acc;
+          }, 0);
+          messenger.setUnreadCount(count);
+        } else {
+          messenger.setUnreadCount(0);
+        }
+      } catch (error) {
+        console.error('❌ Failed to parse cached conversations:', error);
+        messenger.setUnreadCount(0);
       }
-    };    
+    };
   
     checkUnreadCount();
     const interval = setInterval(checkUnreadCount, 3000);
     return () => clearInterval(interval);
-  }, [currentUser?.id]);  
+  }, [currentUser?.id]);   
 
   useEffect(() => {
     const checkUnreadCount = async () => {
@@ -105,16 +111,16 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
         const res = await fetch(`/api/conversations`);
         const data = await res.json();
   
-        // Filter and count unread
+        if (!Array.isArray(data)) {
+          throw new Error('Conversations response is not an array');
+        }
+  
         const unread = data.filter((c: any) => c.hasUnread).length;
   
-        // Store to localStorage for consistency (optional)
         localStorage.setItem(`conversations_${userId}`, JSON.stringify(data));
-  
-        // Update badge
         messenger.setUnreadCount(unread);
       } catch (err) {
-        console.error('Failed to fetch conversations:', err);
+        console.error('❌ Failed to fetch conversations:', err);
       }
     };
   
