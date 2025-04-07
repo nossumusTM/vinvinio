@@ -95,8 +95,7 @@ const RegisterModal = () => {
                     className={`
                     px-4 py-2 rounded-full border text-sm font-medium transition
                     border-neutral-300
-                    ${isSelected ? 'bg-black text-white' : 'bg-white text-black'}
-                    hover:bg-neutral-100 hover:text-black
+                    ${isSelected ? 'bg-black text-white' : 'bg-white text-black hover:bg-neutral-100 hover:text-black'}
                     `}
                     disabled={isLoading}
                 >

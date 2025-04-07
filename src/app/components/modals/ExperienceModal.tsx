@@ -452,7 +452,7 @@ const ExperienceModal = () => {
     formState: { errors }
   } = useForm<FieldValues>({
     defaultValues: {
-      category: '',
+      category: [],
       location: null,
       guestCount: 1,
       imageSrc: [],
@@ -523,22 +523,36 @@ const ExperienceModal = () => {
       <div className="flex flex-col gap-8">
         <Heading
           title="What type of experience are you offering?"
-          subtitle="Pick a category"
+          subtitle="Pick up to 3 categories"
         />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto">
-          {categories.map((item) => (
-            <div key={item.label} className="col-span-1">
-              <CategoryInput
-                onClick={(category) => setCustomValue('category', category)}
-                selected={category === item.label}
-                label={item.label}
-                icon={item.icon}
-              />
-            </div>
-          ))}
+          {categories.map((item) => {
+            const isSelected = Array.isArray(category) && category.includes(item.label);
+    
+            return (
+              <div key={item.label} className="col-span-1">
+                <CategoryInput
+                  onClick={() => {
+                    let updated = Array.isArray(category) ? [...category] : [];
+    
+                    if (isSelected) {
+                      updated = updated.filter((cat) => cat !== item.label);
+                    } else if (updated.length < 3) {
+                      updated.push(item.label);
+                    }
+    
+                    setCustomValue('category', updated);
+                  }}
+                  selected={isSelected}
+                  label={item.label}
+                  icon={item.icon}
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
-    );
+    );    
   }
 
   if (step === STEPS.LOCATION) {

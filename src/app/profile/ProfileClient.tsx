@@ -49,8 +49,6 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   const [isCropping, setIsCropping] = useState(false);
   const [showConfirmDeletePayout, setShowConfirmDeletePayout] = useState(false);
 
-  // console.log("Current user", currentUser);
-
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [fieldValues, setFieldValues] = useState<{
@@ -379,6 +377,106 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
           </div>
         </div>
       </div>
+
+                {/* Promoter Stats */}
+                {currentUser.role === 'promoter' && (
+            <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              
+              {/* Referral Activities */}
+              <div className="p-6 border rounded-xl shadow-sm hover:shadow-md">
+                <p className="text-lg font-semibold mb-2">Referral Activities</p>
+                <p className="text-sm text-neutral-600 mb-4">
+                  Track your referral performance and earnings.
+                </p>
+
+                <div className="space-y-4 p-5">
+                  <div className="flex justify-between items-center shadow-md rounded-xl p-4 text-lg text-neutral-800 hover:shadow-sm transition">
+                    <span className="font-medium">Total Books</span>
+                    <span className="font-semibold text-black">{analytics.totalBooks}</span>
+                  </div>
+
+                  <div className="flex justify-between items-center shadow-md rounded-xl p-4 text-lg text-neutral-800 hover:shadow-sm transition">
+                    <span className="font-medium">QR Code Scanned</span>
+                    <span className="font-semibold text-black">{analytics.qrScans}</span> {/* Update dynamically */}
+                  </div>
+
+                  <div className="flex justify-between items-center shadow-md rounded-xl p-4 text-lg text-neutral-800 hover:shadow-sm transition">
+                    <span className="font-medium">Total Books Revenue</span>
+                    <span className="font-semibold text-black">{formatCurrency(analytics.totalRevenue)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Total Earned */}
+              <div className="p-6 border rounded-xl shadow-sm hover:shadow-md flex flex-col">
+                <p className="text-lg font-semibold mb-2">Total Earned</p>
+                <p className="text-sm text-neutral-600 mb-4">
+                  Earning 10% from each referral booking made through your code.
+                </p>
+                <div className="rounded-xl p-10 pl-8 pr-8 flex justify-center md:items-center md:h-52 hover:shadow-sm">
+                  <p className="text-3xl text-black font-semibold">
+                    {formatCurrency((analytics.totalRevenue || 0) * 0.10)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Payout Details */}
+              <div className="p-6 border rounded-xl shadow-sm hover:shadow-md">
+                <p className="text-lg font-semibold mb-2">Payout Method</p>
+                <p className="text-sm text-neutral-600 mb-4">Deposits processed twice per month.</p>
+
+                {savedPayout ? (
+                  <div
+                    className="relative w-full max-w-sm h-56 perspective"
+                    onClick={() => setIsFlipped(prev => !prev)}
+                  >
+                    <div
+                      className={`absolute w-full h-full duration-700 transform transition-transform preserve-3d ${
+                        isFlipped ? 'rotate-y-180' : ''
+                      }`}
+                    >
+                      {/* FRONT SIDE */}
+                      <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-xl flex items-center justify-center">
+                        <p className="text-lg font-semibold tracking-widest uppercase">
+                          {savedPayout.method}
+                        </p>
+                      </div>
+
+                      {/* BACK SIDE */}
+                      <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-xl rotate-y-180 p-6 flex flex-col justify-center items-center gap-4">
+                        <p className="text-xs tracking-wider text-gray-400">Payout Info</p>
+                        <p className="text-lg font-mono text-center">
+                          {savedPayout.method === 'paypal'
+                            ? savedPayout.number
+                            : savedPayout.number && savedPayout.number.length >= 8
+                            ? `${savedPayout.number.slice(0, 4)}${'*'.repeat(
+                                savedPayout.number.length - 8
+                              )}${savedPayout.number.slice(-4)}`
+                            : '****'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-neutral-100 p-4 rounded-xl flex items-center justify-between">
+                    <p className="text-sm text-neutral-600">Payout method is not provided</p>
+                    <button
+                      onClick={() => {
+                        setActiveSection('payments');
+                        setActivePaymentTab('payout');
+                        const section = document.getElementById('payments-section');
+                        if (section) section.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      className="text-sm underline text-black ml-4"
+                    >
+                      Go to Payouts
+                    </button>
+                  </div>
+                )}
+              </div>
+
+            </div>
+          )}
   
           {activeSection === 'personal-info' && (
             <>
@@ -589,11 +687,32 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                         )
                       ) : (
                         <p className="text-lg font-medium break-words">
-                          {key === 'address'
-                            ? fieldValues.street || 'Not provided'
-                            : typeof fieldValues[key as keyof typeof fieldValues] === 'string'
+                          {key === 'address' ? (
+                            fieldValues.country || fieldValues.street || fieldValues.city || fieldValues.state || fieldValues.zip ? (
+                              <div className="text-md text-neutral-800 space-y-1">
+                                {fieldValues.country && (
+                                  <div className="flex items-center gap-2">
+                                    {fieldValues.country.flag && <span className="text-xl">{fieldValues.country.flag}</span>}
+                                    <span>{fieldValues.country.label}</span>
+                                  </div>
+                                )}
+                                {fieldValues.street && <div>{fieldValues.street}</div>}
+                                {fieldValues.apt && <div>{fieldValues.apt}</div>}
+                                {fieldValues.city && <div>{fieldValues.city}</div>}
+                                {fieldValues.state && <div>{fieldValues.state}</div>}
+                                {fieldValues.zip && <div>{fieldValues.zip}</div>}
+                              </div>
+                            ) : (
+                              <p className="text-md text-neutral-800">Not provided</p>
+                            )
+                          ) : (
+                            <p className="text-md text-neutral-800">
+                            {typeof fieldValues[key as keyof typeof fieldValues] === 'string' &&
+                            (fieldValues[key as keyof typeof fieldValues] as string).trim()
                               ? (fieldValues[key as keyof typeof fieldValues] as string)
                               : 'Not provided'}
+                          </p>
+                          )}
                         </p>
                       )}
                     </div>
@@ -602,23 +721,23 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                       className="text-sm text-black border-b border-black hover:opacity-80 ml-2 whitespace-nowrap"
                     >
                       {key === 'address'
-  ? (
-      fieldValues.street ||
-      fieldValues.apt ||
-      fieldValues.city ||
-      fieldValues.state ||
-      fieldValues.zip ||
-      fieldValues.country
-    )
-    ? editingField === key
-      ? 'Cancel'
-      : 'Edit'
-    : 'Add'
-  : fieldValues[key as keyof typeof fieldValues]
-    ? editingField === key
-      ? 'Cancel'
-      : 'Edit'
-    : 'Add'}
+                        ? (
+                            fieldValues.street ||
+                            fieldValues.apt ||
+                            fieldValues.city ||
+                            fieldValues.state ||
+                            fieldValues.zip ||
+                            fieldValues.country
+                          )
+                          ? editingField === key
+                            ? 'Cancel'
+                            : 'Edit'
+                          : 'Add'
+                        : fieldValues[key as keyof typeof fieldValues]
+                          ? editingField === key
+                            ? 'Cancel'
+                            : 'Edit'
+                          : 'Add'}
 
                     </button>
                   </div>
@@ -740,6 +859,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
               </div>
 
               {/* Tabs */}
+              {currentUser.role === 'promoter' && (
               <div className="flex gap-4 mb-6">
                 <button
                   className={`px-4 py-2 rounded-lg ${activePaymentTab === 'payment' ? 'bg-black text-white' : 'border'}`}
@@ -754,6 +874,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                   Payout
                 </button>
               </div>
+              )}
 
               {activePaymentTab === 'payment' && (
                 <>
@@ -1299,106 +1420,6 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
               <p className="text-sm text-neutral-600">View and update your payout methods</p>
             </div>
           </div>
-  
-          {/* Promoter Stats */}
-          {currentUser.role === 'promoter' && (
-            <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              
-              {/* Referral Activities */}
-              <div className="p-6 border rounded-xl shadow-sm hover:shadow-md">
-                <p className="text-lg font-semibold mb-2">Referral Activities</p>
-                <p className="text-sm text-neutral-600 mb-4">
-                  Track your referral performance and earnings.
-                </p>
-
-                <div className="space-y-4 p-5">
-                  <div className="flex justify-between items-center shadow-md rounded-xl p-4 text-lg text-neutral-800 hover:shadow-sm transition">
-                    <span className="font-medium">Total Books</span>
-                    <span className="font-semibold text-black">{analytics.totalBooks}</span>
-                  </div>
-
-                  <div className="flex justify-between items-center shadow-md rounded-xl p-4 text-lg text-neutral-800 hover:shadow-sm transition">
-                    <span className="font-medium">QR Code Scanned</span>
-                    <span className="font-semibold text-black">{analytics.qrScans}</span> {/* Update dynamically */}
-                  </div>
-
-                  <div className="flex justify-between items-center shadow-md rounded-xl p-4 text-lg text-neutral-800 hover:shadow-sm transition">
-                    <span className="font-medium">Total Books Revenue</span>
-                    <span className="font-semibold text-black">{formatCurrency(analytics.totalRevenue)}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Total Earned */}
-              <div className="p-6 border rounded-xl shadow-sm hover:shadow-md flex flex-col">
-                <p className="text-lg font-semibold mb-2">Total Earned</p>
-                <p className="text-sm text-neutral-600 mb-4">
-                  Earning 10% from each referral booking made through your code.
-                </p>
-                <div className="rounded-xl p-10 pl-8 pr-8 flex justify-center md:items-center md:h-52 hover:shadow-sm">
-                  <p className="text-3xl text-black font-semibold">
-                    {formatCurrency((analytics.totalRevenue || 0) * 0.10)}
-                  </p>
-                </div>
-              </div>
-
-              {/* Payout Details */}
-              <div className="p-6 border rounded-xl shadow-sm hover:shadow-md">
-                <p className="text-lg font-semibold mb-2">Payout Method</p>
-                <p className="text-sm text-neutral-600 mb-4">Deposits processed twice per month.</p>
-
-                {savedPayout ? (
-                  <div
-                    className="relative w-full max-w-sm h-56 perspective"
-                    onClick={() => setIsFlipped(prev => !prev)}
-                  >
-                    <div
-                      className={`absolute w-full h-full duration-700 transform transition-transform preserve-3d ${
-                        isFlipped ? 'rotate-y-180' : ''
-                      }`}
-                    >
-                      {/* FRONT SIDE */}
-                      <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-xl flex items-center justify-center">
-                        <p className="text-lg font-semibold tracking-widest uppercase">
-                          {savedPayout.method}
-                        </p>
-                      </div>
-
-                      {/* BACK SIDE */}
-                      <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-xl rotate-y-180 p-6 flex flex-col justify-center items-center gap-4">
-                        <p className="text-xs tracking-wider text-gray-400">Payout Info</p>
-                        <p className="text-lg font-mono text-center">
-                          {savedPayout.method === 'paypal'
-                            ? savedPayout.number
-                            : savedPayout.number && savedPayout.number.length >= 8
-                            ? `${savedPayout.number.slice(0, 4)}${'*'.repeat(
-                                savedPayout.number.length - 8
-                              )}${savedPayout.number.slice(-4)}`
-                            : '****'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-neutral-100 p-4 rounded-xl flex items-center justify-between">
-                    <p className="text-sm text-neutral-600">Payout method is not provided</p>
-                    <button
-                      onClick={() => {
-                        setActiveSection('payments');
-                        setActivePaymentTab('payout');
-                        const section = document.getElementById('payments-section');
-                        if (section) section.scrollIntoView({ behavior: 'smooth' });
-                      }}
-                      className="text-sm underline text-black ml-4"
-                    >
-                      Go to Payouts
-                    </button>
-                  </div>
-                )}
-              </div>
-
-            </div>
-          )}
         </>
       )}
   
@@ -1433,7 +1454,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
         </div>
       )}
 
-      {currentUser.role === 'host' && (
+      {currentUser.role === 'moderator' && (
         <div className="mt-6 space-y-2 space-x-4">
           <input
             type="text"
