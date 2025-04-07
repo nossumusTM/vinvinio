@@ -43,6 +43,33 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
   };  
 
   // Poll server for new messages
+  // useEffect(() => {
+  //   if (!recipient?.id) return;
+  
+  //   const fetchMessages = async () => {
+  //     try {
+  //       const res = await fetch(`/api/messages?recipientId=${recipient.id}`);
+  //       if (!res.ok) throw new Error('Failed to fetch messages');
+  //       const serverMessages: Message[] = await res.json();
+  
+  //       setMessages((prevMessages) => {
+  //         const optimisticMessages = prevMessages.filter(
+  //           (msg) => msg.id.startsWith('temp-') // keep temp/optimistic messages
+  //         );
+  
+  //         // Merge server-confirmed and any optimistic messages
+  //         return [...serverMessages, ...optimisticMessages];
+  //       });
+  //     } catch (err) {
+  //       console.error('Fetch messages error:', err);
+  //     }
+  //   };
+  
+  //   fetchMessages();
+  //   const intervalId = setInterval(fetchMessages, 3000);
+  //   return () => clearInterval(intervalId);
+  // }, [recipient?.id]);
+
   useEffect(() => {
     if (!recipient?.id) return;
   
@@ -50,25 +77,23 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
       try {
         const res = await fetch(`/api/messages?recipientId=${recipient.id}`);
         if (!res.ok) throw new Error('Failed to fetch messages');
+  
         const serverMessages: Message[] = await res.json();
+        console.log("✅ Messages fetched:", serverMessages); // <-- Add this
   
         setMessages((prevMessages) => {
-          const optimisticMessages = prevMessages.filter(
-            (msg) => msg.id.startsWith('temp-') // keep temp/optimistic messages
-          );
-  
-          // Merge server-confirmed and any optimistic messages
+          const optimisticMessages = prevMessages.filter((msg) => msg.id.startsWith('temp-'));
           return [...serverMessages, ...optimisticMessages];
         });
       } catch (err) {
-        console.error('Fetch messages error:', err);
+        console.error('❌ Fetch messages error:', err);
       }
     };
   
     fetchMessages();
     const intervalId = setInterval(fetchMessages, 3000);
     return () => clearInterval(intervalId);
-  }, [recipient?.id]);
+  }, [recipient?.id]);  
 
   // Mark as seen + update conversation list in localStorage
   useEffect(() => {
@@ -247,6 +272,12 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
         })}
         <div ref={messagesEndRef} />
       </div>
+
+      {messages.length === 0 && (
+        <div className="text-sm text-neutral-400 text-center mt-4">
+          No messages to show.
+        </div>
+      )}
 
       {showConfirm && (
         <ConfirmPopup
