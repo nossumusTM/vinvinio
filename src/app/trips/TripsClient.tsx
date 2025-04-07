@@ -161,11 +161,6 @@ const TripsClient: React.FC<TripsClientProps> = ({
               key={reservation.id}
               className="bg-white border border-neutral-200 rounded-2xl shadow-md hover:shadow-lg transition duration-300 overflow-hidden"
             >
-              {/* <Image
-                src={reservation.listing.imageSrc}
-                alt="Listing"
-                className="w-full h-48 object-cover"
-              /> */}
               {Array.isArray(reservation.listing.imageSrc) && reservation.listing.imageSrc.length > 0 && (
                 <Image
                   src={reservation.listing.imageSrc[0]}

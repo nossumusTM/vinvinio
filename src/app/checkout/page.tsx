@@ -483,7 +483,7 @@ const CheckoutPage = () => {
                     ${cardInfo.expiration ? 'top-2 text-sm text-black' : ''}
                   `}
                 >
-                  Expiration (MM/YY)
+                  (MM/YY)
                 </label>
               </div>
 

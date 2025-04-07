@@ -119,6 +119,8 @@ const ListingCard: React.FC<ListingCardProps> = ({
       onClick={() => router.push(`/listings/${data.id}`)}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onTouchStart={() => setIsHovered(true)}
+      onTouchEnd={() => setIsHovered(false)}
       className="col-span-1 cursor-pointer group pl-5 pr-5"
     >
       <div className="flex flex-col gap-2 w-full">

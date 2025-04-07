@@ -79,7 +79,7 @@ const RegisterModal = () => {
 
     const bodyContent = (
         <div className="flex flex-col gap-4">
-            <p className="text-3xl text-left">Welcome to Vuoiaggio</p>
+            <p className="text-lg text-left">Welcome to Vuoiaggio</p>
 
            {/* Role selection */}
             <div className="flex justify-baseline items-center gap-4 flex-wrap">
@@ -143,12 +143,6 @@ const RegisterModal = () => {
                 icon={FcGoogle}
                 onClick={() => signIn('google')}
             />
-            {/* <Button
-                outline
-                label="Continue with Github"
-                icon={AiFillGithub}
-                onClick={() => signIn('github')}
-            /> */}
             <div className="text-neutral-500 text-center mt-4 font-light">
             <p>Already have an account?&nbsp;
                 <span
