@@ -257,38 +257,51 @@ export async function GET() {
 
     console.log(`Retrieved ${messages.length} messages for user ${currentUser.id}.`);
 
-    const uniqueUsersMap = new Map();
+    const uniqueUsersMap = new Map<string, any>();
 
     messages.forEach((msg: any) => {
       const isIncoming = msg.recipientId === currentUser.id;
+      const isUnread = isIncoming && !msg.seen;
       const otherUser = isIncoming ? msg.sender : msg.recipient;
 
-      if (!otherUser || otherUser.id === currentUser.id) return;
+      if (!otherUser || !otherUser.id || otherUser.id === currentUser.id) {
+        console.warn('⚠️ Message skipped (invalid other user)', {
+          msgId: msg.id,
+          senderId: msg.senderId,
+          recipientId: msg.recipientId,
+          currentUserId: currentUser.id,
+        });
+        return;
+      }
 
       const existing = uniqueUsersMap.get(otherUser.id);
-      const isUnread = isIncoming && !msg.seen;
 
       if (!existing) {
         uniqueUsersMap.set(otherUser.id, {
           id: otherUser.id,
-          name: otherUser.name ?? 'Unknown',
-          image: otherUser.image,
+          name: otherUser.name || 'User',
+          image: otherUser.image || null,
           hasUnread: isUnread,
           latestMessage: msg.text,
           latestMessageCreatedAt: msg.createdAt,
         });
       } else {
         if (isUnread) existing.hasUnread = true;
-        if (msg.createdAt > existing.latestMessageCreatedAt) {
+        if (msg.createdAt > (existing.latestMessageCreatedAt || new Date(0))) {
           existing.latestMessage = msg.text;
           existing.latestMessageCreatedAt = msg.createdAt;
         }
       }
     });
 
-    const conversations = Array.from(uniqueUsersMap.values());
-    console.log(`Returning ${conversations.length} conversations.`);
-    return NextResponse.json(conversations);
+
+    // const conversations = Array.from(uniqueUsersMap.values());
+    // console.log(`Returning ${conversations.length} conversations.`);
+    // return NextResponse.json(conversations);
+
+    const result = Array.from(uniqueUsersMap.values());
+    console.log('✅ Final conversations result:', result);
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Error in /api/conversations:', error);
     return new Response(JSON.stringify([]), {
