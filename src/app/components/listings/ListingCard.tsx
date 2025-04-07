@@ -62,13 +62,12 @@ const ListingCard: React.FC<ListingCardProps> = ({
     return Math.floor(Math.random() * images.length);
   }, [images]);  
   
-  const firstHover = useRef(true);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const randomHeight = useMemo(() => Math.floor(Math.random() * 1) + 400, []);
 
   const coverMedia = useMemo(() => {
     const roll = Math.random();
-    if (roll < 0.3 && videos.length > 0) {
+    if (roll < 0.9 && videos.length > 0) {
       const randomVideo = videos[Math.floor(Math.random() * videos.length)];
       return { type: 'video', src: randomVideo };
     }
@@ -82,23 +81,16 @@ const ListingCard: React.FC<ListingCardProps> = ({
   useEffect(() => {
     if (!isHovered || images.length <= 1) return;
   
-    // Clear any existing interval before setting a new one
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-  
     intervalRef.current = setInterval(() => {
       setActiveImageIndex((prevIndex) => (prevIndex + 1) % images.length);
     }, 1500);
   
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-      setActiveImageIndex(0); // Reset to first image on unhover
+      clearInterval(intervalRef.current!);
+      intervalRef.current = null;
+      setActiveImageIndex(0);
     };
-  }, [isHovered, images.length]);  
+  }, [isHovered, images.length]);   
 
   const hasFetched = useRef(false);
 
@@ -152,8 +144,16 @@ const ListingCard: React.FC<ListingCardProps> = ({
       onClick={() => router.push(`/listings/${data.id}`)}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onTouchStart={() => setIsHovered(true)}
-      onTouchEnd={() => setIsHovered(false)}
+      onTouchStart={() => {
+        setIsHovered(true);
+      }}
+      onTouchEnd={() => {
+        setIsHovered(false);
+      }}
+      onTouchCancel={(e) => {
+        e.stopPropagation();
+        setIsHovered(false);
+      }}      
       className="col-span-1 cursor-pointer group pl-5 pr-5"
     >
       <div className="flex flex-col gap-2 w-full">
@@ -170,7 +170,16 @@ const ListingCard: React.FC<ListingCardProps> = ({
               alt={`Listing ${i}`}
             />
           ))} */}
-          {images.length > 0 ? (
+          {coverMedia.type === 'video' ? (
+              <video
+                src={coverMedia.src}
+                className="absolute top-0 left-0 w-full h-full object-cover rounded-xl"
+                autoPlay
+                loop
+                muted
+                playsInline
+              />
+            ) : (
               images.map((img: string, i: number) => (
                 <Image
                   key={i}
@@ -182,24 +191,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                   alt={`Listing ${i}`}
                 />
               ))
-            ) : coverMedia.type === 'video' ? (
-              <video
-                src={coverMedia.src}
-                className="absolute top-0 left-0 w-full h-full object-cover rounded-xl"
-                autoPlay
-                loop
-                muted
-                playsInline
-              />
-            ) : (
-              <Image
-                fill
-                className="object-cover h-full w-full absolute top-0 left-0 rounded-xl"
-                src={coverMedia.src}
-                alt="Listing fallback"
-              />
             )}
-
 
           <div className="absolute top-3 right-3">
             <HeartButton listingId={data.id} currentUser={currentUser} />

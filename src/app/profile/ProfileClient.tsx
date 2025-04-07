@@ -1078,8 +1078,8 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
           )}
 
       {showCardModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+        <div className="fixed inset-0 z-50 p-5 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl w-full max-w-md max-h-[90vh] p-5 flex flex-col">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Payment Card Details</h3>
               <button onClick={() => setShowCardModal(false)} className="text-sm">✕</button>
@@ -1094,6 +1094,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                   <Image width={50} height={50} src="/images/Discover.png" alt="Discover" className="w-8" />
                 </div>
 
+              <div className="overflow-y-auto mt-2 mb-4 space-y-4">
                 {/* Card Number with floating label */}
                 <div className="relative w-full mb-4">
                   <input
@@ -1158,7 +1159,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                         duration-200 ease-in-out peer-placeholder-shown:top-4 peer-placeholder-shown:text-base
                         peer-placeholder-shown:text-neutral-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-black"
                     >
-                      Expiration (MM/YY)
+                      (MM/YY)
                     </label>
                   </div>
 
@@ -1222,6 +1223,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                     value={cardInfo.country}
                     onChange={(value) => setCardInfo({ ...cardInfo, country: value })}
                   />
+                </div>
                 </div>
 
                 <button

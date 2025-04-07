@@ -223,7 +223,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
             </div>
             )}
             
-            <hr />
+            {/* <hr /> */}
 
             {category && (
                 <ListingCategory

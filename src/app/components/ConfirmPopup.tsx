@@ -42,7 +42,7 @@ const ConfirmPopup: React.FC<ConfirmPopupProps> = ({
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm">
+    <div className="p-4 fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm">
       <div ref={popupRef} className="bg-white p-6 rounded-xl max-w-sm w-full shadow-lg">
         <h3 className="text-lg font-semibold mb-2">{title}</h3>
         {message && <p className="text-sm text-neutral-700 mb-6">{message}</p>}

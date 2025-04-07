@@ -240,13 +240,18 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                 {(userRole === 'customer' || userRole === 'promoter' || userRole === 'host') && (
                   <>
                     <MenuItem
-                        label="Messages"
-                        onClick={() => {
-                          setIsOpen(false);
-                          messenger.openList();
-                        }}
-                        badgeCount={messenger.unreadCount > 0 ? messenger.unreadCount : undefined}
-                      />
+                      label="Messages"
+                      onClick={() => {
+                        setIsOpen(false);
+                        if (messenger.isOpen) {
+                          messenger.close();     // Close messenger if already open
+                        } else {
+                          messenger.openList();  // Open messenger if closed
+                        }
+                      }}
+                      badgeCount={messenger.unreadCount > 0 ? messenger.unreadCount : undefined}
+                    />
+
                     <hr className="my-2" />
                   </>
                 )}
@@ -257,7 +262,11 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                       setIsOpen(false);
                       router.push('/trips');
                     }} />
-                    <MenuItem label="Favorites" onClick={() => router.push('/favorites')} />
+                    <MenuItem label="Favorites" 
+                      onClick={() => {
+                        setIsOpen(false);
+                        router.push('/favorites')
+                      }} />
                     {(userRole === 'customer' || userRole === 'promoter' || userRole === 'host') && (
                         <>
                           <MenuItem label="Account" 
@@ -275,7 +284,11 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                   <>
                     {/* Only render on mobile as MenuItems */}
                     <div className="md:hidden">
-                      <MenuItem label="Promote QR-Code" onClick={onPromote} />
+                      <MenuItem label="Promote QR-Code" 
+                        onClick={() => {
+                          setIsOpen(false);
+                          onPromote();
+                        }} />
                     </div>
                     <MenuItem label="Trips" 
                       onClick={() => {
@@ -309,11 +322,23 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                       onRent;
                     }} />
                     </div>
-                    <MenuItem label="Trips" onClick={() => router.push('/trips')} />
-                    <MenuItem label="Favorites" onClick={() => router.push('/favorites')} />
+                    <MenuItem label="Trips" 
+                      onClick={() => {
+                        setIsOpen(false);
+                        router.push('/trips')
+                      }}/>
+                    <MenuItem label="Favorites" 
+                      onClick={() => {
+                        setIsOpen(false);
+                        router.push('/favorites')
+                      }}/>
                     {(userRole === 'host') && (
                         <>
-                          <MenuItem label="Account" onClick={() => router.push('/profile')} />
+                          <MenuItem label="Account" 
+                            onClick={() => {
+                              setIsOpen(false);
+                              router.push('/profile')
+                            }} />
                           <hr className="my-2" />
                         </>
                     )}
@@ -332,7 +357,11 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                     loginModal.onOpen();
                   }} />
                 <hr className="my-2" />
-                  <MenuItem label="Sign up" onClick={registerModal.onOpen} />
+                  <MenuItem label="Sign up" 
+                    onClick={() => {
+                      setIsOpen(false);
+                      registerModal.onOpen
+                    }} />
 
               </>
             )}

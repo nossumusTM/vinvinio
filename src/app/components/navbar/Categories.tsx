@@ -148,7 +148,7 @@ const Categories = () => {
                 flex 
                 flex-row 
                 items-center 
-                gap-0
+                gap-2
                 overflow-x-auto
                 scroll-smooth
                 scrollbar-thin

@@ -89,6 +89,7 @@ const Modal: React.FC<ModalProps> = ({
         focus:outline-none
         bg-black/30
         backdrop-blur-sm
+        p-5
       "
     >
       <div
