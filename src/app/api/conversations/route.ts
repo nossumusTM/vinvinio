@@ -57,6 +57,7 @@ export async function GET() {
     return NextResponse.json(result);
   } catch (error) {
     console.error('❌ Error in /api/conversations:', error);
-    return new NextResponse(JSON.stringify({ error: 'Internal Server Error' }), { status: 500 });
+    // return new NextResponse(JSON.stringify({ error: 'Internal Server Error' }), { status: 500 });
+    return NextResponse.json([], { status: 500 });
   }
 }

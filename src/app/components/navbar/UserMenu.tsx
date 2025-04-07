@@ -118,6 +118,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
         const data = await res.json();
   
         if (!Array.isArray(data)) {
+          console.warn('❌ Conversations response is not an array:', data);
           throw new Error('Conversations response is not an array');
         }
   
