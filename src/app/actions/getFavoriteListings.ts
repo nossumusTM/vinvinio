@@ -1,6 +1,6 @@
 // import prisma from "@/app/libs/prismadb";
 
-// import { getCurrentUser } from "./getCurrentUser";
+//  "./getCurrentUser";
 
 // export default async function getFavoriteListings() {
 //   try {
@@ -31,7 +31,7 @@
 
 export const dynamic = 'force-dynamic';
 import prisma from "@/app/libs/prismadb";
-import { getCurrentUser } from "./getCurrentUser";
+ "./getCurrentUser";
 import { SafeListing } from "../types"; // Assuming this is defined elsewhere
 
 export default async function getFavoriteListings(): Promise<SafeListing[]> {

@@ -1,5 +1,5 @@
 
-import { getCurrentUser } from "@/app/actions/getCurrentUser";
+ "@/app/actions/getCurrentUser";
 import getListingById from "@/app/actions/getListingById";
 import getReservations from "@/app/actions/getReservations";
 export const dynamic = 'force-dynamic';

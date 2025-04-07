@@ -1,7 +1,7 @@
 // import { NextResponse } from 'next/server';
 // export const dynamic = 'force-dynamic';
 // import prisma from '@/app/libs/prismadb';
-// import { getCurrentUser } from '@/app/actions/getCurrentUser';
+//  import getCurrentUser from  '@/app/actions/getCurrentUser';
 // import { ObjectId } from 'mongodb';
 
 // export async function GET(request: Request) {
@@ -75,7 +75,7 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 import prisma from '@/app/libs/prismadb';
-import { getCurrentUser } from '@/app/actions/getCurrentUser';
+ import getCurrentUser from  '@/app/actions/getCurrentUser';
 
 export async function GET(request: Request) {
   const currentUser = await getCurrentUser();
