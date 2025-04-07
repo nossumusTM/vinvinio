@@ -319,7 +319,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                     <div className="md:hidden">
                       <MenuItem label="Add Experience"  onClick={() => {
                       setIsOpen(false);
-                      onRent;
+                      onRent();
                     }} />
                     </div>
                     <MenuItem label="Trips" 
@@ -360,7 +360,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                   <MenuItem label="Sign up" 
                     onClick={() => {
                       setIsOpen(false);
-                      registerModal.onOpen
+                      registerModal.onOpen();
                     }} />
 
               </>
