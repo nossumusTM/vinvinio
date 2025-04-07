@@ -4,7 +4,7 @@ import ClientOnly from "@/app/components/ClientOnly";
 
 import { redirect } from "next/navigation";
 
-import getCurrentUser from "@/app/actions/getCurrentUser";
+import { getCurrentUser } from "@/app/actions/getCurrentUser";
 import getListings from "@/app/actions/getListings";
 
 import PropertiesClient from "./PropertiesClient";

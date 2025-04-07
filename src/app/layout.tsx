@@ -15,7 +15,7 @@ import ToasterProvider from '@/app/providers/ToasterProvider';
 
 import './globals.css';
 import ClientOnly from './components/ClientOnly';
-import getCurrentUser from './actions/getCurrentUser';
+import { getCurrentUser } from './actions/getCurrentUser';
 import ExperienceModal from './components/modals/ExperienceModal';
 import Footer from './components/Footer';
 

@@ -1,7 +1,7 @@
 // /app/api/users/save-card/route.ts
 import { NextResponse } from 'next/server';
 import prisma from '@/app/libs/prismadb';
-import getCurrentUser from '@/app/actions/getCurrentUser';
+import { getCurrentUser } from '@/app/actions/getCurrentUser';
 export const dynamic = 'force-dynamic';
 import CryptoJS from 'crypto-js';
 

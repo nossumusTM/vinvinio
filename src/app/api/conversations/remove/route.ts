@@ -1,7 +1,7 @@
 // /api/conversations/remove/route.ts
 import { NextResponse } from 'next/server';
 import prisma from '@/app/libs/prismadb';
-import getCurrentUser from '@/app/actions/getCurrentUser';
+import { getCurrentUser } from '@/app/actions/getCurrentUser';
 export const dynamic = 'force-dynamic';
 
 export async function DELETE(request: Request) {

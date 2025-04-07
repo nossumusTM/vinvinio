@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 import getListings, {
   IListingsParams
 } from "@/app/actions/getListings";
-import getCurrentUser from "@/app/actions/getCurrentUser";
+import { getCurrentUser } from "@/app/actions/getCurrentUser";
 import ClientOnly from "./components/ClientOnly";
 import Footer from "./components/Footer";
 

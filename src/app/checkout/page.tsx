@@ -7,7 +7,7 @@ import axios from 'axios';
 import { format } from 'date-fns';
 import { TbCalendarTime } from "react-icons/tb";
 
-import getCurrentUser from '@/app/actions/getCurrentUser';
+import { getCurrentUser } from '@/app/actions/getCurrentUser';
 import { useSession } from 'next-auth/react';
 
 import Button from '@/app/components/Button';
