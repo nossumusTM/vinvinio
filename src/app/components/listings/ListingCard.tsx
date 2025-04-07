@@ -44,32 +44,61 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
   const [isHovered, setIsHovered] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const images: string[] = useMemo(
-    () => (Array.isArray(data.imageSrc) ? data.imageSrc.filter(src => !/\.(mp4|webm|ogg)$/i.test(src)) : []),
-    [data.imageSrc]
-  );
+  // const images: string[] = useMemo(
+  //   () => (Array.isArray(data.imageSrc) ? data.imageSrc.filter(src => !/\.(mp4|webm|ogg)$/i.test(src)) : []),
+  //   [data.imageSrc]
+  // );
+  const { images, videos } = useMemo(() => {
+    const imageArr = Array.isArray(data.imageSrc)
+      ? data.imageSrc.filter(src => !/\.(mp4|webm|ogg)$/i.test(src))
+      : [];
+    const videoArr = Array.isArray(data.imageSrc)
+      ? data.imageSrc.filter(src => /\.(mp4|webm|ogg)$/i.test(src))
+      : [];
+    return { images: imageArr, videos: videoArr };
+  }, [data.imageSrc]);  
+
+  const coverImageIndex = useMemo(() => {
+    return Math.floor(Math.random() * images.length);
+  }, [images]);  
+  
   const firstHover = useRef(true);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const randomHeight = useMemo(() => Math.floor(Math.random() * 200) + 400, []);
+  const randomHeight = useMemo(() => Math.floor(Math.random() * 1) + 400, []);
+
+  const coverMedia = useMemo(() => {
+    const roll = Math.random();
+    if (roll < 0.3 && videos.length > 0) {
+      const randomVideo = videos[Math.floor(Math.random() * videos.length)];
+      return { type: 'video', src: randomVideo };
+    }
+    if (images.length > 0) {
+      const randomImage = images[Math.floor(Math.random() * images.length)];
+      return { type: 'image', src: randomImage };
+    }
+    return { type: 'image', src: '/placeholder.jpg' }; // Fallback
+  }, [images, videos]);  
 
   useEffect(() => {
     if (!isHovered || images.length <= 1) return;
-
-    if (firstHover.current) {
-      firstHover.current = false;
-      setActiveImageIndex((prevIndex) => (prevIndex + 1) % images.length);
+  
+    // Clear any existing interval before setting a new one
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
     }
-
+  
     intervalRef.current = setInterval(() => {
       setActiveImageIndex((prevIndex) => (prevIndex + 1) % images.length);
     }, 1500);
-
+  
     return () => {
-      clearInterval(intervalRef.current!);
-      setActiveImageIndex(0); // Reset to initial image
-      firstHover.current = true;
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      setActiveImageIndex(0); // Reset to first image on unhover
     };
-  }, [isHovered, images]);
+  }, [isHovered, images.length]);  
 
   const hasFetched = useRef(false);
 
@@ -114,6 +143,10 @@ const ListingCard: React.FC<ListingCardProps> = ({
     fetchReviews();
   }, [data.id]);
 
+  useEffect(() => {
+    setActiveImageIndex(Math.floor(Math.random() * images.length));
+  }, [images.length]);  
+
   return (
     <div
       onClick={() => router.push(`/listings/${data.id}`)}
@@ -128,7 +161,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
         className="w-full relative rounded-xl overflow-hidden transition-all duration-500"
         style={{ minHeight: 'auto', maxHeight: `${randomHeight}px`, height: `${randomHeight}px` }}
         >
-          {images.map((img: string, i: number) => (
+          {/* {images.map((img: string, i: number) => (
             <Image
               key={i}
               fill
@@ -136,7 +169,37 @@ const ListingCard: React.FC<ListingCardProps> = ({
               src={img}
               alt={`Listing ${i}`}
             />
-          ))}
+          ))} */}
+          {images.length > 0 ? (
+              images.map((img: string, i: number) => (
+                <Image
+                  key={i}
+                  fill
+                  className={`object-cover h-full w-full absolute top-0 left-0 rounded-xl transition-opacity duration-700 ease-in-out ${
+                    i === activeImageIndex ? 'opacity-100' : 'opacity-0'
+                  }`}
+                  src={img}
+                  alt={`Listing ${i}`}
+                />
+              ))
+            ) : coverMedia.type === 'video' ? (
+              <video
+                src={coverMedia.src}
+                className="absolute top-0 left-0 w-full h-full object-cover rounded-xl"
+                autoPlay
+                loop
+                muted
+                playsInline
+              />
+            ) : (
+              <Image
+                fill
+                className="object-cover h-full w-full absolute top-0 left-0 rounded-xl"
+                src={coverMedia.src}
+                alt="Listing fallback"
+              />
+            )}
+
 
           <div className="absolute top-3 right-3">
             <HeartButton listingId={data.id} currentUser={currentUser} />

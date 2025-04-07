@@ -240,21 +240,31 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                 {(userRole === 'customer' || userRole === 'promoter' || userRole === 'host') && (
                   <>
                     <MenuItem
-                      label="Messages"
-                      onClick={messenger.openList}
-                      badgeCount={messenger.unreadCount > 0 ? messenger.unreadCount : undefined}
-                    />
+                        label="Messages"
+                        onClick={() => {
+                          setIsOpen(false);
+                          messenger.openList();
+                        }}
+                        badgeCount={messenger.unreadCount > 0 ? messenger.unreadCount : undefined}
+                      />
                     <hr className="my-2" />
                   </>
                 )}
 
                 {userRole === 'customer' && (
                   <>
-                    <MenuItem label="Trips" onClick={() => router.push('/trips')} />
+                    <MenuItem label="Trips" onClick={() => {
+                      setIsOpen(false);
+                      router.push('/trips');
+                    }} />
                     <MenuItem label="Favorites" onClick={() => router.push('/favorites')} />
                     {(userRole === 'customer' || userRole === 'promoter' || userRole === 'host') && (
                         <>
-                          <MenuItem label="Account" onClick={() => router.push('/profile')} />
+                          <MenuItem label="Account" 
+                            onClick={() => {
+                              setIsOpen(false);
+                              router.push('/profile')
+                            }} />
                           <hr className="my-2" />
                         </>
                       )}
@@ -267,11 +277,24 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                     <div className="md:hidden">
                       <MenuItem label="Promote QR-Code" onClick={onPromote} />
                     </div>
-                    <MenuItem label="Trips" onClick={() => router.push('/trips')} />
-                    <MenuItem label="Favorites" onClick={() => router.push('/favorites')} />
+                    <MenuItem label="Trips" 
+                      onClick={() => {
+                        setIsOpen(false);
+                        router.push('/trips')
+                      }}/>
+                    <MenuItem label="Favorites" 
+                      onClick={() => {
+                        setIsOpen(false);
+                        router.push('/favorites')
+                      }}/>
                     {(userRole === 'promoter' || userRole === 'promoter' || userRole === 'host') && (
                         <>
-                          <MenuItem label="Account" onClick={() => router.push('/profile')} />
+                          <MenuItem label="Account" 
+                            onClick={() => {
+                              setIsOpen(false);
+                              router.push('/profile')
+                            }} 
+                          />
                           <hr className="my-2" />
                         </>
                       )}
@@ -281,7 +304,10 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                 {userRole === 'host' && (
                   <>
                     <div className="md:hidden">
-                      <MenuItem label="Add Experience" onClick={onRent} />
+                      <MenuItem label="Add Experience"  onClick={() => {
+                      setIsOpen(false);
+                      onRent;
+                    }} />
                     </div>
                     <MenuItem label="Trips" onClick={() => router.push('/trips')} />
                     <MenuItem label="Favorites" onClick={() => router.push('/favorites')} />
@@ -294,11 +320,17 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                   </>
                 )}
 
-                <MenuItem label="Logout" onClick={() => signOut()} />
+                  <MenuItem label="Logout" onClick={() => {
+                    setIsOpen(false);
+                    signOut();
+                  }} />
               </>
             ) : (
               <>
-                  <MenuItem label="Login" onClick={loginModal.onOpen} />
+                  <MenuItem label="Login" onClick={() => {
+                    setIsOpen(false);
+                    loginModal.onOpen();
+                  }} />
                 <hr className="my-2" />
                   <MenuItem label="Sign up" onClick={registerModal.onOpen} />
 

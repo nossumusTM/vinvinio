@@ -28,32 +28,32 @@ import Container from '../Container';
 
 export const categories = [
     {
-        label: 'Fiat Tour',
+        label: 'La Bella Tour',
         icon: SiFiat,
         description: 'Aventine Hill Tour in Vintage Fiat 500 Convoy',
     },
     {
-        label: 'Lookbook',
+        label: 'Photo Muse',
         icon: BiPhotoAlbum,
         description: 'Capture the timeless beauty of one of the most iconic landmarks'
     },
     {
-        label: 'Vespa Tour',
+        label: 'Viva Vespa!',
         icon: SiVespa,
         description: 'Vespa Sidecar Tour with Pickup, Drop-off',
     },
     {
-        label: 'Shopping',
+        label: 'Alla Italiana',
         icon: LuShoppingBag,
         description: "Discover Italy’s finest fashion and artisanal treasures on an exclusive shopping tour."
     },
     {
-        label: 'Food Guide',
+        label: 'Cooking Class',
         icon: GrRestaurant,
         description: 'Guided Food & Wine Tour in Trastevere'
     },
     {
-        label: 'Tour Guide',
+        label: 'Walking Art',
         icon: MdOutlineTour,
         description: "Experience the city's heartbeat through unique stories hidden behind the scenes"
     },

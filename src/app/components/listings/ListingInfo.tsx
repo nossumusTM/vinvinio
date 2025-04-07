@@ -133,7 +133,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                         )}
                         
                         {hostDescription && (
-                        <p className="text-sm text-neutral-600 mt-2 text-justify whitespace-pre-line">
+                        <p className="md:pl-5 md:pr-5 text-sm text-neutral-600 mt-2 text-justify whitespace-pre-line">
                             {hostDescription}
                         </p>
                         )}
@@ -203,7 +203,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
             <hr />
             
             {(Array.isArray(locationType) && locationType.length > 0 || locationDescription) && (
-            <div className="md:col-span-7 rounded-2xl">
+            <div className="p-5 md:col-span-7 rounded-2xl">
                 <h2 className="text-lg font-semibold mb-2">Experience theme</h2>
 
                 {Array.isArray(locationType) && locationType.length > 0 && (
@@ -236,7 +236,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
 
             <Heading title="About experience" />
 
-            <div className="text-lg text-neutral-600 text-justify whitespace-pre-line">
+            <div className="text-md md:p-5 text-neutral-600 text-justify whitespace-pre-line">
                 {description}
             </div>
             <hr />
