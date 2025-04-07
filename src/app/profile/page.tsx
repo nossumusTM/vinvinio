@@ -1,4 +1,3 @@
- "@/app/actions/getCurrentUser";
 import getReferralBookings from "../actions/getReferralBookings";
 import ClientOnly from "@/app/components/ClientOnly";
 import EmptyState from "@/app/components/EmptyState";
