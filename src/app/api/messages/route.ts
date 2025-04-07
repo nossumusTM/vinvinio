@@ -22,12 +22,12 @@ export async function GET(request: Request) {
         where: {
           OR: [
             {
-              senderId: new ObjectId(currentUser.id).toString(),
-              recipientId: new ObjectId(recipientId).toString(),
+              senderId: currentUser.id,
+              recipientId,
             },
             {
-              senderId: new ObjectId(recipientId).toString(),
-              recipientId: new ObjectId(currentUser.id).toString(),
+              senderId: recipientId,
+              recipientId: currentUser.id,
             },
           ],
         },
