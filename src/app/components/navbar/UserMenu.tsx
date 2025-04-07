@@ -116,19 +116,18 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
       try {
         const res = await fetch(`/api/conversations`);
         const data = await res.json();
-      
+  
         if (!Array.isArray(data)) {
-          console.warn('❌ Conversations response is not an array:', data);
-          return; // skip processing
+          throw new Error('Conversations response is not an array');
         }
-      
+  
         const unread = data.filter((c: any) => c.hasUnread).length;
-      
+  
         localStorage.setItem(`conversations_${userId}`, JSON.stringify(data));
         messenger.setUnreadCount(unread);
       } catch (err) {
         console.error('❌ Failed to fetch conversations:', err);
-      }      
+      }
     };
   
     checkUnreadCount();
