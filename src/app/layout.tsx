@@ -18,6 +18,7 @@ import ClientOnly from './components/ClientOnly';
 import { getCurrentUser } from './actions/getCurrentUser';
 import ExperienceModal from './components/modals/ExperienceModal';
 import Footer from './components/Footer';
+import CurrentUserProvider from './actions/CurrentUserProvider';
 
 export const metadata = {
   title: 'Vuoiaggio | Wanna Go? Let\'s Go!',
@@ -46,7 +47,7 @@ export default async function RootLayout({
           strategy="beforeInteractive"
         />
 
-        <ClientOnly>
+        {/* <ClientOnly>
           <ToasterProvider />
           <NavBar currentUser={currentUser} />
           <LoginModal />
@@ -56,6 +57,23 @@ export default async function RootLayout({
           <ExperienceModal />
           <PromoteModal currentUser={currentUser} />
           <Messenger userId={currentUser?.id} />
+        </ClientOnly> */}
+        <ClientOnly>
+          <ToasterProvider />
+          <CurrentUserProvider>
+            {(currentUser) => (
+              <>
+                <NavBar currentUser={currentUser} />
+                <LoginModal />
+                <RegisterModal />
+                <SearchModal />
+                <RentModal />
+                <ExperienceModal />
+                <PromoteModal currentUser={currentUser} />
+                <Messenger userId={currentUser?.id} />
+              </>
+            )}
+          </CurrentUserProvider>
         </ClientOnly>
 
         <div className="pb-20 pt-28 min-h-screen">

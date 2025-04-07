@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { toast } from "react-hot-toast";
 import { signIn } from 'next-auth/react';
+import { getSession } from "next-auth/react";
 import {
     FieldValues,
     SubmitHandler,
@@ -39,28 +40,51 @@ const LoginModal = () => {
         },
     });
 
-    const onSubmit: SubmitHandler<FieldValues> =
-        (data) => {
-            setIsLoading(true);
+    // const onSubmit: SubmitHandler<FieldValues> =
+    //     (data) => {
+    //         setIsLoading(true);
 
-            signIn('credentials', {
-                ...data,
-                redirect: false,
-            })
-                .then((callback) => {
-                    setIsLoading(false);
+    //         signIn('credentials', {
+    //             ...data,
+    //             redirect: false,
+    //         })
+    //             .then((callback) => {
+    //                 setIsLoading(false);
 
-                    if (callback?.ok) {
-                        toast.success('Logged in');
-                        router.refresh();
-                        loginModal.onClose();
-                    }
+    //                 if (callback?.ok) {
+    //                     toast.success('Logged in');
+    //                     router.refresh();
+    //                     loginModal.onClose();
+    //                 }
 
-                    if (callback?.error) {
-                        toast.error(callback.error);
-                    }
-                });
+    //                 if (callback?.error) {
+    //                     toast.error(callback.error);
+    //                 }
+    //             });
+    //     }
+
+    const onSubmit: SubmitHandler<FieldValues> = async (data) => {
+        setIsLoading(true);
+      
+        const callback = await signIn('credentials', {
+          ...data,
+          redirect: false,
+        });
+      
+        setIsLoading(false);
+      
+        if (callback?.ok) {
+          toast.success('Logged in');
+      
+          await getSession(); // Refresh session
+          router.refresh();   // Refresh UI (re-fetch currentUser)
+          loginModal.onClose();
         }
+      
+        if (callback?.error) {
+          toast.error(callback.error);
+        }
+      };      
 
     const onToggle = useCallback(() => {
         loginModal.onClose();
