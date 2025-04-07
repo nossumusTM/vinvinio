@@ -159,8 +159,10 @@ export async function GET() {
     
       const otherUser = isIncoming ? msg.sender : isOutgoing ? msg.recipient : null;
     
-      if (!otherUser || otherUser.id === currentUser.id || !otherUser.name) return;
-    
+      // if (!otherUser || otherUser.id === currentUser.id || !otherUser.name) return;
+
+      if (!otherUser || otherUser.id === currentUser.id) return;
+      
       const existing = uniqueUsersMap.get(otherUser.id);
       const isUnread = isIncoming && !msg.seen;
     

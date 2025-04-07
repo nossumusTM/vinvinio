@@ -96,23 +96,46 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
   }, [recipient?.id]);  
 
   // Mark as seen + update conversation list in localStorage
+  // useEffect(() => {
+  //   const markMessagesSeen = async () => {
+  //     try {
+  //       await fetch('/api/messages/mark-seen', {
+  //         method: 'POST',
+  //         headers: { 'Content-Type': 'application/json' },
+  //         body: JSON.stringify({ senderId: recipient?.id }),
+  //       });
+
+  //     } catch (error) {
+  //       console.error('Error marking messages as seen:', error);
+  //     }
+  //   };
+
+  //   if (recipient?.id) {
+  //     markMessagesSeen();
+  //   }
+  // }, [recipient?.id]);
+
+  // Mark as seen after a short delay
   useEffect(() => {
-    const markMessagesSeen = async () => {
-      try {
-        await fetch('/api/messages/mark-seen', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ senderId: recipient?.id }),
-        });
+    if (!recipient?.id) return;
 
-      } catch (error) {
-        console.error('Error marking messages as seen:', error);
-      }
-    };
+    const timer = setTimeout(() => {
+      const markMessagesSeen = async () => {
+        try {
+          await fetch('/api/messages/mark-seen', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ senderId: recipient.id }),
+          });
+        } catch (error) {
+          console.error('Error marking messages as seen:', error);
+        }
+      };
 
-    if (recipient?.id) {
       markMessagesSeen();
-    }
+    }, 3000); // Delay to let unread state settle
+
+    return () => clearTimeout(timer); // Cleanup on unmount or change
   }, [recipient?.id]);
 
   // Scroll to bottom when messages change
