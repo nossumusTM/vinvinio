@@ -241,6 +241,20 @@ export async function GET() {
   }
 
   try {
+    // const messages = await prisma.message.findMany({
+    //   where: {
+    //     OR: [
+    //       { senderId: currentUser.id },
+    //       { recipientId: currentUser.id },
+    //     ],
+    //   },
+    //   include: {
+    //     sender: true,
+    //     recipient: true,
+    //   },
+    //   orderBy: { createdAt: 'desc' },
+    // });
+
     const messages = await prisma.message.findMany({
       where: {
         OR: [
@@ -249,11 +263,25 @@ export async function GET() {
         ],
       },
       include: {
-        sender: true,
-        recipient: true,
+        sender: {
+          select: {
+            id: true,
+            name: true,
+            image: true,
+          },
+        },
+        recipient: {
+          select: {
+            id: true,
+            name: true,
+            image: true,
+          },
+        },
       },
-      orderBy: { createdAt: 'desc' },
-    });
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });    
 
     console.log(`Retrieved ${messages.length} messages for user ${currentUser.id}.`);
 
