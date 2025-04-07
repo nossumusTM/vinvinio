@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import getCurrentUser from '@/app/actions/getCurrentUser';
-export const dynamic = 'force-dynamic';
 import prisma from '@/app/libs/prismadb';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   const currentUser = await getCurrentUser();
@@ -22,29 +23,19 @@ export async function GET() {
       orderBy: { createdAt: 'desc' },
     });
 
-    const uniqueUsers = new Map<
-      string,
-      {
-        id: string;
-        name: string;
-        image?: string | null;
-        hasUnread: boolean;
-        latestMessage?: string;
-        latestMessageCreatedAt?: Date;
-      }
-    >();
+    const uniqueUsersMap = new Map();
 
-    messages.forEach((msg) => {
+    messages.forEach((msg: any) => {
       const isIncoming = msg.recipientId === currentUser.id;
       const otherUser = isIncoming ? msg.sender : msg.recipient;
 
       if (!otherUser || otherUser.id === currentUser.id || !otherUser.name) return;
 
-      const existing = uniqueUsers.get(otherUser.id);
+      const existing = uniqueUsersMap.get(otherUser.id);
       const isUnread = isIncoming && !msg.seen;
 
       if (!existing) {
-        uniqueUsers.set(otherUser.id, {
+        uniqueUsersMap.set(otherUser.id, {
           id: otherUser.id,
           name: otherUser.name ?? 'Unknown',
           image: otherUser.image,
@@ -59,15 +50,13 @@ export async function GET() {
           existing.latestMessageCreatedAt = msg.createdAt;
         }
       }
-
     });
 
-    // return NextResponse.json(
-    //   Array.from(uniqueUsers.values()).map(({ latestMessageCreatedAt, ...rest }) => rest)
-    // );
-    return NextResponse.json(Array.from(uniqueUsers.values()));
+    const result = Array.from(uniqueUsersMap.values());
+
+    return NextResponse.json(result);
   } catch (error) {
-    console.error('Error fetching conversations:', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    console.error('❌ Error in /api/conversations:', error);
+    return new NextResponse(JSON.stringify({ error: 'Internal Server Error' }), { status: 500 });
   }
 }

@@ -13,17 +13,6 @@ import TripsClient from "./ReservationsClient";
 const ReservationsPage = async () => {
     const currentUser = await getCurrentUser();
 
-    // if (!currentUser) {
-    //     return (
-    //         <ClientOnly>
-    //             <EmptyState
-    //                 title="Unauthorized"
-    //                 subtitle="Please login"
-    //             />
-    //         </ClientOnly>
-    //     )
-    // }
-
     if (!currentUser) {
             redirect('/');
     }

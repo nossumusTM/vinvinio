@@ -22,6 +22,9 @@ import Footer from './components/Footer';
 export const metadata = {
   title: 'Vuoiaggio | Wanna Go? Let\'s Go!',
   description: 'Wanna Go? Let\'s Go!',
+  icons: {
+    icon: '/favicon.ico', // ✅ tells Next.js where to find it
+  },
 };
 
 const font = Nunito({
@@ -37,11 +40,6 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <head>
-        <link rel="icon" href="/favicon.ico" />
-        <title>{metadata.title}</title>
-        <meta name="description" content={metadata.description} />
-      </head>
       <body className={font.className}>
         <Script
           src="https://widget.cloudinary.com/v2.0/global/all.js"
