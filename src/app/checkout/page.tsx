@@ -354,18 +354,18 @@ const CheckoutPage = () => {
 
             {cardInfo.method === 'card' && (
                 <div className="flex items-center gap-4 ">
-                <Image src="/images/visa.png" alt="Visa" className="h-3 w-auto object-contain" />
-                <Image src="/images/mastercard.png" alt="MasterCard" className="h-5 w-auto object-contain" />
-                <Image src="/images/AmericanExpress.png" alt="American Express" className="h-7 w-auto object-contain" />
+                <Image width={50} height={50} src="/images/visa.png" alt="Visa" className="h-3 w-auto object-contain" />
+                <Image width={50} height={50} src="/images/mastercard.png" alt="MasterCard" className="h-5 w-auto object-contain" />
+                <Image width={50} height={50} src="/images/AmericanExpress.png" alt="American Express" className="h-7 w-auto object-contain" />
                 </div>
             )}
 
             {cardInfo.method === 'paypal' && (
-                <Image src="/images/paypal.png" alt="PayPal" className="h-6 w-auto object-contain mb-1" />
+                <Image width={50} height={50} src="/images/paypal.png" alt="PayPal" className="h-6 w-auto object-contain mb-1" />
             )}
 
             {cardInfo.method === 'gpay' && (
-                <Image src="/images/gpay.png" alt="Google Pay" className="h-6 w-auto object-contain mb-1" />
+                <Image width={50} height={50} src="/images/gpay.png" alt="Google Pay" className="h-6 w-auto object-contain mb-1" />
             )}
         </div>
 
@@ -417,6 +417,7 @@ const CheckoutPage = () => {
                   }
                   alt="Card Type"
                   className="w-8 h-5 object-contain"
+                  width={50} height={50}
                 />
               </div>
             </div>

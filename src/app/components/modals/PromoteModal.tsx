@@ -53,6 +53,8 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
             src="/images/qrlogo.png"
             alt="Logo"
             className="w-12 h-12 object-contain bg-white p-1 border-radius rotate-45"
+            width={50}
+            height={50}
           />
         </div>
       </div>

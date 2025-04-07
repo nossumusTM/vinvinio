@@ -971,6 +971,8 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                             }
                             alt="Method"
                             className="w-8 h-5 object-contain"
+                            width={50}
+                            height={50}
                           />
                         </div>
                       </div>
@@ -1086,10 +1088,10 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
             {cardInfo.method === 'card' && (
               <>
                 <div className="flex items-center gap-4 mb-4">
-                  <Image src="/images/Visa.png" alt="Visa" className="w-8" />
-                  <Image src="/images/MasterCard.png" alt="MasterCard" className="w-6" />
-                  <Image src="/images/americanexpress.png" alt="AMEX" className="w-6" />
-                  <Image src="/images/Discover.png" alt="Discover" className="w-8" />
+                  <Image width={50} height={50} src="/images/Visa.png" alt="Visa" className="w-8" />
+                  <Image width={50} height={50} src="/images/MasterCard.png" alt="MasterCard" className="w-6" />
+                  <Image width={50} height={50} src="/images/americanexpress.png" alt="AMEX" className="w-6" />
+                  <Image width={50} height={50} src="/images/Discover.png" alt="Discover" className="w-8" />
                 </div>
 
                 {/* Card Number with floating label */}
@@ -1128,6 +1130,8 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                       }
                       alt="Card Type"
                       className="w-8 h-5 object-contain"
+                      width={50}
+                      height={50}
                     />
                   </div>
                 </div>

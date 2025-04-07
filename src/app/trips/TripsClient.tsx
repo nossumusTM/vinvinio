@@ -171,6 +171,8 @@ const TripsClient: React.FC<TripsClientProps> = ({
                   src={reservation.listing.imageSrc[0]}
                   alt="Listing"
                   className="w-full h-48 object-cover"
+                  width={50}
+                  height={50}
                 />
               )}
 

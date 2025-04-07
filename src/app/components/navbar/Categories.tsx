@@ -43,15 +43,14 @@ export const categories = [
         description: 'Vespa Sidecar Tour with Pickup, Drop-off',
     },
     {
-        label: 'Food Guide',
-        icon: GrRestaurant,
-        description: 'Guided Food & Wine Tour in Trastevere'
-    },
-    
-    {
         label: 'Shopping',
         icon: LuShoppingBag,
         description: "Discover Italy’s finest fashion and artisanal treasures on an exclusive shopping tour."
+    },
+    {
+        label: 'Food Guide',
+        icon: GrRestaurant,
+        description: 'Guided Food & Wine Tour in Trastevere'
     },
     {
         label: 'Tour Guide',
@@ -102,7 +101,32 @@ export const categories = [
     //     label: 'Lux',
     //     icon: IoDiamond,
     //     description: 'This property is brand new and luxurious!'
-    // }
+    // },
+    // {
+    //     label: 'Caves',
+    //     icon: GiCaveEntrance,
+    //     description: 'This property is in a spooky cave!'
+    // },
+    // {
+    //     label: 'Camping',
+    //     icon: GiForestCamp,
+    //     description: 'This property offers camping activities!'
+    // },
+    // {
+    //     label: 'Arctic',
+    //     icon: BsSnow,
+    //     description: 'This property is in arctic environment!'
+    // },
+    // {
+    //     label: 'Desert',
+    //     icon: GiCactus,
+    //     description: 'This property is in the desert!'
+    // },
+    // {
+    //     label: 'Barns',
+    //     icon: GiBarn,
+    //     description: 'This property is in a barn!'
+    // },
 ]
 
 const Categories = () => {
@@ -116,28 +140,37 @@ const Categories = () => {
     }
 
     return (
-        <Container>
-            <div
-                className="
-          pt-4
-          flex 
-          flex-row 
-          items-center 
-          justify-center
-          overflow-x-auto
-        "
+        <div className="w-full overflow-x-auto">
+          <Container>
+          <div
+            className="
+                pt-4
+                flex 
+                flex-row 
+                items-center 
+                gap-0
+                overflow-x-auto
+                scroll-smooth
+                scrollbar-thin
+                snap-x 
+                snap-mandatory
+                w-full
+                sm:w-auto
+            "
             >
-                {categories.map((item) => (
-                    <CategoryBox
-                        key={item.label}
-                        label={item.label}
-                        icon={item.icon}
-                        selected={category === item.label}
-                    />
-                ))}
+              {categories.map((item) => (
+                <CategoryBox
+                  key={item.label}
+                  label={item.label}
+                  icon={item.icon}
+                  selected={category === item.label}
+                />
+              ))}
             </div>
-        </Container>
-    );
+          </Container>
+        </div>
+      );
+      
 }
 
 export default Categories;
