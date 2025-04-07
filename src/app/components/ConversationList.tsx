@@ -21,39 +21,73 @@ interface ConversationListProps {
 const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUserId }) => {
   const [users, setUsers] = useState<User[]>([]);
 
+  // useEffect(() => {
+  //   if (!currentUserId) return;
+
+  //   const localKey = `conversations_${currentUserId}`;
+  //   const cached = localStorage.getItem(localKey);
+
+  //   if (cached) {
+  //     // ⏱️ Show cached conversations instantly
+  //     setUsers(JSON.parse(cached));
+  //   }
+
+  //   const fetchConversations = async () => {
+  //     try {
+  //       // const res = await fetch(`/api/conversations`);
+  //       const res = await fetch(`/api/conversations`, {
+  //         credentials: 'include', // 👈 important for authenticated routes
+  //       });
+  //       const text = await res.text();
+  //       const data = text ? JSON.parse(text) : [];
+
+  //       // ✅ Save in state and cache
+  //       setUsers(data);
+  //       localStorage.setItem(localKey, JSON.stringify(data));
+  //     } catch (err) {
+  //       console.error('Failed to fetch conversations:', err);
+  //     }
+  //   };
+
+  //   // 🚀 Fetch updated conversations in background
+  //   fetchConversations();
+  //   const interval = setInterval(fetchConversations, 5000);
+  //   return () => clearInterval(interval);
+  // }, [currentUserId]);
+
   useEffect(() => {
     if (!currentUserId) return;
-
+  
     const localKey = `conversations_${currentUserId}`;
     const cached = localStorage.getItem(localKey);
-
+  
     if (cached) {
-      // ⏱️ Show cached conversations instantly
       setUsers(JSON.parse(cached));
     }
-
+  
     const fetchConversations = async () => {
       try {
-        // const res = await fetch(`/api/conversations`);
         const res = await fetch(`/api/conversations`, {
-          credentials: 'include', // 👈 important for authenticated routes
+          credentials: 'include',
         });
-        const text = await res.text();
-        const data = text ? JSON.parse(text) : [];
-
-        // ✅ Save in state and cache
+        const data = await res.json();
+  
+        if (!Array.isArray(data)) {
+          console.error('Unexpected response format:', data);
+          return;
+        }
+  
         setUsers(data);
         localStorage.setItem(localKey, JSON.stringify(data));
       } catch (err) {
         console.error('Failed to fetch conversations:', err);
       }
     };
-
-    // 🚀 Fetch updated conversations in background
+  
     fetchConversations();
     const interval = setInterval(fetchConversations, 5000);
     return () => clearInterval(interval);
-  }, [currentUserId]);
+  }, [currentUserId]);  
 
   return (
     <div className="p-4 space-y-3 overflow-y-auto h-full">
