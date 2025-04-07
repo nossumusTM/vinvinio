@@ -137,6 +137,20 @@ export async function GET() {
   if (!currentUser) return NextResponse.json([], { status: 200 });
 
   try {
+    // const messages = await prisma.message.findMany({
+    //   where: {
+    //     OR: [
+    //       { senderId: currentUser.id },
+    //       { recipientId: currentUser.id },
+    //     ],
+    //   },
+    //   include: {
+    //     sender: true,
+    //     recipient: true,
+    //   },
+    //   orderBy: { createdAt: 'desc' },
+    // });
+
     const messages = await prisma.message.findMany({
       where: {
         OR: [
@@ -145,23 +159,48 @@ export async function GET() {
         ],
       },
       include: {
-        sender: true,
-        recipient: true,
+        sender: {
+          select: {
+            id: true,
+            name: true,
+            image: true
+          }
+        },
+        recipient: {
+          select: {
+            id: true,
+            name: true,
+            image: true
+          }
+        }
       },
       orderBy: { createdAt: 'desc' },
-    });
+    });    
 
     const uniqueUsersMap = new Map<string, any>();
 
     messages.forEach((msg: any) => {
+      // const isIncoming = msg.recipientId === currentUser.id;
+      // const isOutgoing = msg.senderId === currentUser.id;
+
       const isIncoming = msg.recipientId === currentUser.id;
-      const isOutgoing = msg.senderId === currentUser.id;
+      const otherUser = isIncoming ? msg.sender : msg.recipient;
+
+      if (!otherUser || !otherUser.id || otherUser.id === currentUser.id) return;
+
     
-      const otherUser = isIncoming ? msg.sender : isOutgoing ? msg.recipient : null;
+      // const otherUser = isIncoming ? msg.sender : isOutgoing ? msg.recipient : null;
     
       // if (!otherUser || otherUser.id === currentUser.id || !otherUser.name) return;
 
-      if (!otherUser || otherUser.id === currentUser.id) return;
+      // if (!otherUser || otherUser.id === currentUser.id) return;
+
+      if (
+        !otherUser || 
+        !otherUser.id || 
+        otherUser.id === currentUser.id || 
+        (!msg.text && !msg.createdAt)
+      ) return;
       
       const existing = uniqueUsersMap.get(otherUser.id);
       const isUnread = isIncoming && !msg.seen;
