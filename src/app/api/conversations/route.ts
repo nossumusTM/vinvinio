@@ -119,6 +119,11 @@ export async function GET() {
     return NextResponse.json(Array.from(uniqueUsersMap.values()));
   } catch (error) {
     console.error('❌ Error in /api/conversations:', error);
-    return NextResponse.json([], { status: 500 }); // ✅ fallback with array
+    return new Response(JSON.stringify([]), {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
   }
 }
