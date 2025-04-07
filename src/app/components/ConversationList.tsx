@@ -34,7 +34,10 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
 
     const fetchConversations = async () => {
       try {
-        const res = await fetch(`/api/conversations`);
+        // const res = await fetch(`/api/conversations`);
+        const res = await fetch(`/api/conversations`, {
+          credentials: 'include', // 👈 important for authenticated routes
+        });
         const text = await res.text();
         const data = text ? JSON.parse(text) : [];
 

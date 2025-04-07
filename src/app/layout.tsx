@@ -55,7 +55,8 @@ export default async function RootLayout({
           <RentModal />
           <ExperienceModal />
           <PromoteModal currentUser={currentUser} />
-          <Messenger userId={currentUser?.id} />
+          {currentUser && <Messenger currentUser={currentUser} />}
+          {/* <Messenger userId={currentUser?.id} /> */}
         </ClientOnly>
 
         <div className="pb-20 pt-28 min-h-screen">
