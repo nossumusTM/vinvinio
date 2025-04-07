@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 export const dynamic = 'force-dynamic';
 
- "@/app/actions/getCurrentUser";
+import getCurrentUser from "@/app/actions/getCurrentUser";
 import prisma from "@/app/libs/prismadb";
 
 interface IParams {

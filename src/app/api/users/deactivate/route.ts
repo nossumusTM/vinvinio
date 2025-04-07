@@ -1,6 +1,6 @@
 // /app/api/users/deactivate/route.ts
 import { NextResponse } from "next/server";
- "@/app/actions/getCurrentUser";
+import getCurrentUser from "@/app/actions/getCurrentUser";
 import prisma from "@/app/libs/prismadb";
 export const dynamic = 'force-dynamic';
 

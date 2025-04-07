@@ -3,6 +3,7 @@
 import getListingById from "@/app/actions/getListingById";
 import getReservations from "@/app/actions/getReservations";
 export const dynamic = 'force-dynamic';
+import getCurrentUser from "@/app/actions/getCurrentUser";
 
 import ClientOnly from "@/app/components/ClientOnly";
 import EmptyState from "@/app/components/EmptyState";

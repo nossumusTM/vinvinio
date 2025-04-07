@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 
 import { redirect } from "next/navigation";
 
- "@/app/actions/getCurrentUser";
+import getCurrentUser from "@/app/actions/getCurrentUser";
 import getReservations from "@/app/actions/getReservations";
 
 import TripsClient from "./ReservationsClient";

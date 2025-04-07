@@ -4,6 +4,7 @@ import ClientOnly from "@/app/components/ClientOnly";
 import EmptyState from "@/app/components/EmptyState";
 import { redirect } from "next/navigation";
 export const dynamic = 'force-dynamic';
+import getCurrentUser from "@/app/actions/getCurrentUser";
 
 import ProfileClient from "./ProfileClient";
 
