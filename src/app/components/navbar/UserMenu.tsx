@@ -114,7 +114,9 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
       if (!userId) return;
   
       try {
-        const res = await fetch(`/api/conversations`);
+        const res = await fetch('/api/conversations', {
+          credentials: 'same-origin',
+        });
         const data = await res.json();
   
         if (!Array.isArray(data)) {

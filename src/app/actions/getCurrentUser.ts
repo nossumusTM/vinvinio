@@ -80,17 +80,67 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import prisma from "@/app/libs/prismadb";
 import { SafeUser } from "@/app/types";
 
-export async function getSession() {
-  return await getServerSession(authOptions);
-}
+// export async function getSession() {
+//   return await getServerSession(authOptions);
+// }
+
+// export default async function getCurrentUser(): Promise<SafeUser | null> {
+//   try {
+//     const session = await getSession();
+//     if (!session?.user?.email) return null;
+
+//     const user = await prisma.user.findUnique({
+//       where: { email: session.user.email as string },
+//       select: {
+//         id: true,
+//         name: true,
+//         email: true,
+//         hostName: true,
+//         image: true,
+//         role: true,
+//         referenceId: true,
+//         favoriteIds: true,
+//         phone: true,
+//         contact: true,
+//         legalName: true,
+//         address: true,
+//         createdAt: true,
+//         updatedAt: true,
+//         emailVerified: true,
+//       },
+//     });
+
+//     if (!user) return null;
+
+//     return {
+//       ...user,
+//       createdAt: user.createdAt.toISOString(),
+//       updatedAt: user.updatedAt.toISOString(),
+//       emailVerified: user.emailVerified?.toISOString() || null,
+//       phone: user.phone ?? null,
+//       contact: user.contact ?? null,
+//       legalName: user.legalName ?? null,
+//       address: user.address ?? null,
+//       hostName: user.hostName || null,
+//     };
+//   } catch (error) {
+//     console.error("getCurrentUser error:", error);
+//     return null;
+//   }
+// }
+
+import { getToken } from "next-auth/jwt";
+import { cookies } from "next/headers";
 
 export default async function getCurrentUser(): Promise<SafeUser | null> {
   try {
-    const session = await getSession();
-    if (!session?.user?.email) return null;
+    const cookieStore = cookies();
+    const token = await getToken({ req: { headers: { cookie: cookieStore.toString() } } as any, secret: process.env.NEXTAUTH_SECRET });
+
+    if (!token?.email) return null;
 
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email as string },
+      where: { email: token.email },
       select: {
         id: true,
         name: true,
@@ -124,7 +174,7 @@ export default async function getCurrentUser(): Promise<SafeUser | null> {
       hostName: user.hostName || null,
     };
   } catch (error) {
-    console.error("getCurrentUser error:", error);
+    console.error("🔴 getCurrentUser error:", error);
     return null;
   }
 }
