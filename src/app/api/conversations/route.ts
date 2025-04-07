@@ -129,7 +129,7 @@
 
 
 import { NextResponse } from 'next/server';
- import getCurrentUser from  '@/app/actions/getCurrentUser';
+import getCurrentUser from  '@/app/actions/getCurrentUser';
 import prisma from '@/app/libs/prismadb';
 
 export async function GET() {
@@ -155,13 +155,15 @@ export async function GET() {
 
     messages.forEach((msg: any) => {
       const isIncoming = msg.recipientId === currentUser.id;
-      const otherUser = isIncoming ? msg.sender : msg.recipient;
-
+      const isOutgoing = msg.senderId === currentUser.id;
+    
+      const otherUser = isIncoming ? msg.sender : isOutgoing ? msg.recipient : null;
+    
       if (!otherUser || otherUser.id === currentUser.id || !otherUser.name) return;
-
+    
       const existing = uniqueUsersMap.get(otherUser.id);
       const isUnread = isIncoming && !msg.seen;
-
+    
       if (!existing) {
         uniqueUsersMap.set(otherUser.id, {
           id: otherUser.id,
@@ -178,7 +180,7 @@ export async function GET() {
           existing.latestMessageCreatedAt = msg.createdAt;
         }
       }
-    });
+    });    
 
     return NextResponse.json(Array.from(uniqueUsersMap.values()));
   } catch (error) {
