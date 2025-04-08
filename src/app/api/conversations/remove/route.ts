@@ -12,6 +12,10 @@ export async function DELETE(request: Request) {
     const { recipientId } = await request.json();
     if (!recipientId) return new NextResponse('Recipient ID is required', { status: 400 });
 
+    if (recipientId === 'support-id-001') {
+      return new NextResponse('Cannot remove Customer Service', { status: 403 });
+    }
+
     // Delete all messages between the current user and the recipient
     await prisma.message.deleteMany({
       where: {

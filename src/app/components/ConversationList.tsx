@@ -64,7 +64,7 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
     if (cached) {
       const parsed = JSON.parse(cached);
       console.log('📦 Cached conversations loaded:', parsed);
-      setUsers(parsed);
+      setUsers([customerServiceUser, ...parsed.filter((u: User) => u.id !== CUSTOMER_SERVICE_ID)]);
     }
   
     const fetchConversations = async () => {
@@ -81,8 +81,8 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
           return;
         }
   
-        setUsers(data);
-        localStorage.setItem(localKey, JSON.stringify(data));
+        setUsers([customerServiceUser, ...data.filter(u => u.id !== CUSTOMER_SERVICE_ID)]);
+        localStorage.setItem(localKey, JSON.stringify([customerServiceUser, ...data.filter((u: User) => u.id !== CUSTOMER_SERVICE_ID)]));
       } catch (err) {
         console.error('❌ Failed to fetch conversations:', err);
       }
@@ -92,6 +92,16 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
     const interval = setInterval(fetchConversations, 5000);
     return () => clearInterval(interval);
   }, [currentUserId]);  
+
+  const CUSTOMER_SERVICE_ID = 'support-id-001'; // 🔐 set this to your actual support user id
+  const customerServiceUser: User = {
+    id: CUSTOMER_SERVICE_ID,
+    name: 'Customer Service',
+    image: '/images/customerservice.png', // optional default avatar
+    hasUnread: false,
+    latestMessage: 'How can we help you?',
+    latestMessageCreatedAt: new Date().toISOString(),
+  };
 
   return (
     <div className="p-4 space-y-3 overflow-y-auto h-full">
@@ -107,20 +117,20 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
                 <div>
                   <span className="text-xl font-medium">{user.name}</span>
                   {user.latestMessage && (
-                  <div className="text-sm text-neutral-500 flex flex-col max-w-[180px] truncate">
-                    <span className="truncate">{user.latestMessage}</span>
-                    {user.latestMessageCreatedAt && (
-                      <span className="text-[11px] text-neutral-400 mt-1">
-                        {new Date(user.latestMessageCreatedAt).toLocaleString(undefined, {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          month: 'short',
-                          day: 'numeric',
-                        })}
-                      </span>
-                    )}
-                  </div>
-                )}
+                    <div className="text-sm text-neutral-500 flex flex-col max-w-[180px] truncate">
+                      <span className="truncate">{user.latestMessage}</span>
+                      {user.latestMessageCreatedAt && (
+                        <span className="text-[11px] text-neutral-400 mt-1">
+                          {new Date(user.latestMessageCreatedAt).toLocaleString(undefined, {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            month: 'short',
+                            day: 'numeric',
+                          })}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
               {user.hasUnread && (

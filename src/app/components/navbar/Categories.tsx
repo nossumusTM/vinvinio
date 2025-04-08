@@ -47,11 +47,11 @@ export const categories = [
         icon: LuShoppingBag,
         description: "Discover Italy’s finest fashion and artisanal treasures on an exclusive shopping tour."
     },
-    {
-        label: 'Cooking Class',
-        icon: GrRestaurant,
-        description: 'Guided Food & Wine Tour in Trastevere'
-    },
+    // {
+    //     label: 'Cooking Class',
+    //     icon: GrRestaurant,
+    //     description: 'Guided Food & Wine Tour in Trastevere'
+    // },
     {
         label: 'Walking Art',
         icon: MdOutlineTour,

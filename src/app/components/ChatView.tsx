@@ -259,7 +259,7 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
       {/* Messages */}
       <div 
         ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto p-4 space-y-4 mb-10">
+        className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((msg, index) => {
           const isLast = index === messages.length - 1;
           return (
