@@ -37,7 +37,7 @@ const Messenger = ({ currentUser }: MessengerProps) => {
         className={clsx(
           'z-50 bg-white shadow-sm hover:shadow-xl border rounded-t-3xl fixed transition-all flex flex-col',
           isMobile
-            ? 'bottom-0 left-0 w-full h-[70vh]'
+            ? 'bottom-0 left-0 w-full h-[65vh]'
             : 'bottom-4 right-4 w-[500px] h-[700px] max-h-[90vh]'
         )}
       >

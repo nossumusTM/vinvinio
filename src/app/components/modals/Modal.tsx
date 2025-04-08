@@ -28,7 +28,8 @@ const Modal: React.FC<ModalProps> = ({
   footer,
   disabled,
   secondaryAction,
-  secondaryActionLabel
+  secondaryActionLabel,
+  className
 }) => {
   const [showModal, setShowModal] = useState(isOpen);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -72,6 +73,23 @@ const Modal: React.FC<ModalProps> = ({
     if (disabled || !secondaryAction) return;
     secondaryAction();
   }, [secondaryAction, disabled]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        handleSubmit();
+      }
+    };
+  
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
+  
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, handleSubmit]);  
 
   if (!isOpen) return null;
 
@@ -164,7 +182,8 @@ const Modal: React.FC<ModalProps> = ({
             </div>
 
             {/* Body */}
-            <div className="relative p-6 flex-auto">{body}</div>
+            {/* <div className="relative p-6 flex-auto">{body}</div> */}
+            <div className={`relative p-6 flex-auto overflow-y-auto ${className}`}>{body}</div>
 
             {/* Footer */}
             <div className="flex flex-col gap-2 p-6">

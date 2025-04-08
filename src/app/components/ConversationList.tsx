@@ -144,7 +144,32 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
               className="flex items-center justify-between gap-3 cursor-pointer hover:bg-neutral-100 p-2 rounded-xl"
             >
               <div className="flex items-center gap-3">
-                <Avatar src={user.image} name={user.name} size={48} />
+                <div className="relative">
+                  <Avatar src={user.image} name={user.name} size={48} />
+                  {user.id === CUSTOMER_SERVICE_ID && (
+                    <div
+                      className="absolute -top-1 -right-1 w-5 h-5 bg-[#25F4EE] flex items-center justify-center"
+                      style={{
+                        clipPath: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)',
+                        borderRadius: '4px',
+                      }}
+                    >
+                      <svg
+                        className="w-3 h-3 text-white"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 00-1.414 0L8 12.586 4.707 9.293a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l8-8a1 1 0 000-1.414z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+
+
                 <div>
                   <span className="text-xl font-medium">{user.name}</span>
                   {user.latestMessage && (

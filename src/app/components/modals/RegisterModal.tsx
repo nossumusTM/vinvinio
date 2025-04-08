@@ -53,7 +53,12 @@ const RegisterModal = () => {
 
         axios.post('/api/register', formData)
             .then(() => {
-                toast.success('Registered!');
+                toast.success('Registered', {
+                    iconTheme: {
+                        primary: '#25F4EE',
+                        secondary: '#fff',
+                    },
+                  });
                 registerModal.onClose();
                 loginModal.onOpen();
             })
@@ -92,9 +97,7 @@ const RegisterModal = () => {
     const bodyContent = (
         <div className="flex flex-col gap-4">
             {/* <p className="text-lg text-left">Welcome to Vuoiaggio</p> */}
-            <div className="text-center">
-                <Heading title='Welcome to Vuoiaggio' subtitle=''/>
-            </div>
+            <Heading title='Welcome to Vuoiaggio' subtitle='' center/>
 
            {/* Role selection */}
             {/* <div className="flex justify-baseline items-center gap-4 flex-wrap">
@@ -175,12 +178,14 @@ const RegisterModal = () => {
               </span>
             </p>
           </div>
-          <Button
-            outline
-            label="Continue with Google"
-            icon={FcGoogle}
-            onClick={() => signIn('google')}
-          />
+          <div className="mb-2">
+            <Button
+                outline
+                label="Continue with Google"
+                icon={FcGoogle}
+                onClick={() => signIn('google')}
+            />
+            </div>
         </div>
       );      
 
