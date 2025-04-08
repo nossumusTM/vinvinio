@@ -447,7 +447,7 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
       </div>
 
       {awaitingTopic && (
-        <div className="flex flex-row gap-2 justify-center items-center p-4">
+        <div className="flex flex-row gap-2 justify-start items-start p-4 overflow-y-auto max-h-64 ml-0">
           {supportTopics.map((topic) => (
             <button
               key={topic}

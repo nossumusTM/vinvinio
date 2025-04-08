@@ -253,7 +253,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                 {(userRole === 'customer' || userRole === 'promoter' || userRole === 'host') && (
                   <>
                     <MenuItem
-                      label="Messages"
+                      label="Messenger"
                       onClick={() => {
                         setIsOpen(false);
                         if (messenger.isOpen) {
@@ -335,6 +335,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                       onRent();
                     }} />
                     </div>
+                    <hr className="my-2" />
                     <MenuItem label="Trips" 
                       onClick={() => {
                         setIsOpen(false);

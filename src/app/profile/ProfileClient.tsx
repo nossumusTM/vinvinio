@@ -333,6 +333,12 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
     }
   };  
 
+  useEffect(() => {
+    if (activeSection !== null) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [activeSection]);  
+
   return (
     <Container>
       <div className="pl-5">
@@ -834,7 +840,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                   <p className="text-lg font-medium">Deactivate your account</p>
                   <button
                     onClick={() => setConfirmDeactivation(true)}
-                    className="text-sm text-black underline hover:opacity-80"
+                    className="text-sm text-black border-b border-black hover:opacity-80"
                   >
                     Deactivate
                   </button>
@@ -878,7 +884,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
 
               {activePaymentTab === 'payment' && (
                 <>
-                  <Heading title="Payment Methods" subtitle="Manage your cards and payment methods" />
+                  <Heading title="Payment Method" subtitle="Manage your cards and payment methods" />
                   {!savedCard ? (
                     <button
                       className="mt-4 px-4 border py-2 bg-black text-white transition hover:bg-white hover:text-black rounded-lg"

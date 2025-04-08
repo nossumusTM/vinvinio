@@ -727,6 +727,7 @@ const ExperienceModal = () => {
       secondaryAction={step === STEPS.CATEGORY ? undefined : onBack}
       onClose={experienceModal.onClose}
       body={bodyContent}
+      className="max-h-[90vh] overflow-y-auto"
     />
   );
 };

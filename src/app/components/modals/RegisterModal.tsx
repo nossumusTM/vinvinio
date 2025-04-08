@@ -92,7 +92,9 @@ const RegisterModal = () => {
     const bodyContent = (
         <div className="flex flex-col gap-4">
             {/* <p className="text-lg text-left">Welcome to Vuoiaggio</p> */}
-            <Heading title='Welcome to Vuoiaggio' subtitle='' />
+            <div className="text-center">
+                <Heading title='Welcome to Vuoiaggio' subtitle=''/>
+            </div>
 
            {/* Role selection */}
             {/* <div className="flex justify-baseline items-center gap-4 flex-wrap">
@@ -160,26 +162,27 @@ const RegisterModal = () => {
     );
 
     const footerContent = (
-        <div className="flex flex-col gap-4 mt-3">
-            <hr />
-            <Button
-                outline
-                label="Continue with Google"
-                icon={FcGoogle}
-                onClick={() => signIn('google')}
-            />
-            <div className="text-neutral-800 text-center mt-4 font-light">
-            <p>Already have an account?&nbsp;
-                <span
-                    onClick={onToggle}
-                    className="text-normal font-normal cursor-pointer underline"
-                >
-                    Log in
-                </span>
-                </p>
-            </div>
+        <div className="flex flex-col gap-4 mt-3 overflow-y-auto max-h-[40vh] sm:max-h-none">
+          <hr />
+          <div className="text-neutral-800 text-center font-light">
+            <p>
+              Already have an account?&nbsp;
+              <span
+                onClick={onToggle}
+                className="text-normal font-normal cursor-pointer underline"
+              >
+                Log in
+              </span>
+            </p>
+          </div>
+          <Button
+            outline
+            label="Continue with Google"
+            icon={FcGoogle}
+            onClick={() => signIn('google')}
+          />
         </div>
-    );
+      );      
 
     return (
         <Modal
@@ -191,6 +194,7 @@ const RegisterModal = () => {
             onSubmit={handleSubmit(onSubmit)}
             body={bodyContent}
             footer={footerContent}
+            className=""
         />
     );
 }

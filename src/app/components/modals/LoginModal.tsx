@@ -143,6 +143,7 @@ const LoginModal = () => {
             onSubmit={handleSubmit(onSubmit)}
             body={bodyContent}
             footer={footerContent}
+            className=""
         />
     );
 }

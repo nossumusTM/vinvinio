@@ -15,6 +15,7 @@ interface ModalProps {
   disabled?: boolean;
   secondaryAction?: () => void;
   secondaryActionLabel?: string;
+  className: string;
 }
 
 const Modal: React.FC<ModalProps> = ({
