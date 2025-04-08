@@ -164,7 +164,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
               cursor-pointer
             "
           >
-            Add experience
+            Add Experience
           </div>
         )}
 
@@ -334,8 +334,8 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                       setIsOpen(false);
                       onRent();
                     }} />
-                    </div>
                     <hr className="my-2" />
+                    </div>
                     <MenuItem label="Trips" 
                       onClick={() => {
                         setIsOpen(false);
