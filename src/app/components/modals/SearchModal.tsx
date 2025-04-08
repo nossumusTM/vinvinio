@@ -191,6 +191,7 @@ const SearchModal = () => {
             secondaryAction={step === STEPS.LOCATION ? undefined : onBack}
             onClose={searchModal.onClose}
             body={bodyContent}
+            className=''
         />
     );
 }

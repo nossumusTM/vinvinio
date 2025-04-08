@@ -74,6 +74,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
       actionLabel="Close"
       disabled={false}
       body={bodyContent}
+      className=''
     />
   );  
 };

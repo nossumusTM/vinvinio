@@ -281,6 +281,7 @@ const RentModal = () => {
             secondaryAction={step === STEPS.CATEGORY ? undefined : onBack}
             onClose={rentModal.onClose}
             body={bodyContent}
+            className=''
         />
     );
 }
