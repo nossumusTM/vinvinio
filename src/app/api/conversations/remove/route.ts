@@ -12,7 +12,7 @@ export async function DELETE(request: Request) {
     const { recipientId } = await request.json();
     if (!recipientId) return new NextResponse('Recipient ID is required', { status: 400 });
 
-    if (recipientId === 'support-id-001') {
+    if (recipientId === '67ef2895f045b7ff3d0cf6fc') {
       return new NextResponse('Cannot remove Customer Service', { status: 403 });
     }
 

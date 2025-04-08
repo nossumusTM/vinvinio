@@ -123,8 +123,13 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
           throw new Error('Conversations response is not an array');
         }
   
-        const unread = data.filter((c: any) => c.hasUnread).length;
-  
+        // const unread = data.filter((c: any) => c.hasUnread).length;
+
+        const unread = data.reduce((count, convo) => {
+          if (convo.hasUnread) return count + 1;
+          return count;
+        }, 0);
+        
         localStorage.setItem(`conversations_${userId}`, JSON.stringify(data));
         messenger.setUnreadCount(unread);
       } catch (err) {

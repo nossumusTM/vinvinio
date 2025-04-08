@@ -115,6 +115,36 @@ export async function GET(request: Request) {
   }
 }
 
+// export async function POST(request: Request) {
+//   const currentUser = await getCurrentUser();
+//   if (!currentUser) {
+//     return new NextResponse('Unauthorized', { status: 401 });
+//   }
+
+//   try {
+//     const { recipientId, text } = await request.json();
+
+//     if (!recipientId || !text) {
+//       return new NextResponse('Recipient ID and text are required', { status: 400 });
+//     }
+
+//     const newMessage = await prisma.message.create({
+//       data: {
+//         senderId: currentUser.id,
+//         recipientId,
+//         text,
+//         seen: false,
+//       },
+//     });
+
+//     return NextResponse.json(newMessage);
+//   } catch (error) {
+//     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+//     console.error('Error sending message:', errorMessage);
+//     return new NextResponse(JSON.stringify({ error: errorMessage }), { status: 500 });
+//   }
+// }
+
 export async function POST(request: Request) {
   const currentUser = await getCurrentUser();
   if (!currentUser) {
@@ -122,15 +152,23 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { recipientId, text } = await request.json();
+    const { recipientId, text, senderId } = await request.json();
 
     if (!recipientId || !text) {
       return new NextResponse('Recipient ID and text are required', { status: 400 });
     }
 
+    // Prevent users from spoofing senderId
+    const isSystemMessage = senderId && senderId !== currentUser.id;
+
+    if (isSystemMessage && currentUser.email !== 'admin@yourapp.com') {
+      // Optional: restrict system messages to only admin or internal calls
+      return new NextResponse('Forbidden: Cannot spoof senderId', { status: 403 });
+    }
+
     const newMessage = await prisma.message.create({
       data: {
-        senderId: currentUser.id,
+        senderId: isSystemMessage ? senderId : currentUser.id,
         recipientId,
         text,
         seen: false,

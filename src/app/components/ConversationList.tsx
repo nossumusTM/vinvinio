@@ -20,6 +20,7 @@ interface ConversationListProps {
 
 const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUserId }) => {
   const [users, setUsers] = useState<User[]>([]);
+  const CUSTOMER_SERVICE_ID = '67ef2895f045b7ff3d0cf6fc';
 
   // useEffect(() => {
   //   if (!currentUserId) return;
@@ -63,6 +64,17 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
   
     if (cached) {
       const parsed = JSON.parse(cached);
+  
+      const realCS = parsed.find((u: User) => u.id === CUSTOMER_SERVICE_ID);
+      const customerServiceUser: User = {
+        id: CUSTOMER_SERVICE_ID,
+        name: 'Customer Service',
+        image: '/images/customerservice.png',
+        hasUnread: realCS?.hasUnread ?? false,
+        latestMessage: realCS?.latestMessage || 'How can we help you?',
+        latestMessageCreatedAt: realCS?.latestMessageCreatedAt || new Date().toISOString(),
+      };
+  
       console.log('📦 Cached conversations loaded:', parsed);
       setUsers([customerServiceUser, ...parsed.filter((u: User) => u.id !== CUSTOMER_SERVICE_ID)]);
     }
@@ -81,8 +93,20 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
           return;
         }
   
-        setUsers([customerServiceUser, ...data.filter(u => u.id !== CUSTOMER_SERVICE_ID)]);
-        localStorage.setItem(localKey, JSON.stringify([customerServiceUser, ...data.filter((u: User) => u.id !== CUSTOMER_SERVICE_ID)]));
+        const customerServiceData = data.find((u) => u.id === CUSTOMER_SERVICE_ID);
+        const otherUsers = data.filter((u) => u.id !== CUSTOMER_SERVICE_ID);
+  
+        const mergedCustomerServiceUser: User = {
+          id: CUSTOMER_SERVICE_ID,
+          name: 'Customer Service',
+          image: '/images/customerservice.png',
+          hasUnread: customerServiceData?.hasUnread ?? false,
+          latestMessage: customerServiceData?.latestMessage || 'How can we help you?',
+          latestMessageCreatedAt: customerServiceData?.latestMessageCreatedAt || new Date().toISOString(),
+        };
+  
+        setUsers([mergedCustomerServiceUser, ...otherUsers]);
+        localStorage.setItem(localKey, JSON.stringify([mergedCustomerServiceUser, ...otherUsers]));
       } catch (err) {
         console.error('❌ Failed to fetch conversations:', err);
       }
@@ -93,7 +117,6 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
     return () => clearInterval(interval);
   }, [currentUserId]);  
 
-  const CUSTOMER_SERVICE_ID = 'support-id-001'; // 🔐 set this to your actual support user id
   const customerServiceUser: User = {
     id: CUSTOMER_SERVICE_ID,
     name: 'Customer Service',

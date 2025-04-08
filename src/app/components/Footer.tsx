@@ -1,8 +1,12 @@
 'use client';
 
 import { TbBrandTelegram, TbBrandTiktok, TbBrandInstagram, TbBrandFacebook, TbBrandX } from 'react-icons/tb';
+import useMessenger from '@/app/hooks/useMessager';
 
 const Footer = () => {
+
+  const messenger = useMessenger();
+
   return (
     <footer className="bg-[#F9F9F9] text-gray-800 px-6 py-10">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-y-8 md:gap-x-4">
@@ -10,7 +14,15 @@ const Footer = () => {
         <div className="flex flex-col justify-center md:pl-10 md:ml-10">
           <h3 className="font-semibold text-lg mb-4 underline">Support</h3>
           <ul className="space-y-2">
-            <li><a href="#" className="hover:underline">Help Center</a></li>
+          <li>
+            <button
+              onClick={() => messenger.openChat({ id: '67ef2895f045b7ff3d0cf6fc', name: 'Customer Service', image: '/images/customerservice.png' })}
+              className="hover:underline"
+            >
+              Help Center
+            </button>
+          </li>
+
             <li><a href="#" className="hover:underline">Cancellation options</a></li>
             <li><a href="#" className="hover:underline">Promoters Guide</a></li>
           </ul>

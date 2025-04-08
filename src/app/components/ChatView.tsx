@@ -30,6 +30,21 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [hasScrolledManually, setHasScrolledManually] = useState(false);
+  const [hasSentGreeting, setHasSentGreeting] = useState(false);
+
+  const CUSTOMER_SERVICE_ID = '67ef2895f045b7ff3d0cf6fc';
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  };
+
+  const supportTopics = ['Booking', 'Cancellation', 'Payment', 'Refund'];
+
+  const [awaitingTopic, setAwaitingTopic] = useState(false);
+  const [awaitingIssue, setAwaitingIssue] = useState(false);
 
   const scrollToBottom = (force = false) => {
     const container = scrollContainerRef.current;
@@ -79,7 +94,7 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
         if (!res.ok) throw new Error('Failed to fetch messages');
   
         const serverMessages: Message[] = await res.json();
-        console.log("✅ Messages fetched:", serverMessages); // <-- Add this
+        console.log("✅ Messages fetched:", serverMessages); // <-- Add this   
   
         setMessages((prevMessages) => {
           const optimisticMessages = prevMessages.filter((msg) => msg.id.startsWith('temp-'));
@@ -94,6 +109,116 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
     const intervalId = setInterval(fetchMessages, 3000);
     return () => clearInterval(intervalId);
   }, [recipient?.id]);  
+
+  useEffect(() => {
+    if (recipient.id !== CUSTOMER_SERVICE_ID) return;
+  
+    const greetingText = 'please specify the topic of assistance';
+    const localGreetingKey = `greetingSent-${currentUserId}`;
+  
+    const hasGreeting = messages.some(
+      (msg) =>
+        msg.senderId === CUSTOMER_SERVICE_ID &&
+        msg.recipientId === currentUserId &&
+        msg.text.toLowerCase().includes(greetingText)
+    );
+  
+    if (hasGreeting) {
+      if (!hasSentGreeting) {
+        const alreadyRespondedWithTopic = messages.some(
+          (msg) =>
+            msg.senderId === CUSTOMER_SERVICE_ID &&
+            msg.recipientId === currentUserId &&
+            msg.text.toLowerCase().includes('could you please describe your issue')
+        );
+  
+        setHasSentGreeting(true);
+        setAwaitingTopic(!alreadyRespondedWithTopic);
+        setAwaitingIssue(alreadyRespondedWithTopic);
+        localStorage.setItem(localGreetingKey, 'true');
+      }
+      return;
+    }
+  
+    const hasBeenSentBefore = localStorage.getItem(localGreetingKey);
+  
+    // ✅ Only send greeting if this is the FIRST time user opens Customer Assistant chat
+    const hasMessagesBetweenUserAndCS = messages.some(
+      (msg) =>
+        (msg.senderId === CUSTOMER_SERVICE_ID && msg.recipientId === currentUserId) ||
+        (msg.senderId === currentUserId && msg.recipientId === CUSTOMER_SERVICE_ID)
+    );
+  
+    if (!hasBeenSentBefore && !hasSentGreeting && !hasMessagesBetweenUserAndCS) {
+      const sendGreeting = async () => {
+        const greeting = `${getGreeting()}, nice to meet you here. Before we proceed, please specify the topic of assistance:`;
+  
+        try {
+          await fetch('/api/messages/system', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              senderId: CUSTOMER_SERVICE_ID,
+              recipientId: currentUserId,
+              text: greeting,
+            }),
+          });
+  
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `greeting-${Date.now()}`,
+              senderId: CUSTOMER_SERVICE_ID,
+              recipientId: currentUserId,
+              text: greeting,
+              createdAt: new Date().toISOString(),
+              seen: true,
+            },
+          ]);
+  
+          setHasSentGreeting(true);
+          setAwaitingTopic(true);
+          localStorage.setItem(localGreetingKey, 'true');
+        } catch (err) {
+          console.error('Failed to send greeting:', err);
+        }
+      };
+  
+      sendGreeting();
+    }
+  }, [messages, recipient.id, currentUserId, hasSentGreeting]);  
+  
+  useEffect(() => {
+    if (recipient.id !== CUSTOMER_SERVICE_ID || messages.length === 0) return;
+  
+    const hasTopicResponse = messages.some(
+      (msg) =>
+        msg.senderId === CUSTOMER_SERVICE_ID &&
+        msg.recipientId === currentUserId &&
+        msg.text.toLowerCase().includes('could you please describe your issue')
+    );
+  
+    if (hasTopicResponse) {
+      setAwaitingTopic(false);
+      setAwaitingIssue(true);
+    }
+  }, [messages, recipient.id, currentUserId]);  
+
+  useEffect(() => {
+    if (!awaitingIssue || recipient.id !== CUSTOMER_SERVICE_ID) return;
+  
+    const assistantHasReplied = messages.some(
+      (msg) =>
+        msg.senderId === CUSTOMER_SERVICE_ID &&
+        msg.recipientId === currentUserId &&
+        !msg.text.toLowerCase().includes('could you please describe your issue') && // exclude system response
+        !msg.text.toLowerCase().includes('please specify the topic of assistance')  // exclude greeting
+    );
+  
+    if (assistantHasReplied) {
+      setAwaitingIssue(false);
+    }
+  }, [messages, awaitingIssue, recipient.id, currentUserId]);  
 
   // Mark as seen + update conversation list in localStorage
   // useEffect(() => {
@@ -179,6 +304,8 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
     setMessages((prev) => [...prev, tempMessage]); // show optimistically
     setNewMessage('');
     scrollToBottom(true);
+
+    if (awaitingIssue) setAwaitingIssue(false);
   
     try {
       const res = await fetch('/api/messages', {
@@ -223,6 +350,31 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
 
   const confirmRemoveConversation = async () => {
     try {
+      if (recipient.id === CUSTOMER_SERVICE_ID) {
+        const res = await fetch('/api/messages/delete-conversation', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            recipientId: CUSTOMER_SERVICE_ID,
+          }),
+        });
+  
+        if (!res.ok) throw new Error('Failed to delete Customer Service messages');
+  
+        // ✅ Clear frontend state
+        setMessages([]);
+        setHasSentGreeting(false);
+        setAwaitingTopic(false);
+        setAwaitingIssue(false);
+        setShowConfirm(false);
+  
+        // ✅ Clear greeting memory from localStorage
+        localStorage.removeItem(`greetingSent-${currentUserId}`);
+  
+        return;
+      }
+  
+      // Handle other conversations normally
       const res = await fetch('/api/conversations/remove', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
@@ -230,16 +382,14 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
       });
   
       if (!res.ok) throw new Error('Failed to remove conversation');
-  
-      setShowConfirm(false);
       onBack();
     } catch (error) {
       console.error('Failed to remove conversation:', error);
     }
-  };
+  };  
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full max-h-screen overflow-hidden">
       {/* Header */}
       <div className="flex items-center gap-3 p-4 border-b justify-between">
         <div className="flex items-center gap-3">
@@ -259,7 +409,7 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
       {/* Messages */}
       <div 
         ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto p-4 space-y-4">
+        className="flex-grow overflow-y-auto p-4 space-y-4">
         {messages.map((msg, index) => {
           const isLast = index === messages.length - 1;
           return (
@@ -296,6 +446,86 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
         <div ref={messagesEndRef} />
       </div>
 
+      {awaitingTopic && (
+        <div className="flex flex-row gap-2 justify-center items-center p-4">
+          {supportTopics.map((topic) => (
+            <button
+              key={topic}
+              onClick={async () => {
+                const now = new Date().toISOString();
+              
+                const topicMessage = {
+                  text: topic,
+                  recipientId: CUSTOMER_SERVICE_ID,
+                };
+              
+                const responseMessage = {
+                  text: `Thank you for getting in touch about "${topic}". Could you please describe your issue in a few words?`,
+                  recipientId: currentUserId,
+                  senderId: CUSTOMER_SERVICE_ID,
+                };
+              
+                try {
+                  // 1. Send user's selected topic to Customer Service
+                  await fetch('/api/messages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(topicMessage),
+                  });
+              
+                  // 2. Optimistically render user's message
+                  setMessages((prev) => [
+                    ...prev,
+                    {
+                      id: `topic-${now}`,
+                      senderId: currentUserId,
+                      recipientId: CUSTOMER_SERVICE_ID,
+                      text: topic,
+                      createdAt: now,
+                      seen: true,
+                    },
+                  ]);
+              
+                  // 3. Send system response from Customer Service (server-side message)
+                  await fetch('/api/messages/system', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(responseMessage),
+                  });
+              
+                  // 4. Optimistically render Customer Service reply
+                  setMessages((prev) => [
+                    ...prev,
+                    {
+                      id: `response-${Date.now()}`,
+                      senderId: CUSTOMER_SERVICE_ID,
+                      recipientId: currentUserId,
+                      text: responseMessage.text,
+                      createdAt: new Date().toISOString(),
+                      seen: true,
+                    },
+                  ]);
+                } catch (error) {
+                  console.error('Error sending topic selection or system reply:', error);
+                }
+              
+                setAwaitingTopic(false);
+                setAwaitingIssue(true);
+              }}                       
+              className="bg-neutral-100 rounded-xl px-4 py-2 w-full text-left hover:bg-neutral-200 transition"
+            >
+              {topic}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {awaitingIssue && (
+        <div className="text-sm text-neutral-400 text-center mt-2 italic">
+          Customer assistant will respond as soon as possible.
+        </div>
+      )}
+
       {messages.length === 0 && (
         <div className="text-sm text-neutral-400 text-center mt-4">
           No messages to show.
@@ -315,7 +545,7 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
 
 
       {/* Sticky Input */}
-      <div className="p-3 border-t flex gap-2 bg-white sticky bottom-0 z-10">
+      <div className="p-3 border-t flex gap-2 bg-white md:sticky md:bottom-0 z-10">
         <form
             onSubmit={(e) => {
             e.preventDefault(); // prevent form reload
