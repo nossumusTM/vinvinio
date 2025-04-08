@@ -75,7 +75,7 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
         latestMessageCreatedAt: realCS?.latestMessageCreatedAt || new Date().toISOString(),
       };
   
-      console.log('📦 Cached conversations loaded:', parsed);
+      // console.log('📦 Cached conversations loaded:', parsed);
       setUsers([customerServiceUser, ...parsed.filter((u: User) => u.id !== CUSTOMER_SERVICE_ID)]);
     }
   
@@ -86,7 +86,7 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
         });
   
         const data = await res.json();
-        console.log('🌐 Conversations fetched from API:', data);
+        // console.log('🌐 Conversations fetched from API:', data);
   
         if (!Array.isArray(data)) {
           console.error('❌ Unexpected conversations format:', data);
@@ -105,8 +105,16 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
           latestMessageCreatedAt: customerServiceData?.latestMessageCreatedAt || new Date().toISOString(),
         };
   
-        setUsers([mergedCustomerServiceUser, ...otherUsers]);
-        localStorage.setItem(localKey, JSON.stringify([mergedCustomerServiceUser, ...otherUsers]));
+        // setUsers([mergedCustomerServiceUser, ...otherUsers]);
+        // localStorage.setItem(localKey, JSON.stringify([mergedCustomerServiceUser, ...otherUsers]));
+        const shouldIncludeCS = currentUserId !== CUSTOMER_SERVICE_ID;
+        const updatedList = shouldIncludeCS
+          ? [mergedCustomerServiceUser, ...otherUsers]
+          : [...otherUsers];
+
+        setUsers(updatedList);
+        localStorage.setItem(localKey, JSON.stringify(updatedList));
+
       } catch (err) {
         console.error('❌ Failed to fetch conversations:', err);
       }

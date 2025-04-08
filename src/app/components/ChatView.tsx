@@ -94,7 +94,7 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
         if (!res.ok) throw new Error('Failed to fetch messages');
   
         const serverMessages: Message[] = await res.json();
-        console.log("✅ Messages fetched:", serverMessages); // <-- Add this   
+        // console.log("✅ Messages fetched:", serverMessages); // <-- Add this   
   
         setMessages((prevMessages) => {
           const optimisticMessages = prevMessages.filter((msg) => msg.id.startsWith('temp-'));
@@ -575,7 +575,7 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            className="flex-1 border rounded-xl px-3 py-1 text-sm"
+            className="flex-1 border rounded-xl px-3 py-1 text-base"
             placeholder="Type your message"
             />
             <button

@@ -40,29 +40,6 @@ const LoginModal = () => {
         },
     });
 
-    // const onSubmit: SubmitHandler<FieldValues> =
-    //     (data) => {
-    //         setIsLoading(true);
-
-    //         signIn('credentials', {
-    //             ...data,
-    //             redirect: false,
-    //         })
-    //             .then((callback) => {
-    //                 setIsLoading(false);
-
-    //                 if (callback?.ok) {
-    //                     toast.success('Logged in');
-    //                     router.refresh();
-    //                     loginModal.onClose();
-    //                 }
-
-    //                 if (callback?.error) {
-    //                     toast.error(callback.error);
-    //                 }
-    //             });
-    //     }
-
     const onSubmit: SubmitHandler<FieldValues> = async (data) => {
         setIsLoading(true);
       
@@ -74,7 +51,12 @@ const LoginModal = () => {
         setIsLoading(false);
       
         if (callback?.ok) {
-          toast.success('Logged in');
+          toast.success('Logged in', {
+            iconTheme: {
+                primary: '#25F4EE',
+                secondary: '#fff',
+            },
+          });
       
           await getSession(); // Refresh session
           router.refresh();   // Refresh UI (re-fetch currentUser)
@@ -104,6 +86,7 @@ const LoginModal = () => {
                 register={register}
                 errors={errors}
                 required
+                inputClassName="rounded-xl"
             />
             <Input
                 id="password"
@@ -113,6 +96,7 @@ const LoginModal = () => {
                 register={register}
                 errors={errors}
                 required
+                inputClassName="rounded-xl"
             />
         </div>
     )
@@ -133,14 +117,15 @@ const LoginModal = () => {
                 onClick={() => signIn('github')}
             /> */}
             <div className="
-      text-neutral-500 text-center mt-4 font-light">
+      text-neutral-800 text-center mt-4 font-light">
                 <p>First time using Vuoiaggio?
                     <span
                         onClick={onToggle}
                         className="
-              text-neutral-800
+              text-black
+              font-normal
               cursor-pointer 
-              hover:underline
+              underline
             "
                     > Create an account</span>
                 </p>

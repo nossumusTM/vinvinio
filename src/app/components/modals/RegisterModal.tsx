@@ -5,7 +5,9 @@ import { AiFillGithub } from "react-icons/ai";
 import { signIn } from "next-auth/react";
 import { FcGoogle } from "react-icons/fc";
 import { useCallback, useState } from "react";
+import ConfirmPopup from "../ConfirmPopup";
 import { toast } from "react-hot-toast";
+
 import {
     FieldValues,
     SubmitHandler,
@@ -25,6 +27,7 @@ const RegisterModal = () => {
     const loginModal = useLoginModal();
     const [isLoading, setIsLoading] = useState(false);
     const [role, setRole] = useState<'customer' | 'host' | 'promoter'>('customer');
+    const [popupMessage, setPopupMessage] = useState<string | null>(null);
 
     const {
         register,
@@ -56,17 +59,26 @@ const RegisterModal = () => {
             })
             .catch((error) => {
                 if (axios.isAxiosError(error)) {
-                    if (error.response?.status === 409) {
-                        toast.error("Email is already registered.");
-                    } else if (error.response?.data) {
-                        toast.error(error.response.data);
+                  if (error.response?.status === 409) {
+                    const message = error.response.data;
+              
+                    if (message === "Email already in use" || message === "Email is already registered.") {
+                      setPopupMessage("This email is already registered.");
+                    } else if (message === "Name is already taken.") {
+                      setPopupMessage("This name is already taken. Please choose another.");
                     } else {
-                        toast.error("Something went wrong.");
+                      setPopupMessage("Something went wrong. Please try again.");
                     }
+              
+                  } else if (error.response?.data) {
+                    setPopupMessage(error.response.data);
+                  } else {
+                    setPopupMessage("Something went wrong.");
+                  }
                 } else {
-                    toast.error("Unexpected error.");
+                  setPopupMessage("Unexpected error occurred.");
                 }
-            })            
+              })            
             .finally(() => {
                 setIsLoading(false);
             });
@@ -79,10 +91,11 @@ const RegisterModal = () => {
 
     const bodyContent = (
         <div className="flex flex-col gap-4">
-            <p className="text-lg text-left">Welcome to Vuoiaggio</p>
+            {/* <p className="text-lg text-left">Welcome to Vuoiaggio</p> */}
+            <Heading title='Welcome to Vuoiaggio' subtitle='' />
 
            {/* Role selection */}
-            <div className="flex justify-baseline items-center gap-4 flex-wrap">
+            {/* <div className="flex justify-baseline items-center gap-4 flex-wrap">
             <p>I&apos;m a:</p>
             {['customer', 'host', 'promoter'].map((option) => {
                 const isSelected = role === option;
@@ -103,7 +116,7 @@ const RegisterModal = () => {
                 </button>
                 );
             })}
-            </div>
+            </div> */}
 
             <Input
                 id="email"
@@ -112,14 +125,16 @@ const RegisterModal = () => {
                 register={register}
                 errors={errors}
                 required
+                inputClassName="rounded-xl"
             />
             <Input
                 id="name"
-                label="Name"
+                label="Username"
                 disabled={isLoading}
                 register={register}
                 errors={errors}
                 required
+                inputClassName="rounded-xl"
             />
             <Input
                 id="password"
@@ -129,7 +144,18 @@ const RegisterModal = () => {
                 register={register}
                 errors={errors}
                 required
+                inputClassName="rounded-xl"
             />
+
+            {popupMessage && (
+            <ConfirmPopup
+                title="Notice"
+                message={popupMessage}
+                hideCancel
+                confirmLabel="OK"
+                onConfirm={() => setPopupMessage(null)}
+            />
+            )}
         </div>
     );
 
@@ -142,11 +168,11 @@ const RegisterModal = () => {
                 icon={FcGoogle}
                 onClick={() => signIn('google')}
             />
-            <div className="text-neutral-500 text-center mt-4 font-light">
+            <div className="text-neutral-800 text-center mt-4 font-light">
             <p>Already have an account?&nbsp;
                 <span
                     onClick={onToggle}
-                    className="text-neutral-800 cursor-pointer hover:underline"
+                    className="text-normal font-normal cursor-pointer underline"
                 >
                     Log in
                 </span>

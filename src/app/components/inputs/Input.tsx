@@ -19,6 +19,7 @@ interface InputProps {
     errors: FieldErrors,
     maxLength?: number,
     textarea?: boolean;
+    inputClassName?: string;
 }
 
 const Input: React.FC<InputProps> = ({
@@ -30,7 +31,8 @@ const Input: React.FC<InputProps> = ({
     register,
     required,
     errors,
-    textarea
+    textarea,
+    inputClassName
 }) => {
     return (
         <div className="w-full relative">
@@ -68,6 +70,7 @@ const Input: React.FC<InputProps> = ({
                     ${formatPrice ? 'pl-9' : 'pl-4'}
                     ${errors[id] ? 'border-rose-500' : 'border-neutral-300'}
                     ${errors[id] ? 'focus:border-rose-500' : 'focus:border-black'}
+                    ${inputClassName || ''}
                     `}
                 />
                 ) : (
@@ -93,6 +96,7 @@ const Input: React.FC<InputProps> = ({
                     ${formatPrice ? 'pl-9' : 'pl-4'}
                     ${errors[id] ? 'border-rose-500' : 'border-neutral-300'}
                     ${errors[id] ? 'focus:border-rose-500' : 'focus:border-black'}
+                    ${inputClassName || ''}
                     `}
                 />
                 )}
