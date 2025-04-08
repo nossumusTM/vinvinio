@@ -236,7 +236,7 @@ import prisma from '@/app/libs/prismadb';
 export async function GET() {
   const currentUser = await getCurrentUser();
   if (!currentUser) {
-    console.log('❌ No current user found in /api/conversations');
+    console.log('❌ No current user found');
     return NextResponse.json([], { status: 200 });
   }
 
@@ -264,33 +264,32 @@ export async function GET() {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
 
-    console.log(`📨 Total messages involving currentUser (${currentUser.id}): ${messages.length}`);
+    console.log(`📥 Retrieved ${messages.length} messages for user ${currentUser.id}`);
 
     const uniqueUsersMap = new Map<string, any>();
 
     messages.forEach((msg: any) => {
-      const isUserSender = msg.senderId === currentUser.id;
-      const partner = isUserSender ? msg.recipient : msg.sender;
-    
+      const isSender = msg.senderId === currentUser.id;
+      const partner = isSender ? msg.recipient : msg.sender;
+
       if (!partner || !partner.id) {
-        console.warn('⚠️ No valid partner user for message:', msg.id);
+        console.warn('⚠️ Skipped message — invalid partner:', {
+          msgId: msg.id,
+          senderId: msg.senderId,
+          recipientId: msg.recipientId,
+        });
         return;
       }
 
-      console.log('👥 Conversation partner resolved:', {
-        currentUserId: currentUser.id,
-        partner: partner?.id,
-        isUserSender,
-        msgText: msg.text,
-      });      
-    
-      const isUnread = !isUserSender && !msg.seen;
-    
+      const isUnread = !isSender && !msg.seen;
+
       const existing = uniqueUsersMap.get(partner.id);
-    
+
       if (!existing) {
         uniqueUsersMap.set(partner.id, {
           id: partner.id,
@@ -307,10 +306,10 @@ export async function GET() {
           existing.latestMessageCreatedAt = msg.createdAt;
         }
       }
-    });    
+    });
 
     const result = Array.from(uniqueUsersMap.values());
-    console.log(`✅ Final conversations for user ${currentUser.id}:`, result);
+    console.log('✅ Final conversation list:', result);
 
     return NextResponse.json(result);
   } catch (error) {
@@ -321,3 +320,4 @@ export async function GET() {
     });
   }
 }
+
