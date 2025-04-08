@@ -236,25 +236,11 @@ import prisma from '@/app/libs/prismadb';
 export async function GET() {
   const currentUser = await getCurrentUser();
   if (!currentUser) {
-    console.log('No current user found.');
+    console.log('❌ No current user found in /api/conversations');
     return NextResponse.json([], { status: 200 });
   }
 
   try {
-    // const messages = await prisma.message.findMany({
-    //   where: {
-    //     OR: [
-    //       { senderId: currentUser.id },
-    //       { recipientId: currentUser.id },
-    //     ],
-    //   },
-    //   include: {
-    //     sender: true,
-    //     recipient: true,
-    //   },
-    //   orderBy: { createdAt: 'desc' },
-    // });
-
     const messages = await prisma.message.findMany({
       where: {
         OR: [
@@ -278,37 +264,38 @@ export async function GET() {
           },
         },
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });    
+      orderBy: { createdAt: 'desc' },
+    });
 
-    console.log(`Retrieved ${messages.length} messages for user ${currentUser.id}.`);
+    console.log(`📨 Total messages involving currentUser (${currentUser.id}): ${messages.length}`);
 
     const uniqueUsersMap = new Map<string, any>();
 
     messages.forEach((msg: any) => {
-      const isIncoming = msg.recipientId === currentUser.id;
-      const isUnread = isIncoming && !msg.seen;
-      const otherUser = isIncoming ? msg.sender : msg.recipient;
-
-      if (!otherUser || !otherUser.id || otherUser.id === currentUser.id) {
-        console.warn('⚠️ Message skipped (invalid other user)', {
-          msgId: msg.id,
-          senderId: msg.senderId,
-          recipientId: msg.recipientId,
-          currentUserId: currentUser.id,
-        });
+      const isUserSender = msg.senderId === currentUser.id;
+      const partner = isUserSender ? msg.recipient : msg.sender;
+    
+      if (!partner || !partner.id) {
+        console.warn('⚠️ No valid partner user for message:', msg.id);
         return;
       }
 
-      const existing = uniqueUsersMap.get(otherUser.id);
-
+      console.log('👥 Conversation partner resolved:', {
+        currentUserId: currentUser.id,
+        partner: partner?.id,
+        isUserSender,
+        msgText: msg.text,
+      });      
+    
+      const isUnread = !isUserSender && !msg.seen;
+    
+      const existing = uniqueUsersMap.get(partner.id);
+    
       if (!existing) {
-        uniqueUsersMap.set(otherUser.id, {
-          id: otherUser.id,
-          name: otherUser.name || 'User',
-          image: otherUser.image || null,
+        uniqueUsersMap.set(partner.id, {
+          id: partner.id,
+          name: partner.name ?? 'Unknown',
+          image: partner.image ?? null,
           hasUnread: isUnread,
           latestMessage: msg.text,
           latestMessageCreatedAt: msg.createdAt,
@@ -320,18 +307,14 @@ export async function GET() {
           existing.latestMessageCreatedAt = msg.createdAt;
         }
       }
-    });
-
-
-    // const conversations = Array.from(uniqueUsersMap.values());
-    // console.log(`Returning ${conversations.length} conversations.`);
-    // return NextResponse.json(conversations);
+    });    
 
     const result = Array.from(uniqueUsersMap.values());
-    console.log('✅ Final conversations result:', result);
+    console.log(`✅ Final conversations for user ${currentUser.id}:`, result);
+
     return NextResponse.json(result);
   } catch (error) {
-    console.error('Error in /api/conversations:', error);
+    console.error('❌ Error in /api/conversations:', error);
     return new Response(JSON.stringify([]), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },

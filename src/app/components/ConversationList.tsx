@@ -62,7 +62,9 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
     const cached = localStorage.getItem(localKey);
   
     if (cached) {
-      setUsers(JSON.parse(cached));
+      const parsed = JSON.parse(cached);
+      console.log('📦 Cached conversations loaded:', parsed);
+      setUsers(parsed);
     }
   
     const fetchConversations = async () => {
@@ -70,17 +72,19 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
         const res = await fetch(`/api/conversations`, {
           credentials: 'include',
         });
+  
         const data = await res.json();
+        console.log('🌐 Conversations fetched from API:', data);
   
         if (!Array.isArray(data)) {
-          console.error('Unexpected response format:', data);
+          console.error('❌ Unexpected conversations format:', data);
           return;
         }
   
         setUsers(data);
         localStorage.setItem(localKey, JSON.stringify(data));
       } catch (err) {
-        console.error('Failed to fetch conversations:', err);
+        console.error('❌ Failed to fetch conversations:', err);
       }
     };
   
