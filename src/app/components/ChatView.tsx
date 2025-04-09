@@ -392,36 +392,11 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
     <div className="flex flex-col h-full max-h-screen overflow-hidden">
       {/* Header */}
       <div className="flex items-center gap-3 p-4 border-b justify-between">
-      <div className="flex items-center gap-3">
-        <button onClick={onBack} className="text-sm text-neutral-600 hover:text-black">&larr;</button>
-
-        <div className="relative">
-          <Avatar src={recipient.image} name={recipient.name} size={40} />
-          {recipient.id === CUSTOMER_SERVICE_ID && (
-            <div
-              className="absolute -top-1 -right-1 w-5 h-5 bg-[#25F4EE] flex items-center justify-center"
-              style={{
-                clipPath: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)',
-                borderRadius: '4px',
-              }}
-            >
-              <svg
-                className="w-3 h-3 text-white"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M16.707 5.293a1 1 0 00-1.414 0L8 12.586 4.707 9.293a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l8-8a1 1 0 000-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </div>
-          )}
+        <div className="flex items-center gap-3">
+            <button onClick={onBack} className="text-sm text-neutral-600 hover:text-black">&larr;</button>
+            <Avatar src={recipient.image} name={recipient.name} size={40} />
+            <h4 className="font-semibold text-lg">{recipient.name}</h4>
         </div>
-
-        <h4 className="font-semibold text-lg">{recipient.name}</h4>
-      </div>
         <button
         onClick={() => setShowConfirm(true)}
         title="Remove from conversations"
