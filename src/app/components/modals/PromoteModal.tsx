@@ -11,6 +11,7 @@ import { SafeUser } from '@/app/types';
 
 import { useRef } from 'react';
 import html2canvas from 'html2canvas';
+import { saveAs } from 'file-saver';
 
 interface PromoteModalProps {
   currentUser: SafeUser | null;
@@ -56,7 +57,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
               className='p-1'
               includeMargin={false}
             />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 shadow-md w-10 h-10 bg-[#25F4EE]/80 backdrop-blur-md rounded-full flex items-center justify-center">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 shadow-md w-10 h-10 bg-[#25F4EE]/80 backdrop-blur-xl rounded-full flex items-center justify-center">
               <Image
                 src="/images/qrlogo.png"
                 alt="Logo"
@@ -152,7 +153,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
       onClose={promoteModal.onClose}
       onSubmit={async () => {
         setShowDownloadLayout(true);
-      
+
         // ✅ Ensure image is fully loaded before capture
         await new Promise<void>((resolve) => {
           const preloadImage = new window.Image();
@@ -160,39 +161,41 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
           preloadImage.src = '/images/promo-banner.jpg';
           preloadImage.onload = () => resolve();
         });
-      
+
         if (!qrDownloadRef.current) return;
-      
+
         const canvas = await html2canvas(qrDownloadRef.current, {
           useCORS: true,
           backgroundColor: null,
-          scale: 2, // ✅ Higher quality & iOS fix
+          scale: 2, // Higher quality
         });
-      
-        const dataURL = canvas.toDataURL('image/png');
-      
-        // ✅ Detect iOS
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-        if (isIOS) {
-          window.open(dataURL, '_blank'); // ✅ Safari-safe fallback
-        } else {
-          const link = document.createElement('a');
-          link.href = dataURL;
-          link.download = `vuoiaggio-promote-${referenceId}.png`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        }
-      
-        setShowDownloadLayout(false);
-        promoteModal.onClose();
-      }}      
-      title="Promote Listing"
+
+        canvas.toBlob((blob) => {
+          if (!blob) return;
+
+          const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+          if (isIOS) {
+            const newTab = window.open();
+            if (newTab) {
+              const url = URL.createObjectURL(blob);
+              newTab.document.write(`<img src="${url}" style="width:100%;"/>`);
+            }
+          } else {
+            saveAs(blob, `vuoiaggio-promote-${referenceId}.png`);
+          }
+
+          setShowDownloadLayout(false);
+          promoteModal.onClose();
+        });
+      }}
+      title="Promo Barcode"
       actionLabel="Download QR"
       disabled={false}
       body={bodyContent}
       className=""
     />
+
   );  
 };
 

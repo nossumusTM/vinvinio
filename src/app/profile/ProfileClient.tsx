@@ -193,6 +193,14 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
     fetchPayoutMethod();
   }, [payoutUpdated]);
 
+  useEffect(() => {
+    if (currentUser.role === 'promoter') {
+      setActivePaymentTab('payout');
+    } else if (currentUser.role === 'customer') {
+      setActivePaymentTab('payment');
+    }
+  }, [currentUser.role]);  
+
   const handleSavePayoutMethod = async () => {
     try {
       const { method, number } = payoutInfo;
@@ -396,11 +404,11 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
           </div>
 
           <div className="pt-1 text-normal">
-            <p className="text-3xl font-semibold">{currentUser?.legalName || currentUser?.name || "Unnamed"}</p>
-            <p className="text-1xl font-semibold">{currentUser?.email || ""}</p>
+                <p className="text-3xl font-semibold">{currentUser?.legalName || currentUser?.name || "Unnamed"}</p>
+                <p className="text-1xl font-semibold">{currentUser?.email || ""}</p>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
   
           {activeSection === 'personal-info' && (
             <>
@@ -794,12 +802,6 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
               {currentUser.role === 'promoter' && (
               <div className="flex gap-4 mb-6">
                 <button
-                  className={`px-4 py-2 rounded-lg ${activePaymentTab === 'payment' ? 'bg-black text-white' : 'border'}`}
-                  onClick={() => setActivePaymentTab('payment')}
-                >
-                  Payment
-                </button>
-                <button
                   className={`px-4 py-2 rounded-lg ${activePaymentTab === 'payout' ? 'bg-black text-white' : 'border'}`}
                   onClick={() => setActivePaymentTab('payout')}
                 >
@@ -808,7 +810,19 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
               </div>
               )}
 
-              {activePaymentTab === 'payment' && (
+              {/* Tabs */}
+              {currentUser.role === 'customer' && (
+              <div className="flex gap-4 mb-6">
+                <button
+                  className={`px-4 py-2 rounded-lg ${activePaymentTab === 'payment' ? 'bg-black text-white' : 'border'}`}
+                  onClick={() => setActivePaymentTab('payment')}
+                >
+                  Payment
+                </button>
+              </div>
+              )}
+
+              {activePaymentTab === 'payout' && currentUser.role === 'customer' && (
                 <>
                   <Heading title="Payment Method" subtitle="Manage your cards and payment methods" />
                   {!savedCard ? (
@@ -922,7 +936,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                           {/* FRONT */}
                           <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-xl flex items-center justify-center">
                             <p className="text-xl font-semibold tracking-widest uppercase">
-                              {savedPayout.method}
+                              &lt; {savedPayout.method} &gt;
                             </p>
                           </div>
 
@@ -1360,14 +1374,16 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
               <p className="text-sm text-neutral-600">View and update your payout methods</p>
             </div>
           </div>
+
+            <div className='pt-6'>
+                <hr className="my-2"/>
+              </div>
         </>
       )}
 
-
                 {/* Promoter Stats */}
-                {currentUser.role === 'promoter' && (
+                {currentUser.role === 'promoter' && !activeSection && (
             <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              
               {/* Referral Activities */}
               <div className="p-6 border rounded-xl shadow-sm hover:shadow-md">
                 <p className="text-lg font-semibold mb-2">Referral Activities</p>
@@ -1424,7 +1440,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                       {/* FRONT SIDE */}
                       <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-xl flex items-center justify-center">
                         <p className="text-lg font-semibold tracking-widest uppercase">
-                          {savedPayout.method}
+                          &lt; {savedPayout.method} &gt;
                         </p>
                       </div>
 
@@ -1435,9 +1451,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                           {savedPayout.method === 'paypal'
                             ? savedPayout.number
                             : savedPayout.number && savedPayout.number.length >= 8
-                            ? `${savedPayout.number.slice(0, 4)}${'*'.repeat(
-                                savedPayout.number.length - 8
-                              )}${savedPayout.number.slice(-4)}`
+                            ? `${savedPayout.number.slice(0, 4)} ${'*'.repeat(8)} ${savedPayout.number.slice(-4)}`
                             : '****'}
                         </p>
                       </div>
