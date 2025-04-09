@@ -300,13 +300,27 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
     const croppedBase64 = await getCroppedImg(uploadedImage, croppedAreaPixels);
     setProfileImage(croppedBase64);
     setIsCropping(false);
-
+  
     try {
       await axios.put('/api/users/profile-image', { image: croppedBase64 });
+  
+      // 👇 Fetch updated user profile (if you have such an endpoint)
+      const res = await axios.get('/api/users/current');
+      if (res.data?.image) {
+        setProfileImage(res.data.image);
+      }
+  
+      toast.success('Profile image updated!', {
+        iconTheme: {
+          primary: '#25F4EE',
+          secondary: '#fff',
+        }
+      });
     } catch (err) {
       console.error("Image upload failed", err);
+      toast.error('Failed to upload image.');
     }
-  };
+  };  
 
   const handleCropCancel = () => {
     setIsCropping(false);
@@ -1495,7 +1509,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
           <div className="flex gap-4 mt-4">
             <button
               onClick={handleCropSubmit}
-              className="px-6 py-2 bg-[#ff4d01] text-white rounded-xl hover:opacity-90"
+              className="px-6 py-2 bg-[#000] text-white rounded-xl hover:opacity-90"
             >
               Save
             </button>
