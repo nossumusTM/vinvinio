@@ -43,7 +43,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
           height={600}
           unoptimized
           // className="w-full h-auto object-cover rounded-xl"
-          className="w-full h-auto object-cover rounded-xl scale-[0.85] md:scale-100 transition"
+          className="w-full h-auto object-cover rounded-xl scale-[0.85] md:scale-100 -translate-y-4 md:translate-y-0 transition"
         />
         <div className="absolute bottom-[20%] left-[40%] -translate-x-1/2 bg-white p-2 rounded-xl shadow-lg w-32 h-32 flex items-center justify-center">
           <div className="relative w-full h-full flex items-center justify-center">
@@ -84,7 +84,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
           Copy Reference Link
         </button>
       ) : (
-        <div className="flex items-center gap-2 text-sm text-black border-b border-black px-3 py-1 rounded-xl transition">
+        <div className="flex items-center gap-2 text-sm text-black px-3 py-1 transition">
           <svg
             className="w-4 h-4"
             fill="none"
@@ -114,32 +114,32 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
         className="w-full h-full object-cover"
       />
 
-<div className="absolute bottom-[20%] left-[40%] -translate-x-1/2 bg-white p-3 rounded-xl shadow-lg w-48 h-48 flex items-center justify-center">
-  <div className="relative w-full h-full flex items-center justify-center p-3">
-    <QRCodeCanvas
-      value={`https://vuoiaggio.netlify.app/reference/${referenceId}`}
-      size={180}
-      bgColor="#ffffff"
-      fgColor="#000000"
-      level="H"
-      includeMargin={false}
-      className="bg-white p-1"
-    />
-    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 shadow-md w-16 h-16 bg-[#25F4EE]/80 backdrop-blur-md rounded-full flex items-center justify-center">
-      <Image
-        src="/images/qrlogo.png"
-        alt="Logo"
-        className="w-4/5 h-4/5 object-contain rotate-45"
-        width={48}
-        height={48}
-        unoptimized
-      />
-    </div>
-  </div>
-</div>
-    </div>
-  </div>
-)}
+      <div className="absolute bottom-[20%] left-[40%] -translate-x-1/2 bg-white p-3 rounded-xl shadow-lg w-48 h-48 flex items-center justify-center">
+        <div className="relative w-full h-full flex items-center justify-center p-3">
+          <QRCodeCanvas
+            value={`https://vuoiaggio.netlify.app/reference/${referenceId}`}
+            size={180}
+            bgColor="#ffffff"
+            fgColor="#000000"
+            level="H"
+            includeMargin={false}
+            className="bg-white p-1"
+          />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 shadow-md w-16 h-16 bg-[#25F4EE]/80 backdrop-blur-md rounded-full flex items-center justify-center">
+            <Image
+              src="/images/qrlogo.png"
+              alt="Logo"
+              className="w-4/5 h-4/5 object-contain rotate-45"
+              width={48}
+              height={48}
+              unoptimized
+            />
+          </div>
+        </div>
+      </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );  
@@ -149,8 +149,15 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
       isOpen={promoteModal.isOpen}
       onClose={promoteModal.onClose}
       onSubmit={async () => {
-        setShowDownloadLayout(true); // show hidden div first
-        await new Promise((resolve) => setTimeout(resolve, 100)); // wait for DOM to render
+        setShowDownloadLayout(true);
+
+        // ✅ Ensure image is fully loaded before capture
+        await new Promise<void>((resolve) => {
+          const preloadImage = new window.Image();
+          preloadImage.crossOrigin = 'anonymous';
+          preloadImage.src = '/images/promo-banner.jpg';
+          preloadImage.onload = () => resolve();
+        });        
       
         if (!qrDownloadRef.current) return;
       
