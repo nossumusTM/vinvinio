@@ -186,7 +186,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
           setSavedPayout(res.data);
         }
       } catch (err) {
-        console.error('Failed to fetch payout method', err);
+        console.error('Failed to fetch withdraw method', err);
       }
     };
   
@@ -206,8 +206,8 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
       const { method, number } = payoutInfo;
   
       if (!number) {
-        // setPopupMessage('Please enter your payout details.');
-        toast.error('Please enter your payout details.')
+        // setPopupMessage('Please enter your withdraw details.');
+        toast.error('Please enter your withdraw details.')
         return;
       }
   
@@ -222,8 +222,8 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
         number, // ✅ Must match backend’s expected structure
       });
   
-      // setPopupMessage('Payout method saved!');
-      toast.success('Payout method saved!', {
+      // setPopupMessage('Withdraw method saved!');
+      toast.success('Withdraw method saved!', {
         iconTheme: {
             primary: '#25F4EE',
             secondary: '#fff',
@@ -232,9 +232,9 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
       
       setPayoutUpdated((prev) => !prev);
     } catch (err) {
-      console.error('Failed to save payout method', err);
-      // setPopupMessage('Error saving payout method.');
-      toast.error('Error saving payout method.')
+      console.error('Failed to save withdraw method', err);
+      // setPopupMessage('Error saving withdraw method.');
+      toast.error('Error saving withdraw method.')
     }
   };  
   
@@ -242,17 +242,17 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
     try {
       await axios.delete('/api/users/delete-payout-method');
       setSavedPayout(null);
-      // setPopupMessage('Payout method deleted!');
-      toast.success('Payout method deleted!', {
+      // setPopupMessage('Withdraw method deleted!');
+      toast.success('Withdraw method deleted!', {
         iconTheme: {
             primary: '#25F4EE',
             secondary: '#fff',
         }
       });
     } catch (err) {
-      console.error('Failed to delete payout method', err);
-      // setPopupMessage('Error deleting payout method.');
-      toast.error('Error deleting payout method.');
+      console.error('Failed to delete withdraw method', err);
+      // setPopupMessage('Error deleting withdraw method.');
+      toast.error('Error deleting withdraw method.');
     }
   };  
 
@@ -794,7 +794,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                   >
                     ←
                   </button>
-                  <h2 className="text-xl font-bold">Payments & Payouts</h2>
+                  <h2 className="text-xl font-bold">Payments & Withdraw</h2>
                 </div>
               </div>
 
@@ -919,7 +919,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
 
               {activePaymentTab === 'payout' && currentUser.role === 'promoter' && (
                 <>
-                  <Heading title="Payout Method" subtitle="Manage your payout credentials" />
+                  <Heading title="Withdraw Method" subtitle="Manage your withdraw credentials" />
 
                   {savedPayout ? (
                     <>
@@ -935,20 +935,20 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                         >
                           {/* FRONT */}
                           <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-xl flex items-center justify-center">
-                            <p className="text-xl font-semibold tracking-widest uppercase">
+                            <p className="text-lg font-bold tracking-widest uppercase">
                               &lt; {savedPayout.method} &gt;
                             </p>
                           </div>
 
-                          {/* BACK */}
+                          {/* BACK SIDE */}
                           <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-xl rotate-y-180 p-6 flex flex-col justify-center items-center gap-4">
-                            <p className="text-xs tracking-wider text-gray-400">Payout Info</p>
+                            <p className="text-xs tracking-wider text-gray-400">Withdraw Info</p>
                             <p className="text-lg font-mono text-center">
-                            {savedPayout.method === 'paypal'
-                              ? savedPayout.number
-                              : savedPayout.number && savedPayout.number.length >= 8
-                              ? `${savedPayout.number.slice(0, 4)}${'*'.repeat(savedPayout.number.length - 8)}${savedPayout.number.slice(-4)}`
-                              : '****'}
+                              {savedPayout.method === 'paypal'
+                                ? savedPayout.number
+                                : savedPayout.number && savedPayout.number.length >= 8
+                                ? `${savedPayout.number.slice(0, 4)} ${'*'.repeat(8)} ${savedPayout.number.slice(-4)}`
+                                : '****'}
                             </p>
                           </div>
                         </div>
@@ -960,7 +960,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                           onClick={() => setShowConfirmDeletePayout(true)}
                           className="border px-4 py-2 rounded-lg hover:bg-black hover:text-white transition"
                         >
-                          Delete Payout Method
+                          Delete Withdraw Method
                         </button>
                       </div>
                     </>
@@ -968,7 +968,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                     <>
                       {/* Select Method */}
                       <div className="mt-4">
-                        <label className="block mb-2 font-semibold">Payout Method</label>
+                        <label className="block mb-2 font-semibold">Withdraw Method</label>
                         <select
                           value={payoutInfo.method}
                           onChange={(e) => setPayoutInfo({ ...payoutInfo, method: e.target.value })}
@@ -1063,8 +1063,8 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
 
           {showConfirmDeletePayout && (
             <ConfirmPopup
-              title="Delete Payout Method"
-              message="Are you sure you want to delete your payout method?"
+              title="Delete Withdraw Method"
+              message="Are you sure you want to delete your withdraw method?"
               onCancel={() => setShowConfirmDeletePayout(false)}
               onConfirm={async () => {
                 try {
@@ -1370,8 +1370,8 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
               className="cursor-pointer p-6 border rounded-xl shadow-sm hover:shadow-md transition"
             >
               <div className="text-4xl text-[#000] mb-4"><RiSecurePaymentLine /></div>
-              <p className="text-lg font-semibold">Payments & Payouts</p>
-              <p className="text-sm text-neutral-600">View and update your payout methods</p>
+              <p className="text-lg font-semibold">Payments & Withdraw</p>
+              <p className="text-sm text-neutral-600">View and update your withdraw methods</p>
             </div>
           </div>
 
@@ -1422,9 +1422,9 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                 </div>
               </div>
 
-              {/* Payout Details */}
+              {/* Withdraw Details */}
               <div className="p-6 border rounded-xl shadow-sm hover:shadow-md">
-                <p className="text-lg font-semibold mb-2">Payout Method</p>
+                <p className="text-lg font-semibold mb-2">Withdraw Method</p>
                 <p className="text-sm text-neutral-600 mb-4">Deposits processed twice per month.</p>
 
                 {savedPayout ? (
@@ -1439,14 +1439,14 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                     >
                       {/* FRONT SIDE */}
                       <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-xl flex items-center justify-center">
-                        <p className="text-lg font-semibold tracking-widest uppercase">
+                        <p className="text-lg font-bold tracking-widest uppercase">
                           &lt; {savedPayout.method} &gt;
                         </p>
                       </div>
 
                       {/* BACK SIDE */}
                       <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-xl rotate-y-180 p-6 flex flex-col justify-center items-center gap-4">
-                        <p className="text-xs tracking-wider text-gray-400">Payout Info</p>
+                        <p className="text-xs tracking-wider text-gray-400">Withdraw Info</p>
                         <p className="text-lg font-mono text-center">
                           {savedPayout.method === 'paypal'
                             ? savedPayout.number
@@ -1459,7 +1459,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                   </div>
                 ) : (
                   <div className="bg-neutral-100 p-4 rounded-xl flex items-center justify-between">
-                    <p className="text-sm text-neutral-600">Payout method is not provided</p>
+                    <p className="text-sm text-neutral-600">Withdrawmethod is not provided</p>
                     <button
                       onClick={() => {
                         setActiveSection('payments');
@@ -1469,7 +1469,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                       }}
                       className="text-sm underline text-black ml-4"
                     >
-                      Go to Payouts
+                      Go to Withdraw
                     </button>
                   </div>
                 )}

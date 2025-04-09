@@ -86,9 +86,9 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
             Copy Reference Link
           </button>
         ) : (
-          <div className="flex items-center gap-2 text-sm text-black px-3 py-1 transition">
+          <div className="flex items-center gap-2 text-xl text-black px-3 py-1 transition">
             <svg
-              className="w-4 h-4"
+              className="w-8 h-8"
               fill="none"
               stroke="#000"
               strokeWidth={2}
@@ -96,7 +96,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
-            <span>Copied!</span>
+            {/* <span>Copied!</span> */}
           </div>
         )}
       </div>
@@ -162,12 +162,14 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
           preloadImage.onload = () => resolve();
         });
 
+        await new Promise((r) => setTimeout(r, 200));
+
         if (!qrDownloadRef.current) return;
 
-        const canvas = await html2canvas(qrDownloadRef.current, {
+        const canvas = await html2canvas(qrDownloadRef.current!, {
           useCORS: true,
           backgroundColor: null,
-          scale: 2, // Higher quality
+          scale: 2,
         });
 
         canvas.toBlob((blob) => {
@@ -176,13 +178,18 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
           const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
           if (isIOS) {
-            const newTab = window.open();
-            if (newTab) {
-              const url = URL.createObjectURL(blob);
-              newTab.document.write(`<img src="${url}" style="width:100%;"/>`);
+            const dataUrl = canvas.toDataURL('image/png');
+            const win = window.open();
+            if (win) {
+              win.document.write(`<img src="${dataUrl}" style="width:100%;" />`);
+            } else {
+              alert("Please enable pop-ups to view the image.");
             }
           } else {
-            saveAs(blob, `vuoiaggio-promote-${referenceId}.png`);
+            canvas.toBlob((blob) => {
+              if (!blob) return;
+              saveAs(blob, `vuoiaggio-promote-${referenceId}.png`);
+            });
           }
 
           setShowDownloadLayout(false);
