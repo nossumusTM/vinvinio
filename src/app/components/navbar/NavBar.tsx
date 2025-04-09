@@ -25,7 +25,9 @@ const NavBar: React.FC<NavBarProps> = ({ currentUser }) => {
             </div>
           </Container>
         </div>
-        <Categories />
+        <div className="relative z-0">
+          <Categories />
+        </div>
       </div>
     );
   };

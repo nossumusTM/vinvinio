@@ -223,16 +223,16 @@ const Categories = () => {
         </AnimatePresence>
     
         {/* Toggle Button (stays fixed in position) */}
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-[-16px] z-10">
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-[-14px] z-10">
           <div
             onClick={() => setVisible((prev) => !prev)}
-            className="bg-white border shadow-md rounded-full p-2 cursor-pointer transition-transform duration-300"
+            className="bg-white border shadow-md rounded-full p-1 cursor-pointer transition-transform duration-300"
           >
             <motion.div
               animate={{ rotate: visible ? 0 : 180 }}
               transition={{ duration: 0.3 }}
             >
-              <LuChevronUp size={20} strokeWidth={3} color="#25F4EE" />
+              <LuChevronUp size={15} strokeWidth={3} color="#25F4EE" />
             </motion.div>
           </div>
         </div>
