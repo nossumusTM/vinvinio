@@ -6,6 +6,7 @@ import Picker from '@emoji-mart/react';
 import data from '@emoji-mart/data';
 import ConfirmPopup from './ConfirmPopup';
 import Avatar from './Avatar';
+import { motion } from 'framer-motion';
 
 type Message = {
   id: string;
@@ -389,6 +390,13 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
   };  
 
   return (
+    <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    transition={{ duration: 0.25 }}
+    className="flex flex-col h-full max-h-screen overflow-hidden"
+  >
     <div className="flex flex-col h-full max-h-screen overflow-hidden">
       {/* Header */}
       <div className="flex items-center gap-3 p-4 border-b justify-between">
@@ -413,12 +421,16 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
         {messages.map((msg, index) => {
           const isLast = index === messages.length - 1;
           return (
-            <div
-              key={msg.id}
-              className={`max-w-[70%] transition-all duration-300 transform ${
-                isLast ? 'scale-90 animate-scaleIn' : 'scale-100'
-              } ${msg.senderId === currentUserId ? 'ml-auto text-right' : ''}`}
-            >
+            <motion.div
+                key={msg.id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.2 }}
+                className={`max-w-[70%] ${
+                  msg.senderId === currentUserId ? 'ml-auto text-right' : ''
+                }`}
+              >
+
               {/* Sender */}
               <div className="text-xs font-semibold text-neutral-500 mb-1">
                 {msg.senderId === currentUserId ? 'Me' : recipient.name}
@@ -440,7 +452,7 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
               <div className="text-[10px] text-neutral-400 mt-1">
                 {new Date(msg.createdAt).toLocaleString()}
               </div>
-            </div>
+              </motion.div>
           );
         })}
         <div ref={messagesEndRef} />
@@ -588,6 +600,7 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
         </form>
         </div>
     </div>
+    </motion.div>
   );
 };
 
