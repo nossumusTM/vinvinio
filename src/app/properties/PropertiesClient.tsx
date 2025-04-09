@@ -28,7 +28,12 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
 
         axios.delete(`/api/listings/${id}`)
             .then(() => {
-                toast.success('Listing deleted');
+                toast.success('Listing deleted!', {
+                    iconTheme: {
+                        primary: '#25F4EE',
+                        secondary: '#fff',
+                    }
+                });
                 router.refresh();
             })
             .catch((error) => {

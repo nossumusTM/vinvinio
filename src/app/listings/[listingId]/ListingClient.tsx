@@ -112,7 +112,12 @@ const ListingClient: React.FC<ListingClientProps> = ({
             guestCount,
         })
             .then(() => {
-                toast.success('Listing reserved!');
+                toast.success('Listing reserved!', {
+                    iconTheme: {
+                        primary: '#25F4EE',
+                        secondary: '#fff',
+                    }
+                });
                 setDateRange(initialDateRange);
                 router.push('/trips');
             })

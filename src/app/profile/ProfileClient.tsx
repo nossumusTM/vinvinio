@@ -18,6 +18,7 @@ import { CgUserlane } from "react-icons/cg";
 import { MdOutlineSecurity } from "react-icons/md";
 import { RiSecurePaymentLine } from "react-icons/ri";
 import ConfirmPopup from "../components/ConfirmPopup";
+import toast from "react-hot-toast";
 export const dynamic = 'force-dynamic';
 
 interface ProfileClientProps {
@@ -197,12 +198,14 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
       const { method, number } = payoutInfo;
   
       if (!number) {
-        setPopupMessage('Please enter your payout details.');
+        // setPopupMessage('Please enter your payout details.');
+        toast.error('Please enter your payout details.')
         return;
       }
   
       if (method === 'iban' && (!number.startsWith('IT') || number.replace(/\s/g, '').length !== 27)) {
-        setPopupMessage('IBAN must start with IT and be 27 characters.');
+        // setPopupMessage('IBAN must start with IT and be 27 characters.');
+        toast.error('IBAN must start with IT and be 27 characters.')
         return;
       }
   
@@ -211,11 +214,19 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
         number, // ✅ Must match backend’s expected structure
       });
   
-      setPopupMessage('Payout method saved!');
+      // setPopupMessage('Payout method saved!');
+      toast.success('Payout method saved!', {
+        iconTheme: {
+            primary: '#25F4EE',
+            secondary: '#fff',
+        }
+      });
+      
       setPayoutUpdated((prev) => !prev);
     } catch (err) {
       console.error('Failed to save payout method', err);
-      setPopupMessage('Error saving payout method.');
+      // setPopupMessage('Error saving payout method.');
+      toast.error('Error saving payout method.')
     }
   };  
   
@@ -223,10 +234,17 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
     try {
       await axios.delete('/api/users/delete-payout-method');
       setSavedPayout(null);
-      setPopupMessage('Payout method deleted!');
+      // setPopupMessage('Payout method deleted!');
+      toast.success('Payout method deleted!', {
+        iconTheme: {
+            primary: '#25F4EE',
+            secondary: '#fff',
+        }
+      });
     } catch (err) {
       console.error('Failed to delete payout method', err);
-      setPopupMessage('Error deleting payout method.');
+      // setPopupMessage('Error deleting payout method.');
+      toast.error('Error deleting payout method.');
     }
   };  
 
@@ -809,7 +827,8 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                         const confirmNewPassword = (document.getElementById('confirmNewPassword') as HTMLInputElement).value;
 
                         if (!currentPassword || !newPassword || newPassword !== confirmNewPassword) {
-                          setPopupMessage('Please check your input fields.');
+                          // setPopupMessage('Please check your input fields.');
+                          toast.error('Please check your input fields.');
                           return;
                         }
 
@@ -819,10 +838,17 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                             newPassword,
                             confirmPassword: confirmNewPassword
                           });
-                          setPopupMessage('Password updated successfully!');
+                          // setPopupMessage('Password updated successfully!');
+                          toast.success('Password updated successfully!', {
+                            iconTheme: {
+                                primary: '#25F4EE',
+                                secondary: '#fff',
+                            }
+                          });
                           setEditingField(null);
                         } catch (err) {
-                          setPopupMessage('Failed to update password. Check current password.');
+                          // setPopupMessage('Failed to update password. Check current password.');
+                          toast.error('Failed to update password. Check current password.')
                         }
                       }}
                       className="text-sm text-white bg-[#000] hover:bg-neutral-700 px-4 py-1 rounded"
@@ -1185,7 +1211,8 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                   await axios.delete('/api/users/deactivate');
                   window.location.href = '/'; // Redirect after deactivation
                 } catch (err) {
-                  setPopupMessage('Failed to deactivate account.');
+                  // setPopupMessage('Failed to deactivate account.');
+                  toast.error('Failed to deactivate account.');
                 } finally {
                   setConfirmDeactivation(false);
                 }
@@ -1378,10 +1405,17 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                         name: decrypt(cardRes.data.name),
                       });
 
-                      setPopupMessage('Card saved successfully!');
+                      // setPopupMessage('Card saved successfully!');
+                      toast.success('Card saved successfully!', {
+                        iconTheme: {
+                            primary: '#25F4EE',
+                            secondary: '#fff',
+                        }
+                      });
                     } catch (err) {
                       console.error(err);
-                      setPopupMessage('Failed to save card. Please try again.');
+                      // setPopupMessage('Failed to save card. Please try again.');
+                      toast.error('Failed to save card. Please try again.');
                     }
                   }}
                 >
