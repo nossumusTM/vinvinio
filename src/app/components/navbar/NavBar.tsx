@@ -19,7 +19,9 @@ const NavBar: React.FC<NavBarProps> = ({ currentUser }) => {
               <div className="flex-1">
                 <Logo />
                 </div>
-              <UserMenu currentUser={currentUser} />
+              <div className="relative z-10">
+                <UserMenu currentUser={currentUser} />
+              </div>
             </div>
           </Container>
         </div>

@@ -146,6 +146,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
       onMouseLeave={() => setIsHovered(false)}
       onTouchStart={() => {
         setIsHovered(true);
+        setActiveImageIndex((prevIndex) => (prevIndex + 1) % images.length);
       }}
       onTouchEnd={() => {
         setIsHovered(false);
