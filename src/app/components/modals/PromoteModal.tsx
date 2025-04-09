@@ -69,6 +69,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
                 className="w-4/5 h-4/5 object-contain rotate-45"
                 width={32}
                 height={32}
+                unoptimized
               />
             </div>
           </div>
@@ -158,9 +159,14 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
       isOpen={promoteModal.isOpen}
       onClose={promoteModal.onClose}
       onSubmit={async () => {
+        const isMobile = /iPad|iPhone|iPod|Android/.test(navigator.userAgent);
+      
+        // 👇 Open the tab immediately to avoid iOS popup blockers
+        const win = isMobile ? window.open() : null;
+      
         setShowDownloadLayout(true);
       
-        // Ensure image is fully loaded
+        // Wait for image preload
         await new Promise<void>((resolve) => {
           const preloadImage = new window.Image();
           preloadImage.crossOrigin = 'anonymous';
@@ -168,8 +174,8 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
           preloadImage.onload = () => resolve();
         });
       
-        // Wait a moment for DOM updates (especially for glassmorphism effects)
-        await new Promise((r) => setTimeout(r, 300));
+        // Allow glassmorphism/logo to fully render
+        await new Promise((r) => setTimeout(r, 400));
       
         if (!qrDownloadRef.current) return;
       
@@ -179,12 +185,9 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
           scale: 2,
         });
       
-        const isMobile = /iPad|iPhone|iPod|Android/.test(navigator.userAgent);
         const dataUrl = canvas.toDataURL('image/png');
       
         if (isMobile) {
-          // Open image in new tab for long press save
-          const win = window.open();
           if (win) {
             win.document.write(`
               <html>
@@ -195,10 +198,9 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
               </html>
             `);
           } else {
-            alert('Please enable pop-ups to view and save the image.');
+            alert('Please enable pop-ups to save the image.');
           }
         } else {
-          // Desktop: trigger download
           const link = document.createElement('a');
           link.href = dataUrl;
           link.download = `vuoiaggio-promote-${referenceId}.png`;
@@ -209,7 +211,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
       
         setShowDownloadLayout(false);
         promoteModal.onClose();
-      }}         
+      }}              
       title="Vuoiaggio Passcode"
       actionLabel="Save Passcode"
       disabled={false}
