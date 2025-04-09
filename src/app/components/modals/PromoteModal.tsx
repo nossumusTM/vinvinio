@@ -209,7 +209,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
       
         setShowDownloadLayout(false);
         promoteModal.onClose();
-      }}         
+      }}
       title="Vuoiaggio Passcode"
       actionLabel="Save Passcode"
       disabled={false}
