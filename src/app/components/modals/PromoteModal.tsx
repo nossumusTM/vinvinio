@@ -71,32 +71,34 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
       {/* <p className="text-sm text-neutral-600 break-all text-center">
         {referenceId}
       </p> */}
-      {!copied ? (
-        <button
-          onClick={() => {
-            const url = `https://vuoiaggio.netlify.app/reference/${referenceId}`;
-            navigator.clipboard.writeText(url);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000); // reset after 2s
-          }}
-          className="text-sm text-black border-b border-black bg-transparent hover:opacity-70 transition"
-        >
-          Copy Reference Link
-        </button>
-      ) : (
-        <div className="flex items-center gap-2 text-sm text-black px-3 py-1 transition">
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="#000"
-            strokeWidth={2}
-            viewBox="0 0 24 24"
+      <div className="pt-2 -translate-y-4 md:translate-y-0">
+        {!copied ? (
+          <button
+            onClick={() => {
+              const url = `https://vuoiaggio.netlify.app/reference/${referenceId}`;
+              navigator.clipboard.writeText(url);
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000); // reset after 2s
+            }}
+            className="text-sm text-black border-b border-black bg-transparent hover:opacity-70 transition"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
-          <span>Copied!</span>
-        </div>
-      )}
+            Copy Reference Link
+          </button>
+        ) : (
+          <div className="flex items-center gap-2 text-sm text-black px-3 py-1 transition">
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="#000"
+              strokeWidth={2}
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            <span>Copied!</span>
+          </div>
+        )}
+      </div>
 
 
       {showDownloadLayout && (
@@ -150,36 +152,41 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
       onClose={promoteModal.onClose}
       onSubmit={async () => {
         setShowDownloadLayout(true);
-
+      
         // ✅ Ensure image is fully loaded before capture
         await new Promise<void>((resolve) => {
           const preloadImage = new window.Image();
           preloadImage.crossOrigin = 'anonymous';
           preloadImage.src = '/images/promo-banner.jpg';
           preloadImage.onload = () => resolve();
-        });        
+        });
       
         if (!qrDownloadRef.current) return;
       
-        // const canvas = await html2canvas(qrDownloadRef.current);
         const canvas = await html2canvas(qrDownloadRef.current, {
-          useCORS: true, // ensure cross-origin images are loaded
-          backgroundColor: null
+          useCORS: true,
+          backgroundColor: null,
+          scale: 2, // ✅ Higher quality & iOS fix
         });
-        const dataURL = canvas.toDataURL('image/png');
-
-        // Fallback for Safari
-        const link = document.createElement('a');
-        link.href = dataURL;
-        link.setAttribute('download', `vuoiaggio-promote-${referenceId}.png`);
-        link.setAttribute('target', '_blank'); // ✅ for Safari
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
       
-        setShowDownloadLayout(false); // clean up hidden div
+        const dataURL = canvas.toDataURL('image/png');
+      
+        // ✅ Detect iOS
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        if (isIOS) {
+          window.open(dataURL, '_blank'); // ✅ Safari-safe fallback
+        } else {
+          const link = document.createElement('a');
+          link.href = dataURL;
+          link.download = `vuoiaggio-promote-${referenceId}.png`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+      
+        setShowDownloadLayout(false);
         promoteModal.onClose();
-      }}
+      }}      
       title="Promote Listing"
       actionLabel="Download QR"
       disabled={false}
