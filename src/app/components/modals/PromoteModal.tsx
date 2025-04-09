@@ -40,6 +40,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
         <Image
           src="/images/promo-banner.jpg"
           alt="Promo-Banner"
+          crossOrigin="anonymous"
           width={869}
           height={600}
           unoptimized
@@ -57,7 +58,11 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
               className='p-1'
               includeMargin={false}
             />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 shadow-md w-10 h-10 bg-[#25F4EE]/80 backdrop-blur-xl rounded-full flex items-center justify-center">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 shadow-md w-10 h-10 rounded-full overflow-hidden">
+            {/* Simulated glass blur background */}
+            <div className="absolute inset-0 bg-[#25F4EE]/80 blur-[6px] scale-110" />
+            {/* Logo */}
+            <div className="relative z-10 w-full h-full flex items-center justify-center">
               <Image
                 src="/images/qrlogo.png"
                 alt="Logo"
@@ -66,6 +71,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
                 height={32}
               />
             </div>
+          </div>
           </div>
         </div>
       </div>
@@ -111,6 +117,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
       <Image
         src="/images/promo-banner.jpg"
         alt="Promo-Banner-Download"
+        crossOrigin="anonymous"
         width={600}
         height={869}
         unoptimized
@@ -143,7 +150,6 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
           </div>
         </div>
       )}
-
     </div>
   );  
 
@@ -153,50 +159,50 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
       onClose={promoteModal.onClose}
       onSubmit={async () => {
         setShowDownloadLayout(true);
-
-        // ✅ Ensure image is fully loaded before capture
+      
+        // Wait for DOM to render & preload image
         await new Promise<void>((resolve) => {
           const preloadImage = new window.Image();
           preloadImage.crossOrigin = 'anonymous';
           preloadImage.src = '/images/promo-banner.jpg';
           preloadImage.onload = () => resolve();
         });
-
-        await new Promise((r) => setTimeout(r, 200));
-
+      
+        await new Promise((r) => setTimeout(r, 300)); // let DOM paint
+      
         if (!qrDownloadRef.current) return;
-
-        const canvas = await html2canvas(qrDownloadRef.current!, {
+      
+        const canvas = await html2canvas(qrDownloadRef.current, {
           useCORS: true,
           backgroundColor: null,
           scale: 2,
         });
-
-        canvas.toBlob((blob) => {
-          if (!blob) return;
-
-          const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-
-          if (isIOS) {
-            const dataUrl = canvas.toDataURL('image/png');
-            const win = window.open();
-            if (win) {
-              win.document.write(`<img src="${dataUrl}" style="width:100%;" />`);
-            } else {
-              alert("Please enable pop-ups to view the image.");
-            }
+      
+        const dataUrl = canvas.toDataURL('image/png');
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      
+        if (isIOS) {
+          // Open new tab with image instead
+          const win = window.open();
+          if (win) {
+            win.document.write(`<img src="${dataUrl}" style="width:100%;" />`);
           } else {
-            canvas.toBlob((blob) => {
-              if (!blob) return;
-              saveAs(blob, `vuoiaggio-promote-${referenceId}.png`);
-            });
+            alert("Please allow pop-ups to view and save your QR banner.");
           }
-
-          setShowDownloadLayout(false);
-          promoteModal.onClose();
-        });
-      }}
-      title="Promo Barcode"
+        } else {
+          // For Android + desktop, download using file-saver
+          const link = document.createElement('a');
+          link.href = dataUrl;
+          link.download = `vuoiaggio-promote-${referenceId}.png`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+      
+        setShowDownloadLayout(false);
+        promoteModal.onClose();
+      }}       
+      title="Vuoiaggio Passcode"
       actionLabel="Download QR"
       disabled={false}
       body={bodyContent}

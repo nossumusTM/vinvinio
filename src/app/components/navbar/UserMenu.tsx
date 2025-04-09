@@ -184,7 +184,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
               cursor-pointer
             "
           >
-            Promote QR-Code
+            Vuoiaggio Passcode
           </div>
         )}
 
@@ -297,7 +297,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                   <>
                     {/* Only render on mobile as MenuItems */}
                     <div className="md:hidden">
-                      <MenuItem label="Promote QR-Code" 
+                      <MenuItem label="Vuoiaggio Passcode" 
                         onClick={() => {
                           setIsOpen(false);
                           onPromote();

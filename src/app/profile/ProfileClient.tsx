@@ -935,8 +935,8 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                         >
                           {/* FRONT */}
                           <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-xl flex items-center justify-center">
-                            <p className="text-lg font-bold tracking-widest uppercase">
-                              &lt; {savedPayout.method} &gt;
+                            <p className="text-lg font-bold tracking-widest uppercase border-b border-white">
+                              {savedPayout.method}
                             </p>
                           </div>
 
@@ -1439,8 +1439,8 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                     >
                       {/* FRONT SIDE */}
                       <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-xl flex items-center justify-center">
-                        <p className="text-lg font-bold tracking-widest uppercase">
-                          &lt; {savedPayout.method} &gt;
+                        <p className="text-lg font-bold tracking-widest uppercase border-b border-white">
+                          {savedPayout.method}
                         </p>
                       </div>
 
