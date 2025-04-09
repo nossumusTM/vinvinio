@@ -22,6 +22,8 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
   const qrRef = useRef<HTMLDivElement>(null);
   const qrDownloadRef = useRef<HTMLDivElement>(null);
 
+  const [copied, setCopied] = useState(false);
+
   const [showDownloadLayout, setShowDownloadLayout] = useState(false);
 
   useEffect(() => {
@@ -40,7 +42,8 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
           width={869}
           height={600}
           unoptimized
-          className="w-full h-auto object-cover rounded-xl"
+          // className="w-full h-auto object-cover rounded-xl"
+          className="w-full h-auto object-cover rounded-xl scale-[0.85] md:scale-100 transition"
         />
         <div className="absolute bottom-[20%] left-[40%] -translate-x-1/2 bg-white p-2 rounded-xl shadow-lg w-32 h-32 flex items-center justify-center">
           <div className="relative w-full h-full flex items-center justify-center">
@@ -53,7 +56,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
               className='p-1'
               includeMargin={false}
             />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 shadow-md w-10 h-10 bg-[#25F4EE]/90 backdrop-blur-md rounded-full flex items-center justify-center">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 shadow-md w-10 h-10 bg-[#25F4EE]/80 backdrop-blur-md rounded-full flex items-center justify-center">
               <Image
                 src="/images/qrlogo.png"
                 alt="Logo"
@@ -65,9 +68,36 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
           </div>
         </div>
       </div>
-      <p className="text-sm text-neutral-600 break-all text-center">
+      {/* <p className="text-sm text-neutral-600 break-all text-center">
         {referenceId}
-      </p>
+      </p> */}
+      {!copied ? (
+        <button
+          onClick={() => {
+            const url = `https://vuoiaggio.netlify.app/reference/${referenceId}`;
+            navigator.clipboard.writeText(url);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000); // reset after 2s
+          }}
+          className="text-sm text-black border-b border-black bg-transparent hover:opacity-70 transition"
+        >
+          Copy Reference Link
+        </button>
+      ) : (
+        <div className="flex items-center gap-2 text-sm text-black border-b border-black px-3 py-1 rounded-xl transition">
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="#000"
+            strokeWidth={2}
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+          <span>Copied!</span>
+        </div>
+      )}
+
 
       {showDownloadLayout && (
   <div className="fixed -z-50 opacity-0 pointer-events-none">
@@ -93,9 +123,9 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
       fgColor="#000000"
       level="H"
       includeMargin={false}
-      className="bg-white"
+      className="bg-white p-1"
     />
-    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 shadow-md w-16 h-16 bg-[#25F4EE]/90 backdrop-blur-md rounded-full flex items-center justify-center">
+    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 shadow-md w-16 h-16 bg-[#25F4EE]/80 backdrop-blur-md rounded-full flex items-center justify-center">
       <Image
         src="/images/qrlogo.png"
         alt="Logo"
@@ -124,12 +154,21 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
       
         if (!qrDownloadRef.current) return;
       
-        const canvas = await html2canvas(qrDownloadRef.current);
+        // const canvas = await html2canvas(qrDownloadRef.current);
+        const canvas = await html2canvas(qrDownloadRef.current, {
+          useCORS: true, // ensure cross-origin images are loaded
+          backgroundColor: null
+        });
         const dataURL = canvas.toDataURL('image/png');
+
+        // Fallback for Safari
         const link = document.createElement('a');
         link.href = dataURL;
-        link.download = `vuoiaggio-promote-${referenceId}.png`;
+        link.setAttribute('download', `vuoiaggio-promote-${referenceId}.png`);
+        link.setAttribute('target', '_blank'); // ✅ for Safari
+        document.body.appendChild(link);
         link.click();
+        document.body.removeChild(link);
       
         setShowDownloadLayout(false); // clean up hidden div
         promoteModal.onClose();
