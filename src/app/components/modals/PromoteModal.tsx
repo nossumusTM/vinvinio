@@ -92,11 +92,11 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
             Copy Reference Link
           </button>
         ) : (
-          <div className="flex items-center gap-2 text-xl text-black px-3 py-1 transition">
+          <div className="flex items-center gap-2 text-xl text-[#25F4EE] px-3 py-1 transition">
             <svg
               className="w-8 h-8"
               fill="none"
-              stroke="#000"
+              stroke="#25F4EE"
               strokeWidth={2}
               viewBox="0 0 24 24"
             >
@@ -160,7 +160,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
       onSubmit={async () => {
         setShowDownloadLayout(true);
       
-        // Wait for DOM to render & preload image
+        // Ensure image is fully loaded
         await new Promise<void>((resolve) => {
           const preloadImage = new window.Image();
           preloadImage.crossOrigin = 'anonymous';
@@ -168,7 +168,8 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
           preloadImage.onload = () => resolve();
         });
       
-        await new Promise((r) => setTimeout(r, 300)); // let DOM paint
+        // Wait a moment for DOM updates (especially for glassmorphism effects)
+        await new Promise((r) => setTimeout(r, 300));
       
         if (!qrDownloadRef.current) return;
       
@@ -178,19 +179,26 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
           scale: 2,
         });
       
+        const isMobile = /iPad|iPhone|iPod|Android/.test(navigator.userAgent);
         const dataUrl = canvas.toDataURL('image/png');
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
       
-        if (isIOS) {
-          // Open new tab with image instead
+        if (isMobile) {
+          // Open image in new tab for long press save
           const win = window.open();
           if (win) {
-            win.document.write(`<img src="${dataUrl}" style="width:100%;" />`);
+            win.document.write(`
+              <html>
+                <head><title>Save Promo Banner</title></head>
+                <body style="margin:0;display:flex;justify-content:center;align-items:center;height:100vh;background:#fff;">
+                  <img src="${dataUrl}" style="max-width:100%;height:auto;" />
+                </body>
+              </html>
+            `);
           } else {
-            alert("Please allow pop-ups to view and save your QR banner.");
+            alert('Please enable pop-ups to view and save the image.');
           }
         } else {
-          // For Android + desktop, download using file-saver
+          // Desktop: trigger download
           const link = document.createElement('a');
           link.href = dataUrl;
           link.download = `vuoiaggio-promote-${referenceId}.png`;
@@ -201,9 +209,9 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
       
         setShowDownloadLayout(false);
         promoteModal.onClose();
-      }}       
+      }}         
       title="Vuoiaggio Passcode"
-      actionLabel="Download QR"
+      actionLabel="Save Passcode"
       disabled={false}
       body={bodyContent}
       className=""
