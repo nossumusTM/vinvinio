@@ -38,15 +38,16 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
   }, [promoteModal.isOpen, currentUser]);
 
   useEffect(() => {
-    // Preload assets
-    const preloadLogo = new window.Image();
-    preloadLogo.src = '/images/qrlogo.png';
+    const preload = (src: string) => {
+      const img = new window.Image();
+      img.crossOrigin = 'anonymous';
+      img.src = src;
+    };
   
-    const preloadBanner = new window.Image();
-    preloadBanner.src = '/images/promo-banner.jpg';
+    preload('/images/qrlogo.png');
+    preload('/images/promo-banner.jpg');
   
-    // Trigger download preview on mobile when modal opens
-    if (promoteModal.isOpen && /iPhone|iPad|Android/.test(navigator.userAgent)) {
+    if (promoteModal.isOpen && /iPhone|iPad|Android/i.test(navigator.userAgent)) {
       downloadImage();
     }
   }, [promoteModal.isOpen]);  
@@ -113,9 +114,10 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
             <img
               src="/images/qrlogo.png"
               alt="QR Logo"
-              className="relative w-4/5 h-4/5 object-contain rotate-45 z-10"
-              style={{ pointerEvents: 'none' }}
+              crossOrigin="anonymous"
+              className="w-4/5 h-4/5 object-contain rotate-45 relative z-10"
             />
+
           </div>
 
           </div>
@@ -235,32 +237,36 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
       onClose={promoteModal.onClose}
       onSubmit={async () => {
         const isMobile = /iPhone|iPad|Android/i.test(navigator.userAgent);
-      
-        // 1. Wait for image block to be ready
         setShowDownloadLayout(true);
-        await new Promise((r) => setTimeout(r, 600));
-        if (!qrDownloadRef.current) return;
       
-        // 2. Merge into 1 canvas
+        // Wait for QR code and logo to render
+        await new Promise((r) => setTimeout(r, isMobile ? 1200 : 600));
+      
+        const qrCanvas = qrDownloadRef.current?.querySelector('canvas');
+        if (!qrCanvas) {
+          alert('QR code not ready yet. Please try again.');
+          setShowDownloadLayout(false);
+          return;
+        }
+      
+        if (!qrDownloadRef.current) return;
         const canvas = await html2canvas(qrDownloadRef.current, {
           useCORS: true,
           backgroundColor: null,
           scale: 2,
         });
       
-        // 3. Convert to blob/url
         canvas.toBlob((blob) => {
           if (!blob) return;
       
           const url = URL.createObjectURL(blob);
-      
           if (isMobile) {
             const newWin = window.open('', '_blank');
             if (newWin) {
               newWin.document.write(`
                 <html>
                   <head><title>Vuoiaggio Promo</title></head>
-                  <body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh;background:#fff;">
+                  <body style="margin:0;display:flex;justify-content:center;align-items:center;height:100vh;background:#fff;">
                     <img src="${url}" style="max-width:100%;height:auto;" />
                   </body>
                 </html>
@@ -275,13 +281,12 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
               setShowDownloadLayout(false);
             }
           } else {
-            // DESKTOP DOWNLOAD
             saveAs(blob, `vuoiaggio-promote-${referenceId}.png`);
             setShowDownloadLayout(false);
             promoteModal.onClose();
           }
         });
-      }}              
+      }}           
       title="Vuoiaggio Passcode"
       actionLabel="Save Passcode"
       disabled={false}
