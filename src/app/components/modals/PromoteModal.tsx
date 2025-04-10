@@ -26,12 +26,29 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
   const [copied, setCopied] = useState(false);
 
   const [showDownloadLayout, setShowDownloadLayout] = useState(false);
+  const [mobilePreviewUrl, setMobilePreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (promoteModal.isOpen && currentUser?.referenceId) {
       setReferenceId(currentUser.referenceId);
     }
   }, [promoteModal.isOpen, currentUser]);
+
+  const downloadImage = async () => {
+    setShowDownloadLayout(true);
+  
+    await new Promise((r) => setTimeout(r, 500));
+    if (!qrDownloadRef.current) return;
+  
+    const canvas = await html2canvas(qrDownloadRef.current, {
+      useCORS: true,
+      backgroundColor: null,
+      scale: 2,
+    });
+  
+    const dataUrl = canvas.toDataURL('image/png');
+    setMobilePreviewUrl(dataUrl);
+  };  
 
   const bodyContent = (
     <div className="flex flex-col items-center gap-4">
@@ -63,15 +80,14 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
             <div className="absolute inset-0 bg-[#25F4EE]/80 blur-[6px] scale-110" />
             {/* Logo */}
             <div className="relative z-10 w-full h-full flex items-center justify-center">
-              <Image
-                src={`${window.location.origin}/images/qrlogo.png?cb=${Date.now()}`}
-                // crossOrigin="anonymous"
-                // unoptimized
-                alt="Logo"
-                className="w-4/5 h-4/5 object-contain rotate-45"
-                width={32}
-                height={32}
-              />
+            <Image
+              src="/images/qrlogo.png"
+              alt="Logo"
+              width={32}
+              height={32}
+              className="w-4/5 h-4/5 object-contain rotate-45"
+              style={{ imageRendering: 'auto' }}
+            />
             </div>
           </div>
           </div>
@@ -108,7 +124,6 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
           </div>
         )}
       </div>
-
 
       {showDownloadLayout && (
   <div className="fixed -z-50 opacity-0 pointer-events-none">
@@ -157,6 +172,35 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
     </div>
   );  
 
+  {typeof window !== 'undefined' && /iPad|iPhone|iPod|Android/.test(navigator.userAgent) && (
+    <button
+      onClick={async () => {
+        await downloadImage();
+        if (mobilePreviewUrl) {
+          const newWin = window.open();
+          if (newWin) {
+            newWin.document.write(`
+              <html>
+                <head><title>Vuoiaggio Promo</title></head>
+                <body style="margin:0;display:flex;justify-content:center;align-items:center;height:100vh;background:#fff;">
+                  <img src="${mobilePreviewUrl}" style="max-width:100%;height:auto;" />
+                </body>
+              </html>
+            `);
+          } else {
+            alert('Please enable pop-ups to view and save the image.');
+          }
+          setShowDownloadLayout(false);
+          promoteModal.onClose();
+        }
+      }}
+      className="text-sm text-blue-600 border border-blue-600 px-4 py-2 rounded-lg mt-2"
+    >
+      Save Promo (Mobile)
+    </button>
+  )}
+  
+
   return (
     <Modal
       isOpen={promoteModal.isOpen}
@@ -180,7 +224,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
           }),
         ]);
       
-        // Wait for DOM updates
+        // Wait for DOM to fully render
         await new Promise((r) => setTimeout(r, 500));
       
         if (!qrDownloadRef.current) return;
@@ -205,8 +249,8 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
                 </body>
               </html>
             `);
-        
-            // Give Safari time to load the new window before closing modal
+      
+            // Delay modal closing to give time for rendering
             setTimeout(() => {
               setShowDownloadLayout(false);
               promoteModal.onClose();
@@ -216,10 +260,11 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
             setShowDownloadLayout(false);
           }
         } else {
+          // Desktop: trigger download
           saveAs(dataUrl, `vuoiaggio-promote-${referenceId}.png`);
           setShowDownloadLayout(false);
           promoteModal.onClose();
-        }        
+        }
       }}      
       title="Vuoiaggio Passcode"
       actionLabel="Save Passcode"
