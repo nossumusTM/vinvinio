@@ -100,7 +100,7 @@ const RegisterModal = () => {
             <Heading title='Welcome to Vuoiaggio' subtitle='' center/>
 
            {/* Role selection */}
-            {/* <div className="flex justify-baseline items-center gap-4 flex-wrap">
+            <div className="flex justify-baseline items-center gap-4 flex-wrap">
             <p>I&apos;m a:</p>
             {['customer', 'host', 'promoter'].map((option) => {
                 const isSelected = role === option;
@@ -121,7 +121,7 @@ const RegisterModal = () => {
                 </button>
                 );
             })}
-            </div> */}
+            </div>
 
             <Input
                 id="email"

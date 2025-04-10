@@ -242,10 +242,10 @@ const CheckoutPage = () => {
         const saved = cardRes.data;
 
           const CryptoJS = await import('crypto-js');
-          const key = process.env.NEXT_PUBLIC_CARD_SECRET_KEY;
+          const key = process.env.CARD_SECRET_KEY;
   
           if (!key) {
-            console.warn('❗️Missing NEXT_PUBLIC_CARD_SECRET_KEY');
+            console.warn('❗️Missing CARD_SECRET_KEY');
             return;
           }
   

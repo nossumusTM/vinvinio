@@ -5,7 +5,7 @@ import prisma from '@/app/libs/prismadb';
 export const dynamic = 'force-dynamic';
 import CryptoJS from 'crypto-js';
 
-const SECRET_KEY = process.env.NEXT_PUBLIC_CARD_SECRET_KEY!; // set this in your .env
+const SECRET_KEY = process.env.CARD_SECRET_KEY!; // set this in your .env
 
 export async function POST(req: Request) {
   try {

@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import prisma from "@/app/libs/prismadb";
+import { uploadImageToCloudinary } from "@/app/utils/uploadImageToCloudinary";
 export const dynamic = 'force-dynamic';
 
 export async function PUT(request: Request) {
@@ -9,16 +10,28 @@ export async function PUT(request: Request) {
   if (!currentUser) return new NextResponse("Unauthorized", { status: 401 });
 
   const body = await request.json();
-  const { image } = body;
+  let { image } = body;
 
-  if (!image) return new NextResponse("No image provided", { status: 400 });
+  if (!image || typeof image !== 'string') {
+    return new NextResponse("No image provided", { status: 400 });
+  }
 
+  // ✅ Upload base64 to Cloudinary and get back URL
+  if (image.startsWith('data:image/')) {
+    try {
+      image = await uploadImageToCloudinary(image);
+    } catch (err) {
+      return new NextResponse("Image upload failed", { status: 500 });
+    }
+  }
+
+  // ✅ Save image URL to database
   await prisma.user.update({
     where: { id: currentUser.id },
     data: { image },
   });
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, image });
 }
 
 export async function POST(req: Request) {

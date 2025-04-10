@@ -148,13 +148,33 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
     fetchSavedCard();
   }, [cardUpdated]);  
 
+  // useEffect(() => {
+  //   const fetchAnalytics = async () => {
+  //     const res = await axios.get('/api/analytics/get');
+  //     setAnalytics(res.data);
+  //   };
+  //   fetchAnalytics();
+  // }, []); 
+
   useEffect(() => {
     const fetchAnalytics = async () => {
-      const res = await axios.get('/api/analytics/get');
-      setAnalytics(res.data);
+      try {
+        const res = await axios.get('/api/analytics/get', { timeout: 10000 });
+        setAnalytics(res.data);
+      } catch (error) {
+        console.error('Error fetching analytics:', error);
+      }
     };
+  
+    // Call once immediately on mount
     fetchAnalytics();
-  }, [analytics]); 
+  
+    // Then set interval
+    const interval = setInterval(fetchAnalytics, 20000); // ⏱️ every 20 seconds
+  
+    // Clear interval on unmount
+    return () => clearInterval(interval);
+  }, []);  
 
   useEffect(() => {
     try {
@@ -300,27 +320,13 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
     const croppedBase64 = await getCroppedImg(uploadedImage, croppedAreaPixels);
     setProfileImage(croppedBase64);
     setIsCropping(false);
-  
+
     try {
       await axios.put('/api/users/profile-image', { image: croppedBase64 });
-  
-      // 👇 Fetch updated user profile (if you have such an endpoint)
-      const res = await axios.get('/api/users/current');
-      if (res.data?.image) {
-        setProfileImage(res.data.image);
-      }
-  
-      toast.success('Profile image updated!', {
-        iconTheme: {
-          primary: '#25F4EE',
-          secondary: '#fff',
-        }
-      });
     } catch (err) {
       console.error("Image upload failed", err);
-      toast.error('Failed to upload image.');
     }
-  };  
+  };
 
   const handleCropCancel = () => {
     setIsCropping(false);
@@ -836,7 +842,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
               </div>
               )}
 
-              {activePaymentTab === 'payout' && currentUser.role === 'customer' && (
+              {activePaymentTab === 'payment' && currentUser.role === 'customer' && (
                 <>
                   <Heading title="Payment Method" subtitle="Manage your cards and payment methods" />
                   {!savedCard ? (
@@ -876,9 +882,29 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                         }`}
                     >
                       {/* FRONT SIDE */}
-                      <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-xl flex items-center justify-center">
+                      {/* <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-xl flex items-center justify-center">
                         <p className="text-lg font-semibold tracking-widest">Payment Card</p>
+                      </div> */}
+                      <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-xl flex items-center justify-center">
+                        <Image
+                          src={
+                            savedCard?.number?.replace(/\D/g, '').startsWith('4')
+                              ? '/images/Visa.png'
+                              : savedCard?.number?.replace(/\D/g, '').startsWith('5')
+                              ? '/images/MasterCard.png'
+                              : savedCard?.number?.replace(/\D/g, '').startsWith('3')
+                              ? '/images/americanexpress.png'
+                              : savedCard?.number?.replace(/\D/g, '').startsWith('6')
+                              ? '/images/Discover.png'
+                              : '/images/card.png'
+                          }
+                          alt="Card Type"
+                          className="w-16 h-auto object-contain"
+                          width={64}
+                          height={32}
+                        />
                       </div>
+
 
                       {/* BACK SIDE */}
                       <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-xl rotate-y-180 p-6 flex flex-col justify-between">
@@ -949,9 +975,36 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                         >
                           {/* FRONT */}
                           <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-xl flex items-center justify-center">
-                            <p className="text-lg font-bold tracking-widest uppercase border-b border-white">
+                            {/* <p className="text-lg font-bold tracking-widest uppercase border-b border-white">
                               {savedPayout.method}
-                            </p>
+                            </p> */}
+                             <Image
+                                src={
+                                  savedPayout.method === 'paypal'
+                                    ? '/images/paypal.png'
+                                    : savedPayout.method === 'iban'
+                                    ? '/images/iban.png'
+                                    : savedPayout.method === 'revolut'
+                                    ? '/images/revolut.png'
+                                    : savedPayout.method === 'card' &&
+                                      savedPayout.number?.replace(/\D/g, '').startsWith('4')
+                                    ? '/images/Visa.png'
+                                    : savedPayout.method === 'card' &&
+                                      savedPayout.number?.replace(/\D/g, '').startsWith('5')
+                                    ? '/images/MasterCard.png'
+                                    : savedPayout.method === 'card' &&
+                                      savedPayout.number?.replace(/\D/g, '').startsWith('3')
+                                    ? '/images/americanexpress.png'
+                                    : savedPayout.method === 'card' &&
+                                      savedPayout.number?.replace(/\D/g, '').startsWith('6')
+                                    ? '/images/Discover.png'
+                                    : '/images/card.png'
+                                }
+                                alt={savedPayout.method}
+                                className="w-16 h-auto object-contain"
+                                width={64}
+                                height={32}
+                              />
                           </div>
 
                           {/* BACK SIDE */}
@@ -1322,9 +1375,9 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                       setShowCardModal(false);
 
                       const cardRes = await axios.get('/api/users/get-card');
-                      const NEXT_PUBLIC_CARD_SECRET_KEY = process.env.NEXT_PUBLIC_CARD_SECRET_KEY || '';
+                      const CARD_SECRET_KEY = process.env.CARD_SECRET_KEY || '';
                       const decrypt = (text: string) =>
-                        CryptoJS.AES.decrypt(text, NEXT_PUBLIC_CARD_SECRET_KEY).toString(CryptoJS.enc.Utf8);
+                        CryptoJS.AES.decrypt(text, CARD_SECRET_KEY).toString(CryptoJS.enc.Utf8);
 
                       setSavedCard({
                         number: decrypt(cardRes.data.number),
@@ -1452,11 +1505,41 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                       }`}
                     >
                       {/* FRONT SIDE */}
-                      <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-xl flex items-center justify-center">
+                      {/* <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-xl flex items-center justify-center">
                         <p className="text-lg font-bold tracking-widest uppercase border-b border-white">
                           {savedPayout.method}
                         </p>
+                      </div> */}
+                      <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-xl flex items-center justify-center">
+                        <Image
+                          src={
+                            savedPayout.method === 'paypal'
+                              ? '/images/paypal.png'
+                              : savedPayout.method === 'iban'
+                              ? '/images/iban.png'
+                              : savedPayout.method === 'revolut'
+                              ? '/images/revolut.png'
+                              : savedPayout.method === 'card' &&
+                                savedPayout.number?.replace(/\D/g, '').startsWith('4')
+                              ? '/images/Visa.png'
+                              : savedPayout.method === 'card' &&
+                                savedPayout.number?.replace(/\D/g, '').startsWith('5')
+                              ? '/images/MasterCard.png'
+                              : savedPayout.method === 'card' &&
+                                savedPayout.number?.replace(/\D/g, '').startsWith('3')
+                              ? '/images/americanexpress.png'
+                              : savedPayout.method === 'card' &&
+                                savedPayout.number?.replace(/\D/g, '').startsWith('6')
+                              ? '/images/Discover.png'
+                              : '/images/card.png'
+                          }
+                          alt={savedPayout.method}
+                          className="w-16 h-auto object-contain"
+                          width={64}
+                          height={32}
+                        />
                       </div>
+
 
                       {/* BACK SIDE */}
                       <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-xl rotate-y-180 p-6 flex flex-col justify-center items-center gap-4">
