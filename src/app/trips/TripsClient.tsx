@@ -241,7 +241,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
               )}
               </div>
 
-              {currentUser?.role === 'promoter' && (
+              {currentUser?.role === 'customer' && (
                 <div className="mt-4 border-t pt-6 flex flex-col items-center justify-center text-center">
                   {submittedReviews[reservation.id] ? (
                     <>
