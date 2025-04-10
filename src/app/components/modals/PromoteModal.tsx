@@ -38,6 +38,14 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
   }, [promoteModal.isOpen, currentUser]);
 
   useEffect(() => {
+    // Preload assets
+    const preloadLogo = new window.Image();
+    preloadLogo.src = '/images/qrlogo.png';
+  
+    const preloadBanner = new window.Image();
+    preloadBanner.src = '/images/promo-banner.jpg';
+  
+    // Trigger download preview on mobile when modal opens
     if (promoteModal.isOpen && /iPhone|iPad|Android/.test(navigator.userAgent)) {
       downloadImage();
     }
@@ -101,14 +109,15 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
           {/* </div> */}
 
           <div className="absolute top-1/2 left-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center pointer-events-none">
-            <div className="absolute inset-0 bg-[#25F4EE]/80 blur-[6px] rounded-full scale-110" />
+            <div className="absolute inset-0 bg-[#25F4EE]/80 blur-[6px] rounded-full scale-110 z-0" />
             <img
               src="/images/qrlogo.png"
               alt="QR Logo"
-              className="relative w-4/5 h-4/5 object-contain rotate-45 z-20"
+              className="relative w-4/5 h-4/5 object-contain rotate-45 z-10"
               style={{ pointerEvents: 'none' }}
             />
           </div>
+
           </div>
         </div>
       </div>
@@ -227,130 +236,52 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
       onSubmit={async () => {
         const isMobile = /iPhone|iPad|Android/i.test(navigator.userAgent);
       
-        if (isMobile) {
-          const url = `https://vuoiaggio.netlify.app/reference/${referenceId}`;
-          const html = `
-            <html>
-              <head>
-                <title>Vuoiaggio Promo</title>
-                <style>
-                  body {
-                    margin: 0;
-                    padding: 0;
-                    background: #fff;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    height: 100vh;
-                  }
-                  .container {
-                    position: relative;
-                    width: 600px;
-                    height: 869px;
-                  }
-                  .container img.bg {
-                    width: 100%;
-                    height: 100%;
-                    object-fit: cover;
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                  }
-                  .qr {
-                    position: absolute;
-                    bottom: 20%;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    width: 180px;
-                    height: 180px;
-                    background: white;
-                    padding: 12px;
-                    border-radius: 16px;
-                    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-                  }
-                  .qr canvas {
-                    width: 100% !important;
-                    height: 100% !important;
-                  }
-                  .logo-overlay {
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%) rotate(45deg);
-                    width: 48px;
-                    height: 48px;
-                    border-radius: 50%;
-                    background: rgba(37, 244, 238, 0.8);
-                    backdrop-filter: blur(6px);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                  }
-                  .logo-overlay img {
-                    width: 80%;
-                    height: 80%;
-                    object-fit: contain;
-                  }
-                </style>
-              </head>
-              <body>
-                <div class="container">
-                  <img class="bg" src="/images/promo-banner.jpg" />
-                  <div class="qr">
-                    <canvas id="qrCanvas"></canvas>
-                    <div class="logo-overlay">
-                      <img src="/images/qrlogo.png" />
-                    </div>
-                  </div>
-                </div>
-                <script>
-                  const canvas = document.getElementById('qrCanvas');
-                  const qr = new QRCode(canvas, {
-                    text: "${url}",
-                    width: 180,
-                    height: 180,
-                    colorDark : "#000000",
-                    colorLight : "#ffffff",
-                    correctLevel : QRCode.CorrectLevel.H
-                  });
-                </script>
-                <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
-              </body>
-            </html>
-          `;
-      
-          const newWindow = window.open();
-          if (newWindow) {
-            newWindow.document.open();
-            newWindow.document.write(html);
-            newWindow.document.close();
-          } else {
-            alert('Please enable pop-ups to view and save the image.');
-          }
-      
-          return;
-        }
-      
-        // DESKTOP BEHAVIOR
+        // 1. Wait for image block to be ready
         setShowDownloadLayout(true);
-        await new Promise((r) => setTimeout(r, 500));
-      
+        await new Promise((r) => setTimeout(r, 600));
         if (!qrDownloadRef.current) return;
       
+        // 2. Merge into 1 canvas
         const canvas = await html2canvas(qrDownloadRef.current, {
           useCORS: true,
           backgroundColor: null,
           scale: 2,
         });
       
+        // 3. Convert to blob/url
         canvas.toBlob((blob) => {
           if (!blob) return;
-          saveAs(blob, `vuoiaggio-promote-${referenceId}.png`);
-        });
       
-        setShowDownloadLayout(false);
-        promoteModal.onClose();
-      }}           
+          const url = URL.createObjectURL(blob);
+      
+          if (isMobile) {
+            const newWin = window.open('', '_blank');
+            if (newWin) {
+              newWin.document.write(`
+                <html>
+                  <head><title>Vuoiaggio Promo</title></head>
+                  <body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh;background:#fff;">
+                    <img src="${url}" style="max-width:100%;height:auto;" />
+                  </body>
+                </html>
+              `);
+              newWin.document.close();
+              setTimeout(() => {
+                setShowDownloadLayout(false);
+                promoteModal.onClose();
+              }, 1000);
+            } else {
+              alert('Please enable pop-ups to view and save the image.');
+              setShowDownloadLayout(false);
+            }
+          } else {
+            // DESKTOP DOWNLOAD
+            saveAs(blob, `vuoiaggio-promote-${referenceId}.png`);
+            setShowDownloadLayout(false);
+            promoteModal.onClose();
+          }
+        });
+      }}              
       title="Vuoiaggio Passcode"
       actionLabel="Save Passcode"
       disabled={false}
