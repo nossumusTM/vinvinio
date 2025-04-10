@@ -879,9 +879,10 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                     onClick={() => setIsFlipped(prev => !prev)}
                   >
                     <div
-                      className={`absolute w-full h-full duration-700 transform transition-transform preserve-3d ${isFlipped ? 'rotate-y-180' : ''
-                        }`}
-                    >
+                      className={`absolute w-full h-full sm:h-full h-[90%] duration-700 transform transition-transform preserve-3d ${
+                        isFlipped ? 'rotate-y-180' : ''
+                      }`}
+                      >
                       {/* FRONT SIDE */}
                       {/* <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-xl flex items-center justify-center">
                         <p className="text-lg font-semibold tracking-widest">Payment Card</p>
@@ -900,7 +901,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                               : '/images/card.png'
                           }
                           alt="Card Type"
-                          className="w-16 h-auto object-contain"
+                          className="w-24 h-auto object-contain"
                           width={64}
                           height={32}
                         />
@@ -970,10 +971,10 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                         onClick={() => setIsFlipped(prev => !prev)}
                       >
                         <div
-                          className={`absolute w-full h-full duration-700 transform transition-transform preserve-3d ${
+                          className={`absolute w-full h-full sm:h-full h-[90%] duration-700 transform transition-transform preserve-3d ${
                             isFlipped ? 'rotate-y-180' : ''
                           }`}
-                        >
+                          >
                           {/* FRONT */}
                           <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-xl flex items-center justify-center">
                             {/* <p className="text-lg font-bold tracking-widest uppercase border-b border-white">
@@ -1002,7 +1003,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                                     : '/images/card.png'
                                 }
                                 alt={savedPayout.method}
-                                className="w-16 h-auto object-contain"
+                                className="w-24 h-auto object-contain"
                                 width={64}
                                 height={32}
                               />
@@ -1497,10 +1498,10 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                     onClick={() => setIsFlipped(prev => !prev)}
                   >
                     <div
-                      className={`absolute w-full h-full duration-700 transform transition-transform preserve-3d ${
+                      className={`absolute w-full h-full sm:h-full h-[90%] duration-700 transform transition-transform preserve-3d ${
                         isFlipped ? 'rotate-y-180' : ''
                       }`}
-                    >
+                      >
                       {/* FRONT SIDE */}
                       {/* <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-xl flex items-center justify-center">
                         <p className="text-lg font-bold tracking-widest uppercase border-b border-white">
@@ -1531,7 +1532,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                               : '/images/card.png'
                           }
                           alt={savedPayout.method}
-                          className="w-16 h-auto object-contain"
+                          className="w-24 h-auto object-contain"
                           width={64}
                           height={32}
                         />

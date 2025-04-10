@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { TbBrandTelegram, TbBrandTiktok, TbBrandInstagram, TbBrandFacebook, TbBrandX } from 'react-icons/tb';
 import useMessenger from '@/app/hooks/useMessager';
-import FooterModal from './modals/FooterModal';
+import Modal from './modals/Modal';
 
 const Footer = () => {
 
@@ -302,8 +302,8 @@ const Footer = () => {
     </div>
     </div>
 
-      {/* Cancellation Policy FooterModal */}
-      <FooterModal
+      {/* Cancellation Policy Modal */}
+      <Modal
         isOpen={isCancellationOpen}
         onClose={() => setIsCancellationOpen(false)}
         onSubmit={() => setIsCancellationOpen(false)}
@@ -313,8 +313,8 @@ const Footer = () => {
         className="max-h-[65vh] overflow-y-auto"
       />
 
-      {/* Promoters Guide FooterModal */}
-      <FooterModal
+      {/* Promoters Guide Modal */}
+      <Modal
         isOpen={isPromoterGuideOpen}
         onClose={() => setIsPromoterGuideOpen(false)}
         onSubmit={() => setIsPromoterGuideOpen(false)}
@@ -324,8 +324,8 @@ const Footer = () => {
         className="max-h-[65vh] overflow-y-auto"
       />
 
-      {/* Privacy Policy FooterModal */}
-      <FooterModal
+      {/* Privacy Policy Modal */}
+      <Modal
         isOpen={isPrivacyOpen}
         onClose={() => setIsPrivacyOpen(false)}
         onSubmit={() => setIsPrivacyOpen(false)}
@@ -335,8 +335,8 @@ const Footer = () => {
         className="max-h-[65vh] overflow-y-auto"
       />
 
-      {/* Terms of Service FooterModal */}
-      <FooterModal
+      {/* Terms of Service Modal */}
+      <Modal
         isOpen={isTermsOpen}
         onClose={() => setIsTermsOpen(false)}
         onSubmit={() => setIsTermsOpen(false)}
