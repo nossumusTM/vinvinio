@@ -318,7 +318,7 @@ const Footer = () => {
         isOpen={isPromoterGuideOpen}
         onClose={() => setIsPromoterGuideOpen(false)}
         onSubmit={() => setIsPromoterGuideOpen(false)}
-        title="Promoters' Guide"
+        title="Promoters&apos; Guide"
         body={promotersGuideContent}
         actionLabel="Close"
         className="max-h-[65vh] overflow-y-auto"
