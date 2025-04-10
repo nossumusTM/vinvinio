@@ -66,6 +66,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
               <Image
                 src="/images/qrlogo.png"
                 crossOrigin="anonymous"
+                unoptimized
                 alt="Logo"
                 className="w-4/5 h-4/5 object-contain rotate-45"
                 width={32}
@@ -161,6 +162,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
       onSubmit={async () => {
         setShowDownloadLayout(true);
       
+        // Preload all images
         await Promise.all([
           new Promise<void>((resolve) => {
             const preloadBanner = new window.Image();
@@ -175,9 +177,9 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
             preloadLogo.onload = () => resolve();
           }),
         ]);
-        
-        // Give DOM a moment to render images fully
-        await new Promise((r) => setTimeout(r, 500));        
+      
+        // Wait for DOM to update
+        await new Promise((r) => setTimeout(r, 500));
       
         if (!qrDownloadRef.current) return;
       
@@ -187,41 +189,32 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
           scale: 2,
         });
       
-        const isMobile = /iPad|iPhone|iPod|Android/.test(navigator.userAgent);
-        const dataUrl = canvas.toDataURL('image/png');
+        canvas.toBlob((blob) => {
+          if (!blob) return;
+          const url = URL.createObjectURL(blob);
       
-        if (isMobile) {
-          // Open image in new tab for long press save
-          const newWindow = window.open();
-          if (newWindow) {
-            const html = `
-              <html>
-                <head><title>Save Promo Banner</title></head>
-                <body style="margin:0;display:flex;justify-content:center;align-items:center;height:100vh;background:#fff;">
-                  <img src="${dataUrl}" style="max-width:100%;height:auto;" />
-                </body>
-              </html>
-            `;
-            newWindow.document.open();
-            newWindow.document.write(html);
-            newWindow.document.close();
+          const isMobile = /iPad|iPhone|iPod|Android/.test(navigator.userAgent);
+      
+          if (isMobile) {
+            // ✅ Use <a target="_blank"> to open Blob in new tab
+            const a = document.createElement('a');
+            a.href = url;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            a.click();
           } else {
-            alert('Please allow pop-ups to view and save the image.');
+            // ✅ Desktop direct download
+            saveAs(blob, `vuoiaggio-promote-${referenceId}.png`);
           }
-
-        } else {
-          // Desktop: trigger download
-          const link = document.createElement('a');
-          link.href = dataUrl;
-          link.download = `vuoiaggio-promote-${referenceId}.png`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        }
+      
+          setTimeout(() => {
+            URL.revokeObjectURL(url);
+          }, 3000);
+        });
       
         setShowDownloadLayout(false);
         promoteModal.onClose();
-      }}
+      }}      
       title="Vuoiaggio Passcode"
       actionLabel="Save Passcode"
       disabled={false}
