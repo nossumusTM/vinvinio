@@ -64,9 +64,9 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
             {/* Logo */}
             <div className="relative z-10 w-full h-full flex items-center justify-center">
               <Image
-                src="/images/qrlogo.png"
-                crossOrigin="anonymous"
-                unoptimized
+                src={`${window.location.origin}/images/qrlogo.png?cb=${Date.now()}`}
+                // crossOrigin="anonymous"
+                // unoptimized
                 alt="Logo"
                 className="w-4/5 h-4/5 object-contain rotate-45"
                 width={32}
@@ -195,7 +195,6 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
         const isMobile = /iPad|iPhone|iPod|Android/.test(navigator.userAgent);
       
         if (isMobile) {
-          // ✅ Open image in a new tab for long-press save (Safari-safe)
           const newWindow = window.open();
           if (newWindow) {
             newWindow.document.write(`
@@ -206,16 +205,21 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
                 </body>
               </html>
             `);
+        
+            // Give Safari time to load the new window before closing modal
+            setTimeout(() => {
+              setShowDownloadLayout(false);
+              promoteModal.onClose();
+            }, 1000);
           } else {
             alert('Please enable pop-ups to view and save the image.');
+            setShowDownloadLayout(false);
           }
         } else {
-          // ✅ Trigger file download on desktop
           saveAs(dataUrl, `vuoiaggio-promote-${referenceId}.png`);
-        }
-      
-        setShowDownloadLayout(false);
-        promoteModal.onClose();
+          setShowDownloadLayout(false);
+          promoteModal.onClose();
+        }        
       }}      
       title="Vuoiaggio Passcode"
       actionLabel="Save Passcode"
