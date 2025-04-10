@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { QRCodeCanvas } from 'qrcode.react';
 import Image from 'next/image';
+import NextImage from 'next/image';
 
 import Modal from './Modal';
 import usePromoteModal from '@/app/hooks/usePromoteModal';
@@ -27,6 +28,8 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
 
   const [showDownloadLayout, setShowDownloadLayout] = useState(false);
   const [mobilePreviewUrl, setMobilePreviewUrl] = useState<string | null>(null);
+
+  const banner = new window.Image();
 
   useEffect(() => {
     if (promoteModal.isOpen && currentUser?.referenceId) {
@@ -75,20 +78,34 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
               className='p-1'
               includeMargin={false}
             />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 shadow-md w-10 h-10 rounded-full overflow-hidden">
+          {/* <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 shadow-md w-10 h-10 rounded-full overflow-hidden"> */}
             {/* Simulated glass blur background */}
-            <div className="absolute inset-0 bg-[#25F4EE]/80 blur-[6px] scale-110" />
+            {/* <div className="absolute inset-0 bg-[#25F4EE]/80 blur-[6px] scale-110" /> */}
             {/* Logo */}
-            <div className="relative z-10 w-full h-full flex items-center justify-center">
-            <Image
+            {/* <div className="relative z-10 w-full h-full flex items-center justify-center"> */}
+            {/* <Image
               src="/images/qrlogo.png"
               alt="Logo"
               width={32}
               height={32}
               className="w-4/5 h-4/5 object-contain rotate-45"
               style={{ imageRendering: 'auto' }}
+            /> */}
+            {/* </div> */}
+          {/* </div> */}
+
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 z-10 flex items-center justify-center">
+            <div className="absolute inset-0 bg-[#25F4EE]/80 blur-[6px] rounded-full scale-110 z-0" />
+            <NextImage
+              src="/images/qrlogo.png"
+              alt="QR Logo"
+              width={32}
+              height={32}
+              className="relative z-10 w-4/5 h-4/5 object-contain rotate-45"
+              priority
+              unoptimized
+              crossOrigin="anonymous"
             />
-            </div>
           </div>
           </div>
         </div>
@@ -174,30 +191,24 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
 
   {typeof window !== 'undefined' && /iPad|iPhone|iPod|Android/.test(navigator.userAgent) && (
     <button
-      onClick={async () => {
-        await downloadImage();
-        if (mobilePreviewUrl) {
-          const newWin = window.open();
-          if (newWin) {
-            newWin.document.write(`
-              <html>
-                <head><title>Vuoiaggio Promo</title></head>
-                <body style="margin:0;display:flex;justify-content:center;align-items:center;height:100vh;background:#fff;">
-                  <img src="${mobilePreviewUrl}" style="max-width:100%;height:auto;" />
-                </body>
-              </html>
-            `);
-          } else {
-            alert('Please enable pop-ups to view and save the image.');
+        onClick={async () => {
+          await downloadImage();
+          if (mobilePreviewUrl) {
+            const newWindow = window.open('', '_blank');
+            if (newWindow) {
+              newWindow.document.write(`
+                <html><body style="margin:0;background:#fff;display:flex;align-items:center;justify-content:center;height:100vh">
+                <img src="${mobilePreviewUrl}" style="max-width:100%;height:auto;" />
+                </body></html>
+              `);
+              newWindow.document.close();
+            }
           }
-          setShowDownloadLayout(false);
-          promoteModal.onClose();
-        }
-      }}
-      className="text-sm text-blue-600 border border-blue-600 px-4 py-2 rounded-lg mt-2"
-    >
-      Save Promo (Mobile)
-    </button>
+        }}
+        className="text-sm mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg shadow"
+      >
+        Save Mobile
+      </button>
   )}
   
 
@@ -208,23 +219,22 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
       onSubmit={async () => {
         setShowDownloadLayout(true);
       
-        // Preload all images (promo-banner and qr-logo)
+        // Preload images
         await Promise.all([
           new Promise<void>((resolve) => {
-            const preloadBanner = new window.Image();
-            preloadBanner.crossOrigin = 'anonymous';
-            preloadBanner.src = '/images/promo-banner.jpg';
-            preloadBanner.onload = () => resolve();
+            const banner = new window.Image();
+            banner.crossOrigin = 'anonymous';
+            banner.src = '/images/promo-banner.jpg';
+            banner.onload = () => resolve();
           }),
           new Promise<void>((resolve) => {
-            const preloadLogo = new window.Image();
-            preloadLogo.crossOrigin = 'anonymous';
-            preloadLogo.src = '/images/qrlogo.png';
-            preloadLogo.onload = () => resolve();
+            const logo = new window.Image();
+            logo.crossOrigin = 'anonymous';
+            logo.src = '/images/qrlogo.png';
+            logo.onload = () => resolve();
           }),
         ]);
       
-        // Wait for DOM to fully render
         await new Promise((r) => setTimeout(r, 500));
       
         if (!qrDownloadRef.current) return;
@@ -239,7 +249,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
         const isMobile = /iPad|iPhone|iPod|Android/.test(navigator.userAgent);
       
         if (isMobile) {
-          const newWindow = window.open();
+          const newWindow = window.open('', '_blank');
           if (newWindow) {
             newWindow.document.write(`
               <html>
@@ -249,8 +259,6 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
                 </body>
               </html>
             `);
-      
-            // Delay modal closing to give time for rendering
             setTimeout(() => {
               setShowDownloadLayout(false);
               promoteModal.onClose();
@@ -260,12 +268,11 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
             setShowDownloadLayout(false);
           }
         } else {
-          // Desktop: trigger download
           saveAs(dataUrl, `vuoiaggio-promote-${referenceId}.png`);
           setShowDownloadLayout(false);
           promoteModal.onClose();
         }
-      }}      
+      }}        
       title="Vuoiaggio Passcode"
       actionLabel="Save Passcode"
       disabled={false}
