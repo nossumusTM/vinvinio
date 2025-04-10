@@ -117,6 +117,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
               className="w-4/5 h-4/5 object-contain rotate-45 relative z-10"
             />
           </div>
+          
           </div>
         </div>
       </div>
