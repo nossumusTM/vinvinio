@@ -392,7 +392,8 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
       </div>
 
       {/* Avatar & name */}
-      <div className="pl-5 pr-5 pb-6 border-b-[1px] border-neutral-300">
+      <div className="pl-5 pt-3 pr-5 pb-6 border-b border-gray-300 my-2 rounded-xl shadow-sm">
+        {/* Divider */}
         <div className="flex items-center gap-4 mt-4">
           <div
             className="relative group cursor-pointer"
@@ -779,7 +780,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                           toast.error('Failed to update password. Check current password.')
                         }
                       }}
-                      className="text-sm text-white bg-[#000] hover:bg-neutral-700 px-4 py-1 rounded"
+                      className="text-sm text-white bg-[#000] hover:bg-neutral-700 p-2 rounded-lg"
                     >
                       Update Password
                     </button>
@@ -1441,10 +1442,6 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
               <p className="text-sm text-neutral-600">View and update your withdraw methods</p>
             </div>
           </div>
-
-            <div className='pt-6'>
-                <hr className="my-2"/>
-              </div>
         </>
       )}
 
@@ -1606,7 +1603,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
         </div>
       )}
 
-      {currentUser.role === 'moderator' && (
+      {currentUser.role === 'host' && (
         <div className="mt-6 space-y-2 space-x-4">
           <input
             type="text"
@@ -1620,9 +1617,14 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
               if (!targetUserId) return alert('Please provide a promoter userId');
               try {
                 const res = await axios.post('/api/analytics/withdraw', { userId: targetUserId });
-                alert(res.data.message);
+                toast.success(res.data.message, {
+                  iconTheme: {
+                      primary: '#25F4EE',
+                      secondary: '#fff',
+                  },
+                });
               } catch (err) {
-                alert('Failed to withdraw for this promoter.');
+                toast.error('Failed to withdraw for this promoter.');
                 console.error(err);
               }
             }}

@@ -39,7 +39,8 @@ const RegisterModal = () => {
         defaultValues: {
             name: '',
             email: '',
-            password: ''
+            password: '',
+            confirmPassword: '',
         },
     });
 
@@ -50,6 +51,12 @@ const RegisterModal = () => {
             ...data,
             role // Include selected role
         };
+
+        if (data.password !== data.confirmPassword) {
+          toast.error('Passwords do not match');
+          setIsLoading(false);
+          return;
+        }        
 
         axios.post('/api/register', formData)
             .then(() => {
@@ -151,6 +158,17 @@ const RegisterModal = () => {
                 required
                 inputClassName="rounded-xl"
             />
+            <Input
+              id="confirmPassword"
+              label="Confirm Password"
+              type="password"
+              disabled={isLoading}
+              register={register}
+              errors={errors}
+              required
+              inputClassName="rounded-xl"
+            />
+
 
             {popupMessage && (
             <ConfirmPopup
