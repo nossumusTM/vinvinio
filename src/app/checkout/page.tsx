@@ -6,6 +6,7 @@ import Image from 'next/image';
 import axios from 'axios';
 import { format } from 'date-fns';
 import { TbCalendarTime } from "react-icons/tb";
+import toast from 'react-hot-toast';
 
  import getCurrentUser from  '@/app/actions/getCurrentUser';
 import { useSession } from 'next-auth/react';
@@ -153,7 +154,12 @@ const CheckoutPage = () => {
         });
       }
   
-      setPopupMessage("Payment confirmed! Reservation created.");
+      toast.success('Payment confirmed! Reservation created.', {
+        iconTheme: {
+            primary: '#25F4EE',
+            secondary: '#fff',
+        },
+      });
     } catch (error) {
       console.error('Error creating reservation:', error);
       setPopupMessage("Something went wrong. Please try again.");

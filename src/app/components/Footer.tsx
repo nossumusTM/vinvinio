@@ -15,12 +15,12 @@ const Footer = () => {
   const cancellationContent = (
     <div className="text-gray-700 text-sm space-y-5 leading-relaxed">
       <p>
-        Thank you for choosing to book your experience through <strong>Voiaggio</strong>, your trusted platform for unique local adventures and curated travel experiences. Our mission is to ensure every guest has a seamless and enriching journey. We understand that plans can change, and our cancellation policy is designed to be fair and transparent while respecting the time and effort of our hosts.
+        Thank you for choosing to book your experience through <strong>Vuoiaggio</strong>, your trusted platform for unique local adventures and curated travel experiences. Our mission is to ensure every guest has a seamless and enriching journey. We understand that plans can change, and our cancellation policy is designed to be fair and transparent while respecting the time and effort of our hosts.
       </p>
   
       <h3 className="text-base font-semibold mt-6">Cancellation Rules for Guests</h3>
       <p>
-        All cancellations must be requested through your booking account or by contacting our support team via email.
+      All cancellations must be requested through your booking account, by contacting our support team via email, or by sending a message directly to Customer Service via Messenger.
       </p>
   
       <div className="space-y-3">
@@ -59,10 +59,11 @@ const Footer = () => {
         If you have any questions about our cancellation policy or need assistance with your booking, feel free to reach out.
       </p>
       <div className="space-y-1 text-sm">
-        <p><strong>Voiaggio Travel Services</strong></p>
-        <p>123 Riviera Lane, Florence, Italy</p>
-        <p>Phone: +39 055 123 4567</p>
-        <p>Email: <a href="mailto:privacy@sample.com" className="text-blue-600 underline">privacy@sample.com</a></p>
+        <p><strong>Vuoiaggio International Srls.</strong></p>
+        <p>P.IVA 57483813574</p>
+        <p>Via Novacella 18, Rome, Italy</p>
+        <p>Phone: +39 371 528 4911</p>
+        <p>Email: <a href="mailto:privacy@vuoiaggio.it" className="text-blue-600 underline">privacy@vuoiaggio.it</a></p>
       </div>
     </div>
   );  
@@ -70,15 +71,15 @@ const Footer = () => {
   const promotersGuideContent = (
     <div className="text-gray-700 text-sm space-y-5 leading-relaxed">
       <p>
-        Welcome to the <strong>Voiaggio International Promoters Program</strong> — a unique opportunity for passionate individuals who want to grow with our global travel platform. Whether you&rsquo;re a content creator, travel enthusiast, digital marketer, or just someone who loves connecting people with amazing experiences, we invite you to become a part of our journey.
+        Welcome to the <strong>Vuoiaggio International Promoters Program</strong> — a unique opportunity for passionate individuals who want to grow with our global travel platform. Whether you&rsquo;re a content creator, travel enthusiast, digital marketer, or just someone who loves connecting people with amazing experiences, we invite you to become a part of our journey.
       </p>
   
       <h3 className="text-base font-semibold mt-6">How to Become a Promoter</h3>
       <p>
-        If you&rsquo;re interested in joining our Promoters Program, simply send us an email at <a href="mailto:promoters@sample.com" className="text-blue-600 underline">promoters@sample.com</a>. Our team will review your request and provide you with access to your unique promoter dashboard, where you&rsquo;ll find your referral tools and track your earnings.
+        If you&rsquo;re interested in joining our Promoters Program, simply send us an email at <a href="mailto:promoters@vuoiaggio.it" className="text-blue-600 underline">promoters@vuoiaggio.it</a>. Our team will review your request and provide you with access to your unique promoter dashboard, where you&rsquo;ll find your referral tools and track your earnings.
       </p>
   
-      <h3 className="text-base font-semibold mt-6">Earning with Voiaggio</h3>
+      <h3 className="text-base font-semibold mt-6">Earning with Vuoiaggio</h3>
       <p>
         As a Promoter, you&rsquo;ll receive <strong>10% of the total revenue</strong> generated through bookings made using your referral ID. Your earnings are calculated monthly and based directly on the bookings confirmed through your shared links.
       </p>
@@ -98,14 +99,15 @@ const Footer = () => {
   
       <h3 className="text-base font-semibold mt-6">Need Assistance?</h3>
       <p>
-        Our support team is always here to help you succeed. For any questions regarding your account, referral tracking, or earnings, please reach out to us at <a href="mailto:promoters@sample.com" className="text-blue-600 underline">promoters@sample.com</a>.
+        Our support team is always here to help you succeed. For any questions regarding your account, referral tracking, or earnings, please reach out to us at <a href="mailto:promoters@vuoiaggio.it" className="text-blue-600 underline">promoters@vuoiaggio.it</a>.
       </p>
   
       <div className="space-y-1 text-sm">
-        <p><strong>Voiaggio International Srls</strong></p>
-        <p>123 Riviera Lane, Florence, Italy</p>
-        <p>Phone: +39 055 123 4567</p>
-        <p>Email: <a href="mailto:privacy@sample.com" className="text-blue-600 underline">privacy@sample.com</a></p>
+        <p><strong>Vuoiaggio International Srls.</strong></p>
+        <p>P.IVA 57483813574</p>
+        <p>Via Novacella 18, Rome, Italy</p>
+        <p>Phone: +39 371 528 4911</p>
+        <p>Email: <a href="mailto:privacy@vuoiaggio.it" className="text-blue-600 underline">privacy@vuoiaggio.it</a></p>
       </div>
     </div>
   );  
@@ -113,7 +115,7 @@ const Footer = () => {
   const privacyPolicyContent = (
     <div className="text-gray-700 text-sm space-y-5 leading-relaxed">
       <p>
-        At <strong>Voiaggio International Srls</strong>, we respect your privacy and are committed to protecting your personal data. This Privacy Policy explains how we collect, use, and safeguard your information when you interact with our platform and services.
+        At <strong>Vuoiaggio International Srls</strong>, we respect your privacy and are committed to protecting your personal data. This Privacy Policy explains how we collect, use, and safeguard your information when you interact with our platform and services.
       </p>
   
       <h3 className="text-base font-semibold mt-6">1. Information We Collect</h3>
@@ -150,7 +152,7 @@ const Footer = () => {
         <li>Withdraw consent for data processing, where applicable.</li>
       </ul>
       <p>
-        To exercise any of these rights, contact us at <a href="mailto:privacy@sample.com" className="text-blue-600 underline">privacy@sample.com</a>.
+        To exercise any of these rights, contact us at <a href="mailto:privacy@vuoiaggio.it" className="text-blue-600 underline">privacy@vuoiaggio.it</a>.
       </p>
   
       <h3 className="text-base font-semibold mt-6">5. Data Security</h3>
@@ -164,10 +166,11 @@ const Footer = () => {
       </p>
   
       <div className="space-y-1 text-sm">
-        <p><strong>Voiaggio International Srls</strong></p>
-        <p>123 Riviera Lane, Florence, Italy</p>
-        <p>Phone: +39 055 123 4567</p>
-        <p>Email: <a href="mailto:privacy@sample.com" className="text-blue-600 underline">privacy@sample.com</a></p>
+        <p><strong>Vuoiaggio International Srls.</strong></p>
+        <p>P.IVA 57483813574</p>
+        <p>Via Novacella 18, Rome, Italy</p>
+        <p>Phone: +39 371 528 4911</p>
+        <p>Email: <a href="mailto:privacy@vuoiaggio.it" className="text-blue-600 underline">privacy@vuoiaggio.it</a></p>
       </div>
     </div>
   );  
@@ -175,7 +178,7 @@ const Footer = () => {
   const termsContent = (
     <div className="text-gray-700 text-sm space-y-5 leading-relaxed">
       <p>
-        Welcome to <strong>Voiaggio International Srls</strong>. By accessing or using our platform, you agree to comply with and be bound by the following Terms of Service. These terms apply to all users, including guests, promoters, and hosts.
+        Welcome to <strong>Vuoiaggio International Srls</strong>. By accessing or using our platform, you agree to comply with and be bound by the following Terms of Service. These terms apply to all users, including guests, promoters, and hosts.
       </p>
   
       <h3 className="text-base font-semibold mt-6">1. Use of Our Services</h3>
@@ -200,12 +203,12 @@ const Footer = () => {
   
       <h3 className="text-base font-semibold mt-6">4. Intellectual Property</h3>
       <p>
-        All content on the platform — including logos, media, listings, and design — is owned or licensed by Voiaggio International and protected by intellectual property laws. You may not copy, reproduce, or distribute our content without written consent.
+        All content on the platform — including logos, media, listings, and design — is owned or licensed by Vuoiaggio International and protected by intellectual property laws. You may not copy, reproduce, or distribute our content without written consent.
       </p>
   
       <h3 className="text-base font-semibold mt-6">5. Limitation of Liability</h3>
       <p>
-        Voiaggio is not responsible for direct or indirect damages arising from the use of our services, including issues during travel or interactions between users. We act solely as a booking intermediary and do not control the conduct of hosts or guests.
+        Vuoiaggio is not responsible for direct or indirect damages arising from the use of our services, including issues during travel or interactions between users. We act solely as a booking intermediary and do not control the conduct of hosts or guests.
       </p>
   
       <h3 className="text-base font-semibold mt-6">6. Termination</h3>
@@ -223,10 +226,11 @@ const Footer = () => {
         For questions or concerns regarding these terms, please contact us at:
       </p>
       <div className="space-y-1 text-sm">
-        <p><strong>Voiaggio International Srls</strong></p>
-        <p>123 Riviera Lane, Florence, Italy</p>
-        <p>Phone: +39 055 123 4567</p>
-        <p>Email: <a href="mailto:privacy@sample.com" className="text-blue-600 underline">privacy@sample.com</a></p>
+        <p><strong>Vuoiaggio International Srls.</strong></p>
+        <p>P.IVA 57483813574</p>
+        <p>Via Novacella 18, Rome, Italy</p>
+        <p>Phone: +39 371 528 4911</p>
+        <p>Email: <a href="mailto:privacy@vuoiaggio.it" className="text-blue-600 underline">privacy@vuoiaggio.it</a></p>
       </div>
     </div>
   );  

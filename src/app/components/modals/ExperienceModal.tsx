@@ -498,7 +498,12 @@ const ExperienceModal = () => {
 
     axios.post('/api/listings', data)
       .then(() => {
-        toast.success('Tour created!');
+        toast.success('Tour created!', {
+          iconTheme: {
+              primary: '#25F4EE',
+              secondary: '#fff',
+          },
+        });
         reset();
         experienceModal.onClose();
         router.refresh();

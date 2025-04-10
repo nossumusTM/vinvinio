@@ -76,7 +76,12 @@ const TripsClient: React.FC<TripsClientProps> = ({
         comment,
       });
   
-      setPopupMessage("Review submitted!");
+      toast.success('Review submitted!', {
+        iconTheme: {
+            primary: '#25F4EE',
+            secondary: '#fff',
+        },
+      });
 
       setSubmittedReviews((prev) => ({
         ...prev,
