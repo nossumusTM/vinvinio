@@ -37,6 +37,12 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
     }
   }, [promoteModal.isOpen, currentUser]);
 
+  useEffect(() => {
+    if (promoteModal.isOpen && /iPhone|iPad|Android/.test(navigator.userAgent)) {
+      downloadImage();
+    }
+  }, [promoteModal.isOpen]);  
+
   const downloadImage = async () => {
     setShowDownloadLayout(true);
   
@@ -94,14 +100,14 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
             {/* </div> */}
           {/* </div> */}
 
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 z-10 flex items-center justify-center">
-            <div className="absolute inset-0 bg-[#25F4EE]/80 blur-[6px] rounded-full scale-110 z-0" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 z-20 flex items-center justify-center">
+            <div className="absolute inset-0 bg-[#25F4EE]/80 blur-[6px] rounded-full scale-110 z-10" />
             <NextImage
               src="/images/qrlogo.png"
               alt="QR Logo"
               width={32}
               height={32}
-              className="relative z-10 w-4/5 h-4/5 object-contain rotate-45"
+              className="relative z-20 w-4/5 h-4/5 object-contain rotate-45"
               priority
               unoptimized
               crossOrigin="anonymous"
@@ -186,31 +192,37 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
           </div>
         </div>
       )}
-    </div>
-  );  
 
-  {typeof window !== 'undefined' && /iPad|iPhone|iPod|Android/.test(navigator.userAgent) && (
-    <button
-        onClick={async () => {
-          await downloadImage();
-          if (mobilePreviewUrl) {
+      {mobilePreviewUrl && (
+        <button
+          onClick={() => {
             const newWindow = window.open('', '_blank');
             if (newWindow) {
               newWindow.document.write(`
-                <html><body style="margin:0;background:#fff;display:flex;align-items:center;justify-content:center;height:100vh">
-                <img src="${mobilePreviewUrl}" style="max-width:100%;height:auto;" />
-                </body></html>
+                <html>
+                  <head><title>Vuoiaggio Promo</title></head>
+                  <body style="margin:0;background:#fff;display:flex;align-items:center;justify-content:center;height:100vh;">
+                    <img src="${mobilePreviewUrl}" style="max-width:100%;height:auto;" />
+                  </body>
+                </html>
               `);
               newWindow.document.close();
+              setTimeout(() => {
+                setShowDownloadLayout(false);
+                promoteModal.onClose();
+              }, 1000);
+            } else {
+              alert('Please enable pop-ups to view and save the image.');
             }
-          }
-        }}
-        className="text-sm mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg shadow"
-      >
-        Save Mobile
-      </button>
-  )}
-  
+          }}
+          className="text-sm mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg shadow"
+        >
+          Save Promo Image
+        </button>
+      )}
+
+    </div>
+  );
 
   return (
     <Modal
