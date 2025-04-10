@@ -65,6 +65,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
             <div className="relative z-10 w-full h-full flex items-center justify-center">
               <Image
                 src="/images/qrlogo.png"
+                crossOrigin="anonymous"
                 alt="Logo"
                 className="w-4/5 h-4/5 object-contain rotate-45"
                 width={32}
@@ -160,16 +161,23 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
       onSubmit={async () => {
         setShowDownloadLayout(true);
       
-        // Ensure image is fully loaded
-        await new Promise<void>((resolve) => {
-          const preloadImage = new window.Image();
-          preloadImage.crossOrigin = 'anonymous';
-          preloadImage.src = '/images/promo-banner.jpg';
-          preloadImage.onload = () => resolve();
-        });
-      
-        // Wait a moment for DOM updates (especially for glassmorphism effects)
-        await new Promise((r) => setTimeout(r, 300));
+        await Promise.all([
+          new Promise<void>((resolve) => {
+            const preloadBanner = new window.Image();
+            preloadBanner.crossOrigin = 'anonymous';
+            preloadBanner.src = '/images/promo-banner.jpg';
+            preloadBanner.onload = () => resolve();
+          }),
+          new Promise<void>((resolve) => {
+            const preloadLogo = new window.Image();
+            preloadLogo.crossOrigin = 'anonymous';
+            preloadLogo.src = '/images/qrlogo.png';
+            preloadLogo.onload = () => resolve();
+          }),
+        ]);
+        
+        // Give DOM a moment to render images fully
+        await new Promise((r) => setTimeout(r, 500));        
       
         if (!qrDownloadRef.current) return;
       
@@ -184,19 +192,23 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
       
         if (isMobile) {
           // Open image in new tab for long press save
-          const win = window.open();
-          if (win) {
-            win.document.write(`
+          const newWindow = window.open();
+          if (newWindow) {
+            const html = `
               <html>
                 <head><title>Save Promo Banner</title></head>
                 <body style="margin:0;display:flex;justify-content:center;align-items:center;height:100vh;background:#fff;">
                   <img src="${dataUrl}" style="max-width:100%;height:auto;" />
                 </body>
               </html>
-            `);
+            `;
+            newWindow.document.open();
+            newWindow.document.write(html);
+            newWindow.document.close();
           } else {
-            alert('Please enable pop-ups to view and save the image.');
+            alert('Please allow pop-ups to view and save the image.');
           }
+
         } else {
           // Desktop: trigger download
           const link = document.createElement('a');

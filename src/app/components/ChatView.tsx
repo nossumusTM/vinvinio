@@ -32,6 +32,7 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [hasScrolledManually, setHasScrolledManually] = useState(false);
   const [hasSentGreeting, setHasSentGreeting] = useState(false);
+  const greetingTriggeredRef = useRef(false);
 
   const CUSTOMER_SERVICE_ID = '67ef2895f045b7ff3d0cf6fc';
 
@@ -97,10 +98,25 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
         const serverMessages: Message[] = await res.json();
         // console.log("✅ Messages fetched:", serverMessages); // <-- Add this   
   
+        // setMessages((prevMessages) => {
+        //   const optimisticMessages = prevMessages.filter((msg) => msg.id.startsWith('temp-'));
+        //   return [...serverMessages, ...optimisticMessages];
+        // });
+
         setMessages((prevMessages) => {
           const optimisticMessages = prevMessages.filter((msg) => msg.id.startsWith('temp-'));
-          return [...serverMessages, ...optimisticMessages];
+        
+          const dedupedMessages = serverMessages.filter(serverMsg =>
+            !optimisticMessages.some(optMsg =>
+              optMsg.text === serverMsg.text &&
+              optMsg.recipientId === serverMsg.recipientId &&
+              Math.abs(new Date(optMsg.createdAt).getTime() - new Date(serverMsg.createdAt).getTime()) < 5000
+            )
+          );
+        
+          return [...dedupedMessages, ...optimisticMessages];
         });
+        
       } catch (err) {
         console.error('❌ Fetch messages error:', err);
       }
@@ -111,8 +127,91 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
     return () => clearInterval(intervalId);
   }, [recipient?.id]);  
 
+  // useEffect(() => {
+  //   if (recipient.id !== CUSTOMER_SERVICE_ID) return;
+  
+  //   const greetingText = 'please specify the topic of assistance';
+  //   const localGreetingKey = `greetingSent-${currentUserId}`;
+  
+  //   const hasGreeting = messages.some(
+  //     (msg) =>
+  //       msg.senderId === CUSTOMER_SERVICE_ID &&
+  //       msg.recipientId === currentUserId &&
+  //       msg.text.toLowerCase().includes(greetingText)
+  //   );
+  
+  //   if (hasGreeting) {
+  //     if (!hasSentGreeting) {
+  //       const alreadyRespondedWithTopic = messages.some(
+  //         (msg) =>
+  //           msg.senderId === CUSTOMER_SERVICE_ID &&
+  //           msg.recipientId === currentUserId &&
+  //           msg.text.toLowerCase().includes('could you please describe your issue')
+  //       );
+  
+  //       setHasSentGreeting(true);
+  //       setAwaitingTopic(!alreadyRespondedWithTopic);
+  //       setAwaitingIssue(alreadyRespondedWithTopic);
+  //       localStorage.setItem(localGreetingKey, 'true');
+  //     }
+  //     return;
+  //   }
+  
+  //   const hasBeenSentBefore = localStorage.getItem(localGreetingKey);
+  
+  //   // ✅ Only send greeting if this is the FIRST time user opens Customer Assistant chat
+  //   const hasMessagesBetweenUserAndCS = messages.some(
+  //     (msg) =>
+  //       (msg.senderId === CUSTOMER_SERVICE_ID && msg.recipientId === currentUserId) ||
+  //       (msg.senderId === currentUserId && msg.recipientId === CUSTOMER_SERVICE_ID)
+  //   );
+  
+  //   if (!hasBeenSentBefore && !hasSentGreeting && !hasMessagesBetweenUserAndCS) {
+  //     const sendGreeting = async () => {
+  //       const greeting = `${getGreeting()}, nice to meet you here. Before we proceed, please specify the topic of assistance:`;
+  
+  //       try {
+  //         await fetch('/api/messages/system', {
+  //           method: 'POST',
+  //           headers: { 'Content-Type': 'application/json' },
+  //           body: JSON.stringify({
+  //             senderId: CUSTOMER_SERVICE_ID,
+  //             recipientId: currentUserId,
+  //             text: greeting,
+  //           }),
+  //         });
+  
+  //         setMessages((prev) => [
+  //           ...prev,
+  //           {
+  //             id: `greeting-${Date.now()}`,
+  //             senderId: CUSTOMER_SERVICE_ID,
+  //             recipientId: currentUserId,
+  //             text: greeting,
+  //             createdAt: new Date().toISOString(),
+  //             seen: true,
+  //           },
+  //         ]);
+  
+  //         setHasSentGreeting(true);
+  //         setAwaitingTopic(true);
+  //         localStorage.setItem(localGreetingKey, 'true');
+  //       } catch (err) {
+  //         console.error('Failed to send greeting:', err);
+  //       }
+  //     };
+  
+  //     sendGreeting();
+  //   }
+  // }, [messages, recipient.id, currentUserId, hasSentGreeting]);  
+
   useEffect(() => {
-    if (recipient.id !== CUSTOMER_SERVICE_ID) return;
+    if (
+      hasSentGreeting ||
+      greetingTriggeredRef.current ||
+      recipient.id !== CUSTOMER_SERVICE_ID
+    )
+      return;
   
     const greetingText = 'please specify the topic of assistance';
     const localGreetingKey = `greetingSent-${currentUserId}`;
@@ -143,7 +242,6 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
   
     const hasBeenSentBefore = localStorage.getItem(localGreetingKey);
   
-    // ✅ Only send greeting if this is the FIRST time user opens Customer Assistant chat
     const hasMessagesBetweenUserAndCS = messages.some(
       (msg) =>
         (msg.senderId === CUSTOMER_SERVICE_ID && msg.recipientId === currentUserId) ||
@@ -151,6 +249,8 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
     );
   
     if (!hasBeenSentBefore && !hasSentGreeting && !hasMessagesBetweenUserAndCS) {
+      greetingTriggeredRef.current = true; // ⬅️ Prevent future re-triggers
+  
       const sendGreeting = async () => {
         const greeting = `${getGreeting()}, nice to meet you here. Before we proceed, please specify the topic of assistance:`;
   
@@ -187,7 +287,7 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
   
       sendGreeting();
     }
-  }, [messages, recipient.id, currentUserId, hasSentGreeting]);  
+  }, [messages, recipient.id, currentUserId, hasSentGreeting]);
   
   useEffect(() => {
     if (recipient.id !== CUSTOMER_SERVICE_ID || messages.length === 0) return;

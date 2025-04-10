@@ -81,7 +81,8 @@ const ConfirmPopup: React.FC<ConfirmPopupProps> = ({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
-        className="p-4 fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm"
+        // className="p-4 fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm"
+        className="p-4 fixed inset-0 z-50 flex items-center justify-center"
       >
         <motion.div
           key="popup-content"
