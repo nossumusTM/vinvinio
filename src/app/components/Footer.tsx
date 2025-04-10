@@ -140,7 +140,7 @@ const Footer = () => {
   const promotersGuideContent = (
     <div className="text-gray-700 text-sm space-y-5 leading-relaxed">
       <p>
-        Welcome to the <strong>Voiaggio International Promoters Program</strong> — a unique opportunity for passionate individuals who want to grow with our global travel platform. Whether you're a content creator, travel enthusiast, digital marketer, or just someone who loves connecting people with amazing experiences, we invite you to become a part of our journey.
+        Welcome to the <strong>Voiaggio International Promoters Program</strong> — a unique opportunity for passionate individuals who want to grow with our global travel platform. Whether you&rsquo;re a content creator, travel enthusiast, digital marketer, or just someone who loves connecting people with amazing experiences, we invite you to become a part of our journey.
       </p>
   
       <h3 className="text-base font-semibold mt-6">How to Become a Promoter</h3>
@@ -150,7 +150,7 @@ const Footer = () => {
   
       <h3 className="text-base font-semibold mt-6">Earning with Voiaggio</h3>
       <p>
-        As a Promoter, you'll receive <strong>10% of the total revenue</strong> generated through bookings made using your referral ID. Your earnings are calculated monthly and based directly on the bookings confirmed through your shared links.
+        As a Promoter, you&rsquo;ll receive <strong>10% of the total revenue</strong> generated through bookings made using your referral ID. Your earnings are calculated monthly and based directly on the bookings confirmed through your shared links.
       </p>
   
       <h3 className="text-base font-semibold mt-6">Global Community, Local Focus</h3>
