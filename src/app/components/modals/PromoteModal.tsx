@@ -188,7 +188,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
         </div>
       )}
 
-      {mobilePreviewUrl && (
+      {/* {mobilePreviewUrl && (
         <button
           onClick={() => {
             const newWindow = window.open('', '_blank');
@@ -214,7 +214,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
         >
           Save Promo Image
         </button>
-      )}
+      )} */}
 
     </div>
   );
