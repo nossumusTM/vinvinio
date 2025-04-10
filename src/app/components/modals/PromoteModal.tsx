@@ -100,19 +100,19 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
             {/* </div> */}
           {/* </div> */}
 
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 z-20 flex items-center justify-center">
-            <div className="absolute inset-0 bg-[#25F4EE]/80 blur-[6px] rounded-full scale-110 z-10" />
-            <NextImage
+          <div className="absolute top-1/2 left-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center pointer-events-none">
+            <div className="absolute inset-0 bg-[#25F4EE]/80 blur-[6px] rounded-full scale-110" />
+            <Image
               src="/images/qrlogo.png"
               alt="QR Logo"
               width={32}
               height={32}
-              className="relative z-20 w-4/5 h-4/5 object-contain rotate-45"
-              priority
+              className="relative w-4/5 h-4/5 object-contain rotate-45"
               unoptimized
-              crossOrigin="anonymous"
+              priority
             />
           </div>
+
           </div>
         </div>
       </div>
@@ -231,7 +231,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
       onSubmit={async () => {
         setShowDownloadLayout(true);
       
-        // Preload images
+        // Preload required images
         await Promise.all([
           new Promise<void>((resolve) => {
             const banner = new window.Image();
@@ -247,6 +247,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
           }),
         ]);
       
+        // Give the DOM time to render QR/logo overlay
         await new Promise((r) => setTimeout(r, 500));
       
         if (!qrDownloadRef.current) return;
@@ -258,7 +259,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
         });
       
         const dataUrl = canvas.toDataURL('image/png');
-        const isMobile = /iPad|iPhone|iPod|Android/.test(navigator.userAgent);
+        const isMobile = /iPad|iPhone|iPod|Android/i.test(navigator.userAgent);
       
         if (isMobile) {
           const newWindow = window.open('', '_blank');
@@ -271,6 +272,9 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
                 </body>
               </html>
             `);
+            newWindow.document.close();
+      
+            // Give Safari time to render before closing modal
             setTimeout(() => {
               setShowDownloadLayout(false);
               promoteModal.onClose();
@@ -280,11 +284,12 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
             setShowDownloadLayout(false);
           }
         } else {
+          // Desktop download
           saveAs(dataUrl, `vuoiaggio-promote-${referenceId}.png`);
           setShowDownloadLayout(false);
           promoteModal.onClose();
         }
-      }}        
+      }}          
       title="Vuoiaggio Passcode"
       actionLabel="Save Passcode"
       disabled={false}
