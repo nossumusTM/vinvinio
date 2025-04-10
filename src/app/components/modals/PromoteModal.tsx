@@ -108,7 +108,6 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
             /> */}
             {/* </div> */}
           {/* </div> */}
-
           <div className="absolute top-1/2 left-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center pointer-events-none">
             <div className="absolute inset-0 bg-[#25F4EE]/80 blur-[6px] rounded-full scale-110 z-0" />
             <img
@@ -117,7 +116,6 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
               crossOrigin="anonymous"
               className="w-4/5 h-4/5 object-contain rotate-45 relative z-10"
             />
-
           </div>
 
           </div>
