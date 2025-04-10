@@ -142,9 +142,11 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
               src="/images/qrlogo.png"
               alt="Logo"
               className="w-4/5 h-4/5 object-contain rotate-45"
-              width={48}
-              height={48}
+              width={32}
+              height={32}
               unoptimized
+              priority
+              crossOrigin="anonymous"
             />
           </div>
         </div>
@@ -162,7 +164,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
       onSubmit={async () => {
         setShowDownloadLayout(true);
       
-        // Preload all images
+        // Preload all images (promo-banner and qr-logo)
         await Promise.all([
           new Promise<void>((resolve) => {
             const preloadBanner = new window.Image();
@@ -178,7 +180,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
           }),
         ]);
       
-        // Wait for DOM to update
+        // Wait for DOM updates
         await new Promise((r) => setTimeout(r, 500));
       
         if (!qrDownloadRef.current) return;
@@ -189,28 +191,28 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
           scale: 2,
         });
       
-        canvas.toBlob((blob) => {
-          if (!blob) return;
-          const url = URL.createObjectURL(blob);
+        const dataUrl = canvas.toDataURL('image/png');
+        const isMobile = /iPad|iPhone|iPod|Android/.test(navigator.userAgent);
       
-          const isMobile = /iPad|iPhone|iPod|Android/.test(navigator.userAgent);
-      
-          if (isMobile) {
-            // ✅ Use <a target="_blank"> to open Blob in new tab
-            const a = document.createElement('a');
-            a.href = url;
-            a.target = '_blank';
-            a.rel = 'noopener noreferrer';
-            a.click();
+        if (isMobile) {
+          // ✅ Open image in a new tab for long-press save (Safari-safe)
+          const newWindow = window.open();
+          if (newWindow) {
+            newWindow.document.write(`
+              <html>
+                <head><title>Vuoiaggio Promo</title></head>
+                <body style="margin:0;display:flex;justify-content:center;align-items:center;height:100vh;background:#fff;">
+                  <img src="${dataUrl}" style="max-width:100%;height:auto;" />
+                </body>
+              </html>
+            `);
           } else {
-            // ✅ Desktop direct download
-            saveAs(blob, `vuoiaggio-promote-${referenceId}.png`);
+            alert('Please enable pop-ups to view and save the image.');
           }
-      
-          setTimeout(() => {
-            URL.revokeObjectURL(url);
-          }, 3000);
-        });
+        } else {
+          // ✅ Trigger file download on desktop
+          saveAs(dataUrl, `vuoiaggio-promote-${referenceId}.png`);
+        }
       
         setShowDownloadLayout(false);
         promoteModal.onClose();
