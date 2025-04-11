@@ -210,7 +210,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
   <AiOutlineMenu />
 
   {/* Avatar visible only on md+ screens */}
-  <div className="hidden md:block">
+  <div className="hidden md:block shadow-xl rounded-full">
     {currentUser?.image ? (
       <Avatar src={currentUser.image} />
     ) : (

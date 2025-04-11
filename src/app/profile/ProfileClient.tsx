@@ -405,7 +405,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                 alt="User"
                 width={60}
                 height={60}
-                className="rounded-full object-cover"
+                className="rounded-full object-cover shadow-xl hover:shadow-2xl"
               />
             ) : (
               <div className={twMerge(

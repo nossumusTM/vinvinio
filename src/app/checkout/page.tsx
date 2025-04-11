@@ -16,6 +16,9 @@ import Heading from '@/app/components/Heading';
 import Avatar from '../components/Avatar';
 import dynamic from 'next/dynamic';
 
+import useLoginModal from '@/app/hooks/useLoginModal';
+import useRegisterModal from '@/app/hooks/useRegisterModal';
+
 const CountrySelect = dynamic(() => import('@/app/components/inputs/CountrySelect'), {
   ssr: false,
 });
@@ -87,6 +90,13 @@ const CheckoutPage = () => {
 
   const scannedReferenceId = typeof window !== 'undefined' ? localStorage.getItem('scannedReferenceId') : null;
 
+  const [checkoutMode, setCheckoutMode] = useState<'guest' | 'auth'>('guest');
+  const [legalName, setLegalName] = useState('');
+  const [email, setEmail] = useState('');
+
+  const loginModal = useLoginModal();
+  const registerModal = useRegisterModal();
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCardInfo({ ...cardInfo, [e.target.name]: e.target.value });
   };
@@ -108,6 +118,13 @@ const CheckoutPage = () => {
   const handleSubmit = async () => {
     const newInvalidFields: string[] = [];
   
+    // ✅ Guest-specific validation
+    if (checkoutMode === 'guest') {
+      if (!legalName.trim()) newInvalidFields.push('legalName');
+      if (!email.trim() || !email.includes('@')) newInvalidFields.push('email');
+    }
+  
+    // General validation
     if (!listingId || !startDate || !endDate || !time || !guests || !listingData) {
       setPopupMessage("Missing booking information.");
       return;
@@ -156,13 +173,124 @@ const CheckoutPage = () => {
   
       toast.success('Payment confirmed! Reservation created.', {
         iconTheme: {
-            primary: '#25F4EE',
-            secondary: '#fff',
+          primary: '#25F4EE',
+          secondary: '#fff',
         },
       });
+
+      console.log('📅 startDate from searchParams:', startDate);
+      console.log('⏰ time from searchParams:', time);
+  
+      // ✅ Send booking email only in guest mode
+      if (checkoutMode === 'guest') {
+        const formattedDateTime = (() => {
+          if (!startDate || !time) return 'Unavailable';
+        
+          try {
+            const baseDate = new Date(startDate); // ✅ ISO string supported
+            const [hourStr, minuteStr] = time.split(':');
+            const hour = parseInt(hourStr);
+            const minute = parseInt(minuteStr);
+        
+            baseDate.setHours(hour);
+            baseDate.setMinutes(minute);
+        
+            const datePart = baseDate.toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+            });
+        
+            const timePart = baseDate.toLocaleTimeString('en-US', {
+              hour: 'numeric',
+              minute: '2-digit',
+              hour12: true,
+            });
+        
+            return `${datePart} ${timePart}`;
+          } catch (err) {
+            console.error('Date formatting error:', err);
+            return 'Unavailable';
+          }
+        })();                       
+      
+        const {
+          street,
+          apt,
+          city,
+          state,
+          zip,
+          country
+        } = addressFields;
+      
+        const countryLabel = country?.label || '';
+        const countryFlag = country?.flag || '';
+      
+        await axios.post('/api/email/booking', {
+          to: email,
+          subject: 'Your Voiaggio Booking Confirmation',
+          html: `
+            <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; overflow: hidden;">
+              ${randomImage ? `
+                <img src="${randomImage}" alt="Experience image" style="width: 100%; height: auto; display: block; border-radius: 12px 12px 0 0;" />
+              ` : ''}
+      
+              <div style="padding: 24px; top: -10px">
+                <p style="font-size: 16px; text-align: left; margin-bottom: 8px;">Dear ${legalName},</p>
+                <p style="text-align: left; font-size: 14px; color: #555; margin-bottom: 20px;">
+                  We are happy to inform you that your reservation has been successfully confirmed. Below are the details of your booking with Voiaggio.
+                </p>
+              </div>
+
+              <div style="padding: 24px; padding-top: 0;">
+                <p style="font-size: 20px; font-weight: bold; color: #25F4EE; text-align: center; margin-bottom: 15px;">Booking Confirmation</p>
+                
+                <div style="text-align: center; margin-bottom: 24px;">
+                  <p style="display: inline-block; background: #f3f4f6; padding: 8px 16px; border-radius: 8px; font-weight: 600; margin-bottom: 10px;">Experience</p>
+                  <p style="margin: 0; font-size: 14px font-weight: 700;">${listingData?.title}</p>
+                </div>
+      
+                <div style="margin-top: 20px;">
+                  <div style="margin-bottom: 12px;">
+                    <span style="display: inline-block; background: #f3f4f6; padding: 6px 12px; border-radius: 6px; font-weight: 600;">Date:</span>
+                    <span style="margin-left: 8px;">${formattedDateTime}</span>
+                  </div>
+      
+                  <div style="margin-bottom: 12px;">
+                    <span style="display: inline-block; background: #f3f4f6; padding: 6px 12px; border-radius: 6px; font-weight: 600;">Guests:</span>
+                    <span style="margin-left: 8px;">${guests}</span>
+                  </div>
+      
+                  <div style="margin-bottom: 24px;">
+                    <span style="display: inline-block; background: #f3f4f6; padding: 6px 12px; border-radius: 6px; font-weight: 600;">Total:</span>
+                    <span style="margin-left: 8px;">€${total}</span>
+                  </div>
+                </div>
+      
+                <div style="margin-top: 32px;">
+                  <h3 style="font-size: 16px; font-weight: bold; margin-bottom: 12px;">Billing Information</h3>
+                  <p style="margin: 0;"><strong>Name:</strong> ${legalName}</p>
+                  <p style="margin: 4px 0;"><strong>Email:</strong> ${email}</p>
+                  <p style="margin: 0;"><strong>Contact:</strong> ${contact}</p>
+                  <hr style="margin: 16px 0; border: none; border-top: 1px solid #eee;" />
+                  <p style="margin: 0;"><strong>Billing Address:</strong> ${street}, ${apt}</p>
+                  <p style="margin: 0;"><strong></strong> ${city}, ${state}, ${zip} ${countryFlag} ${countryLabel}</p>
+                </div>
+      
+                <p style="margin-top: 32px;">We look forward to hosting you, <br> <strong>${legalName}</strong>! ✨</p>
+                <p style="font-size: 13px; color: #888; margin-top: 40px;">Vuoiaggio International Srls. · Rome, RM, Italy</p>
+              </div>
+            </div>
+          `,
+        });
+      }
+      
+      
+      
     } catch (error) {
       console.error('Error creating reservation:', error);
-      setPopupMessage("Something went wrong. Please try again.");
+      // setPopupMessage("Something went wrong. Please try again.");
+      toast.error('Something went wrong. Please try again.');
     }
   };    
 
@@ -308,6 +436,55 @@ const CheckoutPage = () => {
 
           <Heading title="Confirm and Pay" />
         </div>
+
+        <div className="flex justify-between items-center gap-4 mb-6">
+          <div className="flex gap-4">
+            <button
+              onClick={() => setCheckoutMode('guest')}
+              className={`text-sm font-medium ${checkoutMode === 'guest' ? 'text-black underline' : 'text-neutral-500'}`}
+            >
+              Continue as Guest
+            </button>
+            <span className="text-neutral-400">|</span>
+            <button
+              onClick={() => {
+                loginModal.onOpen(); // or registerModal.onOpen()
+                setCheckoutMode('auth');
+              }}
+              className={`text-sm font-medium ${checkoutMode === 'auth' ? 'text-black underline' : 'text-neutral-500'}`}
+            >
+              Login / Sign Up
+            </button>
+          </div>
+        </div>
+
+        {checkoutMode === 'guest' && (
+          <>
+            <div className="space-y-2">
+              <h3 className="text-md font-semibold">Legal Name</h3>
+              <input
+                type="text"
+                name="legalName"
+                placeholder="Full name (Name and Surname)"
+                value={legalName}
+                onChange={(e) => setLegalName(e.target.value)}
+                className="w-full border p-2 rounded-lg"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-md font-semibold">Email</h3>
+              <input
+                type="email"
+                name="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full border p-2 rounded-lg"
+              />
+            </div>
+          </>
+        )}
 
         {/* Contact Info */}
         <div className="space-y-2">

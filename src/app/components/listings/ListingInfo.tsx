@@ -152,7 +152,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
             <div className="pt-4 pb-1">
                 <hr />
                 </div>
-                <div className="flex flex-col gap-4 text-left pt-5">
+                <div className="p-5 flex flex-col gap-4 text-left pt-5">
                 {/* Guest Count */}
                 <div className="flex flex-row gap-3 items-start">
                     <FaRegFaceSmileBeam className="text-neutral-600 mt-1 w-6 h-6 md:w-[30px] md:h-[30px]" />
