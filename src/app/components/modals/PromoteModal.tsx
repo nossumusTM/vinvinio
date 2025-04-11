@@ -71,7 +71,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
   const bodyContent = (
     <div className="flex flex-col items-center gap-4">
 
-      <div className="relative w-full max-w-xs rounded-xl overflow-hidden">
+      <div className="relative w-full max-w-[280px] md:max-w-xs rounded-xl overflow-hidden">
         <Image
           src="/images/promo-banner.jpg"
           alt="Promo-Banner"
@@ -79,7 +79,6 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
           width={869}
           height={600}
           unoptimized
-          // className="w-full h-auto object-cover rounded-xl"
           className="w-full h-auto object-cover rounded-xl scale-[0.85] md:scale-100 -translate-y-4 md:translate-y-0 transition"
         />
         <div className="absolute bottom-[20%] left-[40%] -translate-x-1/2 bg-white p-2 rounded-xl shadow-lg w-32 h-32 flex items-center justify-center">
