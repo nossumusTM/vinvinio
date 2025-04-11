@@ -69,10 +69,10 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
       const realCS = parsed.find((u: User) => u.id === CUSTOMER_SERVICE_ID);
       const customerServiceUser: User = {
         id: CUSTOMER_SERVICE_ID,
-        name: 'Customer Service',
-        image: '/images/customerservice.png',
+        name: 'Operator',
+        image: '/images/operator.jpg',
         hasUnread: realCS?.hasUnread ?? false,
-        latestMessage: realCS?.latestMessage || 'How can we help you?',
+        latestMessage: realCS?.latestMessage || '🚀 Ping us anytime!',
         latestMessageCreatedAt: realCS?.latestMessageCreatedAt || new Date().toISOString(),
       };
   
@@ -99,10 +99,10 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
   
         const mergedCustomerServiceUser: User = {
           id: CUSTOMER_SERVICE_ID,
-          name: 'Customer Service',
-          image: '/images/customerservice.png',
+          name: 'Operator',
+          image: '/images/operator.jpg',
           hasUnread: customerServiceData?.hasUnread ?? false,
-          latestMessage: customerServiceData?.latestMessage || 'How can we help you?',
+          latestMessage: customerServiceData?.latestMessage || '🚀 Ping us anytime!',
           latestMessageCreatedAt: customerServiceData?.latestMessageCreatedAt || new Date().toISOString(),
         };
   
@@ -128,10 +128,10 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
 
   const customerServiceUser: User = {
     id: CUSTOMER_SERVICE_ID,
-    name: 'Customer Service',
-    image: '/images/customerservice.png', // optional default avatar
+    name: 'Operator',
+    image: '/images/operator.jpg', // optional default avatar
     hasUnread: false,
-    latestMessage: 'How can we help you?',
+    latestMessage: '🚀 Ping us anytime!',
     latestMessageCreatedAt: new Date().toISOString(),
   };
 

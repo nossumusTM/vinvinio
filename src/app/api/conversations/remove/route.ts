@@ -13,7 +13,7 @@ export async function DELETE(request: Request) {
     if (!recipientId) return new NextResponse('Recipient ID is required', { status: 400 });
 
     if (recipientId === '67ef2895f045b7ff3d0cf6fc') {
-      return new NextResponse('Cannot remove Customer Service', { status: 403 });
+      return new NextResponse('Cannot remove Operator', { status: 403 });
     }
 
     // Delete all messages between the current user and the recipient

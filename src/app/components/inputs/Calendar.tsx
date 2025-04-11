@@ -1,10 +1,10 @@
 'use client';
 
 import { Calendar as DatePicker } from 'react-date-range';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { format } from 'date-fns';
 
-import { Range } from 'react-date-range'; // ✅ correct Range import
+import { Range } from 'react-date-range';
 
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
@@ -17,8 +17,8 @@ interface ReservationSlot {
 interface CalendarProps {
   value: Range; // ✅ use Range type
   onChange: (value: { selection: Range }) => void; // ✅ updated
-  selectedTime?: string;
-  onTimeChange?: (time: string) => void;
+  selectedTime?: string | null;
+  onTimeChange?: (time: string | null) => void;
   bookedSlots?: ReservationSlot[];
 }
 
@@ -40,8 +40,8 @@ const Calendar: React.FC<CalendarProps> = ({
   bookedSlots = [],
 }) => {
   const selectedDateKey = value.startDate
-    ? format(value.startDate, 'yyyy-MM-dd')
-    : '';
+  ? new Date(value.startDate).toLocaleDateString('sv-SE', { timeZone: 'Europe/Rome' }) // 'sv-SE' keeps YYYY-MM-DD format
+  : '';
 
   const bookedTimesForDate = useMemo(() => {
     return bookedSlots
@@ -59,22 +59,96 @@ const Calendar: React.FC<CalendarProps> = ({
 
     return Object.entries(map)
       .filter(([_, times]) => times.size >= availableTimes.length)
-      .map(([date]) => new Date(date));
+      .map(([date]) => {
+        const parts = date.split('-').map(Number);
+        return new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
+      });
+
   }, [bookedSlots]);
 
+  const hasAutoSelected = useRef(false);
+
   useEffect(() => {
-    if (!selectedDateKey || selectedTime) return;
+    if (hasAutoSelected.current) return;
+  
+    const now = new Date();
+    const todayKey = format(now, 'yyyy-MM-dd');
+  
+    // Force override if startDate is today or undefined
+    const currentStartKey = value.startDate
+      ? format(value.startDate, 'yyyy-MM-dd')
+      : null;
+  
+    for (let i = 0; i < 30; i++) {
+      const testDate = new Date();
+      testDate.setDate(now.getDate() + i);
+      const testKey = format(testDate, 'yyyy-MM-dd');
+  
+      const bookedTimes = bookedSlots
+        .filter((slot) => slot.date === testKey)
+        .map((slot) => normalizeTime(slot.time));
+  
+      const isFullyBooked = bookedTimes.length >= availableTimes.length;
+  
+      if (!isFullyBooked) {
+        const firstAvailable = availableTimes.find(
+          (time) => !bookedTimes.includes(time)
+        );
+  
+        const shouldReplaceToday =
+          currentStartKey === null || currentStartKey === todayKey;
+  
+        if (shouldReplaceToday) {
+          onChange({
+            selection: {
+              startDate: testDate,
+              endDate: testDate,
+              key: 'selection',
+            },
+          });
+  
+          onTimeChange?.(firstAvailable || null);
+        }
+  
+        hasAutoSelected.current = true;
+        break;
+      }
+    }
+  }, [value.startDate, bookedSlots, onChange, onTimeChange]);  
 
-    const firstAvailable = availableTimes.find(
-      (time) => !bookedTimesForDate.includes(time)
-    );
-
+  useEffect(() => {
+    if (!value.startDate) return;
+  
+    const formatted = format(value.startDate, 'yyyy-MM-dd');
+    const booked = bookedSlots
+      .filter((slot) => slot.date === formatted)
+      .map((slot) => normalizeTime(slot.time));
+  
+    const firstAvailable = availableTimes.find((t) => !booked.includes(t));
+  
     if (firstAvailable) {
       onTimeChange?.(firstAvailable);
     } else {
+      onTimeChange?.(null); // 🔥 important!
+    }
+  }, [value.startDate, bookedSlots]); 
+  
+  useEffect(() => {
+    if (!value.startDate) return;
+  
+    const formatted = format(value.startDate, 'yyyy-MM-dd');
+    const timesBooked = bookedSlots
+      .filter((slot) => slot.date === formatted)
+      .map((slot) => normalizeTime(slot.time));
+  
+    const available = availableTimes.find((t) => !timesBooked.includes(t));
+  
+    if (available) {
+      onTimeChange?.(available);
+    } else {
       onTimeChange?.('');
     }
-  }, [selectedDateKey, bookedTimesForDate, selectedTime, onTimeChange]);
+  }, [value.startDate, bookedSlots]);  
 
   const handleSelect = (date: Date) => {
     onChange({
@@ -92,7 +166,7 @@ const Calendar: React.FC<CalendarProps> = ({
         date={value.startDate}
         onChange={handleSelect}
         minDate={new Date()}
-        disabledDates={disabledDates}
+        disabledDates={[...disabledDates, new Date()]}
         showDateDisplay={false}
         color="#262626"
       />
@@ -121,7 +195,7 @@ const Calendar: React.FC<CalendarProps> = ({
       <div className="flex flex-col gap-2 p-4">
         <label className="text-xl font-medium">Pick an Available Time</label>
         <select
-          value={selectedTime}
+          value={selectedTime ?? ''}
           onChange={(e) => onTimeChange?.(e.target.value)}
           className="border border-neutral-300 rounded-xl px-3 py-2 text-m"
         >

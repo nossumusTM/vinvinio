@@ -6,6 +6,7 @@ import Button from '../Button';
 import Calendar from '../inputs/Calendar';
 import Counter from '../inputs/Counter';
 import { useEffect } from 'react';
+import toast from 'react-hot-toast';
 
 interface ReservationSlot {
   date: string;
@@ -46,17 +47,44 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
   const router = useRouter();
 
   const handleReserve = () => {
-    if (!listingId) {
-      alert("Missing listingId!");
+    if (!listingId || !selectedTime || !dateRange.startDate) {
+      toast.error("Please select a date and time that is available.");
+      return;
+    }
+  
+    const selectedDateKey = new Date(dateRange.startDate).toLocaleDateString('sv-SE', {
+      timeZone: 'Europe/Rome',
+    });
+  
+    const normalizedTime = selectedTime.padStart(5, '0');
+  
+    const bookedTimes = bookedSlots
+      .filter((slot) => slot.date === selectedDateKey)
+      .map((slot) => slot.time.padStart(5, '0'));
+  
+    const isBooked = bookedTimes.includes(normalizedTime);
+  
+    const isToday = selectedDateKey === new Date().toLocaleDateString('sv-SE', {
+      timeZone: 'Europe/Rome',
+    });
+  
+    const [hour, minute] = normalizedTime.split(':').map(Number);
+    const timeDate = new Date();
+    timeDate.setHours(hour, minute, 0, 0);
+  
+    const isPast = isToday && new Date() > timeDate;
+  
+    if (isBooked || isPast) {
+      toast.error('This time slot is not available. Please choose another.');
       return;
     }
   
     const searchParams = new URLSearchParams({
-      listingId, // ⛳️ must be a real string from props
+      listingId,
       guests: guestCount.toString(),
-      startDate: dateRange.startDate?.toISOString() || '',
-      endDate: dateRange.endDate?.toISOString() || '',
-      time: selectedTime || '',
+      startDate: dateRange.startDate.toISOString(),
+      endDate: dateRange.endDate?.toISOString() || dateRange.startDate.toISOString(),
+      time: selectedTime,
     });
   
     router.push(`/checkout?${searchParams.toString()}`);
@@ -90,7 +118,7 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
         value={dateRange}
         bookedSlots={bookedSlots}
         selectedTime={selectedTime}
-        onTimeChange={onTimeChange}
+        onTimeChange={(time) => onTimeChange?.(time ?? '')}
         onChange={(value) => onChangeDate(value.selection)}
       />
 

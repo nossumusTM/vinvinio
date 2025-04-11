@@ -20,7 +20,7 @@ const Footer = () => {
   
       <h3 className="text-base font-semibold mt-6">Cancellation Rules for Guests</h3>
       <p>
-      All cancellations must be requested through your booking account, by contacting our support team via email, or by sending a message directly to Customer Service via Messenger.
+      All cancellations must be requested through your booking account, by contacting our support team via email, or by sending a message directly to Operator via Messenger.
       </p>
   
       <div className="space-y-3">
@@ -244,7 +244,7 @@ const Footer = () => {
           <ul className="space-y-2">
           <li>
             <button
-              onClick={() => messenger.openChat({ id: '67ef2895f045b7ff3d0cf6fc', name: 'Customer Service', image: '/images/customerservice.png' })}
+              onClick={() => messenger.openChat({ id: '67ef2895f045b7ff3d0cf6fc', name: 'Operator', image: '/images/operator.jpg' })}
               className="hover:underline transition"
             >
               Help Center

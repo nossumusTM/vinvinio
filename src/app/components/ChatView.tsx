@@ -460,7 +460,7 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
           }),
         });
   
-        if (!res.ok) throw new Error('Failed to delete Customer Service messages');
+        if (!res.ok) throw new Error('Failed to delete Operator messages');
   
         // ✅ Clear frontend state
         setMessages([]);
@@ -578,7 +578,7 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
                 };
               
                 try {
-                  // 1. Send user's selected topic to Customer Service
+                  // 1. Send user's selected topic to Operator
                   await fetch('/api/messages', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -598,14 +598,14 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
                     },
                   ]);
               
-                  // 3. Send system response from Customer Service (server-side message)
+                  // 3. Send system response from Operator (server-side message)
                   await fetch('/api/messages/system', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(responseMessage),
                   });
               
-                  // 4. Optimistically render Customer Service reply
+                  // 4. Optimistically render Operator reply
                   setMessages((prev) => [
                     ...prev,
                     {

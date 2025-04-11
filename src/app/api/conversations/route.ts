@@ -64,7 +64,7 @@ export async function GET() {
           name: otherUser.name ?? 'Unknown',
           image: otherUser.image,
           hasUnread: isUnread,
-          latestMessage: showDefaultGreeting ? 'How can we help you?' : msg.text,
+          latestMessage: showDefaultGreeting ? '🚀 Ping us anytime!' : msg.text,
           latestMessageCreatedAt: msg.createdAt,
         });
       } else {
