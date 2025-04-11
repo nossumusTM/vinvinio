@@ -69,52 +69,40 @@ const Calendar: React.FC<CalendarProps> = ({
   const hasAutoSelected = useRef(false);
 
   useEffect(() => {
-    if (hasAutoSelected.current) return;
+    if (hasAutoSelected.current || value.startDate) return;
   
     const now = new Date();
-    const todayKey = format(now, 'yyyy-MM-dd');
   
-    // Force override if startDate is today or undefined
-    const currentStartKey = value.startDate
-      ? format(value.startDate, 'yyyy-MM-dd')
-      : null;
-  
-    for (let i = 0; i < 30; i++) {
-      const testDate = new Date();
+    for (let i = 1; i <= 30; i++) {
+      const testDate = new Date(now);
       testDate.setDate(now.getDate() + i);
-      const testKey = format(testDate, 'yyyy-MM-dd');
+  
+      const dateKey = testDate.toLocaleDateString('sv-SE', {
+        timeZone: 'Europe/Rome',
+      });
   
       const bookedTimes = bookedSlots
-        .filter((slot) => slot.date === testKey)
+        .filter((slot) => slot.date === dateKey)
         .map((slot) => normalizeTime(slot.time));
   
-      const isFullyBooked = bookedTimes.length >= availableTimes.length;
+      if (bookedTimes.length < availableTimes.length) {
+        const availableTime = availableTimes.find((t) => !bookedTimes.includes(t)) ?? null;
   
-      if (!isFullyBooked) {
-        const firstAvailable = availableTimes.find(
-          (time) => !bookedTimes.includes(time)
-        );
+        // ⛳️ Set both date and time inline before render
+        onChange({
+          selection: {
+            startDate: testDate,
+            endDate: testDate,
+            key: 'selection',
+          },
+        });
   
-        const shouldReplaceToday =
-          currentStartKey === null || currentStartKey === todayKey;
-  
-        if (shouldReplaceToday) {
-          onChange({
-            selection: {
-              startDate: testDate,
-              endDate: testDate,
-              key: 'selection',
-            },
-          });
-  
-          onTimeChange?.(firstAvailable || null);
-        }
-  
+        onTimeChange?.(availableTime);
         hasAutoSelected.current = true;
         break;
       }
     }
-  }, [value.startDate, bookedSlots, onChange, onTimeChange]);  
+  }, [bookedSlots, value.startDate, onChange, onTimeChange]);  
 
   useEffect(() => {
     if (!value.startDate) return;

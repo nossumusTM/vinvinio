@@ -909,7 +909,9 @@ const CheckoutPage = () => {
       </div>
 
       {/* RIGHT SECTION */}
-      <div className="w-full lg:w-1/3 bg-white rounded-2xl shadow-md p-6 space-y-7 h-fit max-h-[700px]">
+      <div className="w-full lg:w-1/3">
+        <div className="md:sticky md:top-32">
+          <div className="bg-white rounded-2xl shadow-md p-6 space-y-7">
       {listingData && (
           <>
             {randomImage && (
@@ -993,6 +995,8 @@ const CheckoutPage = () => {
             </div>
           </>
         )}
+      </div>
+      </div>
       </div>
       {popupMessage && (
         <ConfirmPopup
