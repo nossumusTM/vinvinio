@@ -240,24 +240,24 @@ const Footer = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-y-8 md:gap-x-4">
         {/* Support Section */}
         <div className="flex flex-col justify-center md:pl-10 md:ml-10">
-          <h3 className="font-semibold text-lg mb-4 underline">Support</h3>
+          <h3 className="font-semibold text-lg mb-4">Support</h3>
           <ul className="space-y-2">
           <li>
             <button
               onClick={() => messenger.openChat({ id: '67ef2895f045b7ff3d0cf6fc', name: 'Customer Service', image: '/images/customerservice.png' })}
-              className="hover:underline"
+              className="hover:underline transition"
             >
               Help Center
             </button>
           </li>
 
             <li>
-            <button onClick={() => setIsCancellationOpen(true)} className="hover:underline">
+            <button onClick={() => setIsCancellationOpen(true)} className="hover:underline transition">
                   Cancellation options
                 </button>
             </li>
             <li>
-            <button onClick={() => setIsPromoterGuideOpen(true)} className="hover:underline">
+            <button onClick={() => setIsPromoterGuideOpen(true)} className="hover:underline transition">
                   Promoters Guide
                 </button>
             </li>
@@ -266,19 +266,19 @@ const Footer = () => {
 
         {/* Legal Section */}
         <div className="flex flex-col justify-center">
-          <h3 className="font-semibold text-lg mb-4 underline">Legal</h3>
+          <h3 className="font-semibold text-lg mb-4">Legal</h3>
           <ul className="space-y-2">
             <li>
-              <button onClick={() => setIsPrivacyOpen(true)} className="hover:underline">
+              <button onClick={() => setIsPrivacyOpen(true)} className="hover:underline transition">
                 Privacy Policy
               </button>
             </li>
             <li>
-              <button onClick={() => setIsTermsOpen(true)} className="hover:underline">
+              <button onClick={() => setIsTermsOpen(true)} className="hover:underline transition">
                 Terms and Conditions
               </button>
             </li>
-            <li><a href="#" className="hover:underline">Sitemap</a></li>
+            <li><a href="#" className="hover:underline transition">Sitemap</a></li>
           </ul>
         </div>
 

@@ -12,6 +12,7 @@ import useRegisterModal from "@/app/hooks/useRegisterModal";
 import useRentModal from "@/app/hooks/useRentModal";
 import useTourModal from "@/app/hooks/useExperienceModal";
 import { SafeUser } from "@/app/types";
+import { motion } from 'framer-motion';
 
 import MenuItem from "./MenuItem";
 import Avatar from "../Avatar";
@@ -221,10 +222,23 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
   </div>
 
   {/* Badge always visible, even on mobile */}
-  {messenger.unreadCount > 0 && (
+  {/* {messenger.unreadCount > 0 && (
     <div className="absolute -top-1 -right-1 bg-[#25F4EE] text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
       {messenger.unreadCount}
     </div>
+  )} */}
+
+  {messenger.unreadCount > 0 && (
+    <motion.div
+      key={messenger.unreadCount} // Ensures animation runs on change
+      initial={{ scale: 0 }}
+      animate={{ scale: 1 }}
+      exit={{ scale: 0 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+      className="absolute -top-1 -right-1 bg-[#25F4EE] text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center"
+    >
+      {messenger.unreadCount}
+    </motion.div>
   )}
 </div>
 

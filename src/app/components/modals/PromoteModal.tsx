@@ -28,6 +28,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
 
   const [showDownloadLayout, setShowDownloadLayout] = useState(false);
   const [mobilePreviewUrl, setMobilePreviewUrl] = useState<string | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const banner = new window.Image();
 
@@ -71,7 +72,9 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
   const bodyContent = (
     <div className="flex flex-col items-center gap-4">
 
-      <div className="relative w-full max-w-[280px] md:max-w-xs rounded-xl overflow-hidden">
+      <div 
+      ref={scrollRef}
+      className="relative w-full max-w-[280px] md:max-w-xs rounded-xl overflow-hidden overflow-y-auto max-h-[400px] md:max-h-none">
         <Image
           src="/images/promo-banner.jpg"
           alt="Promo-Banner"
@@ -109,34 +112,34 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
             </div>
           </div>
         </div>
-      </div>
-      <div className="pt-2 -translate-y-4 md:translate-y-0">
-        {!copied ? (
-          <button
-            onClick={() => {
-              const url = `https://vuoiaggio.netlify.app/reference/${referenceId}`;
-              navigator.clipboard.writeText(url);
-              setCopied(true);
-              setTimeout(() => setCopied(false), 2000); // reset after 2s
-            }}
-            className="text-sm text-black border-b border-black bg-transparent hover:opacity-70 transition"
-          >
-            Copy Reference Link
-          </button>
-        ) : (
-          <div className="flex items-center gap-2 text-xl text-[#25F4EE] px-3 py-1 transition">
-            <svg
-              className="w-8 h-8"
-              fill="none"
-              stroke="#25F4EE"
-              strokeWidth={2}
-              viewBox="0 0 24 24"
+        <div className="pt-2 -translate-y-4 md:translate-y-0 flex justify-center items-center">
+          {!copied ? (
+            <button
+              onClick={() => {
+                const url = `https://vuoiaggio.netlify.app/reference/${referenceId}`;
+                navigator.clipboard.writeText(url);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000); // reset after 2s
+              }}
+              className="text-sm text-black border-b border-black bg-transparent hover:opacity-70 transition"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-            {/* <span>Copied!</span> */}
-          </div>
-        )}
+              Copy Reference Link
+            </button>
+          ) : (
+            <div className="flex items-center gap-2 text-xl text-[#25F4EE] px-3 py-1 transition">
+              <svg
+                className="w-8 h-8"
+                fill="none"
+                stroke="#25F4EE"
+                strokeWidth={2}
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              {/* <span>Copied!</span> */}
+            </div>
+          )}
+        </div>
       </div>
 
       {showDownloadLayout && (

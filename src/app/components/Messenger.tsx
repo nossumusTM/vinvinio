@@ -38,14 +38,13 @@ const Messenger = ({ currentUser }: MessengerProps) => {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25, ease: 'easeInOut' }}
           className={clsx(
-            'fixed z-50 pointer-events-none',
+            'fixed z-50',
             isMobile
               ? 'bottom-0 left-0 w-full h-[65vh] flex justify-center items-end'
               : 'bottom-4 right-4'
           )}
         >
           <Draggable
-            bounds="parent"
             handle=".messenger-header"
             disabled={isMobile}
           >

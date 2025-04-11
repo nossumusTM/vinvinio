@@ -232,7 +232,7 @@ const Categories = () => {
               animate={{ rotate: visible ? 0 : 180 }}
               transition={{ duration: 0.3 }}
             >
-              <LuChevronUp size={15} strokeWidth={3} color="#25F4EE" />
+              <LuChevronUp size={15} strokeWidth={3} color="#000" />
             </motion.div>
           </div>
         </div>
