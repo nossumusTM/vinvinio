@@ -248,7 +248,7 @@ const Modal: React.FC<ModalProps> = ({
           mx-auto 
           h-auto 
           lg:h-auto
-          md:h-full
+          md:h-auto
         "
       >
         <AnimatePresence>
