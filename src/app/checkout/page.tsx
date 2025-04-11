@@ -228,7 +228,7 @@ const CheckoutPage = () => {
       
         await axios.post('/api/email/booking', {
           to: email,
-          subject: 'Your Voiaggio Booking Confirmation',
+          subject: 'Your Vuoiaggio Booking Confirmation',
           html: `
             <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; overflow: hidden;">
               ${randomImage ? `
@@ -238,7 +238,7 @@ const CheckoutPage = () => {
               <div style="padding: 24px; top: -10px">
                 <p style="font-size: 16px; text-align: left; margin-bottom: 8px;">Dear ${legalName},</p>
                 <p style="text-align: left; font-size: 14px; color: #555; margin-bottom: 20px;">
-                  We are happy to inform you that your reservation has been successfully confirmed. Below are the details of your booking with Voiaggio.
+                  We are happy to inform you that your reservation has been successfully confirmed. Below are the details of your booking with Vuoiaggio.
                 </p>
               </div>
 
@@ -278,7 +278,12 @@ const CheckoutPage = () => {
                 </div>
       
                 <p style="margin-top: 32px;">We look forward to hosting you, <br> <strong>${legalName}</strong>! ✨</p>
-                <p style="font-size: 13px; color: #888; margin-top: 40px;">Vuoiaggio International Srls. · Rome, RM, Italy</p>
+                <p style="font-size: 13px; color: #888; margin-top: 40px;">Vuoiaggio International Srls.</p>
+                <p style="font-size: 13px; color: #888;">P.IVA 57483813574</p>
+                <p style="font-size: 13px; color: #888;">Via Novacella 18, Rome, RM, Italy</p>
+                <p style="font-size: 13px; color: #888;">🇮🇹 +39 371 528 4911</p>
+                <p style="font-size: 13px; color: #888;">ciao@vuoiaggio.it</p>
+
               </div>
             </div>
           `,
