@@ -425,8 +425,8 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
           </div>
 
           <div className="pt-1 text-normal">
-                <p className="text-3xl font-semibold">{currentUser?.legalName || currentUser?.name || "Unnamed"}</p>
-                <p className="text-1xl font-semibold">{currentUser?.email || ""}</p>
+                <p className="text-2xl font-semibold">{currentUser?.legalName || currentUser?.name || "Unnamed"}</p>
+                <p className="text-md font-semibold">{currentUser?.email || ""}</p>
               </div>
             </div>
           </div>
@@ -822,24 +822,24 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
               {/* Tabs */}
               {currentUser.role === 'promoter' && (
               <div className="flex gap-4 mb-6">
-                <button
+                {/* <button
                   className={`px-4 py-2 rounded-lg ${activePaymentTab === 'payout' ? 'bg-black text-white' : 'border'}`}
                   onClick={() => setActivePaymentTab('payout')}
                 >
                   Payout
-                </button>
+                </button> */}
               </div>
               )}
 
               {/* Tabs */}
               {currentUser.role === 'customer' && (
               <div className="flex gap-4 mb-6">
-                <button
+                {/* <button
                   className={`px-4 py-2 rounded-lg ${activePaymentTab === 'payment' ? 'bg-black text-white' : 'border'}`}
                   onClick={() => setActivePaymentTab('payment')}
                 >
                   Payment
-                </button>
+                </button> */}
               </div>
               )}
 

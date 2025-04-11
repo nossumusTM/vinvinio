@@ -3,14 +3,21 @@ import { useState } from 'react';
 import { TbBrandTelegram, TbBrandTiktok, TbBrandInstagram, TbBrandFacebook, TbBrandX } from 'react-icons/tb';
 import useMessenger from '@/app/hooks/useMessager';
 import Modal from './modals/Modal';
+import useLoginModal from '../hooks/useLoginModal';
 
-const Footer = () => {
+interface FooterProps {
+  currentUser: any; // You can replace `any` with your actual `User` type if available
+}
+
+const Footer: React.FC<FooterProps> = ({ currentUser }) => {
 
   const messenger = useMessenger();
   const [isCancellationOpen, setIsCancellationOpen] = useState(false);
   const [isPromoterGuideOpen, setIsPromoterGuideOpen] = useState(false);
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
   const [isTermsOpen, setIsTermsOpen] = useState(false);
+
+  const loginModal = useLoginModal();
 
   const cancellationContent = (
     <div className="text-gray-700 text-sm space-y-5 leading-relaxed">
@@ -242,14 +249,25 @@ const Footer = () => {
         <div className="flex flex-col justify-center md:pl-10 md:ml-10">
           <h3 className="font-semibold text-lg mb-4">Support</h3>
           <ul className="space-y-2">
-          <li>
-            <button
-              onClick={() => messenger.openChat({ id: '67ef2895f045b7ff3d0cf6fc', name: 'Operator', image: '/images/operator.jpg' })}
-              className="hover:underline transition"
-            >
-              Help Center
-            </button>
-          </li>
+            <li>
+              <button
+                onClick={() => {
+                  if (!currentUser) {
+                    loginModal.onOpen();
+                    return;
+                  }
+
+                  messenger.openChat({
+                    id: '67ef2895f045b7ff3d0cf6fc',
+                    name: 'Operator',
+                    image: '/images/operator.jpg',
+                  });
+                }}
+                className="hover:underline transition"
+              >
+                Help Center
+              </button>
+            </li>
 
             <li>
             <button onClick={() => setIsCancellationOpen(true)} className="hover:underline transition">

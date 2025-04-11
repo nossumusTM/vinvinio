@@ -9,6 +9,9 @@ import { GrRestaurant } from "react-icons/gr";
 import { BiPhotoAlbum } from "react-icons/bi";
 import { LuShoppingBag } from "react-icons/lu";
 import { MdOutlineTour } from "react-icons/md";
+import { FaPhotoFilm } from "react-icons/fa6";
+import { HiOutlineShoppingBag } from "react-icons/hi";
+import { SiArtixlinux } from "react-icons/si";
 import {
     GiBarn,
     GiBoatFishing,
@@ -38,7 +41,7 @@ export const categories = [
     },
     {
         label: 'Photo Muse',
-        icon: BiPhotoAlbum,
+        icon: FaPhotoFilm,
         description: 'Capture the timeless beauty of one of the most iconic landmarks'
     },
     {
@@ -48,7 +51,7 @@ export const categories = [
     },
     {
         label: 'Alla Italiana',
-        icon: LuShoppingBag,
+        icon: HiOutlineShoppingBag,
         description: "Discover Italy’s finest fashion and artisanal treasures on an exclusive shopping tour."
     },
     // {
@@ -58,7 +61,7 @@ export const categories = [
     // },
     {
         label: 'Walking Art',
-        icon: MdOutlineTour,
+        icon: SiArtixlinux,
         description: "Experience the city's heartbeat through unique stories hidden behind the scenes"
     },
     // {

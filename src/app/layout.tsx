@@ -64,7 +64,7 @@ export default async function RootLayout({
         </div>
 
         <div className="w-full pt-20">
-          <Footer />
+          <Footer currentUser={currentUser}/>
         </div>
       </body>
     </html>
