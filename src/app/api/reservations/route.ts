@@ -154,6 +154,7 @@ export async function POST(request: Request) {
     const reservation = await prisma.reservation.create({
       data: reservationData,
     });
+    
 
     const fullListing = await prisma.listing.findUnique({
       where: { id: listingId },
