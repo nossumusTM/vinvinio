@@ -8,7 +8,7 @@ import { format } from 'date-fns';
 import { TbCalendarTime } from "react-icons/tb";
 import toast from 'react-hot-toast';
 
- import getCurrentUser from  '@/app/actions/getCurrentUser';
+import getCurrentUser from  '@/app/actions/getCurrentUser';
 import { useSession } from 'next-auth/react';
 
 import Button from '@/app/components/Button';
@@ -96,6 +96,7 @@ const CheckoutPage = () => {
 
   const loginModal = useLoginModal();
   const registerModal = useRegisterModal();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCardInfo({ ...cardInfo, [e.target.name]: e.target.value });
@@ -161,6 +162,8 @@ const CheckoutPage = () => {
         listingId,
         selectedTime: time,
         guestCount: guests,
+        legalName,
+        contact,
       });
   
       if (scannedReferenceId) {
@@ -178,8 +181,14 @@ const CheckoutPage = () => {
         },
       });
 
-      console.log('📅 startDate from searchParams:', startDate);
-      console.log('⏰ time from searchParams:', time);
+      // ✅ Redirect or show confirmation message
+      if (checkoutMode === 'auth') {
+        router.push('/trips');
+      } else {
+        setPopupMessage(
+          'Thank you for your booking, you will receive an email with your booking details and the host will contact you soon with your provided contact method.'
+        );
+      }
   
       // ✅ Send booking email only in guest mode
       if (checkoutMode === 'guest') {
@@ -229,6 +238,7 @@ const CheckoutPage = () => {
         await axios.post('/api/email/booking', {
           to: email,
           subject: 'Your Vuoiaggio Booking Confirmation',
+          listingId,
           html: `
             <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; overflow: hidden;">
               ${randomImage ? `
@@ -266,6 +276,16 @@ const CheckoutPage = () => {
                     <span style="margin-left: 8px;">€${total}</span>
                   </div>
                 </div>
+
+                <div style="margin-bottom: 12px;">
+                  <span style="display: inline-block; background: #f3f4f6; padding: 6px 12px; border-radius: 6px; font-weight: 600;">Listing ID:</span>
+                  <a href="https://vuoiaggio.it/listings/${listingId}"
+                    style="color: #25F4EE; font-weight: 600; text-decoration: none; margin-left: 8px;
+                            border-bottom: 2px solid #25F4EE; padding-bottom: 2px; display: inline-block;">
+                    ${listingId}
+                  </a>
+                </div>
+
       
                 <div style="margin-top: 32px;">
                   <h3 style="font-size: 16px; font-weight: bold; margin-bottom: 12px;">Billing Information</h3>
@@ -289,8 +309,6 @@ const CheckoutPage = () => {
           `,
         });
       }
-      
-      
       
     } catch (error) {
       console.error('Error creating reservation:', error);
@@ -335,9 +353,12 @@ const CheckoutPage = () => {
     const fetchProfileInfo = async () => {
       try {
         const res = await axios.get('/api/users/profile-info');
-        const { contact, address } = res.data;
+        const { contact, address, legalName} = res.data;
   
         if (contact) setContact(contact);
+        if (legalName) {
+          setLegalName(legalName);
+        }
   
         if (address) {
           try {
@@ -425,6 +446,25 @@ const CheckoutPage = () => {
     fetchData();
   }, [listingId]);  
 
+  useEffect(() => {
+    const checkUser = async () => {
+      try {
+        const res = await axios.get('/api/users/current');
+        if (res?.data?.id) {
+          setCheckoutMode('auth');
+          if (res.data.legalName) setLegalName(res.data.legalName);
+          if (res.data.email) setEmail(res.data.email);
+          setIsAuthenticated(true); // ✅ Add this line
+        }
+      } catch (err) {
+        console.log('User not authenticated');
+        setIsAuthenticated(false); // ✅ Add this line
+      }
+    };
+  
+    checkUser();
+  }, []);  
+
   const total = listingData ? listingData.price * guests + serviceFee : 0;
 
   return (
@@ -442,41 +482,43 @@ const CheckoutPage = () => {
           <Heading title="Confirm and Pay" />
         </div>
 
-        <div className="flex justify-between items-center gap-4 mb-6">
-          <div className="flex gap-4">
-            <button
-              onClick={() => setCheckoutMode('guest')}
-              className={`text-sm font-medium ${checkoutMode === 'guest' ? 'text-black underline' : 'text-neutral-500'}`}
-            >
-              Continue as Guest
-            </button>
-            <span className="text-neutral-400">|</span>
-            <button
-              onClick={() => {
-                loginModal.onOpen(); // or registerModal.onOpen()
-                setCheckoutMode('auth');
-              }}
-              className={`text-sm font-medium ${checkoutMode === 'auth' ? 'text-black underline' : 'text-neutral-500'}`}
-            >
-              Login / Sign Up
-            </button>
+        {!isAuthenticated && (
+          <div className="flex justify-between items-center gap-4 mb-6">
+            <div className="flex gap-4">
+              <button
+                onClick={() => setCheckoutMode('guest')}
+                className={`text-sm font-medium ${checkoutMode === 'guest' ? 'text-black underline' : 'text-neutral-500'}`}
+              >
+                Continue as Guest
+              </button>
+              <span className="text-neutral-400">|</span>
+              <button
+                onClick={() => {
+                  loginModal.onOpen();
+                  setCheckoutMode('auth');
+                }}
+                className={`text-sm font-medium ${checkoutMode === 'auth' ? 'text-black underline' : 'text-neutral-500'}`}
+              >
+                Login / Sign Up
+              </button>
+            </div>
           </div>
+        )}
+
+        <div className="space-y-2">
+          <h3 className="text-md font-semibold">Legal Name</h3>
+          <input
+            type="text"
+            name="legalName"
+            placeholder="Full name (Name and Surname)"
+            value={legalName}
+            onChange={(e) => setLegalName(e.target.value)}
+            className="w-full border p-2 rounded-lg"
+          />
         </div>
 
         {checkoutMode === 'guest' && (
           <>
-            <div className="space-y-2">
-              <h3 className="text-md font-semibold">Legal Name</h3>
-              <input
-                type="text"
-                name="legalName"
-                placeholder="Full name (Name and Surname)"
-                value={legalName}
-                onChange={(e) => setLegalName(e.target.value)}
-                className="w-full border p-2 rounded-lg"
-              />
-            </div>
-
             <div className="space-y-2">
               <h3 className="text-md font-semibold">Email</h3>
               <input

@@ -88,19 +88,25 @@ model Listing {
 }
 
 model Reservation {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId     String   @db.ObjectId
-  listingId  String   @db.ObjectId
-  startDate  DateTime
-  endDate    DateTime
-  totalPrice Int
-  referralId String?
-  guestCount Int?
-  time       String // ✅ New field to store time (e.g., '08:00')
-  createdAt  DateTime @default(now())
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  listing    Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  review     Review?
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String?  @db.ObjectId
+  user         User?    @relation(fields: [userId], references: [id])
+
+  listingId    String   @db.ObjectId
+  listing      Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  startDate    DateTime
+  endDate      DateTime
+  totalPrice   Int
+  referralId   String?
+  guestCount   Int?
+  time         String
+  createdAt    DateTime @default(now())
+
+  guestName     String?
+  guestContact  String?
+
+  review       Review?
 }
 
 model Card {
