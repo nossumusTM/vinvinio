@@ -12,6 +12,7 @@ export const dynamic = 'force-dynamic';
 
 import useLoginModal from "@/app/hooks/useLoginModal";
 import { SafeListing, SafeReservation, SafeUser } from "@/app/types";
+import getCurrentUser from "@/app/actions/getCurrentUser";
 
 import Container from "@/app/components/Container";
 import { categories } from "@/app/components/navbar/Categories";
@@ -214,6 +215,12 @@ const ListingClient: React.FC<ListingClientProps> = ({
                     <Button
                     label="Contact Host"
                     onClick={() => {
+                        // 🔐 Check auth first
+                        if (!currentUser) {
+                        loginModal.onOpen();
+                        return;
+                        }
+
                         const isHost = currentUser?.id === listing.user.id;
 
                         const recipient = isHost
@@ -229,11 +236,10 @@ const ListingClient: React.FC<ListingClientProps> = ({
                             };
 
                         if (recipient.id) {
-                        messenger.openChat(recipient); // ✅ recipient is passed here
+                        messenger.openChat(recipient);
                         }
                     }}
                     />
-
                     
                     <div className="grid grid-cols-1 md:grid-cols-7 md:gap-10 mt-6 relative">
                         <ListingInfo

@@ -246,14 +246,15 @@ const CheckoutPage = () => {
               ` : ''}
       
               <div style="padding: 24px; top: -10px">
-                <p style="font-size: 16px; text-align: left; margin-bottom: 8px;">Dear ${legalName},</p>
+                <img src="https://vuoiaggio.netlify.app/images/vuoiaggiologo.png" alt="Vuoiaggio Logo" style="width: 140px; margin: 24px auto 0; display: block;" />
+                <p style="font-size: 16px; text-align: left; margin-bottom: 8px;">Gentile ${legalName},</p>
                 <p style="text-align: left; font-size: 14px; color: #555; margin-bottom: 20px;">
                   We are happy to inform you that your reservation has been successfully confirmed. Below are the details of your booking with Vuoiaggio.
                 </p>
               </div>
 
               <div style="padding: 24px; padding-top: 0;">
-                <p style="font-size: 20px; font-weight: bold; color: #25F4EE; text-align: center; margin-bottom: 15px;">Booking Confirmation</p>
+                <p style="font-size: 20px; font-weight: bold; color: #25F4EE; text-align: center; margin-bottom: 15px;">Confirmed!</p>
                 
                 <div style="text-align: center; margin-bottom: 24px;">
                   <p style="display: inline-block; background: #f3f4f6; padding: 8px 16px; border-radius: 8px; font-weight: 600; margin-bottom: 10px;">Experience</p>
