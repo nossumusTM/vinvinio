@@ -229,7 +229,7 @@ const Categories = () => {
         <div className="absolute left-1/2 -translate-x-1/2 bottom-[-12px] z-10">
           <div
             onClick={() => setVisible((prev) => !prev)}
-            className="bg-white border shadow-md rounded-full p-1 cursor-pointer transition-transform duration-300"
+            className="bg-white shadow-md rounded-full p-1 cursor-pointer transition-transform duration-300"
           >
             <motion.div
               animate={{ rotate: visible ? 0 : 180 }}

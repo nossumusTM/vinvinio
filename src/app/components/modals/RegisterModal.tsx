@@ -150,26 +150,28 @@ const RegisterModal = () => {
                   required
                   inputClassName="rounded-xl"
                 />
-                <Input
-                  id="password"
-                  label="Password"
-                  type="password"
-                  disabled={isLoading}
-                  register={register}
-                  errors={errors}
-                  required
-                  inputClassName="rounded-xl"
-                />
-                <Input
-                  id="confirmPassword"
-                  label="Confirm Password"
-                  type="password"
-                  disabled={isLoading}
-                  register={register}
-                  errors={errors}
-                  required
-                  inputClassName="rounded-xl"
-                />
+                <div className="mt-16 sm:mt-0 flex flex-col gap-4">
+                  <Input
+                    id="password"
+                    label="Password"
+                    type="password"
+                    disabled={isLoading}
+                    register={register}
+                    errors={errors}
+                    required
+                    inputClassName="rounded-xl"
+                  />
+                  <Input
+                    id="confirmPassword"
+                    label="Confirm Password"
+                    type="password"
+                    disabled={isLoading}
+                    register={register}
+                    errors={errors}
+                    required
+                    inputClassName="rounded-xl"
+                  />
+                </div>
               </div>
 
               {popupMessage && (
