@@ -208,36 +208,20 @@ const RegisterModal = () => {
       );      
 
     return (
-        // <Modal
-        //     disabled={isLoading}
-        //     isOpen={registerModal.isOpen}
-        //     title="Register"
-        //     actionLabel="Continue"
-        //     onClose={registerModal.onClose}
-        //     onSubmit={handleSubmit(onSubmit)}
-        //     body={bodyContent}
-        //     footer={footerContent}
-        //     className=""
-        // />
-
         <Modal
-          disabled={isLoading}
-          isOpen={registerModal.isOpen}
-          title="Register"
-          actionLabel="Continue"
-          onClose={registerModal.onClose}
-          onSubmit={handleSubmit(onSubmit)}
-          body={
-            <div className="overflow-y-auto max-h-[60vh] sm:max-h-none px-4 sm:px-0 pb-4">
-              {bodyContent}
-            </div>
-          }
-          footer={
-            <div className="overflow-y-auto max-h-[30vh] sm:max-h-none px-4 sm:px-0">
-              {footerContent}
-            </div>
-          }
-          className=""
+            disabled={isLoading}
+            isOpen={registerModal.isOpen}
+            title="Register"
+            actionLabel="Continue"
+            onClose={registerModal.onClose}
+            onSubmit={handleSubmit(onSubmit)}
+            body={
+              <div className="max-h-[55vh] sm:max-h-none overflow-y-auto pr-2">
+                {bodyContent}
+              </div>
+            }            
+            footer={footerContent}
+            className="sm:max-h-[90vh] max-h-[95vh] overflow-hidden"
         />
     );
 }

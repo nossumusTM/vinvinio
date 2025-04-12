@@ -41,7 +41,7 @@ const AnnouncementModal = () => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60]">
-      <div className="bg-white rounded-xl p-6 max-w-md w-full relative">
+      <div className="bg-white rounded-xl p-4 sm:p-6 max-w-md w-full relative">
         <button
           onClick={handleClose}
           className="absolute top-3 right-3 text-gray-500 hover:text-black transition"
@@ -62,12 +62,20 @@ const AnnouncementModal = () => {
             Use the promocode below at checkout:
           </p>
 
+          <div className="flex flex-col items-center gap-1">
           <button
-            onClick={handleCopy}
-            className="bg-neutral-800 px-4 py-2 rounded-xl text-sm font-semibold text-white hover:bg-neutral-700 transition text-[#25F4EE]"
-          >
-            {copied ? <FaCheck className="inline" /> : 'ESTATERM25'}
-          </button>
+              onClick={handleCopy}
+              className="bg-transparent border border-black border-dashed px-4 py-2 rounded-xl text-sm font-semibold text-black transition"
+            >
+              ESTATERM25
+            </button>
+            {copied && (
+              <span className="text-xs text-black border-b border-black mt-1">
+                Copied to Clipboard!
+              </span>
+            )}
+          </div>
+
         </div>
       </div>
     </div>
