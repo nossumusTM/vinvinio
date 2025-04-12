@@ -30,37 +30,38 @@ const Home = async ({ searchParams }: HomeProps) => {
   return (
     <ClientOnly>
       <Container>
-        {/* RIGHT: Filter Panel */}
-        <div className="relative flex justify-center items-start">
-          <div
-            className="absolute top-8 left-1/2 transform -translate-x-1/2 transition-opacity duration-300"
-            id="filter-container"
-          >
+        {/* Wrap both filter and grid in a relative with z-context */}
+        <div className="relative z-30">
+          {/* Filter dropdown centered */}
+          <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-[9999]">
             <ListingFilter />
           </div>
-        </div>
 
-        <div
-          className="
-            pt-32
-            grid 
-            grid-cols-1 
-            sm:grid-cols-1 
-            md:grid-cols-2 
-            xl:grid-cols-4
-            2xl:grid-cols-4
-            gap-12
-            max-w-screen-2xl
-            mx-auto
-          "
-        >
-          {listings.map((listing: any) => (
-            <ListingCard
-              currentUser={currentUser}
-              key={listing.id}
-              data={listing}
-            />
-          ))}
+          {/* Listing grid */}
+          <div
+            className="
+              pt-32
+              grid 
+              grid-cols-1 
+              sm:grid-cols-1 
+              md:grid-cols-2 
+              xl:grid-cols-4
+              2xl:grid-cols-4
+              gap-12
+              max-w-screen-2xl
+              mx-auto
+              relative
+              z-10
+            "
+          >
+            {listings.map((listing: any) => (
+              <ListingCard
+                currentUser={currentUser}
+                key={listing.id}
+                data={listing}
+              />
+            ))}
+          </div>
         </div>
       </Container>
 
