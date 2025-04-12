@@ -130,56 +130,59 @@ const RegisterModal = () => {
             })}
             </div> */}
 
-            <div className="flex flex-col gap-4 overflow-y-auto max-h-[55vh] pr-2 sm:pr-0">
-            <Input
-                id="email"
-                label="Email"
-                disabled={isLoading}
-                register={register}
-                errors={errors}
-                required
-                inputClassName="rounded-xl"
-            />
-            <Input
-                id="name"
-                label="Username"
-                disabled={isLoading}
-                register={register}
-                errors={errors}
-                required
-                inputClassName="rounded-xl"
-            />
-            <Input
-                id="password"
-                label="Password"
-                type="password"
-                disabled={isLoading}
-                register={register}
-                errors={errors}
-                required
-                inputClassName="rounded-xl"
-            />
-            <Input
-              id="confirmPassword"
-              label="Confirm Password"
-              type="password"
-              disabled={isLoading}
-              register={register}
-              errors={errors}
-              required
-              inputClassName="rounded-xl"
-            />
+            <div className="flex flex-col gap-4 max-h-[55vh] sm:max-h-none overflow-y-auto pr-2 sm:pr-0">
+              <div className="flex flex-col gap-4 min-h-[200px] sm:min-h-fit">
+                <Input
+                  id="email"
+                  label="Email"
+                  disabled={isLoading}
+                  register={register}
+                  errors={errors}
+                  required
+                  inputClassName="rounded-xl"
+                />
+                <Input
+                  id="name"
+                  label="Username"
+                  disabled={isLoading}
+                  register={register}
+                  errors={errors}
+                  required
+                  inputClassName="rounded-xl"
+                />
+                <Input
+                  id="password"
+                  label="Password"
+                  type="password"
+                  disabled={isLoading}
+                  register={register}
+                  errors={errors}
+                  required
+                  inputClassName="rounded-xl"
+                />
+                <Input
+                  id="confirmPassword"
+                  label="Confirm Password"
+                  type="password"
+                  disabled={isLoading}
+                  register={register}
+                  errors={errors}
+                  required
+                  inputClassName="rounded-xl"
+                />
+              </div>
 
-            {popupMessage && (
-            <ConfirmPopup
-                title="Notice"
-                message={popupMessage}
-                hideCancel
-                confirmLabel="OK"
-                onConfirm={() => setPopupMessage(null)}
-            />
-            )}
-          </div>
+              {popupMessage && (
+                <ConfirmPopup
+                  title="Notice"
+                  message={popupMessage}
+                  hideCancel
+                  confirmLabel="OK"
+                  onConfirm={() => setPopupMessage(null)}
+                />
+              )}
+            </div>
+
         </div>
     );
 
