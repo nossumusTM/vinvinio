@@ -41,8 +41,8 @@ const AnnouncementModal = () => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] p-8">
-      <div className="bg-white rounded-xl p-8 sm:p-12 max-w-md w-full relative">
-      <div className="p-10 rounded-xl  border border-black border-dashed">
+      <div className="bg-white rounded-2xl p-8 sm:p-12 max-w-md w-full relative">
+      <div className="p-10 rounded-2xl  border border-black border-dashed">
         <button
           onClick={handleClose}
           className="absolute top-3 right-3 text-gray-500 hover:text-black transition"
