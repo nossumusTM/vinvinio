@@ -60,3 +60,11 @@ body,
 .animate-scaleIn {
   animation: scaleIn 0.3s ease-out;
 }
+
+body.has-announcement-bar #layout-content-wrapper {
+  padding-top: 7rem; /* Adjust based on your NavBar height */
+}
+
+body:not(.has-announcement-bar) #layout-content-wrapper {
+  padding-top: 5rem;
+}

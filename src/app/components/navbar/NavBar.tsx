@@ -5,6 +5,7 @@ import Container from "../Container";
 import Logo from "./Logo";
 import Search from "./Search";
 import UserMenu from "./UserMenu";
+import AnnouncementBar from "../AnnouncementBar";
 
 interface NavBarProps {
     currentUser?: SafeUser | null;
@@ -13,6 +14,7 @@ interface NavBarProps {
 const NavBar: React.FC<NavBarProps> = ({ currentUser }) => {
     return (
       <div className="fixed w-full bg-white z-50 shadow-sm">
+        <AnnouncementBar />
        <div className="p-4 pt-6 md:py-6 border-b-[1px]">
           <Container>
             <div className="flex items-center justify-between w-full">

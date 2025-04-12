@@ -51,9 +51,9 @@ const ListingFilter = () => {
         id="sort"
         value={sort}
         onChange={handleFilterChange}
-        className="bg-white text-md font-semibold text-gray-700 font-medium px-4 py-2 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#25F4EE] focus:border-transparent shadow-sm transition-all"
+        className="bg-white text-md font-semibold text-gray-700 font-medium px-4 py-2 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#25F4EE] focus:border-transparent shadow-sm transition-all hover:shadow-lg"
       >
-        <option value="">Default</option>
+        <option value="">Sort By:</option>
         <option value="rating">Rating</option>
         <option value="priceLow">Price: Low to High</option>
         <option value="priceHigh">Price: High to Low</option>

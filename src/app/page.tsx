@@ -33,7 +33,7 @@ const Home = async ({ searchParams }: HomeProps) => {
         {/* RIGHT: Filter Panel */}
         <div className="relative">
           <div
-            className="absolute top-0 right-0 mt-4 mr-4 md:mt-8 md:mr-8 transition-opacity duration-300"
+            className="absolute top-0 right-0 mt-8 sm:mt-4 md:mt-8 mr-4 md:mr-8 transition-opacity duration-300"
             id="filter-container"
           >
             <ListingFilter />
