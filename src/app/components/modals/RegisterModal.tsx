@@ -131,10 +131,29 @@ const RegisterModal = () => {
             </div> */}
 
             <div className="flex flex-col gap-4 max-h-[55vh] sm:max-h-none overflow-y-auto pr-2 sm:pr-0">
-              <div className="flex flex-col gap-4 min-h-[200px] sm:min-h-fit">
+              <Input
+                id="email"
+                label="Email"
+                disabled={isLoading}
+                register={register}
+                errors={errors}
+                required
+                inputClassName="rounded-xl"
+              />
+              <Input
+                id="name"
+                label="Username"
+                disabled={isLoading}
+                register={register}
+                errors={errors}
+                required
+                inputClassName="rounded-xl"
+              />
+              <div className="mt-72 sm:mt-4 flex flex-col gap-4">
                 <Input
-                  id="email"
-                  label="Email"
+                  id="password"
+                  label="Password"
+                  type="password"
                   disabled={isLoading}
                   register={register}
                   errors={errors}
@@ -142,36 +161,15 @@ const RegisterModal = () => {
                   inputClassName="rounded-xl"
                 />
                 <Input
-                  id="name"
-                  label="Username"
+                  id="confirmPassword"
+                  label="Confirm Password"
+                  type="password"
                   disabled={isLoading}
                   register={register}
                   errors={errors}
                   required
                   inputClassName="rounded-xl"
                 />
-                <div className="mt-16 sm:mt-0 flex flex-col gap-4">
-                  <Input
-                    id="password"
-                    label="Password"
-                    type="password"
-                    disabled={isLoading}
-                    register={register}
-                    errors={errors}
-                    required
-                    inputClassName="rounded-xl"
-                  />
-                  <Input
-                    id="confirmPassword"
-                    label="Confirm Password"
-                    type="password"
-                    disabled={isLoading}
-                    register={register}
-                    errors={errors}
-                    required
-                    inputClassName="rounded-xl"
-                  />
-                </div>
               </div>
 
               {popupMessage && (
@@ -184,7 +182,6 @@ const RegisterModal = () => {
                 />
               )}
             </div>
-
         </div>
     );
 

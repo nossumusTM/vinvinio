@@ -51,7 +51,7 @@ const ListingFilter = () => {
         id="sort"
         value={sort}
         onChange={handleFilterChange}
-        className="bg-white text-md font-semibold text-neutral-700 font-medium px-4 py-2 rounded-full sm:shadow-md transition-all sm:hover:shadow-lg"
+        className="bg-white text-md font-semibold text-neutral-700 font-medium px-4 py-2 rounded-full shadow-md transition-all hover:shadow-lg"
         >
         <option value="">Sort By: Initial</option>
         <option value="rating">Rating</option>
