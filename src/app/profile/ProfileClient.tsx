@@ -392,7 +392,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
       </div>
 
       {/* Avatar & name */}
-      <div className="pl-5 pt-3 pr-5 pb-6 border-b border-gray-300 my-2 rounded-xl shadow-sm">
+      <div className="pl-5 pt-3 pr-5 pb-6 rounded-xl shadow-sm">
         {/* Divider */}
         <div className="flex items-center gap-4 mt-4">
           <div
@@ -433,7 +433,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   
           {activeSection === 'personal-info' && (
             <>
-              <div className="mt-8 pt-10 pl-5 max-w-[600px] bg-white border rounded-xl shadow-sm p-6">
+              <div className="mt-8 pt-10 pl-5 max-w-[600px] bg-white rounded-xl shadow-md hover:shadow-lg p-6">
                 <div className="flex justify-between items-center mb-6">
                   <div className="flex items-center gap-3">
                     <button
@@ -702,7 +702,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
           )}
 
           {activeSection === 'login-security' && (
-            <div className="mt-8 pt-10 pl-5 max-w-[600px] bg-white border rounded-xl shadow-sm p-6">
+            <div className="mt-8 pt-10 pl-5 max-w-[600px] bg-white rounded-xl shadow-md hover:shadow-lg p-6">
               {/* Header */}
               <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-3">
@@ -805,7 +805,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
           )}
 
           {activeSection === 'payments' && (
-            <div className="mt-8 pt-10 pl-5 max-w-[600px] bg-white border rounded-xl shadow-sm p-6">
+            <div className="mt-8 pt-10 pl-5 max-w-[600px] bg-white rounded-xl shadow-md hover:shadow-lg p-6">
               {/* Header */}
               <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-3">
@@ -1418,7 +1418,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
           <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <div
               onClick={() => setActiveSection('personal-info')}
-              className="cursor-pointer p-6 border rounded-xl shadow-sm hover:shadow-md transition"
+              className="cursor-pointer p-6 rounded-xl shadow-md hover:shadow-lg transition"
             >
               <div className="text-4xl text-[#000] mb-4"><CgUserlane /></div>
               <p className="text-lg font-semibold">Personal Info</p>
@@ -1427,7 +1427,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   
             <div
               onClick={() => setActiveSection('login-security')}
-              className="cursor-pointer p-6 border rounded-xl shadow-sm hover:shadow-md transition"
+              className="cursor-pointer p-6 rounded-xl shadow-md hover:shadow-lg transition"
             >
               <div className="text-4xl text-[#000] mb-4"><MdOutlineSecurity /></div>
               <p className="text-lg font-semibold">Login & Security</p>
@@ -1436,7 +1436,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   
             <div
               onClick={() => setActiveSection('payments')}
-              className="cursor-pointer p-6 border rounded-xl shadow-sm hover:shadow-md transition"
+              className="cursor-pointer p-6 rounded-xl shadow-md hover:shadow-lg transition"
             >
               <div className="text-4xl text-[#000] mb-4"><RiSecurePaymentLine /></div>
               <p className="text-lg font-semibold">Payments & Withdraw</p>
@@ -1450,7 +1450,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                 {currentUser.role === 'promoter' && !activeSection && (
             <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Referral Activities */}
-              <div className="p-6 border rounded-xl shadow-sm hover:shadow-md">
+              <div className="p-6 rounded-xl shadow-md hover:shadow-lg">
                 <p className="text-lg font-semibold mb-2">Referral Activities</p>
                 <p className="text-sm text-neutral-600 mb-4">
                   Track your referral performance and earnings.
@@ -1475,7 +1475,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
               </div>
 
               {/* Total Earned */}
-              <div className="p-6 border rounded-xl shadow-sm hover:shadow-md flex flex-col">
+              <div className="p-6 rounded-xl shadow-md hover:shadow-lg flex flex-col">
                 <p className="text-lg font-semibold mb-2">Total Earned</p>
                 <p className="text-sm text-neutral-600 mb-4">
                   Earning 10% from each referral booking made through your code.
@@ -1488,7 +1488,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
               </div>
 
               {/* Withdraw Details */}
-              <div className="p-6 border rounded-xl shadow-sm hover:shadow-md">
+              <div className="p-6 rounded-xl shadow-md hover:shadow-lg">
                 <p className="text-lg font-semibold mb-2">Withdraw Method</p>
                 <p className="text-sm text-neutral-600 mb-4">Deposits processed twice per month.</p>
 

@@ -73,7 +73,7 @@ const ReviewsModal: React.FC<ReviewsModalProps> = ({
           {reviews.map((review, i) => (
             <div
               key={i}
-              className="border border-neutral-200 rounded-2xl p-4 shadow-sm hover:shadow-md"
+              className="rounded-2xl p-4 shadow-md hover:shadow-lg"
             >
               {/* Stars */}
               <div className="flex gap-1 mb-2">

@@ -15,6 +15,7 @@ const ListingFilter = () => {
   const [visible, setVisible] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const buttonRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [dropdownCoords, setDropdownCoords] = useState({ left: 0, top: 0 });
   const shiftLeft = (sort === 'random' || sort === 'rating' || sort === '') ? 25 : -6;
@@ -44,6 +45,23 @@ const ListingFilter = () => {
     router.push(`/?${params.toString()}`);
   };
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        !buttonRef.current?.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+  
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);  
+
   // Scroll-based visibility
   useEffect(() => {
     let lastScroll = window.scrollY;
@@ -72,11 +90,13 @@ const ListingFilter = () => {
               const rect = buttonRef.current.getBoundingClientRect();
               setDropdownCoords({
                 left: rect.left + rect.width / 2,
-                top: rect.bottom + window.scrollY + 8, // dropdown appears below with spacing
+                top: rect.bottom + window.scrollY + 8,
               });
             }
+          
             setIsOpen(prev => !prev);
           }}
+          
           className="flex items-center gap-2 bg-white py-2 px-4 rounded-full shadow-md hover:shadow-lg cursor-pointer font-medium text-neutral-700"
         >
           {sort ? filterOptions.find(o => o.value === sort)?.label : <div className="flex flex-row justify-center items-center gap-2 w-50"> <PiSortDescending /> Sort By </div>}
@@ -85,6 +105,7 @@ const ListingFilter = () => {
         <AnimatePresence>
           {isOpen && (
               <motion.div
+                ref={dropdownRef}
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
@@ -100,13 +121,21 @@ const ListingFilter = () => {
                 <div
                   key={option.value}
                   onClick={() => {
-                    setSort(option.value);
+                    const isSameOption = sort === option.value;
+                    const newSort = isSameOption ? '' : option.value;
+                  
+                    setSort(newSort);
                     setIsOpen(false);
-
+                  
                     const params = new URLSearchParams(searchParams?.toString() || '');
-                    params.set('sort', option.value);
+                    if (isSameOption) {
+                      params.delete('sort');
+                    } else {
+                      params.set('sort', option.value);
+                    }
+                  
                     router.push(`/?${params.toString()}`);
-                  }}
+                  }}                  
                   className={twMerge(
                     "px-4 py-3 text-sm text-neutral-700 hover:bg-neutral-100 transition cursor-pointer",
                     sort === option.value && "font-semibold bg-neutral-100",

@@ -313,7 +313,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                             {/* Individual Reviews */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {reviews.slice(0, 6).map((review, i) => (
-                                <div key={i} className="border border-neutral-200 rounded-2xl p-6 shadow-sm hover:shadow-md">
+                                <div key={i} className="rounded-2xl p-6 shadow-md hover:shadow-lg">
                                 {/* Rating Stars */}
                                 <div className="flex gap-1 mb-2">
                                     {[1, 2, 3, 4, 5].map((star) => (
