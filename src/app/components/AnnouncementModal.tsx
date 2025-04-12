@@ -40,7 +40,7 @@ const AnnouncementModal = () => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60]">
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] p-8">
       <div className="bg-white rounded-xl p-4 sm:p-6 max-w-md w-full relative">
         <button
           onClick={handleClose}
@@ -65,7 +65,7 @@ const AnnouncementModal = () => {
           <div className="flex flex-col items-center gap-1">
           <button
               onClick={handleCopy}
-              className="bg-transparent border border-black border-dashed px-4 py-2 rounded-xl text-sm font-semibold text-black transition"
+              className="bg-transparent border border-black border-dashed px-4 py-2 rounded-xl text-sm font-semibold text-black transition mb-2"
             >
               ESTATERM25
             </button>
