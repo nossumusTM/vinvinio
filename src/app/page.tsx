@@ -31,9 +31,9 @@ const Home = async ({ searchParams }: HomeProps) => {
     <ClientOnly>
       <Container>
         {/* RIGHT: Filter Panel */}
-        <div className="relative">
+        <div className="relative flex justify-center items-start">
           <div
-            className="absolute top-0 right-0 mt-8 sm:mt-4 md:mt-8 mr-4 md:mr-8 transition-opacity duration-300"
+            className="absolute top-8 left-1/2 transform -translate-x-1/2 transition-opacity duration-300"
             id="filter-container"
           >
             <ListingFilter />
