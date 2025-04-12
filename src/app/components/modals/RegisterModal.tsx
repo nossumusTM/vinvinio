@@ -107,7 +107,7 @@ const RegisterModal = () => {
             <Heading title='Welcome to Vuoiaggio' subtitle='' center/>
 
            {/* Role selection */}
-            <div className="flex justify-baseline items-center gap-4 flex-wrap">
+            {/* <div className="flex justify-baseline items-center gap-4 flex-wrap">
             <p>I&apos;m a:</p>
             {['customer', 'host', 'promoter'].map((option) => {
                 const isSelected = role === option;
@@ -128,7 +128,7 @@ const RegisterModal = () => {
                 </button>
                 );
             })}
-            </div>
+            </div> */}
 
             <Input
                 id="email"
@@ -208,16 +208,36 @@ const RegisterModal = () => {
       );      
 
     return (
+        // <Modal
+        //     disabled={isLoading}
+        //     isOpen={registerModal.isOpen}
+        //     title="Register"
+        //     actionLabel="Continue"
+        //     onClose={registerModal.onClose}
+        //     onSubmit={handleSubmit(onSubmit)}
+        //     body={bodyContent}
+        //     footer={footerContent}
+        //     className=""
+        // />
+
         <Modal
-            disabled={isLoading}
-            isOpen={registerModal.isOpen}
-            title="Register"
-            actionLabel="Continue"
-            onClose={registerModal.onClose}
-            onSubmit={handleSubmit(onSubmit)}
-            body={bodyContent}
-            footer={footerContent}
-            className=""
+          disabled={isLoading}
+          isOpen={registerModal.isOpen}
+          title="Register"
+          actionLabel="Continue"
+          onClose={registerModal.onClose}
+          onSubmit={handleSubmit(onSubmit)}
+          body={
+            <div className="overflow-y-auto max-h-[60vh] sm:max-h-none px-4 sm:px-0 pb-4">
+              {bodyContent}
+            </div>
+          }
+          footer={
+            <div className="overflow-y-auto max-h-[30vh] sm:max-h-none px-4 sm:px-0">
+              {footerContent}
+            </div>
+          }
+          className=""
         />
     );
 }

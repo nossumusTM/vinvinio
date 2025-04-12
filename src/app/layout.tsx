@@ -12,6 +12,7 @@ import PromoteModal from './components/modals/PromoteModal';
 import Messenger from './components/Messenger';
 
 import ToasterProvider from '@/app/providers/ToasterProvider';
+import AnnouncementModal from './components/AnnouncementModal';
 
 import './globals.css';
 import ClientOnly from './components/ClientOnly';
@@ -49,6 +50,7 @@ export default async function RootLayout({
         <ClientOnly>
           <ToasterProvider />
           <NavBar currentUser={currentUser} />
+          <AnnouncementModal />
           <LoginModal />
           <RegisterModal />
           <SearchModal />
