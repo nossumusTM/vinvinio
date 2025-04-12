@@ -9,6 +9,7 @@ import getListings, {
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import ClientOnly from "./components/ClientOnly";
 import Footer from "./components/Footer";
+import ListingFilter from "./components/listings/ListingFiltering";
 
 interface HomeProps {
   searchParams: IListingsParams
@@ -29,6 +30,16 @@ const Home = async ({ searchParams }: HomeProps) => {
   return (
     <ClientOnly>
       <Container>
+        {/* RIGHT: Filter Panel */}
+        <div className="relative">
+          <div
+            className="absolute top-0 right-0 mt-4 mr-4 md:mt-8 md:mr-8 transition-opacity duration-300"
+            id="filter-container"
+          >
+            <ListingFilter />
+          </div>
+        </div>
+
         <div
           className="
             pt-32

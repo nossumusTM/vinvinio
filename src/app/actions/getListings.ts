@@ -10,6 +10,7 @@ export interface IListingsParams {
   endDate?: string;
   locationValue?: string;
   category?: string;
+  sort?: 'rating' | 'priceLow' | 'priceHigh' | 'random';
 }
 
 export default async function getListings(params: IListingsParams) {
@@ -23,6 +24,7 @@ export default async function getListings(params: IListingsParams) {
       startDate,
       endDate,
       category,
+      sort
     } = params;
 
     let query: any = {};
@@ -78,15 +80,39 @@ export default async function getListings(params: IListingsParams) {
 
     const listings = await prisma.listing.findMany({
       where: query,
-      orderBy: {
-        createdAt: "desc",
+      // orderBy: {
+      //   createdAt: "desc",
+      // },
+      include: {
+        reviews: true, // include related reviews
       },
     });
 
-    const safeListings = listings.map((listing: any) => ({
-      ...listing,
-      createdAt: listing.createdAt.toISOString(),
-    }));
+    // const safeListings = listings.map((listing: any) => ({
+    //   ...listing,
+    //   createdAt: listing.createdAt.toISOString(),
+    // }));
+
+    const safeListings = listings.map((listing) => {
+      const totalRating = listing.reviews.reduce((sum, r) => sum + (r.rating || 0), 0);
+      const avgRating = listing.reviews.length > 0 ? totalRating / listing.reviews.length : 0;
+
+      return {
+        ...listing,
+        createdAt: listing.createdAt.toISOString(),
+        avgRating,
+      };
+    });
+
+    if (sort === 'rating') {
+      safeListings.sort((a, b) => (b.avgRating || 0) - (a.avgRating || 0));
+    } else if (sort === 'priceLow') {
+      safeListings.sort((a, b) => a.price - b.price);
+    } else if (sort === 'priceHigh') {
+      safeListings.sort((a, b) => b.price - a.price);
+    } else {
+      safeListings.sort(() => Math.random() - 0.5);
+    }
 
     return safeListings;
   } catch (error: any) {
