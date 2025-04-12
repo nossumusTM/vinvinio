@@ -104,7 +104,7 @@ const RegisterModal = () => {
     const bodyContent = (
         <div className="flex flex-col gap-4">
             {/* <p className="text-lg text-left">Welcome to Vuoiaggio</p> */}
-            <Heading title='Welcome to Vuoiaggio' subtitle='' center/>
+            {/* <Heading title='Welcome to Vuoiaggio' subtitle='' center/> */}
 
            {/* Role selection */}
             {/* <div className="flex justify-baseline items-center gap-4 flex-wrap">
@@ -130,8 +130,7 @@ const RegisterModal = () => {
             })}
             </div> */}
 
-            <div className="flex flex-col gap-4 max-h-[55vh] sm:max-h-none overflow-y-auto pr-2 sm:pr-0">
-              <Input
+            <Input
                 id="email"
                 label="Email"
                 disabled={isLoading}
@@ -139,8 +138,8 @@ const RegisterModal = () => {
                 errors={errors}
                 required
                 inputClassName="rounded-xl"
-              />
-              <Input
+            />
+            <Input
                 id="name"
                 label="Username"
                 disabled={isLoading}
@@ -148,40 +147,38 @@ const RegisterModal = () => {
                 errors={errors}
                 required
                 inputClassName="rounded-xl"
-              />
-              <div className="flex flex-col gap-4 pt-8 sm:pt-4">
-                <Input
-                  id="password"
-                  label="Password"
-                  type="password"
-                  disabled={isLoading}
-                  register={register}
-                  errors={errors}
-                  required
-                  inputClassName="rounded-xl"
-                />
-                <Input
-                  id="confirmPassword"
-                  label="Confirm Password"
-                  type="password"
-                  disabled={isLoading}
-                  register={register}
-                  errors={errors}
-                  required
-                  inputClassName="rounded-xl"
-                />
-              </div>
+            />
+            <Input
+                id="password"
+                label="Password"
+                type="password"
+                disabled={isLoading}
+                register={register}
+                errors={errors}
+                required
+                inputClassName="rounded-xl"
+            />
+            <Input
+              id="confirmPassword"
+              label="Confirm Password"
+              type="password"
+              disabled={isLoading}
+              register={register}
+              errors={errors}
+              required
+              inputClassName="rounded-xl"
+            />
 
-              {popupMessage && (
-                <ConfirmPopup
-                  title="Notice"
-                  message={popupMessage}
-                  hideCancel
-                  confirmLabel="OK"
-                  onConfirm={() => setPopupMessage(null)}
-                />
-              )}
-            </div>
+
+            {popupMessage && (
+            <ConfirmPopup
+                title="Notice"
+                message={popupMessage}
+                hideCancel
+                confirmLabel="OK"
+                onConfirm={() => setPopupMessage(null)}
+            />
+            )}
         </div>
     );
 
@@ -214,17 +211,13 @@ const RegisterModal = () => {
         <Modal
             disabled={isLoading}
             isOpen={registerModal.isOpen}
-            title="Register"
+            title="Welcome to Vuoiaggio"
             actionLabel="Continue"
             onClose={registerModal.onClose}
             onSubmit={handleSubmit(onSubmit)}
-            body={
-              <div className="max-h-[55vh] sm:max-h-none overflow-y-auto pr-2">
-                {bodyContent}
-              </div>
-            }            
+            body={bodyContent}
             footer={footerContent}
-            className="sm:max-h-[90vh] max-h-[95vh] overflow-hidden"
+            className=""
         />
     );
 }
