@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { IoClose } from 'react-icons/io5';
 import { FaCheck } from 'react-icons/fa';
 
@@ -8,6 +8,7 @@ const AnnouncementModal = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   const handleCopy = () => {
     navigator.clipboard.writeText('ESTATERM');
@@ -37,11 +38,31 @@ const AnnouncementModal = () => {
     }
   }, [mounted]);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        handleClose();
+      }
+    };
+  
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+  
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);  
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] p-8">
-      <div className="bg-white rounded-2xl p-8 sm:p-12 max-w-md w-full relative">
+      <div
+        ref={modalRef}
+        className="bg-white rounded-2xl p-8 sm:p-12 max-w-md w-full relative"
+      >
+
       <div className="p-10 rounded-2xl  border border-black border-dashed">
         <button
           onClick={handleClose}

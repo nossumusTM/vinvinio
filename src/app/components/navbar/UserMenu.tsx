@@ -12,7 +12,7 @@ import useRegisterModal from "@/app/hooks/useRegisterModal";
 import useRentModal from "@/app/hooks/useRentModal";
 import useTourModal from "@/app/hooks/useExperienceModal";
 import { SafeUser } from "@/app/types";
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import MenuItem from "./MenuItem";
 import Avatar from "../Avatar";
@@ -243,23 +243,27 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
 
       </div>
 
-      {isOpen && (
-        <div
-          className="
-            absolute 
-            rounded-xl 
-            shadow-md
-            min-w-[220px]
-            max-w-[300px]
-            w-[70vw]
-            md:w-[240px]
-            bg-white 
-            overflow-hidden 
-            right-0 
-            top-12 
-            text-sm
-          "
-        >
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            key="user-menu"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+            className="absolute 
+              rounded-xl 
+              shadow-md
+              min-w-[220px]
+              max-w-[300px]
+              w-[70vw]
+              md:w-[240px]
+              bg-white 
+              overflow-hidden 
+              right-0 
+              top-12 
+              text-sm"
+          >
           <div className="flex flex-col cursor-pointer">
             {currentUser ? (
               <>
@@ -394,8 +398,9 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
             )}
           </div>
 
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

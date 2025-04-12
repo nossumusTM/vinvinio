@@ -17,7 +17,7 @@ const ListingFilter = () => {
   const buttonRef = useRef<HTMLDivElement>(null);
 
   const [dropdownCoords, setDropdownCoords] = useState({ left: 0, top: 0 });
-  const shiftLeft = (sort === 'random' || sort === 'rating' || sort === '') ? 25 : -5;
+  const shiftLeft = (sort === 'random' || sort === 'rating' || sort === '') ? 25 : -6;
 
   const filterOptions = [
     { value: 'rating', label: 'Review' },
@@ -79,7 +79,7 @@ const ListingFilter = () => {
           }}
           className="flex items-center gap-2 bg-white py-2 px-4 rounded-full shadow-md hover:shadow-lg cursor-pointer font-medium text-neutral-700"
         >
-          {sort ? filterOptions.find(o => o.value === sort)?.label : <div className="flex flex-row justify-center items-center gap-2 w-50"> <PiSortDescending /> Filter </div>}
+          {sort ? filterOptions.find(o => o.value === sort)?.label : <div className="flex flex-row justify-center items-center gap-2 w-50"> <PiSortDescending /> Sort By </div>}
         </div>
   
         <AnimatePresence>
