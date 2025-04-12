@@ -17,6 +17,7 @@ const ListingFilter = () => {
   const buttonRef = useRef<HTMLDivElement>(null);
 
   const [dropdownCoords, setDropdownCoords] = useState({ left: 0, top: 0 });
+  const shiftLeft = (sort === 'random' || sort === 'rating' || sort === '') ? 25 : -5;
 
   const filterOptions = [
     { value: 'rating', label: 'Review' },
@@ -78,7 +79,7 @@ const ListingFilter = () => {
           }}
           className="flex items-center gap-2 bg-white py-2 px-4 rounded-full shadow-md hover:shadow-lg cursor-pointer font-medium text-neutral-700"
         >
-          {sort ? filterOptions.find(o => o.value === sort)?.label : 'FILTER BY'}
+          {sort ? filterOptions.find(o => o.value === sort)?.label : <div className="flex flex-row justify-center items-center gap-2 w-50"> <PiSortDescending /> Filter </div>}
         </div>
   
         <AnimatePresence>
@@ -89,6 +90,10 @@ const ListingFilter = () => {
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.15 }}
                 className="fixed z-[9999] bg-white border border-neutral-200 rounded-xl shadow-lg w-max min-w-[160px]"
+                style={{
+                  left: 0 - shiftLeft,
+                  top: 50,
+                }}
               >            
                      
               {filterOptions.map((option, index) => (
