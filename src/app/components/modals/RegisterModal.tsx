@@ -137,7 +137,7 @@ const RegisterModal = () => {
                 register={register}
                 errors={errors}
                 required
-                inputClassName="rounded-xl"
+                inputClassName="h-9 text-sm lg:h-[46px] lg:text-base rounded-xl"
             />
             <Input
                 id="name"
@@ -146,7 +146,7 @@ const RegisterModal = () => {
                 register={register}
                 errors={errors}
                 required
-                inputClassName="rounded-xl"
+                inputClassName="h-9 text-sm lg:h-[46px] lg:text-base rounded-xl"
             />
             <Input
                 id="password"
@@ -156,7 +156,7 @@ const RegisterModal = () => {
                 register={register}
                 errors={errors}
                 required
-                inputClassName="rounded-xl"
+                inputClassName="h-9 text-sm lg:h-[46px] lg:text-base rounded-xl"
             />
             <Input
               id="confirmPassword"
@@ -166,7 +166,7 @@ const RegisterModal = () => {
               register={register}
               errors={errors}
               required
-              inputClassName="rounded-xl"
+              inputClassName="h-9 text-sm lg:h-[46px] lg:text-base rounded-xl"
             />
 
 
