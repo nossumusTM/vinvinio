@@ -207,14 +207,16 @@ const Input: React.FC<InputProps> = ({
       <label
         htmlFor={id}
         className={`
-          absolute text-sm transition-all duration-150 z-10 origin-[0]
-          ${formatPrice ? 'left-9' : 'left-4'}
-          top-1/2 -translate-y-1/2
-          peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2
-          peer-focus:top-1 peer-focus:translate-y-0
-          peer-focus:scale-90 peer-placeholder-shown:scale-100
-          ${errors[id] ? 'text-rose-500' : 'text-zinc-400'}
-        `}
+            absolute text-sm transition-all duration-150 z-10 origin-[0]
+            ${formatPrice ? 'left-9' : 'left-4'}
+            top-1/2 -translate-y-1/2
+            peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2
+            peer-focus:top-1 peer-focus:translate-y-0
+            peer-focus:scale-90 peer-placeholder-shown:scale-100
+            peer-[&:not(:placeholder-shown)]:top-1 peer-[&:not(:placeholder-shown)]:translate-y-0
+            peer-[&:not(:placeholder-shown)]:scale-90
+            ${errors[id] ? 'text-rose-500' : 'text-zinc-400'}
+          `}          
       >
         {label}
       </label>
