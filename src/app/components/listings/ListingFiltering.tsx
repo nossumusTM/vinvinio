@@ -43,22 +43,24 @@ const ListingFilter = () => {
 
   return (
     <div
-      className={`transition-opacity duration-300 ${
-        visible ? 'opacity-100' : 'opacity-0'
-      }`}
-    >
-      <select
-        id="sort"
-        value={sort}
-        onChange={handleFilterChange}
-        className="bg-white text-md font-semibold text-neutral-700 px-4 py-2 rounded-full shadow-lg transition-all hover:shadow-xl"
+        className={`transition-opacity duration-300 ${
+            visible ? 'opacity-100' : 'opacity-0'
+        }`}
         >
-        <option value="">Sort By: Initial</option>
-        <option value="rating">Rating</option>
-        <option value="priceLow">Price: Low to High</option>
-        <option value="priceHigh">Price: High to Low</option>
-        <option value="random">Random</option>
-        </select>
+        <div className="bg-white px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-all">
+            <select
+            id="sort"
+            value={sort}
+            onChange={handleFilterChange}
+            className="bg-transparent text-md font-semibold text-neutral-700 outline-none"
+            >
+            <option value="">Sort By: Initial</option>
+            <option value="rating">Rating</option>
+            <option value="priceLow">Price: Low to High</option>
+            <option value="priceHigh">Price: High to Low</option>
+            <option value="random">Random</option>
+            </select>
+        </div>
     </div>
   );
 };
