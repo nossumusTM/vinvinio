@@ -130,6 +130,7 @@ const RegisterModal = () => {
             })}
             </div> */}
 
+            <div className="flex flex-col gap-4 overflow-y-auto max-h-[55vh] pr-2 sm:pr-0">
             <Input
                 id="email"
                 label="Email"
@@ -169,7 +170,6 @@ const RegisterModal = () => {
               inputClassName="rounded-xl"
             />
 
-
             {popupMessage && (
             <ConfirmPopup
                 title="Notice"
@@ -179,6 +179,7 @@ const RegisterModal = () => {
                 onConfirm={() => setPopupMessage(null)}
             />
             )}
+          </div>
         </div>
     );
 
