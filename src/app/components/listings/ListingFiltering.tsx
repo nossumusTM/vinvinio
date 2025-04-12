@@ -16,7 +16,7 @@ const ListingFilter = () => {
   const [isOpen, setIsOpen] = useState(false);
   const buttonRef = useRef<HTMLDivElement>(null);
 
-  const [dropdownStyle, setDropdownStyle] = useState<{ left: number; top: number }>({ left: 0, top: 0 });
+  const [dropdownCoords, setDropdownCoords] = useState({ left: 0, top: 0 });
 
   const filterOptions = [
     { value: 'rating', label: 'Review' },
@@ -66,7 +66,16 @@ const ListingFilter = () => {
       <div className="relative inline-block">
         <div
           ref={buttonRef}
-          onClick={() => setIsOpen((prev) => !prev)}
+          onClick={() => {
+            if (buttonRef.current) {
+              const rect = buttonRef.current.getBoundingClientRect();
+              setDropdownCoords({
+                left: rect.left + rect.width / 2,
+                top: rect.bottom + window.scrollY + 8, // dropdown appears below with spacing
+              });
+            }
+            setIsOpen(prev => !prev);
+          }}
           className="flex items-center gap-2 bg-white py-2 px-4 rounded-full shadow-md hover:shadow-lg cursor-pointer font-medium text-neutral-700"
         >
           {sort ? filterOptions.find(o => o.value === sort)?.label : 'FILTER BY'}
@@ -80,11 +89,6 @@ const ListingFilter = () => {
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.15 }}
                 className="fixed z-[9999] bg-white border border-neutral-200 rounded-xl shadow-lg w-max min-w-[160px]"
-                style={{
-                  left: `${dropdownStyle.left - 35}px`,      // move it 5px to the left
-                  top: `${dropdownStyle.top + 51}px`,        // add 8px vertical spacing
-                  transform: 'translateX(-50%)',
-                }}
               >            
                      
               {filterOptions.map((option, index) => (
