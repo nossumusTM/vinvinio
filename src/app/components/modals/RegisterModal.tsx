@@ -149,7 +149,7 @@ const RegisterModal = () => {
                 required
                 inputClassName="rounded-xl"
               />
-              <div className="mt-72 sm:mt-4 flex flex-col gap-4">
+              <div className="flex flex-col gap-4 pt-8 sm:pt-4">
                 <Input
                   id="password"
                   label="Password"
