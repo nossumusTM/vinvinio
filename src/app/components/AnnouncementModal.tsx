@@ -84,10 +84,10 @@ const AnnouncementModal = () => {
             className="w-88 h-auto mb-2"
             onLoad={() => setImageLoaded(true)}
           />
-          <h2 className="text-3xl font-semibold text-gray-900">
+          <h2 className="text-2xl text-left font-semibold text-gray-900">
             GET 5% OFF ON YOUR FIRST BOOKING ᥫ᭡
           </h2>
-          <p className="text-sm text-gray-700">
+          <p className="text-sm  text-left text-gray-700">
             Use the promocode below at checkout:
           </p>
 

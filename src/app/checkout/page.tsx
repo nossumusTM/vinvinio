@@ -452,10 +452,12 @@ const CheckoutPage = () => {
       try {
         const res = await axios.get('/api/users/current');
         if (res?.data?.id) {
-          setCheckoutMode('auth');
+          if (!isAuthenticated) {
+            setCheckoutMode('auth');
+          }
+          setIsAuthenticated(true);
           if (res.data.legalName) setLegalName(res.data.legalName);
           if (res.data.email) setEmail(res.data.email);
-          setIsAuthenticated(true); // ✅ Add this line
         }
       } catch (err) {
         console.log('User not authenticated');
@@ -496,7 +498,7 @@ const CheckoutPage = () => {
               <button
                 onClick={() => {
                   loginModal.onOpen();
-                  setCheckoutMode('auth');
+                  // setCheckoutMode('auth');
                 }}
                 className={`text-sm font-medium ${checkoutMode === 'auth' ? 'text-black underline' : 'text-neutral-500'}`}
               >
@@ -1006,11 +1008,30 @@ const CheckoutPage = () => {
           confirmLabel="OK"
           hideCancel
           onConfirm={() => {
-            if (popupMessage.includes('confirmed')) {
-              router.push('/trips');
+            const messageLower = popupMessage?.toLowerCase() || '';
+            
+            const shouldRedirect =
+              messageLower.includes('confirmed') || messageLower.includes('thank you for your booking');
+          
+            if (shouldRedirect) {
+              const query = new URLSearchParams({
+                legalName,
+                email,
+                contact,
+                street: addressFields.street,
+                apt: addressFields.apt,
+                city: addressFields.city,
+                state: addressFields.state,
+                zip: addressFields.zip,
+                country: addressFields.country?.label || '',
+                listingId: listingId || '',
+              }).toString();
+          
+              router.push(`/confirmed?${query}`);
             }
+          
             setPopupMessage(null);
-          }}
+          }}          
         />
       )}
     </div>
