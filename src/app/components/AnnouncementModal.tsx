@@ -3,11 +3,13 @@
 import { useEffect, useState, useRef } from 'react';
 import { IoClose } from 'react-icons/io5';
 import { FaCheck } from 'react-icons/fa';
+import { FaHeart } from "react-icons/fa6";
 
 const AnnouncementModal = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
   const handleCopy = () => {
@@ -28,11 +30,15 @@ const AnnouncementModal = () => {
   useEffect(() => {
     if (!mounted) return;
 
+    const timer = setTimeout(() => {
+      setImageLoaded(true);
+    }, 1500); // fallback in case onLoad doesn't fire
+
     const hasSeen = sessionStorage.getItem('announcementDismissed');
     if (!hasSeen) {
       const timer = setTimeout(() => {
         setIsOpen(true);
-      }, 10000); // 20 seconds
+      }, 5000); // 20 seconds
 
       return () => clearTimeout(timer);
     }
@@ -54,7 +60,7 @@ const AnnouncementModal = () => {
     };
   }, [isOpen]);  
 
-  if (!isOpen) return null;
+  if (!isOpen || !imageLoaded) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] p-8">
@@ -76,9 +82,10 @@ const AnnouncementModal = () => {
             src="/images/paperplane.png"
             alt="Vuoiaggio Promo"
             className="w-88 h-auto mb-2"
+            onLoad={() => setImageLoaded(true)}
           />
           <h2 className="text-3xl font-semibold text-gray-900">
-            GET 5% OFF ON YOUR FIRST BOOKING!
+            GET 5% OFF ON YOUR FIRST BOOKING ᥫ᭡
           </h2>
           <p className="text-sm text-gray-700">
             Use the promocode below at checkout:

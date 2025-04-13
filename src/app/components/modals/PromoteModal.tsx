@@ -23,12 +23,23 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
   const [referenceId, setReferenceId] = useState('');
   const qrRef = useRef<HTMLDivElement>(null);
   const qrDownloadRef = useRef<HTMLDivElement>(null);
+  const [isReady, setIsReady] = useState(false);
 
   const [copied, setCopied] = useState(false);
 
   const [showDownloadLayout, setShowDownloadLayout] = useState(false);
   const [mobilePreviewUrl, setMobilePreviewUrl] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (promoteModal.isOpen) {
+      const timeout = setTimeout(() => {
+        setIsReady(true); // fallback in case onLoad fails
+      }, 1000); // fallback duration
+
+      return () => clearTimeout(timeout);
+    }
+  }, [promoteModal.isOpen]);
 
   const banner = new window.Image();
 
@@ -69,7 +80,11 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
     setMobilePreviewUrl(dataUrl);
   };  
 
-  const bodyContent = (
+  const bodyContent = !isReady ? (
+    <div className="flex items-center justify-center h-40">
+      <p className="text-sm text-neutral-500">Preparing your passcode...</p>
+    </div>
+  ) : (
     <div className="flex flex-col items-center gap-4">
 
       <div 
@@ -82,6 +97,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
           width={869}
           height={600}
           unoptimized
+          onLoad={() => setIsReady(true)}
           className="w-full h-auto object-cover rounded-xl scale-[0.85] md:scale-100 -translate-y-4 md:translate-y-0 transition"
         />
         <div className="absolute bottom-[20%] left-[40%] -translate-x-1/2 bg-white p-2 rounded-xl shadow-lg w-32 h-32 flex items-center justify-center">
@@ -219,9 +235,12 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
       )} */}
 
     </div>
+
   );
 
   const isMobile = /iPhone|iPad|Android/i.test(navigator.userAgent);
+
+  if (!isReady) return null;
 
   return (
     <Modal
