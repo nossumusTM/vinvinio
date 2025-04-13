@@ -183,7 +183,34 @@ const CheckoutPage = () => {
 
       // ✅ Redirect or show confirmation message
       if (checkoutMode === 'auth') {
-        router.push('/trips');
+        if (checkoutMode === 'auth') {
+          const query = new URLSearchParams({
+            legalName,
+            email,
+            contact,
+            street: addressFields.street,
+            apt: addressFields.apt,
+            city: addressFields.city,
+            state: addressFields.state,
+            zip: addressFields.zip,
+            country: addressFields.country?.label || '',
+            countryFlag: addressFields.country?.flag || '',
+            listingId: listingId || '',
+            guests: guests.toString(),
+            price: listingData?.price?.toString() || '0',
+            auth: isAuthenticated ? 'true' : '',
+            averageRating: (
+              reviews.length > 0
+                ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+                : '0'
+            ),
+            reviewCount: reviews.length.toString(),
+            categoryLabel: listingData?.category || '',
+          }).toString();
+        
+          router.push(`/confirmed?${query}`);
+          return;
+        }        
       } else {
         setPopupMessage(
           'Thank you for your booking, you will receive an email with your booking details and the host will contact you soon with your provided contact method.'

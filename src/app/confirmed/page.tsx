@@ -5,6 +5,9 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Avatar from '@/app/components/Avatar';
 
+import useMessenger from '@/app/hooks/useMessager';
+import useLoginModal from '@/app/hooks/useLoginModal';
+
 const BookingConfirmed = () => {
   const searchParams = useSearchParams();
   const [listing, setListing] = useState<any>(null);
@@ -25,6 +28,9 @@ const BookingConfirmed = () => {
   const averageRating = getParam('averageRating');
   const reviewCount = getParam('reviewCount');
   const categoryLabel = getParam('categoryLabel');
+
+  const messenger = useMessenger();
+  const loginModal = useLoginModal();
 
 
   useEffect(() => {
@@ -59,18 +65,23 @@ const BookingConfirmed = () => {
       const end = Date.now() + duration;
   
       (function frame() {
+        const oceanColors = ['#00CED1', '#1E90FF', '#4682B4', '#87CEEB', '#B0C4DE']; // tiffany, blue, steelblue, skyblue, grayish-blue
+
         confetti({
-          particleCount: 6,
-          angle: 60,
-          spread: 55,
-          origin: { x: 0 },
+        particleCount: 6,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        colors: oceanColors,
         });
         confetti({
-          particleCount: 6,
-          angle: 120,
-          spread: 55,
-          origin: { x: 1 },
+        particleCount: 6,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        colors: oceanColors,
         });
+
   
         if (Date.now() < end) {
           requestAnimationFrame(frame);
@@ -85,6 +96,29 @@ const BookingConfirmed = () => {
   
     runConfetti();
   }, []);  
+
+  const handleContactHost = async () => {
+    try {
+      const res = await fetch('/api/users/current');
+      const user = await res.json();
+  
+      if (!user?.id) {
+        loginModal.onOpen();
+        return;
+      }
+  
+      if (listing?.user?.id) {
+        messenger.openChat({
+          id: listing.user.id,
+          name: listing.user.name ?? 'Host',
+          image: listing.user.image ?? '',
+        });
+      }
+    } catch (err) {
+      console.error('Auth check failed:', err);
+      loginModal.onOpen();
+    }
+  };  
 
   return (
     <div className="max-w-screen-xl mx-auto p-6 pt-8 pb-4 flex flex-col lg:flex-row gap-10">
@@ -140,9 +174,19 @@ const BookingConfirmed = () => {
               <div className="flex items-center gap-3 mt-2">
                 <Avatar src={listing.user?.image} name={listing.user?.name} />
                 <div>
+                  <div className='flex flex-row gap-4'>
+                  <div className='flex flex-col justify-center items-center'>
+                    <p className="text-neutral-600 text-sm">Hosted by</p>
+                    <p className="font-bold text-lg">{listing.user?.name}</p>
+                    </div>
 
-                  <p className="text-neutral-600 text-sm">Hosted by</p>
-                  <p className="font-bold text-lg">{listing.user?.name}</p>
+                    <button
+                        onClick={handleContactHost}
+                        className="text-sm text-black p-4 shadow-md rounded-xl font-medium mt-1 hover:shadow-lg"
+                        >
+                        Contact {listing.user?.name?.split(' ')[0] ?? 'Host'}
+                    </button>
+                </div>
                 </div>
               </div>
             </div>
@@ -152,14 +196,15 @@ const BookingConfirmed = () => {
 
       {/* Guest Info */}
       <div className="w-full lg:w-1/3 bg-white shadow-md rounded-2xl p-6 space-y-5">
-        <h2 className="text-xl font-semibold">Guest Information</h2>
+        <h2 className="text-xl font-semibold">Confirmation Details</h2>
+        <p className="text-neutral-600 text-sm">ID: {listingId}</p>
         <div className="space-y-2 text-sm">
           <p><strong>Name:</strong> {legalName}</p>
           <p><strong>Email:</strong> {email}</p>
           <p><strong>Contact:</strong> {contact}</p>
           <hr />
           <h3 className="font-semibold mt-4">Billing Address</h3>
-          <p>{street}{apt ? `, Apt ${apt}` : ''}</p>
+          <p>{street}{apt ? `, ${apt}` : ''}</p>
           <p>{city}, {state}, {zip}</p>
           <p>
             {countryFlag && (
