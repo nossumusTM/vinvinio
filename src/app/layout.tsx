@@ -61,7 +61,8 @@ export default async function RootLayout({
           {/* <Messenger userId={currentUser?.id} /> */}
         </ClientOnly>
 
-        <div className="pb-20 pt-28 min-h-screen">
+        {/* <div className="pb-20 pt-28 min-h-screen"> */}
+        <div className="pb-0 pt-28">
           {children}
         </div>
 

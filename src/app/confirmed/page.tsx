@@ -20,7 +20,12 @@ const BookingConfirmed = () => {
   const state = getParam('state');
   const zip = getParam('zip');
   const country = getParam('country');
+  const countryFlag = getParam('countryFlag');
   const listingId = getParam('listingId');
+  const averageRating = getParam('averageRating');
+  const reviewCount = getParam('reviewCount');
+  const categoryLabel = getParam('categoryLabel');
+
 
   useEffect(() => {
     const fetchListing = async () => {
@@ -33,14 +38,85 @@ const BookingConfirmed = () => {
     fetchListing();
   }, [listingId]);
 
+  useEffect(() => {
+    const runConfetti = async () => {
+      const canvas = document.createElement('canvas');
+      canvas.style.position = 'fixed';
+      canvas.style.top = '0';
+      canvas.style.left = '0';
+      canvas.style.width = '100%';
+      canvas.style.height = '100%';
+      canvas.style.pointerEvents = 'none';
+      canvas.style.zIndex = '9999';
+      document.body.appendChild(canvas);
+  
+      const confetti = (await import('canvas-confetti')).create(canvas, {
+        resize: true,
+        useWorker: true,
+      });
+  
+      const duration = 2000;
+      const end = Date.now() + duration;
+  
+      (function frame() {
+        confetti({
+          particleCount: 6,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0 },
+        });
+        confetti({
+          particleCount: 6,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1 },
+        });
+  
+        if (Date.now() < end) {
+          requestAnimationFrame(frame);
+        }
+      })();
+  
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(canvas);
+      }, duration + 500);
+    };
+  
+    runConfetti();
+  }, []);  
+
   return (
-    <div className="max-w-screen-xl mx-auto p-6 py-10 flex flex-col lg:flex-row gap-10">
+    <div className="max-w-screen-xl mx-auto p-6 pt-8 pb-4 flex flex-col lg:flex-row gap-10">
       {/* Listing Info */}
       <div className="w-full lg:w-2/3 bg-white shadow-md rounded-2xl p-6 space-y-6">
-        <h1 className="text-2xl font-semibold text-black">Booking Confirmed 🎉</h1>
+        <h1 className="text-2xl font-semibold text-black">Booking Confirmed!</h1>
 
         {listing && (
           <>
+            {averageRating && reviewCount && (
+                <div className="flex items-center gap-2 mt-2">
+                    {/* SVG Star with gradient fill */}
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <defs>
+                        <linearGradient id="starGradientConfirmed">
+                        <stop offset={`${(parseFloat(averageRating) / 5) * 100}%`} stopColor="black" />
+                        <stop offset={`${(parseFloat(averageRating) / 5) * 100}%`} stopColor="lightgray" />
+                        </linearGradient>
+                    </defs>
+                            <path
+                        fill="url(#starGradientConfirmed)"
+                        d="M12 17.27L18.18 21 16.54 13.97 22 9.24 
+                        14.81 8.63 12 2 9.19 8.63 2 9.24 
+                        7.46 13.97 5.82 21 12 17.27z"
+                    />
+                    </svg>
+
+                    <span className="text-sm text-neutral-600">
+                    {parseFloat(averageRating).toFixed(1)} · {reviewCount} review{parseInt(reviewCount) !== 1 ? 's' : ''}
+                    </span>
+                </div>
+                )}
             {listing.imageSrc && listing.imageSrc.length > 0 && (
               <Image
                 src={listing.imageSrc[0]}
@@ -52,10 +128,19 @@ const BookingConfirmed = () => {
             )}
 
             <div>
+
+            {categoryLabel && (
+                  <p className="text-sm text-neutral-500 mt-1">
+                    Experience: <span className="font-normal text-black">{categoryLabel}</span>
+                  </p>
+                  )}
+
               <h2 className="text-xl font-semibold">{listing.title}</h2>
+
               <div className="flex items-center gap-3 mt-2">
                 <Avatar src={listing.user?.image} name={listing.user?.name} />
                 <div>
+
                   <p className="text-neutral-600 text-sm">Hosted by</p>
                   <p className="font-bold text-lg">{listing.user?.name}</p>
                 </div>
@@ -76,12 +161,41 @@ const BookingConfirmed = () => {
           <h3 className="font-semibold mt-4">Billing Address</h3>
           <p>{street}{apt ? `, Apt ${apt}` : ''}</p>
           <p>{city}, {state}, {zip}</p>
-          <p>{country}</p>
+          <p>
+            {countryFlag && (
+                <span className="mr-1 text-xl">{countryFlag}</span>
+            )}
+            {country}
+            </p>
+          <hr />
+          <p>
+                <strong>Guest Count:</strong> {searchParams?.get('guests') || 'N/A'}
+            </p>
+
+            <p>
+                <strong>Total Paid:</strong> €
+                {(() => {
+                const price = parseFloat(searchParams?.get('price') || '0');
+                const guests = parseInt(searchParams?.get('guests') || '1', 10);
+                return (price * guests).toFixed(2);
+                })()}
+            </p>
         </div>
 
-        <div className="bg-green-50 text-green-800 border border-green-200 p-4 rounded-md mt-4 text-sm">
+        {/* <div className="bg-green-50 text-green-800 border border-green-200 p-4 rounded-md mt-4 text-sm">
           A confirmation email has been sent to <strong>{email}</strong>. The host will contact you soon.
-        </div>
+        </div> */}
+        <div className="bg-green-50 text-green-800 border border-green-200 p-4 rounded-md mt-4 text-sm space-y-2">
+            <p>
+                A confirmation email has been sent to <strong>{email}</strong>. The host will contact you soon.
+            </p>
+
+            {!searchParams?.get('auth') && (
+                <p className="pt-2 text-xs text-neutral-500">
+                If you want to contact the host, <strong>create an account</strong> and message them directly via our built-in messenger.
+                </p>
+            )}
+            </div>
       </div>
     </div>
   );

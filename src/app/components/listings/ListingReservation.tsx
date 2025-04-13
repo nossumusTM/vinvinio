@@ -28,6 +28,9 @@ interface ListingReservationProps {
   maxGuests: number;
   guestCount: number;
   onGuestCountChange: (value: number) => void;
+  averageRating: number;
+  reviewCount: number;
+  categoryLabel?: string;
 }
 
 const ListingReservation: React.FC<ListingReservationProps> = ({
@@ -43,6 +46,9 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
   maxGuests,
   guestCount,
   onGuestCountChange,
+  averageRating,
+  reviewCount,
+  categoryLabel
 }) => {
   const router = useRouter();
 
@@ -85,6 +91,9 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
       startDate: dateRange.startDate.toISOString(),
       endDate: dateRange.endDate?.toISOString() || dateRange.startDate.toISOString(),
       time: selectedTime,
+      averageRating: averageRating.toFixed(1),
+      reviewCount: reviewCount.toString(),
+      categoryLabel: categoryLabel || '',
     });
   
     router.push(`/checkout?${searchParams.toString()}`);

@@ -274,6 +274,9 @@ const ListingClient: React.FC<ListingClientProps> = ({
                                 maxGuests={listing.guestCount}
                                 guestCount={guestCount}
                                 onGuestCountChange={setGuestCount} 
+                                averageRating={averageRating}
+                                reviewCount={reviews.length}
+                                categoryLabel={category?.label}
                             />
                             </div>
                         </div>

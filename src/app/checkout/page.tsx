@@ -1024,8 +1024,19 @@ const CheckoutPage = () => {
                 state: addressFields.state,
                 zip: addressFields.zip,
                 country: addressFields.country?.label || '',
+                countryFlag: addressFields.country?.flag || '',
                 listingId: listingId || '',
-              }).toString();
+                guests: guests.toString(),
+                price: listingData?.price?.toString() || '0',
+                auth: isAuthenticated ? 'true' : '',
+                averageRating: (
+                  reviews.length > 0
+                    ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+                    : '0'
+                ),
+                reviewCount: reviews.length.toString(),
+                categoryLabel: listingData?.category || '',
+              }).toString();              
           
               router.push(`/confirmed?${query}`);
             }
