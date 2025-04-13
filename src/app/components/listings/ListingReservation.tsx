@@ -5,7 +5,7 @@ import { Range } from 'react-date-range';
 import Button from '../Button';
 import Calendar from '../inputs/Calendar';
 import Counter from '../inputs/Counter';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 interface ReservationSlot {
@@ -52,11 +52,15 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
 }) => {
   const router = useRouter();
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleReserve = () => {
     if (!listingId || !selectedTime || !dateRange.startDate) {
       toast.error("Please select a date and time that is available.");
       return;
     }
+
+    setIsLoading(true); 
   
     const selectedDateKey = new Date(dateRange.startDate).toLocaleDateString('sv-SE', {
       timeZone: 'Europe/Rome',
@@ -134,11 +138,13 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
       <hr />
 
       <div className="p-4">
-        <Button
-          disabled={disabled || !selectedTime}
-          label="Book Now"
-          onClick={handleReserve}
-        />
+        {isLoading ? (
+          <div className="w-full text-center py-3">
+            <span className="loader inline-block w-5 h-5 border-2 border-t-transparent border-black rounded-full animate-spin" />
+          </div>
+        ) : (
+          <Button label="Book Now" onClick={handleReserve} />
+        )}
       </div>
 
       <hr />

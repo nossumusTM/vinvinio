@@ -28,6 +28,7 @@ const BookingConfirmed = () => {
   const averageRating = getParam('averageRating');
   const reviewCount = getParam('reviewCount');
   const categoryLabel = getParam('categoryLabel');
+  const startDate = getParam('startDate');
 
   const messenger = useMessenger();
   const loginModal = useLoginModal();
@@ -171,18 +172,18 @@ const BookingConfirmed = () => {
 
               <h2 className="text-xl font-semibold">{listing.title}</h2>
 
-              <div className="flex items-center gap-3 mt-2">
+              <div className="flex items-center gap-3 mt-6">
                 <Avatar src={listing.user?.image} name={listing.user?.name} />
                 <div>
-                  <div className='flex flex-row gap-4'>
-                  <div className='flex flex-col justify-center items-center'>
+                  <div className='flex flex-row gap-6'>
+                  <div className='flex flex-col justify-center'>
                     <p className="text-neutral-600 text-sm">Hosted by</p>
                     <p className="font-bold text-lg">{listing.user?.name}</p>
                     </div>
 
                     <button
                         onClick={handleContactHost}
-                        className="text-sm text-black p-4 shadow-md rounded-xl font-medium mt-1 hover:shadow-lg"
+                        className="text-sm text-black p-4 shadow-md rounded-xl font-medium hover:shadow-lg"
                         >
                         Contact {listing.user?.name?.split(' ')[0] ?? 'Host'}
                     </button>
@@ -197,11 +198,33 @@ const BookingConfirmed = () => {
       {/* Guest Info */}
       <div className="w-full lg:w-1/3 bg-white shadow-md rounded-2xl p-6 space-y-5">
         <h2 className="text-xl font-semibold">Confirmation Details</h2>
-        <p className="text-neutral-600 text-sm">ID: {listingId}</p>
         <div className="space-y-2 text-sm">
+          {/* <p className="text-neutral-600 text-sm"><strong>ID:</strong> {listingId}</p> */}
           <p><strong>Name:</strong> {legalName}</p>
           <p><strong>Email:</strong> {email}</p>
           <p><strong>Contact:</strong> {contact}</p>
+          {startDate && (() => {
+                try {
+                    const dateObj = new Date(startDate);
+                    const datePart = dateObj.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    });
+                    const timePart = dateObj.toLocaleTimeString('en-US', {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true,
+                    });
+                    return (
+                    <p className="text-neutral-600 text-sm">
+                        <strong>Date:</strong> {datePart} at {timePart}
+                    </p>
+                    );
+                } catch {
+                    return <p className="text-neutral-600 text-sm">Date: Invalid</p>;
+                }
+            })()}
           <hr />
           <h3 className="font-semibold mt-4">Billing Address</h3>
           <p>{street}{apt ? `, ${apt}` : ''}</p>

@@ -212,7 +212,38 @@ const ListingClient: React.FC<ListingClientProps> = ({
                         currentUser={currentUser}
                     />
 
-                    <Button
+                    <button
+                        onClick={() => {
+                            // 🔐 Check auth first
+                            if (!currentUser) {
+                            loginModal.onOpen();
+                            return;
+                            }
+    
+                            const isHost = currentUser?.id === listing.user.id;
+    
+                            const recipient = isHost
+                            ? {
+                                id: reservations[0]?.user?.id ?? '',
+                                name: reservations[0]?.user?.name ?? 'Guest',
+                                image: reservations[0]?.user?.image ?? '',
+                                }
+                            : {
+                                id: listing.user.id,
+                                name: listing.user.name ?? 'Host',
+                                image: listing.user.image ?? '',
+                                };
+    
+                            if (recipient.id) {
+                            messenger.openChat(recipient);
+                            }
+                        }}
+                        className="text-lg text-white bg-black hover:bg-neutral-800 p-4 rounded-xl font-medium mt-1"
+                        >
+                        Contact {listing.user?.name?.split(' ')[0] ?? 'Host'}
+                    </button>
+
+                    {/* <Button
                     label="Contact Host"
                     onClick={() => {
                         // 🔐 Check auth first
@@ -239,7 +270,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                         messenger.openChat(recipient);
                         }
                     }}
-                    />
+                    /> */}
                     
                     <div className="grid grid-cols-1 md:grid-cols-7 md:gap-10 mt-6 relative">
                         <ListingInfo

@@ -97,6 +97,7 @@ const CheckoutPage = () => {
   const loginModal = useLoginModal();
   const registerModal = useRegisterModal();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCardInfo({ ...cardInfo, [e.target.name]: e.target.value });
@@ -153,6 +154,8 @@ const CheckoutPage = () => {
       setPopupMessage("Please fill out the required fields.");
       return;
     }
+
+    setIsLoading(true);
   
     try {
       await axios.post('/api/reservations', {
@@ -211,9 +214,10 @@ const CheckoutPage = () => {
           router.push(`/confirmed?${query}`);
           return;
         }        
-      } else {
+      } 
+      else {
         setPopupMessage(
-          'Thank you for your booking, you will receive an email with your booking details and the host will contact you soon with your provided contact method.'
+          'Thank you for your booking <3'
         );
       }
   
@@ -342,6 +346,8 @@ const CheckoutPage = () => {
       console.error('Error creating reservation:', error);
       // setPopupMessage("Something went wrong. Please try again.");
       toast.error('Something went wrong. Please try again.');
+    } finally {
+      setIsLoading(false); // ✅ Always stop loading
     }
   };    
 
@@ -926,15 +932,19 @@ const CheckoutPage = () => {
 
         {/* ✅ Show correct button based on selected method */}
         {cardInfo.method === 'gpay' ? (
-        <button className="mt-4 bg-black text-white p-3 rounded font-semibold w-full">
+          <button className="mt-4 bg-black text-white p-3 rounded font-semibold w-full">
             Pay with Google Pay
-        </button>
+          </button>
         ) : cardInfo.method === 'paypal' ? (
-        <button className="mt-4 bg-[#003087] text-white p-3 rounded font-semibold w-full">
+          <button className="mt-4 bg-[#003087] text-white p-3 rounded font-semibold w-full">
             Proceed with PayPal
-        </button>
+          </button>
+        ) : isLoading ? (
+          <div className="w-full text-center py-3">
+            <span className="loader inline-block w-5 h-5 border-2 border-t-transparent border-black rounded-full animate-spin" />
+          </div>
         ) : (
-        <Button label="Confirm and Pay" onClick={handleSubmit} />
+          <Button label="Confirm and Pay" onClick={handleSubmit} />
         )}
       </div>
 
@@ -1030,7 +1040,7 @@ const CheckoutPage = () => {
       </div>
       {popupMessage && (
         <ConfirmPopup
-          title="Notice"
+          title="Confirmed!"
           message={popupMessage}
           confirmLabel="OK"
           hideCancel
@@ -1054,6 +1064,7 @@ const CheckoutPage = () => {
                 countryFlag: addressFields.country?.flag || '',
                 listingId: listingId || '',
                 guests: guests.toString(),
+                startDate: startDate || '',
                 price: listingData?.price?.toString() || '0',
                 auth: isAuthenticated ? 'true' : '',
                 averageRating: (
