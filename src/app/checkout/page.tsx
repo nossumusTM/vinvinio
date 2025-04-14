@@ -99,6 +99,10 @@ const CheckoutPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const referralId = localStorage.getItem('scannedReferenceId');
+  console.log("ReferralId", referralId);
+  console.log("Storage", localStorage);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCardInfo({ ...cardInfo, [e.target.name]: e.target.value });
   };
@@ -167,6 +171,7 @@ const CheckoutPage = () => {
         guestCount: guests,
         legalName,
         contact,
+        referralId,
       });
   
       if (scannedReferenceId) {
@@ -516,6 +521,11 @@ const CheckoutPage = () => {
           </button>
 
           <Heading title="Confirm and Pay" />
+          {/* {referralId && (
+              <div className="text-xs text-neutral-500 mt-2">
+                <span className="font-semibold">Referral ID:</span> {referralId}
+              </div>
+            )} */}
         </div>
 
         {!isAuthenticated && (

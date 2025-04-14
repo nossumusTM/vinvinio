@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 interface ConfirmPopupProps {
   title?: string;
-  message?: string;
+  message?: React.ReactNode;
   onConfirm?: () => void;
   onCancel?: () => void;
   confirmLabel?: string;

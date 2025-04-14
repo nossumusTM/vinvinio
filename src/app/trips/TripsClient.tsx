@@ -14,6 +14,9 @@ import Heading from "@/app/components/Heading";
 import Container from "@/app/components/Container";
 import Avatar from "@/app/components/Avatar";
 import ConfirmPopup from "../components/ConfirmPopup";
+import Modal from "../components/modals/Modal";
+
+import { AxiosError } from 'axios';
 
 import Image from "next/image";
 
@@ -35,30 +38,127 @@ const TripsClient: React.FC<TripsClientProps> = ({
 
   const messenger = useMessenger();
 
-  const onCancel = useCallback(
-    (id: string) => {
-      setDeletingId(id);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [customReason, setCustomReason] = useState('');
+  const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
+  const cancelOptions = [
+    "Change of plans",
+    "Found a better deal",
+    "Unexpected emergency",
+    "Date/time conflict",
+    "Issue with host",
+    "Prefer different experience",
+    "Other"
+  ];
 
-      axios
-        .delete(`/api/reservations/${id}`)
-        .then(() => {
-          toast.success('Reservation cancelled!', {
-            iconTheme: {
-                primary: '#25F4EE',
-                secondary: '#fff',
-            }
+  // const onCancel = useCallback(
+  //   (id: string) => {
+  //     setDeletingId(id);
+
+  //     axios
+  //       .delete(`/api/reservations/${id}`)
+  //       .then(() => {
+  //         toast.success('Reservation cancelled!', {
+  //           iconTheme: {
+  //               primary: '#25F4EE',
+  //               secondary: '#fff',
+  //           }
+  //       });
+  //         router.refresh();
+  //       })
+  //       .catch((error) => {
+  //         toast.error(error?.response?.data?.error);
+  //       })
+  //       .finally(() => {
+  //         setDeletingId('');
+  //       });
+  //   },
+  //   [router]
+  // );
+
+  const handleSubmitCancellation = async () => {
+    if (!selectedReservationId || !cancelReason) return;
+  
+    const reasonToSend = cancelReason === 'Other' ? customReason : cancelReason;
+    const reservation = reservations.find(r => r.id === selectedReservationId);
+    const formattedDate = format(new Date(reservation?.startDate || ''), 'PPP');
+  
+    const submitDate = format(new Date(), 'PPpp');
+
+    const emailText = `
+    🗓️ Reservation Cancellation Request
+
+    📌 Submitted On: ${submitDate}
+
+    👤 User Information:
+    - Username: ${currentUser?.name}
+    - Legal Name: ${currentUser?.legalName}
+    - Email: ${currentUser?.email}
+
+    🧾 Reservation Details:
+    - Reservation ID: ${selectedReservationId}
+    - Guest Count: ${reservation?.guestCount}
+    - Price: €${reservation?.totalPrice}
+    - Date of Reservation: ${formattedDate}
+
+    ❗ Reason for Cancellation:
+    ${reasonToSend}
+    `.trim();
+  
+    try {
+      await axios.post('/api/email/cancellation', {
+        to: 'vuoiaggio@gmail.com',
+        subject: `Cancellation request for reservation ${selectedReservationId}`,
+        bodyText: emailText,
+      });
+  
+      toast.success('Cancellation email sent.');
+      setShowCancelModal(false);
+      setSelectedReservationId(null);
+    } catch (err) {
+      toast.error('Failed to send cancellation email.');
+    }
+  };  
+  
+  const onCancel = useCallback(async (id: string) => {
+    if (currentUser?.role !== 'promoter') return;
+  
+    try {
+      setDeletingId(id);
+  
+      // Fetch reservation to get potential referenceId
+      const res = await axios.get(`/api/reservations/${id}`);
+      const reservation = res.data;
+      const referralId = reservation?.referralId;
+      const totalPrice = reservation?.totalPrice ?? 0;
+  
+      // Cancel reservation
+      await axios.delete(`/api/reservations/${id}`);
+      toast.success('Reservation cancelled!', {
+        iconTheme: {
+          primary: '#25F4EE',
+          secondary: '#fff',
+        }
+      });
+  
+      // Update referral analytics if referenceId exists
+      if (referralId) {
+        await axios.post('/api/analytics/decreament', {
+          reservationId: id,
+          totalBooksIncrement: -1,
+          totalRevenueIncrement: -totalPrice,
         });
-          router.refresh();
-        })
-        .catch((error) => {
-          toast.error(error?.response?.data?.error);
-        })
-        .finally(() => {
-          setDeletingId('');
-        });
-    },
-    [router]
-  );
+      }
+  
+      router.refresh();
+    } catch (error) {
+      const err = error as AxiosError<{ error?: string }>;
+      toast.error(err.response?.data?.error || 'Cancellation failed.');
+    } finally {
+      setDeletingId('');
+    }
+  }, [router, currentUser]);
 
   const handleReviewSubmit = async (reservationId: string, listingId: string) => {
     const { rating, comment } = reviewInputs[reservationId] || {};
@@ -99,23 +199,6 @@ const TripsClient: React.FC<TripsClientProps> = ({
       const reviews: Record<string, { rating: number; comment: string }> = {};
   
       for (const reservation of reservations) {
-        // try {
-        //   const res = await fetch('/api/reviews/get-by-reservation', {
-        //     method: 'POST',
-        //     body: JSON.stringify({ reservationId: reservation.id }),
-        //   });
-  
-        //   const data = await res.json();
-  
-        //   if (data) {
-        //     reviews[reservation.id] = {
-        //       rating: data.rating,
-        //       comment: data.comment,
-        //     };
-        //   }
-        // } catch (err) {
-        //   console.warn(`Failed to fetch review for reservation ${reservation.id}`);
-        // }
         try {
           const res = await fetch('/api/reviews/get-by-reservation', {
             method: 'POST',
@@ -353,6 +436,93 @@ const TripsClient: React.FC<TripsClientProps> = ({
             </div>
           );
         })}
+
+        {showCancelModal && (
+          <Modal
+            isOpen={showCancelModal}
+            onClose={() => setShowCancelModal(false)}
+            onSubmit={handleSubmitCancellation}
+            title="Cancel Reservation"
+            actionLabel="Send Request"
+            className="max-h-[60vh]"
+            body={
+              <div className="flex flex-col gap-4">
+                {/* Heading */}
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold text-black">Reason for Cancellation</h3>
+                  <p className="text-sm text-neutral-600 mt-1">
+                    Let us know why you want to cancel this reservation.
+                    <br />
+                    <span className="text-xs text-neutral-500">
+                      *Note: You can review our{" "}
+                      <a href="/cancellation-policy" target="_blank" className="underline hover:text-black">
+                        cancellation policy
+                      </a>{" "}
+                      for more details.
+                    </span>
+                  </p>
+                </div>
+            
+                {/* Options */}
+                <div className="flex flex-col gap-2">
+                  {cancelOptions.map(option => (
+                    <label
+                      key={option}
+                      className={`
+                        flex items-center shadow-md rounded-lg px-8 py-4 text-md cursor-pointer transition 
+                        ${cancelReason === option ? 'shadow-md bg-neutral-100' : 'hover:bg-neutral-100'}
+                      `}
+                    >
+                      <input
+                        type="radio"
+                        name="cancel-reason"
+                        value={option}
+                        checked={cancelReason === option}
+                        onChange={(e) => setCancelReason(e.target.value)}
+                        className="mr-3 accent-black"
+                      />
+                      {option}
+                    </label>
+                  ))}
+                </div>
+            
+                {/* Textarea for 'Other' */}
+                {cancelReason === 'Other' && (
+                  <div>
+                    <textarea
+                      placeholder="Please specify your reason"
+                      className="w-full border border-neutral-300 rounded-lg p-3 text-sm mt-2 focus:outline-none focus:ring-2 focus:ring-black"
+                      rows={4}
+                      value={customReason}
+                      onChange={(e) => setCustomReason(e.target.value)}
+                    />
+                  </div>
+                )}
+              </div>
+            }            
+          />        
+        )}
+      </div>
+
+      <div>
+      {currentUser?.role === 'promoter' && (
+          <div className="mt-10 max-w-md mx-auto bg-white p-4 rounded-xl shadow-md">
+            <h3 className="text-md font-semibold mb-2">Moderator Cancellation Tool</h3>
+            <input
+              type="text"
+              placeholder="Enter Reservation ID"
+              value={selectedReservationId || ''}
+              onChange={(e) => setSelectedReservationId(e.target.value)}
+              className="w-full border p-2 mb-2 rounded-md"
+            />
+            <button
+              onClick={() => onCancel(selectedReservationId || '')}
+              className="w-full bg-black text-white py-2 rounded-md hover:bg-neutral-800"
+            >
+              Cancel Reservation
+            </button>
+          </div>
+        )}
       </div>
     </Container>
   );

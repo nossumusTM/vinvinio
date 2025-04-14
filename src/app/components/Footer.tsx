@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { TbBrandTelegram, TbBrandTiktok, TbBrandInstagram, TbBrandFacebook, TbBrandX } from 'react-icons/tb';
+import { FiYoutube } from "react-icons/fi";
 import useMessenger from '@/app/hooks/useMessager';
 import Modal from './modals/Modal';
 import useLoginModal from '../hooks/useLoginModal';
@@ -305,9 +306,9 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
           {/* <h3 className="font-semibold text-lg mb-4 underline">Social channels</h3> */}
             <div className="flex space-x-4 text-xl">
                 <a href="#"><TbBrandTelegram className="hover:text-[#25F4EE] text-3xl transition" /></a>
-                <a href="#"><TbBrandX className="hover:text-[#25F4EE] text-3xl transition" /></a>
-                <a href="#"><TbBrandInstagram className="hover:text-[#25F4EE] text-3xl transition" /></a>
+                <a href="#"><FiYoutube className="hover:text-[#25F4EE] text-3xl transition" /></a>
                 <a href="#"><TbBrandTiktok className="hover:text-[#25F4EE] text-3xl transition" /></a>
+                <a href="#"><TbBrandInstagram className="hover:text-[#25F4EE] text-3xl transition" /></a>
             </div>
         </div>
       </div>
