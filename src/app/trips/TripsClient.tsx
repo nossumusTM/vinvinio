@@ -112,14 +112,23 @@ const TripsClient: React.FC<TripsClientProps> = ({
         subject: `Cancellation request for reservation ${selectedReservationId}`,
         bodyText: emailText,
       });
-  
-      toast.success('Cancellation email sent.');
+      toast.success('Cancellation request submitted.', {
+        iconTheme: {
+          primary: '#25F4EE',
+          secondary: '#fff',
+        }
+      });
       setShowCancelModal(false);
       setSelectedReservationId(null);
     } catch (err) {
       toast.error('Failed to send cancellation email.');
     }
   };  
+
+  const openCancelModal = useCallback((id: string) => {
+    setSelectedReservationId(id);
+    setShowCancelModal(true);
+  }, []);  
   
   const onCancel = useCallback(async (id: string) => {
     if (currentUser?.role !== 'promoter') return;
@@ -320,7 +329,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
 
                 {new Date(reservation.startDate) > new Date(Date.now() + 24 * 60 * 60 * 1000) && (
                 <button
-                  onClick={() => onCancel(reservation.id)}
+                  onClick={() => openCancelModal(reservation.id)}
                   disabled={deletingId === reservation.id}
                   className="mt-4 px-4 py-2 text-sm font-medium text-white bg-black rounded-xl hover:bg-neutral-700 disabled:opacity-50"
                 >
@@ -455,9 +464,18 @@ const TripsClient: React.FC<TripsClientProps> = ({
                     <br />
                     <span className="text-xs text-neutral-500">
                       *Note: You can review our{" "}
-                      <a href="/cancellation-policy" target="_blank" className="underline hover:text-black">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const footer = document.getElementById('vuoiaggio-footer');
+                          if (footer) {
+                            footer.scrollIntoView({ behavior: 'smooth' });
+                          }
+                        }}
+                        className="underline hover:text-black"
+                      >
                         cancellation policy
-                      </a>{" "}
+                      </button>{" "}
                       for more details.
                     </span>
                   </p>

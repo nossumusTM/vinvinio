@@ -244,7 +244,7 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
   );  
 
   return (
-    <footer className="bg-[#F9F9F9] text-gray-800 px-6 py-10">
+    <footer id="vuoiaggio-footer" className="bg-[#F9F9F9] text-gray-800 px-6 py-10">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-y-8 md:gap-x-4">
         {/* Support Section */}
         <div className="flex flex-col justify-center md:pl-10 md:ml-10">
