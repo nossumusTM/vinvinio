@@ -26,7 +26,7 @@ const RegisterModal = () => {
     const registerModal = useRegisterModal();
     const loginModal = useLoginModal();
     const [isLoading, setIsLoading] = useState(false);
-    const [role, setRole] = useState<'customer' | 'host' | 'promoter'>('customer');
+    const [role, setRole] = useState<'customer' | 'host' | 'promoter' | 'moder'>('customer');
     const [popupMessage, setPopupMessage] = useState<string | null>(null);
 
     const {
@@ -62,7 +62,7 @@ const RegisterModal = () => {
             .then(() => {
                 toast.success('Registered', {
                     iconTheme: {
-                        primary: '#25F4EE',
+                        primary: '#08e2ff',
                         secondary: '#fff',
                     },
                   });
@@ -107,28 +107,28 @@ const RegisterModal = () => {
             {/* <Heading title='Welcome to Vuoiaggio' subtitle='' center/> */}
 
            {/* Role selection */}
-            {/* <div className="flex justify-baseline items-center gap-4 flex-wrap">
+            <div className="flex justify-baseline items-center gap-4 flex-wrap">
             <p>I&apos;m a:</p>
-            {['customer', 'host', 'promoter'].map((option) => {
-                const isSelected = role === option;
+            {['customer', 'host', 'promoter', 'moder'].map((option) => {
+              const isSelected = role === option;
 
-                return (
+              return (
                 <button
-                    key={option}
-                    type="button"
-                    onClick={() => setRole(option as any)}
-                    className={`
+                  key={option}
+                  type="button"
+                  onClick={() => setRole(option as any)}
+                  className={`
                     px-4 py-2 rounded-full border text-sm font-medium transition
                     border-neutral-300
-                    ${isSelected ? 'bg-black text-white' : 'bg-white text-black hover:bg-neutral-100 hover:text-black'}
-                    `}
-                    disabled={isLoading}
+                    ${isSelected ? 'bg-black text-white' : 'bg-white text-black hover:bg-neutral-100'}
+                  `}
+                  disabled={isLoading}
                 >
-                    {option.charAt(0).toUpperCase() + option.slice(1)}
+                  {option.charAt(0).toUpperCase() + option.slice(1)}
                 </button>
-                );
+              );
             })}
-            </div> */}
+            </div>
 
             <Input
                 id="email"

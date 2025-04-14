@@ -58,8 +58,8 @@ export async function POST(req: Request) {
 
             <p style="margin: 6px 0;"><strong>Listing ID:</strong> 
                 <a href="https://vuoiaggio.it/listings/${listingId}"
-                    style="color: #25F4EE; text-decoration: none; font-weight: 600;
-                            border-bottom: 2px solid #25F4EE; padding-bottom: 2px; display: inline-block;">
+                    style="color: #08e2ff; text-decoration: none; font-weight: 600;
+                            border-bottom: 2px solid #08e2ff; padding-bottom: 2px; display: inline-block;">
                     ${listingId}
                 </a>
             </p>

@@ -500,7 +500,7 @@ const ExperienceModal = () => {
       .then(() => {
         toast.success('Tour created!', {
           iconTheme: {
-              primary: '#25F4EE',
+              primary: '#08e2ff',
               secondary: '#fff',
           },
         });

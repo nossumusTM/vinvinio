@@ -222,7 +222,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
 
   {/* Badge always visible, even on mobile */}
   {/* {messenger.unreadCount > 0 && (
-    <div className="absolute -top-1 -right-1 bg-[#25F4EE] text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
+    <div className="absolute -top-1 -right-1 bg-[#08e2ff] text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
       {messenger.unreadCount}
     </div>
   )} */}
@@ -234,7 +234,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
       animate={{ scale: 1 }}
       exit={{ scale: 0 }}
       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-      className="absolute -top-1 -right-1 bg-[#25F4EE] text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center"
+      className="absolute -top-1 -right-1 bg-[#08e2ff] text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center"
     >
       {messenger.unreadCount}
     </motion.div>
@@ -267,7 +267,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
           <div className="flex flex-col cursor-pointer">
             {currentUser ? (
               <>
-                {(userRole === 'customer' || userRole === 'promoter' || userRole === 'host') && (
+                {(userRole === 'customer' || userRole === 'promoter' || userRole === 'host' || userRole === 'moder') && (
                   <>
                     <MenuItem
                       label="Messenger"
@@ -297,7 +297,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                         setIsOpen(false);
                         router.push('/favorites')
                       }} />
-                    {(userRole === 'customer' || userRole === 'promoter' || userRole === 'host') && (
+                    {(userRole === 'customer' || userRole === 'promoter' || userRole === 'host' || userRole === 'moder') && (
                         <>
                           <MenuItem label="Account" 
                             onClick={() => {
@@ -330,7 +330,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                         setIsOpen(false);
                         router.push('/favorites')
                       }}/>
-                    {(userRole === 'promoter' || userRole === 'promoter' || userRole === 'host') && (
+                    {(userRole === 'promoter' || userRole === 'promoter' || userRole === 'host' || userRole === 'moder') && (
                         <>
                           <MenuItem label="Account" 
                             onClick={() => {
@@ -364,6 +364,38 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                         router.push('/favorites')
                       }}/>
                     {(userRole === 'host') && (
+                        <>
+                          <MenuItem label="Account" 
+                            onClick={() => {
+                              setIsOpen(false);
+                              router.push('/profile')
+                            }} />
+                          <hr className="my-2" />
+                        </>
+                    )}
+                  </>
+                )}
+
+                {userRole === 'moder' && (
+                  <>
+                    <div className="md:hidden">
+                      <MenuItem label="Add Experience"  onClick={() => {
+                      setIsOpen(false);
+                      onRent();
+                    }} />
+                    <hr className="my-2" />
+                    </div>
+                    <MenuItem label="Trips" 
+                      onClick={() => {
+                        setIsOpen(false);
+                        router.push('/trips')
+                      }}/>
+                    <MenuItem label="Favorites" 
+                      onClick={() => {
+                        setIsOpen(false);
+                        router.push('/favorites')
+                      }}/>
+                    {(userRole === 'moder') && (
                         <>
                           <MenuItem label="Account" 
                             onClick={() => {

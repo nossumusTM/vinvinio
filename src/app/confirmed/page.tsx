@@ -185,7 +185,7 @@ const BookingConfirmed = () => {
                         onClick={handleContactHost}
                         className="text-sm text-black p-4 shadow-md rounded-xl font-medium hover:shadow-lg"
                         >
-                        Contact {listing.user?.name?.split(' ')[0] ?? 'Host'}
+                        Message
                     </button>
                 </div>
                 </div>

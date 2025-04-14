@@ -30,7 +30,7 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
             .then(() => {
                 toast.success('Listing deleted!', {
                     iconTheme: {
-                        primary: '#25F4EE',
+                        primary: '#08e2ff',
                         secondary: '#fff',
                     }
                 });

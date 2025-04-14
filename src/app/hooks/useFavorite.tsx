@@ -43,7 +43,7 @@ const useFavorite = ({ listingId, currentUser }: IUseFavorite) => {
             router.refresh();
             toast.success('Success', {
                 iconTheme: {
-                    primary: '#25F4EE',
+                    primary: '#08e2ff',
                     secondary: '#fff',
                 }
             });

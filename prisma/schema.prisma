@@ -10,6 +10,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  customer
+  host
+  promoter
+  moder
+}
+
 model User {
   id                String             @id @default(auto()) @map("_id") @db.ObjectId
   name              String?            
@@ -19,7 +26,7 @@ model User {
   hashedPassword    String?
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
-  role              String             @default("customer")
+  role              Role             @default(customer)
   referenceId       String?
   favoriteIds       String[]           @db.ObjectId
   accounts          Account[]

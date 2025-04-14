@@ -61,7 +61,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
   //       .then(() => {
   //         toast.success('Reservation cancelled!', {
   //           iconTheme: {
-  //               primary: '#25F4EE',
+  //               primary: '#08e2ff',
   //               secondary: '#fff',
   //           }
   //       });
@@ -114,7 +114,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
       });
       toast.success('Cancellation request submitted.', {
         iconTheme: {
-          primary: '#25F4EE',
+          primary: '#08e2ff',
           secondary: '#fff',
         }
       });
@@ -131,7 +131,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
   }, []);  
   
   const onCancel = useCallback(async (id: string) => {
-    if (currentUser?.role !== 'promoter') return;
+    if (currentUser?.role !== 'moder') return;
   
     try {
       setDeletingId(id);
@@ -146,7 +146,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
       await axios.delete(`/api/reservations/${id}`);
       toast.success('Reservation cancelled!', {
         iconTheme: {
-          primary: '#25F4EE',
+          primary: '#08e2ff',
           secondary: '#fff',
         }
       });
@@ -187,7 +187,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
   
       toast.success('Review submitted!', {
         iconTheme: {
-            primary: '#25F4EE',
+            primary: '#08e2ff',
             secondary: '#fff',
         },
       });
@@ -234,6 +234,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
   }, [reservations]);  
 
   return (
+    <>
     <Container>
       <div className="pl-2">
       <Heading
@@ -521,9 +522,9 @@ const TripsClient: React.FC<TripsClientProps> = ({
           />        
         )}
       </div>
-
-      <div>
-      {currentUser?.role === 'promoter' && (
+    </Container>
+    <div>
+      {currentUser?.role === 'moder' && (
           <div className="mt-10 max-w-md mx-auto bg-white p-4 rounded-xl shadow-md">
             <h3 className="text-md font-semibold mb-2">Moderator Cancellation Tool</h3>
             <input
@@ -542,7 +543,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
           </div>
         )}
       </div>
-    </Container>
+    </>
   );
 };
 

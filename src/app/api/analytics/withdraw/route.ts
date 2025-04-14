@@ -21,8 +21,8 @@ export async function POST(req: Request) {
       where: { id: userId },
     });
 
-    if (!user || user.role !== 'promoter') {
-      return new NextResponse('User not found or not a promoter', { status: 404 });
+    if (!user || user.role !== 'moder') {
+      return new NextResponse('User not found or not a moder', { status: 404 });
     }
 
     await prisma.referralAnalytics.update({

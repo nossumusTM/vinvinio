@@ -112,7 +112,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
               includeMargin={false}
             />
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center pointer-events-none">
-              <div className="absolute inset-0 bg-[#25F4EE]/80 blur-[6px] rounded-full scale-110 z-10" />
+              <div className="absolute inset-0 bg-[#08e2ff]/80 blur-[6px] rounded-full scale-110 z-10" />
               <img
                 src="/images/qrlogo.png"
                 alt="QR Logo"
@@ -142,11 +142,11 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
               Copy Reference Link
             </button>
           ) : (
-            <div className="flex items-center gap-2 text-xl text-[#25F4EE] px-3 py-1 transition">
+            <div className="flex items-center gap-2 text-xl text-[#08e2ff] px-3 py-1 transition">
               <svg
                 className="w-8 h-8"
                 fill="none"
-                stroke="#25F4EE"
+                stroke="#08e2ff"
                 strokeWidth={2}
                 viewBox="0 0 24 24"
               >
@@ -186,7 +186,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
                   className="bg-white p-1"
                 />
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center pointer-events-none">
-                  <div className="absolute inset-0 bg-[#25F4EE]/80 blur-[6px] rounded-full scale-110 z-10" />
+                  <div className="absolute inset-0 bg-[#08e2ff]/80 blur-[6px] rounded-full scale-110 z-10" />
                   <img
                     src="/images/qrlogo.png"
                     alt="QR Logo"

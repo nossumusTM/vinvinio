@@ -165,12 +165,12 @@ export async function POST(request: Request) {
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 24px; color: #333;">
             <img src="https://vuoiaggio.netlify.app/images/vuoiaggiologo.png" alt="Vuoiaggio Logo" style="height: 40px; margin-bottom: 24px;" />
-            <h2 style="color: #25F4EE;">New message from ${senderName}</h2>
+            <h2 style="color: #08e2ff;">New message from ${senderName}</h2>
 
             <p>Hi <strong>${recipient.name || 'there'}</strong>,</p>
             <p>You’ve just received a new message on Vuoiaggio:</p>
 
-            <blockquote style="margin: 16px 0; padding: 16px; background: #f9f9f9; border-left: 4px solid #25F4EE;">
+            <blockquote style="margin: 16px 0; padding: 16px; background: #f9f9f9; border-left: 4px solid #08e2ff;">
               <p style="margin: 0;">"${text}"</p>
               <small style="color: #666;">Sent on ${timeSent}</small>
             </blockquote>

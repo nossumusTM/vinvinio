@@ -53,7 +53,7 @@ const LoginModal = () => {
         if (callback?.ok) {
           toast.success('Logged in', {
             iconTheme: {
-                primary: '#25F4EE',
+                primary: '#08e2ff',
                 secondary: '#fff',
             },
           });

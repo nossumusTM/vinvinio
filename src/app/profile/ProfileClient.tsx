@@ -245,7 +245,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
       // setPopupMessage('Withdraw method saved!');
       toast.success('Withdraw method saved!', {
         iconTheme: {
-            primary: '#25F4EE',
+            primary: '#08e2ff',
             secondary: '#fff',
         }
       });
@@ -265,7 +265,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
       // setPopupMessage('Withdraw method deleted!');
       toast.success('Withdraw method deleted!', {
         iconTheme: {
-            primary: '#25F4EE',
+            primary: '#08e2ff',
             secondary: '#fff',
         }
       });
@@ -770,7 +770,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                           // setPopupMessage('Password updated successfully!');
                           toast.success('Password updated successfully!', {
                             iconTheme: {
-                                primary: '#25F4EE',
+                                primary: '#08e2ff',
                                 secondary: '#fff',
                             }
                           });
@@ -1391,7 +1391,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                       // setPopupMessage('Card saved successfully!');
                       toast.success('Card saved successfully!', {
                         iconTheme: {
-                            primary: '#25F4EE',
+                            primary: '#08e2ff',
                             secondary: '#fff',
                         }
                       });
@@ -1620,7 +1620,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                 const res = await axios.post('/api/analytics/withdraw', { userId: targetUserId });
                 toast.success(res.data.message, {
                   iconTheme: {
-                      primary: '#25F4EE',
+                      primary: '#08e2ff',
                       secondary: '#fff',
                   },
                 });

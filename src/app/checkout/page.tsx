@@ -184,7 +184,7 @@ const CheckoutPage = () => {
   
       toast.success('Payment confirmed! Reservation created.', {
         iconTheme: {
-          primary: '#25F4EE',
+          primary: '#08e2ff',
           secondary: '#fff',
         },
       });
@@ -221,9 +221,35 @@ const CheckoutPage = () => {
         }        
       } 
       else {
-        setPopupMessage(
-          'Thank you for your booking <3'
-        );
+        const query = new URLSearchParams({
+          legalName,
+          email,
+          contact,
+          street: addressFields.street,
+          apt: addressFields.apt,
+          city: addressFields.city,
+          state: addressFields.state,
+          zip: addressFields.zip,
+          country: addressFields.country?.label || '',
+          countryFlag: addressFields.country?.flag || '',
+          listingId: listingId || '',
+          guests: guests.toString(),
+          startDate: startDate || '',
+          price: listingData?.price?.toString() || '0',
+          auth: isAuthenticated ? 'true' : '',
+          averageRating: (
+            reviews.length > 0
+              ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+              : '0'
+          ),
+          reviewCount: reviews.length.toString(),
+          categoryLabel: listingData?.category || '',
+        }).toString();
+        
+        router.push(`/confirmed?${query}`);        
+        // setPopupMessage(
+        //   'Thank you for your booking <3'
+        // );
       }
   
       // ✅ Send booking email only in guest mode
@@ -290,7 +316,7 @@ const CheckoutPage = () => {
               </div>
 
               <div style="padding: 24px; padding-top: 0;">
-                <p style="font-size: 20px; font-weight: bold; color: #25F4EE; text-align: center; margin-bottom: 15px;">Confirmed!</p>
+                <p style="font-size: 20px; font-weight: bold; color: #08e2ff; text-align: center; margin-bottom: 15px;">Confirmed!</p>
                 
                 <div style="text-align: center; margin-bottom: 24px;">
                   <p style="display: inline-block; background: #f3f4f6; padding: 8px 16px; border-radius: 8px; font-weight: 600; margin-bottom: 10px;">Experience</p>
@@ -317,8 +343,8 @@ const CheckoutPage = () => {
                 <div style="margin-bottom: 12px;">
                   <span style="display: inline-block; background: #f3f4f6; padding: 6px 12px; border-radius: 6px; font-weight: 600;">Listing ID:</span>
                   <a href="https://vuoiaggio.it/listings/${listingId}"
-                    style="color: #25F4EE; font-weight: 600; text-decoration: none; margin-left: 8px;
-                            border-bottom: 2px solid #25F4EE; padding-bottom: 2px; display: inline-block;">
+                    style="color: #08e2ff; font-weight: 600; text-decoration: none; margin-left: 8px;
+                            border-bottom: 2px solid #08e2ff; padding-bottom: 2px; display: inline-block;">
                     ${listingId}
                   </a>
                 </div>
@@ -1048,7 +1074,7 @@ const CheckoutPage = () => {
       </div>
       </div>
       </div>
-      {popupMessage && (
+      {/* {popupMessage && (
         <ConfirmPopup
           title="Confirmed!"
           message={popupMessage}
@@ -1092,7 +1118,7 @@ const CheckoutPage = () => {
             setPopupMessage(null);
           }}          
         />
-      )}
+      )} */}
     </div>
   );
 };

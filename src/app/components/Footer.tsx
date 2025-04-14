@@ -305,10 +305,10 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
         <div className="flex flex-col justify-center">
           {/* <h3 className="font-semibold text-lg mb-4 underline">Social channels</h3> */}
             <div className="flex space-x-4 text-xl">
-                <a href="#"><TbBrandTelegram className="hover:text-[#25F4EE] text-3xl transition" /></a>
-                <a href="#"><FiYoutube className="hover:text-[#25F4EE] text-3xl transition" /></a>
-                <a href="#"><TbBrandTiktok className="hover:text-[#25F4EE] text-3xl transition" /></a>
-                <a href="#"><TbBrandInstagram className="hover:text-[#25F4EE] text-3xl transition" /></a>
+                <a href="#"><TbBrandTelegram className="hover:text-[#08e2ff] text-3xl transition" /></a>
+                <a href="#"><FiYoutube className="hover:text-[#08e2ff] text-3xl transition" /></a>
+                <a href="#"><TbBrandTiktok className="hover:text-[#08e2ff] text-3xl transition" /></a>
+                <a href="#"><TbBrandInstagram className="hover:text-[#08e2ff] text-3xl transition" /></a>
             </div>
         </div>
       </div>
