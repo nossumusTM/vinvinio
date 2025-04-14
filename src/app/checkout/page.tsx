@@ -302,74 +302,55 @@ const CheckoutPage = () => {
           subject: 'Your Vuoiaggio Booking Confirmation',
           listingId,
           html: `
-            <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; overflow: hidden;">
+            <div style="font-family: 'Nunito', Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; overflow: hidden;">
+              <link href="https://fonts.googleapis.com/css2?family=Nunito&display=swap" rel="stylesheet">
+
               ${randomImage ? `
                 <img src="${randomImage}" alt="Experience image" style="width: 100%; height: auto; display: block; border-radius: 12px 12px 0 0;" />
               ` : ''}
-      
-              <div style="padding: 24px; top: -10px">
+
+              <div style="padding: 24px;">
                 <img src="https://vuoiaggio.netlify.app/images/vuoiaggiologo.png" alt="Vuoiaggio Logo" style="width: 140px; margin: 24px auto 0; display: block;" />
+
                 <p style="font-size: 16px; text-align: left; margin-bottom: 8px;">Gentile ${legalName},</p>
                 <p style="text-align: left; font-size: 14px; color: #555; margin-bottom: 20px;">
-                  We are happy to inform you that your reservation has been successfully confirmed. Below are the details of your booking with Vuoiaggio.
+                  🎉 Your reservation has been successfully confirmed for <strong>${listingData?.title}</strong>.
                 </p>
-              </div>
 
-              <div style="padding: 24px; padding-top: 0;">
-                <p style="font-size: 20px; font-weight: bold; color: #08e2ff; text-align: center; margin-bottom: 15px;">Confirmed!</p>
-                
-                <div style="text-align: center; margin-bottom: 24px;">
-                  <p style="display: inline-block; background: #f3f4f6; padding: 8px 16px; border-radius: 8px; font-weight: 600; margin-bottom: 10px;">Experience</p>
-                  <p style="margin: 0; font-size: 14px font-weight: 700;">${listingData?.title}</p>
-                </div>
-      
-                <div style="margin-top: 20px;">
-                  <div style="margin-bottom: 12px;">
-                    <span style="display: inline-block; background: #f3f4f6; padding: 6px 12px; border-radius: 6px; font-weight: 600;">Date:</span>
-                    <span style="margin-left: 8px;">${formattedDateTime}</span>
-                  </div>
-      
-                  <div style="margin-bottom: 12px;">
-                    <span style="display: inline-block; background: #f3f4f6; padding: 6px 12px; border-radius: 6px; font-weight: 600;">Guests:</span>
-                    <span style="margin-left: 8px;">${guests}</span>
-                  </div>
-      
-                  <div style="margin-bottom: 24px;">
-                    <span style="display: inline-block; background: #f3f4f6; padding: 6px 12px; border-radius: 6px; font-weight: 600;">Total:</span>
-                    <span style="margin-left: 8px;">€${total}</span>
-                  </div>
+                <div style="background: #f3f4f6; padding: 16px 20px; border-radius: 12px; margin-bottom: 24px;">
+                  <p style="margin: 6px 0;"><strong>Experience:</strong> ${listingData?.title}</p>
+                  <p style="margin: 6px 0;"><strong>Date:</strong> ${formattedDateTime}</p>
+                  <p style="margin: 6px 0;"><strong>Guests:</strong> ${guests}</p>
+                  <p style="margin: 6px 0;"><strong>Total:</strong> €${total}</p>
                 </div>
 
-                <div style="margin-bottom: 12px;">
-                  <span style="display: inline-block; background: #f3f4f6; padding: 6px 12px; border-radius: 6px; font-weight: 600;">Listing ID:</span>
+                <p style="margin-bottom: 12px;"><strong>Listing ID:</strong> 
                   <a href="https://vuoiaggio.it/listings/${listingId}"
-                    style="color: #08e2ff; font-weight: 600; text-decoration: none; margin-left: 8px;
-                            border-bottom: 2px solid #08e2ff; padding-bottom: 2px; display: inline-block;">
+                    style="color: #08e2ff; text-decoration: none; font-weight: 600;
+                          border-bottom: 2px solid #08e2ff; padding-bottom: 2px; display: inline-block;">
                     ${listingId}
                   </a>
-                </div>
+                </p>
 
-      
-                <div style="margin-top: 32px;">
-                  <h3 style="font-size: 16px; font-weight: bold; margin-bottom: 12px;">Billing Information</h3>
-                  <p style="margin: 0;"><strong>Name:</strong> ${legalName}</p>
-                  <p style="margin: 4px 0;"><strong>Email:</strong> ${email}</p>
-                  <p style="margin: 0;"><strong>Contact:</strong> ${contact}</p>
-                  <hr style="margin: 16px 0; border: none; border-top: 1px solid #eee;" />
-                  <p style="margin: 0;"><strong>Billing Address:</strong> ${street}, ${apt}</p>
-                  <p style="margin: 0;"><strong></strong> ${city}, ${state}, ${zip} ${countryFlag} ${countryLabel}</p>
-                </div>
-      
+                <h3 style="font-size: 16px; font-weight: bold; margin: 24px 0 12px;">Billing Information</h3>
+                <p style="margin: 0;"><strong>Name:</strong> ${legalName}</p>
+                <p style="margin: 4px 0;"><strong>Email:</strong> ${email}</p>
+                <p style="margin: 0;"><strong>Contact:</strong> ${contact}</p>
+                <hr style="margin: 16px 0; border: none; border-top: 1px solid #eee;" />
+                <p style="margin: 0;"><strong>Billing Address:</strong> ${street}, ${apt}</p>
+                <p style="margin: 0;">${city}, ${state}, ${zip} ${countryFlag} ${countryLabel}</p>
+
                 <p style="margin-top: 32px;">We look forward to hosting you, <br> <strong>${legalName}</strong>! ✨</p>
+
                 <p style="font-size: 13px; color: #888; margin-top: 40px;">Vuoiaggio International Srls.</p>
                 <p style="font-size: 13px; color: #888;">P.IVA 57483813574</p>
                 <p style="font-size: 13px; color: #888;">Via Novacella 18, Rome, RM, Italy</p>
                 <p style="font-size: 13px; color: #888;">🇮🇹 +39 371 528 4911</p>
                 <p style="font-size: 13px; color: #888;">ciao@vuoiaggio.it</p>
-
               </div>
             </div>
           `,
+
         });
       }
       
