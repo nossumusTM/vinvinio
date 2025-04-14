@@ -31,7 +31,7 @@ interface ProfileClientProps {
 
 const getRandomColor = () => {
   const colors = [
-    'bg-[#000]'
+    'bg-[#08e2ff]'
   ];
   return colors[Math.floor(Math.random() * colors.length)];
 };
