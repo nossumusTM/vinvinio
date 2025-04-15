@@ -524,7 +524,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
       </div>
     </Container>
     <div>
-      {currentUser?.role === 'moder' && (
+      {/* {currentUser?.role === 'moder' && (
           <div className="mt-10 max-w-md mx-auto bg-white p-4 rounded-xl shadow-md">
             <h3 className="text-md font-semibold mb-2">Moderator Cancellation Tool</h3>
             <input
@@ -541,7 +541,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
               Cancel Reservation
             </button>
           </div>
-        )}
+        )} */}
       </div>
     </>
   );

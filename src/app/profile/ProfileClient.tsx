@@ -1604,7 +1604,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
         </div>
       )}
 
-      {currentUser.role === 'moder' && (
+      {/* {currentUser.role === 'moder' && (
         <div className="mt-6 space-y-2 space-x-4">
           <input
             type="text"
@@ -1634,7 +1634,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
             Withdraw for Promoter
           </button>
         </div>
-      )}
+      )} */}
 
     </Container>
   );  
