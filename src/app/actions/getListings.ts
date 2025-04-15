@@ -34,8 +34,10 @@ export default async function getListings(params: IListingsParams) {
     }
 
     if (category) {
-      query.category = category;
-    }
+      query.category = {
+        has: category,
+      };
+    }    
 
     if (roomCount) {
       query.roomCount = {
