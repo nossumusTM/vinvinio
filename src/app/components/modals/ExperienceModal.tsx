@@ -491,30 +491,128 @@ const ExperienceModal = () => {
   const onBack = () => setStep((prev) => prev - 1);
   const onNext = () => setStep((prev) => prev + 1);
 
+  // const onSubmit: SubmitHandler<FieldValues> = (data) => {
+  //   if (step === STEPS.CATEGORY) {
+  //     if (!category || (Array.isArray(category) && category.length === 0)) {
+  //       toast.error('Please select a category to continue.');
+  //       return;
+  //     }
+  //     return onNext();
+  //   }
+    
+  //   if (step !== STEPS.PRICE) {
+  //     return onNext();
+  //   }    
+
+  //   setIsLoading(true);
+
+  //   axios.post('/api/listings', data)
+  //     .then(() => {
+  //       toast.success('Tour created!', {
+  //         iconTheme: {
+  //             primary: '#08e2ff',
+  //             secondary: '#fff',
+  //         },
+  //       });
+  //       reset();
+  //       experienceModal.onClose();
+  //       router.refresh();
+  //       setStep(STEPS.CATEGORY);
+  //     })
+  //     .catch(() => toast.error('Something went wrong.'))
+  //     .finally(() => setIsLoading(false));
+  // };
+
   const onSubmit: SubmitHandler<FieldValues> = (data) => {
-    if (step !== STEPS.PRICE) {
+    // CATEGORY
+    if (step === STEPS.CATEGORY) {
+      if (!category || (Array.isArray(category) && category.length === 0)) {
+        toast.error('Please select a category to continue.');
+        return;
+      }
       return onNext();
     }
-
-    setIsLoading(true);
-
-    axios.post('/api/listings', data)
-      .then(() => {
-        toast.success('Tour created!', {
-          iconTheme: {
+  
+    // LOCATION
+    if (step === STEPS.LOCATION) {
+      if (!location || !location.value) {
+        toast.error('Please select a location.');
+        return;
+      }
+      return onNext();
+    }
+  
+    // INFO1
+    if (step === STEPS.INFO1) {
+      if (!data.hostDescription || data.guestCount < 1) {
+        toast.error('Please fill in host description and guest count.');
+        return;
+      }
+      return onNext();
+    }
+  
+    // INFO2
+    if (step === STEPS.INFO2) {
+      if (!data.experienceHour || !data.meetingPoint) {
+        toast.error('Please provide duration and meeting point.');
+        return;
+      }
+      return onNext();
+    }
+  
+    // INFO3
+    if (step === STEPS.INFO3) {
+      if (
+        !data.languages || data.languages.length === 0 ||
+        !data.locationType || data.locationType.length === 0 ||
+        !data.locationDescription
+      ) {
+        toast.error('Please provide languages, location type, and description.');
+        return;
+      }
+      return onNext();
+    }
+  
+    // IMAGES
+    if (step === STEPS.IMAGES) {
+      if (!imageSrc || !Array.isArray(imageSrc) || imageSrc.length === 0) {
+        toast.error('Please upload at least one image or video.');
+        return;
+      }
+      return onNext();
+    }
+  
+    // DESCRIPTION
+    if (step === STEPS.DESCRIPTION) {
+      if (!data.title || !data.description) {
+        toast.error('Please provide a title and description.');
+        return;
+      }
+      return onNext();
+    }
+  
+    // PRICE (final submit)
+    if (step === STEPS.PRICE) {
+      setIsLoading(true);
+  
+      axios.post('/api/listings', data)
+        .then(() => {
+          toast.success('Listing created!', {
+            iconTheme: {
               primary: '#08e2ff',
               secondary: '#fff',
-          },
-        });
-        reset();
-        experienceModal.onClose();
-        router.refresh();
-        setStep(STEPS.CATEGORY);
-      })
-      .catch(() => toast.error('Something went wrong.'))
-      .finally(() => setIsLoading(false));
-  };
-
+            },
+          });
+          reset();
+          experienceModal.onClose();
+          router.refresh();
+          setStep(STEPS.CATEGORY);
+        })
+        .catch(() => toast.error('Something went wrong.'))
+        .finally(() => setIsLoading(false));
+    }
+  };  
+  
   const actionLabel = useMemo(() => (
     step === STEPS.PRICE ? 'Create' : 'Next'
   ), [step]);
@@ -559,7 +657,7 @@ const ExperienceModal = () => {
   if (step === STEPS.LOCATION) {
     bodyContent = (
       <div className="flex flex-col gap-8">
-        <Heading title="Where is your tour located?" subtitle="Choose a location" />
+        <Heading title="Where is your event located?" subtitle="Choose a location" />
         <CountrySelect
           value={location}
           onChange={(value) => setCustomValue('location', value)}
@@ -659,7 +757,7 @@ const ExperienceModal = () => {
   if (step === STEPS.INFO1) {
     bodyContent = (
       <div className="flex flex-col gap-8 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-        <Heading title="Tour details" subtitle="Tell us about your hosting style and group size" />
+        <Heading title="Experience details" subtitle="Tell us about your event style and group size" />
         <Input
           id="hostDescription"
           label="Describe your experience as a host (max 300 characters)"
@@ -683,7 +781,7 @@ const ExperienceModal = () => {
   if (step === STEPS.INFO2) {
     bodyContent = (
       <div className="flex flex-col gap-8 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-        <Heading title="Tour logistics" subtitle="Duration and meeting point" />
+        <Heading title="Event logistics" subtitle="Duration and meeting point" />
         <div className="flex flex-col gap-2">
           <label className="text-md font-medium">How long is your experience?</label>
           <Select
@@ -698,7 +796,7 @@ const ExperienceModal = () => {
         </div>
         <Input
           id="meetingPoint"
-          label="Where should guests meet you?"
+          label="Provide a meeting-point"
           disabled={isLoading}
           register={register}
           errors={errors}
@@ -714,7 +812,7 @@ const ExperienceModal = () => {
         <Heading title="Languages and location" subtitle="Help guests know what to expect" />
         
         <div className="flex flex-col gap-2">
-          <label className="text-md font-medium">Which languages can you provide the tour in?</label>
+          <label className="text-md font-medium">Which languages can you provide the experience in?</label>
           <Select
             options={languageOptions}
             value={watch('languages')}
@@ -731,7 +829,7 @@ const ExperienceModal = () => {
         <Select
           placeholder="What type of location is it? (up to 3)"
           options={locationTypeOptions}
-          value={watch('locationTypes')}
+          value={watch('locationType')}
           onChange={(selected: any) => {
             if (selected.length <= 3) {
               setCustomValue('locationType', selected);
@@ -740,6 +838,7 @@ const ExperienceModal = () => {
           isMulti
           closeMenuOnSelect={false}
           maxMenuHeight={250}
+          isOptionDisabled={() => watch('locationType')?.length >= 3}
           styles={{
             menuPortal: (base) => ({ ...base, zIndex: 9999 }),
             menu: (base) => ({ ...base, zIndex: 9999 }),
@@ -762,13 +861,12 @@ const ExperienceModal = () => {
 
   if (step === STEPS.IMAGES) {
     bodyContent = (
-      <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-8 max-h-[500px]">
         <Heading
           title="Upload photos and video"
-          subtitle="Show your experience! Up to 10 images and 1 video (max 30MB)"
+          subtitle="Display your content! Up to 10 images and 1 video (max 30MB)"
         />
         <ImageUpload
-          multiple
           maxImages={10}
           maxVideoSizeMB={30}
           value={imageSrc}
@@ -781,10 +879,10 @@ const ExperienceModal = () => {
   if (step === STEPS.DESCRIPTION) {
     bodyContent = (
       <div className="flex flex-col gap-8">
-        <Heading title="Describe your tour" subtitle="Make it exciting and fun!" />
+        <Heading title="Describe your event" subtitle="Make it exciting and fun!" />
         <Input
           id="title"
-          label="Title"
+          label="Experience Headline"
           disabled={isLoading}
           register={register}
           errors={errors}
@@ -792,7 +890,7 @@ const ExperienceModal = () => {
         />
         <Input
           id="description"
-          label="Description"
+          label="Share an engaging description about your event"
           disabled={isLoading}
           register={register}
           errors={errors}

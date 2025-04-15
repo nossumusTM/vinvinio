@@ -184,22 +184,18 @@
 
 'use client';
 
-import { CldUploadWidget } from 'next-cloudinary';
 import Image from 'next/image';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { TbPhotoPlus } from 'react-icons/tb';
 import Sortable from 'sortablejs';
-
-declare global {
-  var cloudinary: any;
-}
+import toast from 'react-hot-toast';
 
 const uploadPreset = 'lvnuxui';
+const cloudName = 'dp5oki1jq';
 
 interface ImageUploadProps {
   onChange: (value: string[]) => void;
   value: string[];
-  multiple?: boolean;
   maxImages?: number;
   maxVideoSizeMB?: number;
 }
@@ -210,23 +206,70 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   maxImages = 10,
   maxVideoSizeMB = 30,
 }) => {
+  const inputRef = useRef<HTMLInputElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
-  const handleUpload = useCallback(
-    (result: any) => {
-      const newUrl = result.info.secure_url;
-      const isVideo = result.info.resource_type === 'video';
+  const handleFiles = async (files: FileList | null) => {
+    if (!files) return;
 
-      if (isVideo && result.info.bytes > maxVideoSizeMB * 1024 * 1024) {
-        alert(`Video exceeds ${maxVideoSizeMB}MB size limit`);
-        return;
+    const currentCount = value.length;
+    const remaining = maxImages - currentCount;
+
+    const selectedFiles = Array.from(files).slice(0, remaining);
+
+    const newUploads: string[] = [];
+
+    setIsUploading(true);
+
+    const hasVideo = value.some(v => v.includes('.mp4') || v.includes('video'));
+
+    for (const file of selectedFiles) {
+      const isVideo = file.type.startsWith('video');
+
+      // ✅ Restrict to only one video
+      if (isVideo) {
+        const alreadyHasVideo = [...value, ...newUploads].some(v => v.includes('.mp4') || v.includes('video'));
+        if (alreadyHasVideo) {
+          toast.error('You can only upload one video per experience.');
+          continue;
+        }
+
+        if (file.size > maxVideoSizeMB * 1024 * 1024) {
+          toast.error(`Video exceeds ${maxVideoSizeMB}MB size limit`);
+          continue;
+        }
       }
 
-      const updated = [...value, newUrl].slice(0, maxImages);
-      onChange(updated);
-    },
-    [onChange, value, maxImages, maxVideoSizeMB]
-  );
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', uploadPreset);
+
+      try {
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        const data = await res.json();
+        const secureUrl = data.secure_url;
+
+        if (secureUrl && typeof secureUrl === 'string') {
+          newUploads.push(secureUrl);
+        }
+
+      } catch (error) {
+        console.error('Upload error:', error);
+        toast.error('Failed to upload file.');
+      }
+    }
+
+    // ⏬ Apply all at once after loop
+    const merged = [...value, ...newUploads].slice(0, maxImages);
+    onChange(merged);
+
+    setIsUploading(false);
+  };
 
   useEffect(() => {
     if (previewRef.current) {
@@ -243,83 +286,98 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   }, [value, onChange]);
 
   return (
-    <CldUploadWidget
-      onUpload={handleUpload}
-      uploadPreset={uploadPreset}
-      options={{
-        maxFiles: maxImages,
-        resourceType: 'auto',
-        sources: ['local', 'url', 'camera'],
-      }}
-    >
-      {({ open }) => {
-        return (
-          <div className="flex flex-col gap-4">
-            <div
-              onClick={() => setTimeout(() => open?.(), 0)}
-              className="
-                relative
-                cursor-pointer
-                hover:opacity-70
-                transition
-                border-dashed 
-                border-2 
-                p-10 
-                border-neutral-300
-                flex
-                flex-col
-                justify-center
-                items-center
-                gap-4
-                text-neutral-600
-              "
-            >
-              <TbPhotoPlus size={50} />
-              <div className="font-semibold text-lg">Click to upload</div>
-              <p className="text-xs text-neutral-500">
-                Upload up to {maxImages} images and 1 video (max {maxVideoSizeMB}MB)
-              </p>
-            </div>
+    <div className="flex flex-col gap-4">
+      <input
+        type="file"
+        accept="image/*,video/*"
+        multiple
+        hidden
+        ref={inputRef}
+        onChange={(e) => handleFiles(e.target.files)}
+      />
 
-            {value?.length > 0 && (
+      <div
+        onClick={() => inputRef.current?.click()}
+        className="
+          relative
+          cursor-pointer
+          hover:opacity-70
+          transition
+          border-dashed 
+          border-2 
+          p-10 
+          border-neutral-300
+          flex
+          flex-col
+          justify-center
+          items-center
+          gap-4
+          text-neutral-600
+        "
+      >
+        <TbPhotoPlus size={50} />
+        <div className="font-semibold text-lg">Click to upload</div>
+        <p className="text-xs text-neutral-500">
+          Upload up to {maxImages} images and 1 video (max {maxVideoSizeMB}MB)
+        </p>
+      </div>
+
+      {Array.isArray(value) && value.length > 0 && (
+        <div ref={previewRef} className="grid grid-cols-3 gap-3 mt-4">
+          {value.map((url, idx) => {
+            const isVideo = url.includes('.mp4') || url.includes('video');
+
+            return (
               <div
-                ref={previewRef}
-                className="grid grid-cols-3 gap-3 mt-4"
+                key={url}
+                className="relative w-full h-40 rounded overflow-hidden border border-neutral-300"
               >
-                {value.map((url, idx) => (
-                  <div
-                    key={url}
-                    className="relative w-full h-40 rounded overflow-hidden border border-neutral-300"
-                  >
-                    {url.includes('.mp4') || url.includes('video')
-                      ? (
-                        <video
-                          src={url}
-                          controls
-                          className="w-full h-full object-cover"
-                        />
-                      )
-                      : (
-                        <Image
-                          src={url}
-                          alt={`upload-${idx}`}
-                          fill
-                          className="object-cover"
-                        />
-                      )}
-                    {idx === 0 && (
-                      <span className="absolute top-1 left-1 bg-black text-white text-xs px-2 py-0.5 rounded">
-                        Cover
-                      </span>
-                    )}
-                  </div>
-                ))}
+                {isVideo ? (
+                  <video
+                    src={url}
+                    controls
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <Image
+                    src={url}
+                    alt={`upload-${idx}`}
+                    fill
+                    className="object-cover"
+                  />
+                )}
+
+                {idx === 0 && (
+                  <span className="absolute top-1 left-1 bg-black text-white text-xs px-2 py-0.5 rounded">
+                    Cover
+                  </span>
+                )}
+
+                {/* ❌ Remove Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const updated = value.filter((v) => v !== url);
+                    onChange(updated);
+                  }}
+                  className="absolute top-1 right-1 bg-white rounded-full text-black hover:bg-neutral-100 pl-2 pr-2 shadow"
+                  aria-label="Remove"
+                >
+                  ×
+                </button>
               </div>
-            )}
-          </div>
-        );
-      }}
-    </CldUploadWidget>
+            );
+          })}
+        </div>
+      )}
+
+      {isUploading && (
+        <div className="flex justify-center items-center mt-4">
+          <span className="loader inline-block w-5 h-5 border-2 border-t-transparent border-black rounded-full animate-spin" />
+        </div>
+      )}
+
+    </div>
   );
 };
 

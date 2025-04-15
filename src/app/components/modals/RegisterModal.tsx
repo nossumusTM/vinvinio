@@ -7,7 +7,7 @@ import { BiNavigation } from "react-icons/bi";
 import { PiBarcode } from "react-icons/pi";
 import { signIn } from "next-auth/react";
 import { FcGoogle } from "react-icons/fc";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import ConfirmPopup from "../ConfirmPopup";
 import { toast } from "react-hot-toast";
 
@@ -105,14 +105,24 @@ const RegisterModal = () => {
         loginModal.onOpen();
     }, [registerModal, loginModal]);
 
+    useEffect(() => {
+      if (registerModal.isOpen) {
+        setStep(1);
+      }
+    }, [registerModal.isOpen]);    
+
     const bodyContent = (
       <div className="flex flex-col gap-6">
         {step === 1 ? (
           <>
-            <Heading title="Create Your Account" subtitle="Choose your role to continue registration" center />
+            <Heading 
+              title={`I wanna register as ${role === 'customer' ? 'Guest' : role === 'host' ? 'Host' : 'Promoter'}`} 
+              subtitle="Choose your role below to continue registration"
+              center 
+            />
             <div className="flex justify-center items-center gap-4 flex-wrap">
               {[
-                { key: 'customer', icon: <MdOutlineSwitchAccount size={24} />, label: 'Customer' },
+                { key: 'customer', icon: <MdOutlineSwitchAccount size={24} />, label: 'Guest' },
                 { key: 'host', icon: <BiNavigation size={24} />, label: 'Host' },
                 { key: 'promoter', icon: <PiBarcode size={24} />, label: 'Promoter' }
               ].map(({ key, icon, label }) => {
@@ -141,13 +151,13 @@ const RegisterModal = () => {
           </>
         ) : (
           <>
-            <button
+            {/* <button
                 type="button"
                 onClick={() => setStep(1)}
                 className="text-sm text-neutral-500 hover:text-black self-start"
               >
                 ← Back
-              </button>
+              </button> */}
             <Input
               id="email"
               label="Email"

@@ -3,66 +3,6 @@ import prisma from "@/app/libs/prismadb";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 export const dynamic = 'force-dynamic';
 
-// export async function POST(request: Request) {
-//   const currentUser = await getCurrentUser();
-
-//   if (!currentUser) {
-//     return NextResponse.error();
-//   }
-
-//   const body = await request.json();
-//   const {
-//     title,
-//     description,
-//     imageSrc,
-//     category,
-//     guestCount,
-//     location,
-//     price,
-//   } = body;
-
-//   // Basic validation
-//   if (
-//     !title ||
-//     !description ||
-//     !imageSrc ||
-//     !Array.isArray(imageSrc) || // ✅ ensure imageSrc is an array
-//     imageSrc.length === 0 ||
-//     !category ||
-//     !guestCount ||
-//     !location ||
-//     !price
-//   ) {
-//     return new NextResponse("Missing or invalid required fields", { status: 400 });
-//   }
-
-//   try {
-//     const listing = await prisma.listing.create({
-//       data: {
-//         title,
-//         description,
-//         imageSrc, // ✅ now it's expected to be string[]
-//         category,
-//         guestCount,
-//         // roomCount: 0,
-//         // bathroomCount: 0,
-//         locationValue: location.value,
-//         price: parseInt(price, 10),
-//         user: {
-//           connect: {
-//             id: currentUser.id,
-//           },
-//         },
-//       },
-//     });
-
-//     return NextResponse.json(listing);
-//   } catch (error) {
-//     console.error("Error creating listing:", error);
-//     return new NextResponse("Internal Server Error", { status: 500 });
-//   }
-// }
-
 export async function POST(request: Request) {
   const currentUser = await getCurrentUser();
 
@@ -103,13 +43,16 @@ export async function POST(request: Request) {
   }
 
   try {
+
+    const categoryValue = Array.isArray(category) ? category[0] : category;
+
     const listing = await prisma.listing.create({
       data: {
         title,
         description,
         hostDescription: hostDescription || null,
         imageSrc,
-        category,
+        category: categoryValue,
         guestCount,
         roomCount: 0,
         bathroomCount: 0,

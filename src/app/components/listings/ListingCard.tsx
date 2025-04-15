@@ -67,7 +67,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
   const coverMedia = useMemo(() => {
     const roll = Math.random();
-    if (roll < 0.5 && videos.length > 0) {
+    if (roll < 0.05 && videos.length > 0) {
       const randomVideo = videos[Math.floor(Math.random() * videos.length)];
       return { type: 'video', src: randomVideo };
     }
