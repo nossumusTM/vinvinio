@@ -2,6 +2,9 @@
 
 import axios from "axios";
 import { AiFillGithub } from "react-icons/ai";
+import { MdOutlineSwitchAccount } from "react-icons/md";
+import { BiNavigation } from "react-icons/bi";
+import { PiBarcode } from "react-icons/pi";
 import { signIn } from "next-auth/react";
 import { FcGoogle } from "react-icons/fc";
 import { useCallback, useState } from "react";
@@ -28,6 +31,7 @@ const RegisterModal = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [role, setRole] = useState<'customer' | 'host' | 'promoter' | 'moder'>('customer');
     const [popupMessage, setPopupMessage] = useState<string | null>(null);
+    const [step, setStep] = useState(1);
 
     const {
         register,
@@ -60,7 +64,7 @@ const RegisterModal = () => {
 
         axios.post('/api/register', formData)
             .then(() => {
-                toast.success('Registered', {
+                toast.success('Welcome to Vuoiaggio! Please log in to start exploring.', {
                     iconTheme: {
                         primary: '#08e2ff',
                         secondary: '#fff',
@@ -102,61 +106,75 @@ const RegisterModal = () => {
     }, [registerModal, loginModal]);
 
     const bodyContent = (
-        <div className="flex flex-col gap-4">
-            {/* <p className="text-lg text-left">Welcome to Vuoiaggio</p> */}
-            {/* <Heading title='Welcome to Vuoiaggio' subtitle='' center/> */}
-
-           {/* Role selection */}
-            {/* <div className="flex justify-baseline items-center gap-4 flex-wrap">
-            <p>I&apos;m a:</p>
-            {['customer', 'host', 'promoter', 'moder'].map((option) => {
-              const isSelected = role === option;
-
-              return (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => setRole(option as any)}
-                  className={`
-                    px-4 py-2 rounded-full border text-sm font-medium transition
-                    border-neutral-300
-                    ${isSelected ? 'bg-black text-white' : 'bg-white text-black hover:bg-neutral-100'}
-                  `}
-                  disabled={isLoading}
-                >
-                  {option.charAt(0).toUpperCase() + option.slice(1)}
-                </button>
-              );
-            })}
-            </div> */}
-
+      <div className="flex flex-col gap-6">
+        {step === 1 ? (
+          <>
+            <Heading title="Create Your Account" subtitle="Choose your role to continue registration" center />
+            <div className="flex justify-center items-center gap-4 flex-wrap">
+              {[
+                { key: 'customer', icon: <MdOutlineSwitchAccount size={24} />, label: 'Customer' },
+                { key: 'host', icon: <BiNavigation size={24} />, label: 'Host' },
+                { key: 'promoter', icon: <PiBarcode size={24} />, label: 'Promoter' }
+              ].map(({ key, icon, label }) => {
+                const isSelected = role === key;
+    
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => {
+                      setRole(key as any);
+                      setStep(2);
+                    }}
+                    className={`
+                      flex items-center gap-2 px-6 py-3 rounded-xl text-base font-medium transition shadow-md hover:shadow-lg
+                      ${isSelected ? 'bg-black text-white' : 'bg-white text-black hover:bg-neutral-100'}
+                    `}
+                    disabled={isLoading}
+                  >
+                    <span className="text-xl">{icon}</span>
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        ) : (
+          <>
+            <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="text-sm text-neutral-500 hover:text-black self-start"
+              >
+                ← Back
+              </button>
             <Input
-                id="email"
-                label="Email"
-                disabled={isLoading}
-                register={register}
-                errors={errors}
-                required
-                inputClassName="h-14 lg:h-[46px] text-base rounded-xl"
+              id="email"
+              label="Email"
+              disabled={isLoading}
+              register={register}
+              errors={errors}
+              required
+              inputClassName="h-14 lg:h-[46px] text-base rounded-xl"
             />
             <Input
-                id="name"
-                label="Username"
-                disabled={isLoading}
-                register={register}
-                errors={errors}
-                required
-                inputClassName="h-14 lg:h-[46px] text-base rounded-xl"
+              id="name"
+              label="Username"
+              disabled={isLoading}
+              register={register}
+              errors={errors}
+              required
+              inputClassName="h-14 lg:h-[46px] text-base rounded-xl"
             />
             <Input
-                id="password"
-                label="Password"
-                type="password"
-                disabled={isLoading}
-                register={register}
-                errors={errors}
-                required
-                inputClassName="h-14 lg:h-[46px] text-base rounded-xl"
+              id="password"
+              label="Password"
+              type="password"
+              disabled={isLoading}
+              register={register}
+              errors={errors}
+              required
+              inputClassName="h-14 lg:h-[46px] text-base rounded-xl"
             />
             <Input
               id="confirmPassword"
@@ -168,44 +186,44 @@ const RegisterModal = () => {
               required
               inputClassName="h-14 lg:h-[46px] text-base rounded-xl"
             />
-
-
             {popupMessage && (
-            <ConfirmPopup
+              <ConfirmPopup
                 title="Notice"
                 message={popupMessage}
                 hideCancel
                 confirmLabel="OK"
                 onConfirm={() => setPopupMessage(null)}
-            />
+              />
             )}
-        </div>
-    );
+          </>
+        )}
+      </div>
+    );    
 
-    const footerContent = (
-        <div className="flex flex-col gap-4 mt-3 overflow-y-auto max-h-[40vh] sm:max-h-none">
-          <hr />
-          <div className="text-neutral-800 text-center font-light">
-            <p>
-              Already have an account?&nbsp;
-              <span
-                onClick={onToggle}
-                className="text-normal font-normal cursor-pointer underline"
-              >
-                Log in
-              </span>
-            </p>
-          </div>
-          <div className="mb-2">
-            <Button
-                outline
-                label="Continue with Google"
-                icon={FcGoogle}
-                onClick={() => signIn('google')}
-            />
-            </div>
+    const footerContent = step === 2 ? (
+      <div className="flex flex-col gap-4 mt-3 overflow-y-auto max-h-[40vh] sm:max-h-none">
+        <hr />
+        <div className="text-neutral-800 text-center font-light">
+          <p>
+            Already have an account?&nbsp;
+            <span
+              onClick={onToggle}
+              className="text-normal font-normal cursor-pointer underline"
+            >
+              Log in
+            </span>
+          </p>
         </div>
-      );      
+        <div className="mb-2">
+          <Button
+            outline
+            label="Continue with Google"
+            icon={FcGoogle}
+            onClick={() => signIn('google')}
+          />
+        </div>
+      </div>
+    ) : undefined;    
 
     return (
         <Modal

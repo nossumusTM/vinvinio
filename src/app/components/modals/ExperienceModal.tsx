@@ -430,10 +430,12 @@ const locationTypeOptions = [
 enum STEPS {
   CATEGORY = 0,
   LOCATION = 1,
-  INFO = 2,
-  IMAGES = 3,
-  DESCRIPTION = 4,
-  PRICE = 5,
+  INFO1 = 2,
+  INFO2 = 3,
+  INFO3 = 4,
+  IMAGES = 5,
+  DESCRIPTION = 6,
+  PRICE = 7,
 }
 
 const ExperienceModal = () => {
@@ -528,25 +530,19 @@ const ExperienceModal = () => {
       <div className="flex flex-col gap-8">
         <Heading
           title="What type of experience are you offering?"
-          subtitle="Pick up to 3 categories"
+          subtitle="Select one category to continue"
         />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto">
           {categories.map((item) => {
             const isSelected = Array.isArray(category) && category.includes(item.label);
-    
+  
             return (
               <div key={item.label} className="col-span-1">
                 <CategoryInput
                   onClick={() => {
-                    let updated = Array.isArray(category) ? [...category] : [];
-    
-                    if (isSelected) {
-                      updated = updated.filter((cat) => cat !== item.label);
-                    } else if (updated.length < 3) {
-                      updated.push(item.label);
-                    }
-    
+                    let updated = [item.label];
                     setCustomValue('category', updated);
+                    setTimeout(() => setStep(STEPS.LOCATION), 100); // slight delay for UX
                   }}
                   selected={isSelected}
                   label={item.label}
@@ -558,7 +554,7 @@ const ExperienceModal = () => {
         </div>
       </div>
     );    
-  }
+  }  
 
   if (step === STEPS.LOCATION) {
     bodyContent = (
@@ -573,10 +569,97 @@ const ExperienceModal = () => {
     );
   }
 
-  if (step === STEPS.INFO) {
+  // if (step === STEPS.INFO) {
+  //   bodyContent = (
+  //     <div className="flex flex-col gap-8 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+  //       <Heading title="Tour details" subtitle="" />
+  //       <Input
+  //         id="hostDescription"
+  //         label="Describe your experience as a host (max 300 characters)"
+  //         disabled={isLoading}
+  //         register={register}
+  //         errors={errors}
+  //         required
+  //         maxLength={300}
+  //       />
+  //       <Counter
+  //         title="Guests"
+  //         subtitle="Maximum number of guests"
+  //         value={guestCount}
+  //         onChange={(value) => setCustomValue('guestCount', value)}
+  //       />
+  //       <div className="flex flex-col gap-2">
+  //         <label className="text-md font-medium">How long is your experience?</label>
+  //         <Select
+  //           options={hourOptions}
+  //           value={watch('experienceHour')}
+  //           onChange={(value: any) => setCustomValue('experienceHour', value)}
+  //           styles={{
+  //             menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+  //             menu: (base) => ({ ...base, zIndex: 9999 }),
+  //           }}
+  //         />
+  //       </div>
+  //       <Input
+  //         id="meetingPoint"
+  //         label="Where should guests meet you?"
+  //         disabled={isLoading}
+  //         register={register}
+  //         errors={errors}
+  //         required
+  //       />
+  //       <div className="flex flex-col gap-2">
+  //         <label className="text-md font-medium">Which languages can you provide the tour in?</label>
+  //         <Select
+  //           options={languageOptions}
+  //           value={watch('languages')}
+  //           onChange={(value: any) => setCustomValue('languages', value)}
+  //           styles={{
+  //             menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+  //             menu: (base) => ({ ...base, zIndex: 9999 }),
+  //           }}
+  //           isMulti
+  //         />
+  //       </div>
+
+  //         <label className="text-md font-medium">Location type</label>
+  //       <Select
+  //           placeholder="What type of location is it? (up to 3)"
+  //           options={locationTypeOptions}
+  //           value={watch('locationTypes')}
+  //           onChange={(selected: any) => {
+  //             if (selected.length <= 3) {
+  //               setCustomValue('locationType', selected);
+  //             }
+  //           }}
+  //           isMulti
+  //           closeMenuOnSelect={false}
+  //           maxMenuHeight={250}
+  //           styles={{
+  //             menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+  //             menu: (base) => ({ ...base, zIndex: 9999 }),
+  //           }}
+  //         />
+
+  //         <Input
+  //           id="locationDescription"
+  //           label="Describe the location (max 300 characters)"
+  //           disabled={isLoading}
+  //           register={register}
+  //           errors={errors}
+  //           required
+  //           maxLength={300}
+  //           textarea
+  //         />
+
+  //     </div>
+  //   );
+  // }
+
+  if (step === STEPS.INFO1) {
     bodyContent = (
       <div className="flex flex-col gap-8 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-        <Heading title="Tour details" subtitle="" />
+        <Heading title="Tour details" subtitle="Tell us about your hosting style and group size" />
         <Input
           id="hostDescription"
           label="Describe your experience as a host (max 300 characters)"
@@ -585,6 +668,7 @@ const ExperienceModal = () => {
           errors={errors}
           required
           maxLength={300}
+          textarea // ← already stylized for pasting
         />
         <Counter
           title="Guests"
@@ -592,6 +676,14 @@ const ExperienceModal = () => {
           value={guestCount}
           onChange={(value) => setCustomValue('guestCount', value)}
         />
+      </div>
+    );
+  }
+
+  if (step === STEPS.INFO2) {
+    bodyContent = (
+      <div className="flex flex-col gap-8 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+        <Heading title="Tour logistics" subtitle="Duration and meeting point" />
         <div className="flex flex-col gap-2">
           <label className="text-md font-medium">How long is your experience?</label>
           <Select
@@ -612,6 +704,15 @@ const ExperienceModal = () => {
           errors={errors}
           required
         />
+      </div>
+    );
+  }
+
+  if (step === STEPS.INFO3) {
+    bodyContent = (
+      <div className="flex flex-col gap-8 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+        <Heading title="Languages and location" subtitle="Help guests know what to expect" />
+        
         <div className="flex flex-col gap-2">
           <label className="text-md font-medium">Which languages can you provide the tour in?</label>
           <Select
@@ -625,40 +726,39 @@ const ExperienceModal = () => {
             isMulti
           />
         </div>
-
-          <label className="text-md font-medium">Location type</label>
+  
+        <label className="text-md font-medium">Location type</label>
         <Select
-            placeholder="What type of location is it? (up to 3)"
-            options={locationTypeOptions}
-            value={watch('locationTypes')}
-            onChange={(selected: any) => {
-              if (selected.length <= 3) {
-                setCustomValue('locationType', selected);
-              }
-            }}
-            isMulti
-            closeMenuOnSelect={false}
-            maxMenuHeight={250}
-            styles={{
-              menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-              menu: (base) => ({ ...base, zIndex: 9999 }),
-            }}
-          />
-
-          <Input
-            id="locationDescription"
-            label="Describe the location (max 300 characters)"
-            disabled={isLoading}
-            register={register}
-            errors={errors}
-            required
-            maxLength={300}
-            textarea
-          />
-
+          placeholder="What type of location is it? (up to 3)"
+          options={locationTypeOptions}
+          value={watch('locationTypes')}
+          onChange={(selected: any) => {
+            if (selected.length <= 3) {
+              setCustomValue('locationType', selected);
+            }
+          }}
+          isMulti
+          closeMenuOnSelect={false}
+          maxMenuHeight={250}
+          styles={{
+            menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+            menu: (base) => ({ ...base, zIndex: 9999 }),
+          }}
+        />
+  
+        <Input
+          id="locationDescription"
+          label="Describe the location (max 300 characters)"
+          disabled={isLoading}
+          register={register}
+          errors={errors}
+          required
+          maxLength={300}
+          textarea
+        />
       </div>
     );
-  }
+  }  
 
   if (step === STEPS.IMAGES) {
     bodyContent = (

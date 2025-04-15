@@ -1604,7 +1604,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
         </div>
       )}
 
-      {currentUser.role === 'host' && (
+      {currentUser.role === 'moder' && (
         <div className="mt-6 space-y-2 space-x-4">
           <input
             type="text"
