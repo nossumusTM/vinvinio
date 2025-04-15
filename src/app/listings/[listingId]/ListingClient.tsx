@@ -77,12 +77,11 @@ const ListingClient: React.FC<ListingClientProps> = ({
     }, [reservations]);
 
     const category = useMemo(() => {
-        const categoriesArray = Array.isArray(listing.category)
-          ? listing.category
-          : [listing.category];
+        const cat = listing.category;
+        const categoryArray = Array.isArray(cat) ? cat : typeof cat === 'string' ? [cat] : [];
       
-        return categories.find((item) => categoriesArray.includes(item.label));
-      }, [listing.category]);      
+        return categories.find((item) => categoryArray.includes(item.label));
+      }, [listing.category]);          
 
     const [isLoading, setIsLoading] = useState(false);
     const [totalPrice, setTotalPrice] = useState(listing.price);

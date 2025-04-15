@@ -117,11 +117,11 @@ const RegisterModal = () => {
         {step === 1 ? (
           <>
             <Heading 
-              title={`I wanna register as ${role === 'customer' ? 'Guest' : role === 'host' ? 'Host' : 'Promoter'}`} 
-              subtitle="Choose your role below to continue registration"
+              title={`Sign up as a ${role === 'customer' ? 'Guest' : role === 'host' ? 'Host' : 'Promoter'}`} 
+              subtitle="Choose your option below to continue registration"
               center 
             />
-            <div className="flex justify-center items-center gap-4 flex-wrap">
+            <div className="flex justify-center items-center gap-4 flex-wrap pt-6">
               {[
                 { key: 'customer', icon: <MdOutlineSwitchAccount size={24} />, label: 'Guest' },
                 { key: 'host', icon: <BiNavigation size={24} />, label: 'Host' },

@@ -44,7 +44,11 @@ export async function POST(request: Request) {
 
   try {
 
-    const categoryValue = Array.isArray(category) ? category[0] : category;
+    const categoryArray = Array.isArray(category)
+    ? category
+    : typeof category === 'string'
+      ? [category]
+      : [];
 
     const listing = await prisma.listing.create({
       data: {
@@ -52,7 +56,7 @@ export async function POST(request: Request) {
         description,
         hostDescription: hostDescription || null,
         imageSrc,
-        category: categoryValue,
+        category: categoryArray,
         guestCount,
         roomCount: 0,
         bathroomCount: 0,
