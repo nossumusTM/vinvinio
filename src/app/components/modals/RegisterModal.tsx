@@ -113,7 +113,7 @@ const RegisterModal = () => {
     }, [registerModal.isOpen]);    
 
     const bodyContent = (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-2">
         {step === 1 ? (
           <>
             <Heading 
@@ -138,7 +138,13 @@ const RegisterModal = () => {
                       setStep(2);
                     }}
                     className={`
-                      flex items-center gap-2 px-6 py-3 rounded-xl text-base font-medium transition shadow-md hover:shadow-lg
+                      flex items-center gap-2 
+                      px-3 py-2 sm:px-6 sm:py-3 
+                      rounded-xl 
+                      text-sm sm:text-base 
+                      font-medium 
+                      transition 
+                      shadow-md hover:shadow-lg
                       ${isSelected ? 'bg-black text-white' : 'bg-white text-black hover:bg-neutral-100'}
                     `}
                     disabled={isLoading}
