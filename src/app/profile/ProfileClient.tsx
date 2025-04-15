@@ -959,7 +959,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                 </>
               )}
 
-              {activePaymentTab === 'payout' && currentUser.role === 'promoter' && (
+              {activePaymentTab === 'payout' && currentUser.role === 'promoter'  || currentUser.role === 'host' && (
                 <>
                   <Heading title="Withdraw Method" subtitle="Manage your withdraw credentials" />
 
@@ -1069,7 +1069,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
 
                             setPayoutInfo({ ...payoutInfo, number: val });
                           }}
-                          className="peer w-full border border-neutral-300 rounded-md px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black pr-14"
+                          className="peer w-full border border-neutral-300 rounded-lg px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black pr-14"
                         />
 
                         <label
@@ -1117,7 +1117,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                       <div className="flex gap-4 mt-6">
                         <button
                           onClick={handleSavePayoutMethod}
-                          className="bg-black text-white px-4 py-2 rounded"
+                          className="bg-black text-white px-4 py-2 rounded-lg"
                         >
                           Save Payout
                         </button>

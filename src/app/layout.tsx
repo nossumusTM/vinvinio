@@ -55,7 +55,7 @@ export default async function RootLayout({
           <RegisterModal />
           <SearchModal />
           <RentModal />
-          <ExperienceModal />
+          <ExperienceModal currentUser={currentUser}/>
           <PromoteModal currentUser={currentUser} />
           {currentUser && <Messenger currentUser={currentUser} />}
           {/* <Messenger userId={currentUser?.id} /> */}

@@ -17,6 +17,12 @@ enum Role {
   moder
 }
 
+enum ListingStatus {
+  pending
+  approved
+  rejected
+}
+
 model User {
   id                String             @id @default(auto()) @map("_id") @db.ObjectId
   name              String?            
@@ -88,6 +94,7 @@ model Listing {
   locationType        String[]
   locationDescription String?
   userId              String        @db.ObjectId
+  status              ListingStatus @default(pending)
   price               Int
   user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   reservations        Reservation[]

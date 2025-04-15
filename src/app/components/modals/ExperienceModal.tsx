@@ -249,6 +249,7 @@ import Counter from '../inputs/Counter';
 import CategoryInput from '../inputs/CategoryInput';
 import Select from 'react-select'
 import { categories } from '../navbar/Categories';
+import { SafeUser } from '@/app/types';
 
 import useExperienceModal from '@/app/hooks/useExperienceModal';
 
@@ -438,12 +439,13 @@ enum STEPS {
   PRICE = 7,
 }
 
-const ExperienceModal = () => {
+const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
   const experienceModal = useExperienceModal();
   const router = useRouter();
 
   const [step, setStep] = useState(STEPS.CATEGORY);
   const [isLoading, setIsLoading] = useState(false);
+
 
   const {
     register,
@@ -491,40 +493,7 @@ const ExperienceModal = () => {
   const onBack = () => setStep((prev) => prev - 1);
   const onNext = () => setStep((prev) => prev + 1);
 
-  // const onSubmit: SubmitHandler<FieldValues> = (data) => {
-  //   if (step === STEPS.CATEGORY) {
-  //     if (!category || (Array.isArray(category) && category.length === 0)) {
-  //       toast.error('Please select a category to continue.');
-  //       return;
-  //     }
-  //     return onNext();
-  //   }
-    
-  //   if (step !== STEPS.PRICE) {
-  //     return onNext();
-  //   }    
-
-  //   setIsLoading(true);
-
-  //   axios.post('/api/listings', data)
-  //     .then(() => {
-  //       toast.success('Tour created!', {
-  //         iconTheme: {
-  //             primary: '#08e2ff',
-  //             secondary: '#fff',
-  //         },
-  //       });
-  //       reset();
-  //       experienceModal.onClose();
-  //       router.refresh();
-  //       setStep(STEPS.CATEGORY);
-  //     })
-  //     .catch(() => toast.error('Something went wrong.'))
-  //     .finally(() => setIsLoading(false));
-  // };
-
   const onSubmit: SubmitHandler<FieldValues> = (data) => {
-    // CATEGORY
     if (step === STEPS.CATEGORY) {
       if (!category || (Array.isArray(category) && category.length === 0)) {
         toast.error('Please select a category to continue.');
@@ -533,7 +502,6 @@ const ExperienceModal = () => {
       return onNext();
     }
   
-    // LOCATION
     if (step === STEPS.LOCATION) {
       if (!location || !location.value) {
         toast.error('Please select a location.');
@@ -542,7 +510,6 @@ const ExperienceModal = () => {
       return onNext();
     }
   
-    // INFO1
     if (step === STEPS.INFO1) {
       if (!data.hostDescription || data.guestCount < 1) {
         toast.error('Please fill in host description and guest count.');
@@ -551,7 +518,6 @@ const ExperienceModal = () => {
       return onNext();
     }
   
-    // INFO2
     if (step === STEPS.INFO2) {
       if (!data.experienceHour || !data.meetingPoint) {
         toast.error('Please provide duration and meeting point.');
@@ -560,7 +526,6 @@ const ExperienceModal = () => {
       return onNext();
     }
   
-    // INFO3
     if (step === STEPS.INFO3) {
       if (
         !data.languages || data.languages.length === 0 ||
@@ -573,7 +538,6 @@ const ExperienceModal = () => {
       return onNext();
     }
   
-    // IMAGES
     if (step === STEPS.IMAGES) {
       if (!imageSrc || !Array.isArray(imageSrc) || imageSrc.length === 0) {
         toast.error('Please upload at least one image or video.');
@@ -582,7 +546,6 @@ const ExperienceModal = () => {
       return onNext();
     }
   
-    // DESCRIPTION
     if (step === STEPS.DESCRIPTION) {
       if (!data.title || !data.description) {
         toast.error('Please provide a title and description.');
@@ -591,18 +554,27 @@ const ExperienceModal = () => {
       return onNext();
     }
   
-    // PRICE (final submit)
     if (step === STEPS.PRICE) {
       setIsLoading(true);
   
-      axios.post('/api/listings', data)
+      const submissionData = {
+        ...data,
+        status: currentUser?.role === 'moder' ? 'approved' : 'pending',
+      };
+  
+      axios.post('/api/listings', submissionData)
         .then(() => {
-          toast.success('Listing created!', {
-            iconTheme: {
-              primary: '#08e2ff',
-              secondary: '#fff',
-            },
-          });
+          toast.success(
+            currentUser?.role === 'moder'
+              ? 'Listing published!'
+              : 'Listing submitted for review',
+            {
+              iconTheme: {
+                primary: '#08e2ff',
+                secondary: '#fff',
+              },
+            }
+          );
           reset();
           experienceModal.onClose();
           router.refresh();
@@ -612,6 +584,96 @@ const ExperienceModal = () => {
         .finally(() => setIsLoading(false));
     }
   };  
+
+  // const onSubmit: SubmitHandler<FieldValues> = (data) => {
+  //   // CATEGORY
+  //   if (step === STEPS.CATEGORY) {
+  //     if (!category || (Array.isArray(category) && category.length === 0)) {
+  //       toast.error('Please select a category to continue.');
+  //       return;
+  //     }
+  //     return onNext();
+  //   }
+  
+  //   // LOCATION
+  //   if (step === STEPS.LOCATION) {
+  //     if (!location || !location.value) {
+  //       toast.error('Please select a location.');
+  //       return;
+  //     }
+  //     return onNext();
+  //   }
+  
+  //   // INFO1
+  //   if (step === STEPS.INFO1) {
+  //     if (!data.hostDescription || data.guestCount < 1) {
+  //       toast.error('Please fill in host description and guest count.');
+  //       return;
+  //     }
+  //     return onNext();
+  //   }
+  
+  //   // INFO2
+  //   if (step === STEPS.INFO2) {
+  //     if (!data.experienceHour || !data.meetingPoint) {
+  //       toast.error('Please provide duration and meeting point.');
+  //       return;
+  //     }
+  //     return onNext();
+  //   }
+  
+  //   // INFO3
+  //   if (step === STEPS.INFO3) {
+  //     if (
+  //       !data.languages || data.languages.length === 0 ||
+  //       !data.locationType || data.locationType.length === 0 ||
+  //       !data.locationDescription
+  //     ) {
+  //       toast.error('Please provide languages, location type, and description.');
+  //       return;
+  //     }
+  //     return onNext();
+  //   }
+  
+  //   // IMAGES
+  //   if (step === STEPS.IMAGES) {
+  //     if (!imageSrc || !Array.isArray(imageSrc) || imageSrc.length === 0) {
+  //       toast.error('Please upload at least one image or video.');
+  //       return;
+  //     }
+  //     return onNext();
+  //   }
+  
+  //   // DESCRIPTION
+  //   if (step === STEPS.DESCRIPTION) {
+  //     if (!data.title || !data.description) {
+  //       toast.error('Please provide a title and description.');
+  //       return;
+  //     }
+  //     return onNext();
+  //   }
+  
+  //   // PRICE (final submit)
+  //   if (step === STEPS.PRICE) {
+  //     setIsLoading(true);
+  
+  //     axios.post('/api/listings', data)
+  //       .then(() => {
+  //         toast.success('Listing created!', {
+  //           iconTheme: {
+  //             primary: '#08e2ff',
+  //             secondary: '#fff',
+  //           },
+  //         });
+  //         reset();
+  //         experienceModal.onClose();
+  //         router.refresh();
+  //         setStep(STEPS.CATEGORY);
+  //       })
+  //       .catch(() => toast.error('Something went wrong.'))
+  //       .finally(() => setIsLoading(false));
+  //   }
+  // };  
   
   const actionLabel = useMemo(() => (
     step === STEPS.PRICE ? 'Create' : 'Next'

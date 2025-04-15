@@ -33,6 +33,8 @@ export default async function getListings(params: IListingsParams) {
       query.userId = userId;
     }
 
+    query.status = 'approved';
+
     if (category) {
       query.category = {
         has: category,
