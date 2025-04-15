@@ -19,6 +19,7 @@ import {
 
 import useLoginModal from "@/app/hooks/useLoginModal";
 import useRegisterModal from "@/app/hooks/useRegisterModal";
+import { motion, AnimatePresence } from 'framer-motion';
 
 import Modal from "./Modal";
 import Input from "../inputs/Input";
@@ -49,6 +50,12 @@ const RegisterModal = () => {
     });
 
     const onSubmit: SubmitHandler<FieldValues> = (data) => {
+      // If still on step 1, go to step 2
+      if (step === 1) {
+        setStep(2);
+        return;
+      }
+
         setIsLoading(true);
 
         const formData = {
@@ -113,7 +120,16 @@ const RegisterModal = () => {
     }, [registerModal.isOpen]);    
 
     const bodyContent = (
-      <div className="flex flex-col gap-2">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={`step-${step}`}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.25 }}
+          className="flex flex-col gap-2"
+        >
+
         {step === 1 ? (
           <>
             <Heading 
@@ -214,7 +230,8 @@ const RegisterModal = () => {
             )}
           </>
         )}
-      </div>
+        </motion.div>
+      </ AnimatePresence>
     );    
 
     const footerContent = step === 2 ? (

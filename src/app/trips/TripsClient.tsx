@@ -236,7 +236,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
   return (
     <>
     <Container>
-      <div className="pl-2">
+      <div className="pl-6">
       <Heading
         title="Trips"
         subtitle="Where you've been and where you're going"

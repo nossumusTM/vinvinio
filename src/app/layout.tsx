@@ -41,7 +41,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <body className={font.className}>
+      <body className={`${font.className} min-h-screen flex flex-col`}>
         <Script
           src="https://widget.cloudinary.com/v2.0/global/all.js"
           strategy="beforeInteractive"
@@ -62,9 +62,9 @@ export default async function RootLayout({
         </ClientOnly>
 
         {/* <div className="pb-20 pt-28 min-h-screen"> */}
-        <div className="pb-0 pt-28">
+        <main className="flex-grow pb-0 pt-28">
           {children}
-        </div>
+        </main>
 
         <div className="w-full pt-20">
           <Footer currentUser={currentUser}/>

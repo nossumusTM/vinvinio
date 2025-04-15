@@ -780,7 +780,7 @@ const ExperienceModal = () => {
 
   if (step === STEPS.INFO2) {
     bodyContent = (
-      <div className="flex flex-col gap-8 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+      <div className="flex flex-col gap-8 min-h-[40vh] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
         <Heading title="Event logistics" subtitle="Duration and meeting point" />
         <div className="flex flex-col gap-2">
           <label className="text-md font-medium">How long is your experience?</label>
