@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   const currentUser = await getCurrentUser();
+
   if (!currentUser || (currentUser.role !== 'host' && currentUser.role !== 'moder')) {
     return new NextResponse('Unauthorized', { status: 403 });
   }
@@ -17,11 +18,24 @@ export async function POST(req: Request) {
   }
 
   try {
-    await prisma.hostAnalytics.update({
+    // Get current values to prevent negative numbers
+    const current = await prisma.hostAnalytics.findUnique({
       where: { userId: hostId },
-      data: {
-        totalBooks: { decrement: 1 },
-        totalRevenue: { decrement: totalPrice || 0 },
+    });
+
+    const newBooks = Math.max(0, (current?.totalBooks || 0) - 1);
+    const newRevenue = Math.max(0, (current?.totalRevenue || 0) - (totalPrice || 0));
+
+    await prisma.hostAnalytics.upsert({
+      where: { userId: hostId },
+      update: {
+        totalBooks: newBooks,
+        totalRevenue: newRevenue,
+      },
+      create: {
+        userId: hostId,
+        totalBooks: 0,
+        totalRevenue: 0,
       },
     });
 
