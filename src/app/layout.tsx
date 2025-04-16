@@ -41,7 +41,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <body className={`${font.className} min-h-screen flex flex-col`}>
+      <body className={`${font.className} min-h-screen flex flex-col overflow-x-hidden`}>
         <Script
           src="https://widget.cloudinary.com/v2.0/global/all.js"
           strategy="beforeInteractive"
@@ -58,7 +58,6 @@ export default async function RootLayout({
           <ExperienceModal currentUser={currentUser}/>
           <PromoteModal currentUser={currentUser} />
           {currentUser && <Messenger currentUser={currentUser} />}
-          {/* <Messenger userId={currentUser?.id} /> */}
         </ClientOnly>
 
         {/* <div className="pb-20 pt-28 min-h-screen"> */}

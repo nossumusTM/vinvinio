@@ -107,12 +107,29 @@ const ListingCard: React.FC<ListingCardProps> = ({
     return reservation ? reservation.totalPrice : data.price;
   }, [reservation, data.price]);
 
+  // const reservationDate = useMemo(() => {
+  //   if (!reservation) return null;
+  //   const start = new Date(reservation.startDate);
+  //   const end = new Date(reservation.endDate);
+  //   return `${format(start, 'PP')} - ${format(end, 'PP')}`;
+  // }, [reservation]);
+
   const reservationDate = useMemo(() => {
     if (!reservation) return null;
     const start = new Date(reservation.startDate);
-    const end = new Date(reservation.endDate);
-    return `${format(start, 'PP')} - ${format(end, 'PP')}`;
-  }, [reservation]);
+    const time24 = reservation.time; // e.g., "14:30"
+  
+    if (!time24) return format(start, 'PP'); // fallback
+  
+    // Convert to AM/PM
+    const [hourStr, minuteStr] = time24.split(':');
+    const hour = parseInt(hourStr, 10);
+    const minute = minuteStr.padStart(2, '0');
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 === 0 ? 12 : hour % 12;
+  
+    return `${format(start, 'PP')} at ${hour12}:${minute} ${period}`;
+  }, [reservation]);      
 
   useEffect(() => {
     if (hasFetched.current) return;

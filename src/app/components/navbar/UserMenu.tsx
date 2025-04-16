@@ -363,6 +363,11 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                         setIsOpen(false);
                         router.push('/favorites')
                       }}/>
+                    <MenuItem label="Bookings" 
+                      onClick={() => {
+                        setIsOpen(false);
+                        router.push('/reservations')
+                      }}/>
                     {(userRole === 'host') && (
                         <>
                           <MenuItem label="Account" 

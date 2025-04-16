@@ -122,7 +122,7 @@ const BookingConfirmed = () => {
   };  
 
   return (
-    <div className="max-w-screen-xl mx-auto p-6 pt-8 pb-4 flex flex-col lg:flex-row gap-10">
+    <div className="max-w-screen-xl mx-auto p-6 pt-8 pb-4 flex flex-col lg:flex-row gap-10 md:mt-8">
       {/* Listing Info */}
       <div className="w-full lg:w-2/3 bg-white shadow-md rounded-2xl p-6 space-y-6">
         <h1 className="text-2xl font-semibold text-black">Booking Confirmed!</h1>

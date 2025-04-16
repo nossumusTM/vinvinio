@@ -41,7 +41,7 @@ const useFavorite = ({ listingId, currentUser }: IUseFavorite) => {
 
             await request();
             router.refresh();
-            toast.success('Success', {
+            toast.success('Added to favorites', {
                 iconTheme: {
                     primary: '#08e2ff',
                     secondary: '#fff',

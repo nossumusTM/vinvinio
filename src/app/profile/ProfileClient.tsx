@@ -132,6 +132,11 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
     totalRevenue: 0,
   });
 
+  const [hostAnalytics, setHostAnalytics] = useState({
+    totalBooks: 0,
+    totalRevenue: 0,
+  });  
+
   useEffect(() => {
     const fetchSavedCard = async () => {
       try {
@@ -157,6 +162,8 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   // }, []); 
 
   useEffect(() => {
+    if (currentUser?.role !== 'promoter') return;
+
     const fetchAnalytics = async () => {
       try {
         const res = await axios.get('/api/analytics/get', { timeout: 10000 });
@@ -175,6 +182,24 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
     // Clear interval on unmount
     return () => clearInterval(interval);
   }, []);  
+
+  useEffect(() => {
+    if (currentUser?.role !== 'host') return;
+  
+    const fetchHostAnalytics = async () => {
+      try {
+        const res = await axios.get('/api/analytics/host/get', { timeout: 10000 });
+        setHostAnalytics(res.data);
+      } catch (error) {
+        console.error('Error fetching host analytics:', error);
+      }
+    };
+  
+    fetchHostAnalytics();
+    const interval = setInterval(fetchHostAnalytics, 20000);
+  
+    return () => clearInterval(interval);
+  }, [currentUser]);  
 
   useEffect(() => {
     try {
@@ -210,11 +235,14 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
       }
     };
   
-    fetchPayoutMethod();
+    if (['promoter', 'host'].includes(currentUser?.role)) {
+      fetchPayoutMethod();
+    }
+    // fetchPayoutMethod();
   }, [payoutUpdated]);
 
   useEffect(() => {
-    if (currentUser.role === 'promoter') {
+    if (['promoter', 'host'].includes(currentUser.role)) {
       setActivePaymentTab('payout');
     } else if (currentUser.role === 'customer') {
       setActivePaymentTab('payment');
@@ -959,7 +987,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                 </>
               )}
 
-              {activePaymentTab === 'payout' && currentUser.role === 'promoter'  || currentUser.role === 'host' && (
+              {activePaymentTab === 'payout' && ['promoter', 'host'].includes(currentUser.role) && (
                 <>
                   <Heading title="Withdraw Method" subtitle="Manage your withdraw credentials" />
 
@@ -1446,8 +1474,8 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
         </>
       )}
 
-                {/* Promoter Stats */}
-                {currentUser.role === 'promoter' && !activeSection && (
+      {/* Promoter Stats */}
+      {currentUser.role === 'promoter' && !activeSection && (
             <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Referral Activities */}
               <div className="p-6 rounded-xl shadow-md hover:shadow-lg">
@@ -1571,7 +1599,122 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
               </div>
 
             </div>
-          )}
+      )}
+
+      {/* Host Stats */}
+      {currentUser.role === 'host' && !activeSection && (
+        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Reservation Activities */}
+          <div className="p-6 rounded-xl shadow-md hover:shadow-lg">
+            <p className="text-lg font-semibold mb-2">Reservation Activity</p>
+            <p className="text-sm text-neutral-600 mb-4">
+              Track your hosted bookings and earnings.
+            </p>
+
+            <div className="space-y-4 p-5">
+              <div className="flex justify-between items-center shadow-md rounded-xl p-4 text-lg text-neutral-800 hover:shadow-sm transition">
+                <span className="font-medium">Total Bookings</span>
+                <span className="font-semibold text-black">{hostAnalytics.totalBooks}</span>
+              </div>
+
+              <div className="flex justify-between items-center shadow-md rounded-xl p-4 text-lg text-neutral-800 hover:shadow-sm transition">
+                <span className="font-medium">Total Revenue</span>
+                <span className="font-semibold text-black">{formatCurrency(hostAnalytics.totalRevenue)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Host Total Earned */}
+          <div className="p-6 rounded-xl shadow-md hover:shadow-lg flex flex-col">
+            <p className="text-lg font-semibold mb-2">Total Earned</p>
+            <p className="text-sm text-neutral-600 mb-4">
+              As a host, you earn 90% of your experience revenue.
+            </p>
+            <div className="rounded-xl p-10 pl-8 pr-8 flex justify-center md:items-center md:h-52 hover:shadow-sm">
+              <p className="text-3xl text-black font-semibold">
+                {formatCurrency((hostAnalytics.totalRevenue || 0) * 0.90)}
+              </p>
+            </div>
+          </div>
+
+          {/* Withdraw Method */}
+          <div className="p-6 rounded-xl shadow-md hover:shadow-lg">
+            <p className="text-lg font-semibold mb-2">Withdraw Method</p>
+            <p className="text-sm text-neutral-600 mb-4">Deposits processed twice per month.</p>
+
+            {savedPayout ? (
+              <div
+                className="relative w-full max-w-sm h-56 perspective"
+                onClick={() => setIsFlipped(prev => !prev)}
+              >
+                <div
+                  className={`absolute w-full h-full sm:h-full h-[90%] duration-700 transform transition-transform preserve-3d ${
+                    isFlipped ? 'rotate-y-180' : ''
+                  }`}
+                >
+                  {/* FRONT SIDE */}
+                  <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-xl flex items-center justify-center">
+                    <Image
+                      src={
+                        savedPayout.method === 'paypal'
+                          ? '/images/paypal.png'
+                          : savedPayout.method === 'iban'
+                          ? '/images/iban.png'
+                          : savedPayout.method === 'revolut'
+                          ? '/images/revolut.png'
+                          : savedPayout.method === 'card' &&
+                            savedPayout.number?.replace(/\D/g, '').startsWith('4')
+                          ? '/images/Visa.png'
+                          : savedPayout.method === 'card' &&
+                            savedPayout.number?.replace(/\D/g, '').startsWith('5')
+                          ? '/images/MasterCard.png'
+                          : savedPayout.method === 'card' &&
+                            savedPayout.number?.replace(/\D/g, '').startsWith('3')
+                          ? '/images/americanexpress.png'
+                          : savedPayout.method === 'card' &&
+                            savedPayout.number?.replace(/\D/g, '').startsWith('6')
+                          ? '/images/Discover.png'
+                          : '/images/card.png'
+                      }
+                      alt={savedPayout.method}
+                      className="w-24 h-auto object-contain"
+                      width={64}
+                      height={32}
+                    />
+                  </div>
+
+                  {/* BACK SIDE */}
+                  <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-xl rotate-y-180 p-6 flex flex-col justify-center items-center gap-4">
+                    <p className="text-xs tracking-wider text-gray-400">Withdraw Info</p>
+                    <p className="text-lg font-mono text-center">
+                      {savedPayout.method === 'paypal'
+                        ? savedPayout.number
+                        : savedPayout.number && savedPayout.number.length >= 8
+                        ? `${savedPayout.number.slice(0, 4)} ${'*'.repeat(8)} ${savedPayout.number.slice(-4)}`
+                        : '****'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-neutral-100 p-4 rounded-xl flex items-center justify-between">
+                <p className="text-sm text-neutral-600">Withdraw method is not provided</p>
+                <button
+                  onClick={() => {
+                    setActiveSection('payments');
+                    setActivePaymentTab('payout');
+                    const section = document.getElementById('payments-section');
+                    if (section) section.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="text-sm underline text-black ml-4"
+                >
+                  Go to Withdraw
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
   
       {/* Crop Modal */}
       {isCropping && uploadedImage && (
@@ -1603,38 +1746,6 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
           </div>
         </div>
       )}
-
-      {/* {currentUser.role === 'moder' && (
-        <div className="mt-6 space-y-2 space-x-4">
-          <input
-            type="text"
-            placeholder="Enter promoter userId"
-            value={targetUserId}
-            onChange={(e) => setTargetUserId(e.target.value)}
-            className="border p-2 rounded w-500"
-          />
-          <button
-            onClick={async () => {
-              if (!targetUserId) return alert('Please provide a promoter userId');
-              try {
-                const res = await axios.post('/api/analytics/withdraw', { userId: targetUserId });
-                toast.success(res.data.message, {
-                  iconTheme: {
-                      primary: '#08e2ff',
-                      secondary: '#fff',
-                  },
-                });
-              } catch (err) {
-                toast.error('Failed to withdraw for this promoter.');
-                console.error(err);
-              }
-            }}
-            className="w-500 px-4 py-2 bg-[#000000] text-white rounded hover:bg-neutral-700 transition"
-          >
-            Withdraw for Promoter
-          </button>
-        </div>
-      )} */}
 
     </Container>
   );  

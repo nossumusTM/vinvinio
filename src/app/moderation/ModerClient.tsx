@@ -5,6 +5,7 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { SafeUser } from '@/app/types';
 import { useRouter } from 'next/navigation';
+import { AxiosError } from 'axios';
 
 interface Listing {
   id: string;
@@ -87,21 +88,66 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
     }
   };
 
+  const handleWithdrawForHosts = async () => {
+    if (!targetUserId) return alert('Please provide a host userId');
+    try {
+      const res = await axios.post('/api/analytics/host/withdraw', { userId: targetUserId });
+      toast.success(res.data.message, {
+        iconTheme: { primary: '#08e2ff', secondary: '#fff' },
+      });
+      setTargetUserId('');
+    } catch {
+      toast.error('Failed to withdraw for this host.');
+    }
+  };  
+
   useEffect(() => {
     fetchListings();
   }, []);
 
   const onCancel = async (id: string) => {
     if (!id) return toast.error('Reservation ID required');
+  
     try {
+      setIsLoading(true);
+  
+      // 🔍 Fetch reservation to determine host and totalPrice
+      const res = await axios.get(`/api/reservations/${id}`);
+      const reservation = res.data;
+      const referralId = reservation?.referralId;
+      const totalPrice = reservation?.totalPrice ?? 0;
+      const hostId = reservation?.listing?.userId;
+  
+      // ❌ Delete reservation
       await axios.delete(`/api/reservations/${id}`);
       toast.success('Reservation cancelled', {
         iconTheme: { primary: '#08e2ff', secondary: '#fff' },
       });
+  
+      // 📉 Decrement referral analytics if referralId exists
+      if (referralId) {
+        await axios.post('/api/analytics/decreament', {
+          reservationId: id,
+          totalBooksIncrement: -1,
+          totalRevenueIncrement: -totalPrice,
+        });
+      }
+  
+      // 📉 Decrement host analytics if hostId exists
+      if (hostId && totalPrice) {
+        await axios.post('/api/analytics/host/decrement', {
+          hostId,
+          totalPrice,
+        });
+      }
+  
       setSelectedReservationId('');
-      router.refresh(); // optional if needed
-    } catch {
-      toast.error('Failed to cancel reservation');
+      router.refresh();
+    } catch (error) {
+      const err = error as AxiosError<{ error?: string }>;
+      toast.error(err.response?.data?.error || 'Cancellation failed.');
+    } finally {
+      setIsLoading(false);
     }
   };  
 
@@ -110,10 +156,10 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
   }
 
   return (
-    <div className="px-6 py-10 grid grid-cols-1 lg:grid-cols-12 gap-10 max-w-7xl mx-auto">
+    <div className="px-6 py-10 grid grid-cols-1 lg:grid-cols-12 gap-10 max-w-7xl mx-auto shadow-lg rounded-3xl mt-10">
       {/* Listings */}
       <div className="lg:col-span-8 space-y-6">
-        <h1 className="text-2xl font-semibold mb-4">Pending Listings for Moderation</h1>
+        <h1 className="text-2xl font-semibold mb-4">Pending Listings</h1>
         {listings.length === 0 ? (
           <p className="text-neutral-500">No listings pending moderation.</p>
         ) : (
@@ -159,13 +205,14 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
         )}
       </div>
 
+      {/* Withdraw for Promoter */}
       <div className="lg:col-span-4 space-y-6">
         {/* Withdraw */}
         <div className="shadow-lg p-6 rounded-xl bg-white">
             <h2 className="text-lg font-semibold mb-4">Withdraw for Promoter</h2>
             <input
             type="text"
-            placeholder="Enter promoter userId"
+            placeholder="Enter Promoter userId"
             value={targetUserId}
             onChange={(e) => setTargetUserId(e.target.value)}
             className="border p-2 rounded-lg w-full mb-3"
@@ -177,6 +224,25 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
             >
             Withdraw
             </button>
+        </div>
+
+        {/* Withdraw for Host */}
+        <div className="shadow-lg p-6 rounded-xl bg-white">
+          <h2 className="text-lg font-semibold mb-4">Withdraw for Host</h2>
+          <input
+            type="text"
+            placeholder="Enter Host userId"
+            value={targetUserId}
+            onChange={(e) => setTargetUserId(e.target.value)}
+            className="border p-2 rounded-lg w-full mb-3"
+          />
+          <button
+            onClick={handleWithdrawForHosts}
+            disabled={isLoading}
+            className="w-full px-4 py-2 bg-black text-white rounded-lg hover:bg-neutral-800 transition"
+          >
+            Withdraw
+          </button>
         </div>
 
         {/* Cancel Reservation */}

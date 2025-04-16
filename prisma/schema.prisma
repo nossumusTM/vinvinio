@@ -32,7 +32,7 @@ model User {
   hashedPassword    String?
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
-  role              Role             @default(customer)
+  role              Role               @default(customer)
   referenceId       String?
   favoriteIds       String[]           @db.ObjectId
   accounts          Account[]
@@ -40,6 +40,7 @@ model User {
   reservations      Reservation[]
   cards             Card[]
   referralAnalytics ReferralAnalytics?
+  hostAnalytics     HostAnalytics?
   reviews           Review[]
 
   payout Payout? @relation("UserPayout")
@@ -49,11 +50,11 @@ model User {
   removedConversation RemovedConversation[] @relation("Remover")
   wasRemovedByUsers   RemovedConversation[] @relation("Removed")
 
-  phone     String?
-  contact   String?
-  legalName String?
-  address   String?
-  hostName  String?
+  phone               String?
+  contact             String?
+  legalName           String?
+  address             String?
+  hostName            String?
 
   @@map("User")
 }
@@ -162,6 +163,17 @@ model ReferralAnalytics {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model HostAnalytics {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String   @unique @db.ObjectId
+  totalBooks    Int      @default(0)
+  totalRevenue  Int      @default(0)
+  user          User     @relation(fields: [userId], references: [id])
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model Review {
