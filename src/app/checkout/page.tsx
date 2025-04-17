@@ -184,7 +184,7 @@ const CheckoutPage = () => {
   
       toast.success('Payment confirmed! Reservation created.', {
         iconTheme: {
-          primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #3604ff, #6adcff, #ffffff)',
+          primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #3604ff, #0066ff, #ffffff)',
           secondary: '#fff',
         },
       });

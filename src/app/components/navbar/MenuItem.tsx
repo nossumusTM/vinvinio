@@ -41,7 +41,7 @@ interface MenuItemProps {
           <span 
           className="ml-2 text-xs text-white rounded-full px-2 py-0.5"
           style={{
-            background: 'linear-gradient(135deg, #08e2ff, #04aaff, #3604ff, #6adcff, #ffffff)',
+            background: 'linear-gradient(135deg, #3d08ff, #04aaff, #3604ff, #0066ff, #3d08ff)',
           }}
           >
             {badgeCount > 99 ? '99+' : badgeCount}

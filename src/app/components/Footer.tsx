@@ -1,7 +1,10 @@
 'use client';
 import { useState } from 'react';
-import { TbBrandTelegram, TbBrandTiktok, TbBrandInstagram, TbBrandFacebook, TbBrandX } from 'react-icons/tb';
+import { FaTelegram } from "react-icons/fa";
+import { FaYoutube } from "react-icons/fa";
 import { FiYoutube } from "react-icons/fi";
+import { PiTiktokLogoFill } from "react-icons/pi";
+import { PiInstagramLogoFill } from "react-icons/pi";
 import useMessenger from '@/app/hooks/useMessager';
 import Modal from './modals/Modal';
 import useLoginModal from '../hooks/useLoginModal';
@@ -306,16 +309,16 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
           {/* <h3 className="font-semibold text-lg mb-4 underline">Social channels</h3> */}
             <div className="flex space-x-4 text-xl">
               <div className=''>
-                <a href="#"><TbBrandTelegram className="hover:text-[#3604ff] text-3xl transition" /></a>
+                <a href="#"><FaTelegram className="hover:text-[#3604ff] text-3xl transition" /></a>
                 </div>
               <div className=''>
-                <a href="#"><FiYoutube className="hover:text-[#3604ff] text-3xl transition" /></a>
+                <a href="#"><FaYoutube className="hover:text-[#3604ff] text-3xl transition" /></a>
                 </div>
               <div className=''>
-                <a href="#"><TbBrandTiktok className="hover:text-[#3604ff] text-3xl transition" /></a>
+                <a href="#"><PiTiktokLogoFill className="hover:text-[#3604ff] text-3xl transition" /></a>
                 </div>
               <div className=''>
-                <a href="#"><TbBrandInstagram className="hover:text-[#3604ff] text-3xl transition" /></a>
+                <a href="#"><PiInstagramLogoFill className="hover:text-[#3604ff] text-3xl transition" /></a>
                 </div>
             </div>
         </div>

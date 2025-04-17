@@ -56,7 +56,7 @@ const LoginModal = () => {
         if (callback?.ok) {
           toast.success('Logged in', {
             iconTheme: {
-                primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #3604ff, #6adcff, #ffffff)',
+                primary: 'linear-gradient(135deg, #3d08ff, #04aaff, #3604ff, #0066ff, #3d08ff)',
                 secondary: '#fff',
             },
           });
