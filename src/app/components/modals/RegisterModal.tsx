@@ -3,6 +3,7 @@
 import axios from "axios";
 import { AiFillGithub } from "react-icons/ai";
 import { MdOutlineSwitchAccount } from "react-icons/md";
+import { RiShieldUserLine } from "react-icons/ri";
 import { BiNavigation } from "react-icons/bi";
 import { PiBarcode } from "react-icons/pi";
 import { signIn } from "next-auth/react";
@@ -133,15 +134,15 @@ const RegisterModal = () => {
         {step === 1 ? (
           <>
             <Heading 
-              title={`Sign up as a ${role === 'customer' ? 'Guest' : role === 'host' ? 'Host' : 'Promoter'}`} 
-              subtitle="Choose your option below to continue registration"
+              title={`Continue as a ${role === 'customer' ? 'Guest' : role === 'host' ? 'Host' : 'Promoter'}`} 
+              subtitle="Choose your journey to move forward"
               center 
             />
             <div className="flex justify-center items-center gap-4 flex-wrap pt-6">
               {[
-                { key: 'customer', icon: <MdOutlineSwitchAccount size={24} />, label: 'Guest' },
-                { key: 'host', icon: <BiNavigation size={24} />, label: 'Host' },
-                { key: 'promoter', icon: <PiBarcode size={24} />, label: 'Promoter' }
+                { key: 'customer', icon: <RiShieldUserLine size={14} />, label: 'Guest' },
+                { key: 'host', icon: <BiNavigation size={14} />, label: 'Host' },
+                { key: 'promoter', icon: <PiBarcode size={14} />, label: 'Promoter' }
               ].map(({ key, icon, label }) => {
                 const isSelected = role === key;
     
@@ -181,6 +182,11 @@ const RegisterModal = () => {
               >
                 ← Back
               </button> */}
+            <Heading
+              title='Begin your journey with us'
+              subtitle='Start curating your own unforgettable journey!'
+              center
+            />
             <Input
               id="email"
               label="Email"
@@ -263,7 +269,7 @@ const RegisterModal = () => {
         <Modal
             disabled={isLoading}
             isOpen={registerModal.isOpen}
-            title="Welcome to Vuoiaggio"
+            title="Sign Up"
             actionLabel="Continue"
             onClose={registerModal.onClose}
             onSubmit={handleSubmit(onSubmit)}

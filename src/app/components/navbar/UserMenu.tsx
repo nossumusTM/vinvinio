@@ -212,7 +212,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
   {/* Avatar visible only on md+ screens */}
   <div className="hidden md:block shadow-xl rounded-full">
     {currentUser?.image ? (
-      <Avatar src={currentUser.image} />
+      <Avatar src={currentUser.image} size={30}/>
     ) : (
       <div
         className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm bg-black"

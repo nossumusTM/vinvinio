@@ -69,7 +69,7 @@ const AnnouncementModal = () => {
         className="bg-white rounded-2xl p-8 sm:p-12 max-w-md w-full relative"
       >
 
-      <div className="p-10 rounded-2xl  shadow-xl">
+      <div className="p-10 rounded-3xl">
         <button
           onClick={handleClose}
           className="absolute top-3 right-3 text-gray-500 hover:text-black transition"
