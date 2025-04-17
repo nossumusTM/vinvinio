@@ -13,10 +13,13 @@ const ListingPage = async () => {
     if (listings.length === 0) {
         return (
             <ClientOnly>
-                <EmptyState
+                <div className="flex flex-col justify-center items-center">
+                    <EmptyState
                     title="No favorites found"
                     subtitle="Looks like you have no favorite listings."
-                />
+                    />
+                    
+                </div>
             </ClientOnly>
         );
     }

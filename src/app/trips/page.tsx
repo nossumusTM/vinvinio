@@ -22,9 +22,9 @@ const TripsPage = async () => {
         return (
             <ClientOnly>
                 <EmptyState
-                    title="No trips found"
-                    subtitle="Looks like you havent reserved any trips."
-                />
+                    title="No Experiences Booked"
+                    subtitle="It looks like you have not booked any experiences yet. Start exploring and create unforgettable memories."
+                    />
             </ClientOnly>
         );
     }

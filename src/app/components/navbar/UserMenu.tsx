@@ -300,7 +300,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                       setIsOpen(false);
                       router.push('/trips');
                     }} />
-                    <MenuItem label="Favorites" 
+                    <MenuItem label="Wishlist" 
                       onClick={() => {
                         setIsOpen(false);
                         router.push('/favorites')
@@ -333,7 +333,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                         setIsOpen(false);
                         router.push('/trips')
                       }}/>
-                    <MenuItem label="Favorites" 
+                    <MenuItem label="Wishlist" 
                       onClick={() => {
                         setIsOpen(false);
                         router.push('/favorites')
@@ -366,7 +366,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                         setIsOpen(false);
                         router.push('/trips')
                       }}/>
-                    <MenuItem label="Favorites" 
+                    <MenuItem label="Wishlist" 
                       onClick={() => {
                         setIsOpen(false);
                         router.push('/favorites')
@@ -403,7 +403,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                         setIsOpen(false);
                         router.push('/trips')
                       }}/>
-                    <MenuItem label="Favorites" 
+                    <MenuItem label="Wishlist" 
                       onClick={() => {
                         setIsOpen(false);
                         router.push('/favorites')
