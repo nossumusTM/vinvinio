@@ -13,9 +13,9 @@ const Loader = () => {
       items-center 
     "
         >
-            <CircleLoader
+            <PuffLoader
                 size={100}
-                color="#04aaff"
+                color="#000"
             />
         </div>
     );
