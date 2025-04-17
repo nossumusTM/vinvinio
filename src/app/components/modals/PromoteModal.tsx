@@ -57,7 +57,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
     };
   
     preload('/images/qrlogo.png');
-    preload('/images/promo-banner.jpg');
+    preload('/images/promo-banner.png');
   
     if (promoteModal.isOpen && /iPhone|iPad|Android/i.test(navigator.userAgent)) {
       downloadImage();
@@ -91,7 +91,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
       ref={scrollRef}
       className="relative w-full max-w-[280px] md:max-w-xs rounded-xl overflow-hidden overflow-y-auto max-h-[400px] md:max-h-none">
         <Image
-          src="/images/promo-banner.jpg"
+          src="/images/promo-banner.png"
           alt="Promo-Banner"
           crossOrigin="anonymous"
           width={869}
@@ -111,7 +111,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
               className='p-1'
               includeMargin={false}
             />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center pointer-events-none">
+            {/* <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center pointer-events-none">
               <div className="absolute inset-0 bg-[#3604ff]/80 blur-[6px] rounded-full scale-110 z-10" />
               <img
                 src="/images/qrlogo.png"
@@ -125,7 +125,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
                   display: 'block'
                 }}
               />
-            </div>
+            </div> */}
           </div>
         </div>
         <div className="pt-2 -translate-y-4 md:translate-y-0 flex justify-center items-center">
@@ -165,7 +165,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
             className="relative w-[600px] h-[869px] bg-white rounded-xl overflow-hidden"
           >
             <Image
-              src="/images/promo-banner.jpg"
+              src="/images/promo-banner.png"
               alt="Promo-Banner-Download"
               crossOrigin="anonymous"
               width={600}
