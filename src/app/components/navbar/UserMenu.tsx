@@ -215,10 +215,10 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
       <Avatar src={currentUser.image} />
     ) : (
       <div
-        className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
-        style={{
-          background: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
-        }}
+        className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm bg-black"
+        // style={{
+        //   background: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
+        // }}
       >
         {initials}
       </div>
