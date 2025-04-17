@@ -124,7 +124,7 @@ const LoginModal = () => {
                 outline
                 label="Continue with Google"
                 icon={FcGoogle}
-                onClick={handleGoogleLogin}
+                onClick={() => signIn('google', { callbackUrl: '/' })}
             />
             {/* <Button
                 outline

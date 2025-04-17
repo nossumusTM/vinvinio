@@ -248,14 +248,14 @@ const RegisterModal = () => {
             </span>
           </p>
         </div>
-        <div className="mb-2">
+        {/* <div className="mb-2">
           <Button
             outline
             label="Continue with Google"
             icon={FcGoogle}
             onClick={() => signIn('google', { callbackUrl: '/' })}
           />
-        </div>
+        </div> */}
       </div>
     ) : undefined;    
 

@@ -59,20 +59,20 @@ export const authOptions: AuthOptions = {
   session: {
     strategy: "jwt",
   },
-  callbacks: {
-    async signIn({ user, account }) {
-      const existingUser = await prisma.user.findUnique({
-        where: { email: user.email! },
-      });
+  // callbacks: {
+  //   async signIn({ user, account }) {
+  //     const existingUser = await prisma.user.findUnique({
+  //       where: { email: user.email! },
+  //     });
   
-      if (!existingUser) {
-        // ❌ Not registered yet
-        return '/register?promptRole=true'; // redirect to a custom register step
-      }
+  //     if (!existingUser) {
+  //       // ❌ Not registered yet
+  //       return '/register?promptRole=true'; // redirect to a custom register step
+  //     }
   
-      return true; // ✅ Allow login
-    },
-  },  
+  //     return true; // ✅ Allow login
+  //   },
+  // },  
   secret: process.env.NEXTAUTH_SECRET,
 };
 
