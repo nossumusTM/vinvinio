@@ -31,7 +31,7 @@ const Home = async ({ searchParams }: HomeProps) => {
     <ClientOnly>
       <Container>
         {/* Wrap both filter and grid in a relative with z-context */}
-        <div className="relative z-30 mt-5">
+        <div className="relative z-30 mt-2">
           {/* Filter dropdown centered */}
           <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-[9999]">
             <ListingFilter />
