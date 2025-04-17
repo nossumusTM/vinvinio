@@ -40,7 +40,7 @@ export async function POST(req: Request) {
             </p>
             <p style="font-size: 14px; color: #555;">
               Include this <strong>Listing ID</strong> in your message:
-              <br /><code style="color: #08e2ff; font-weight: bold;">${listingId}</code>
+              <br /><code style="color: #3604ff; font-weight: bold;">${listingId}</code>
             </p>
           </div>
   

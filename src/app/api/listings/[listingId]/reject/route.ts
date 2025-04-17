@@ -60,7 +60,7 @@ export async function POST(
 
               <p style="font-size: 14px;">You may revise the listing and resubmit it for review.</p>
 
-              <p style="margin-top: 32px;">If you have questions, feel free to contact <a href="mailto:ciao@vuoiaggio.it" style="color: #08e2ff;">ciao@vuoiaggio.it</a></p>
+              <p style="margin-top: 32px;">If you have questions, feel free to contact <a href="mailto:ciao@vuoiaggio.it" style="color: #3604ff;">ciao@vuoiaggio.it</a></p>
 
               <hr style="margin-top: 40px;" />
               <p style="font-size: 13px; color: #888;">Vuoiaggio International Srls.</p>

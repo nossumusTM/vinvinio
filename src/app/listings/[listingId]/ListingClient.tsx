@@ -117,7 +117,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
             .then(() => {
                 toast.success('Listing reserved!', {
                     iconTheme: {
-                        primary: '#08e2ff',
+                        primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #3604ff, #6adcff, #ffffff)',
                         secondary: '#fff',
                     }
                 });

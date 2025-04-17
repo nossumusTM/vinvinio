@@ -147,9 +147,10 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
               <div className="flex items-center gap-3">
               <div className="relative">
                 <Avatar src={user.image} name={user.name} size={48} />
+
                 {user.id === CUSTOMER_SERVICE_ID && (
-                  <div className="absolute -top-1 -right-1 rounded-full w-5 h-5 flex items-center justify-center">
-                    <MdVerified color='#08e2ff' className="text-white w-5 h-5" />
+                  <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-gradient-to-r from-[#08e2ff] via-[#04aaff] to-[#3604ff] flex items-center justify-center shadow-md">
+                    <MdVerified className="text-white w-3.5 h-3.5" />
                   </div>
                 )}
               </div>

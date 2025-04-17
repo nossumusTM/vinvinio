@@ -61,7 +61,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
   //       .then(() => {
   //         toast.success('Reservation cancelled!', {
   //           iconTheme: {
-  //               primary: '#08e2ff',
+  //               primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #3604ff, #6adcff, #ffffff)',
   //               secondary: '#fff',
   //           }
   //       });
@@ -114,7 +114,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
       });
       toast.success('Cancellation request submitted.', {
         iconTheme: {
-          primary: '#08e2ff',
+          primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #3604ff, #6adcff, #ffffff)',
           secondary: '#fff',
         }
       });
@@ -146,7 +146,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
       await axios.delete(`/api/reservations/${id}`);
       toast.success('Reservation cancelled!', {
         iconTheme: {
-          primary: '#08e2ff',
+          primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #3604ff, #6adcff, #ffffff)',
           secondary: '#fff',
         }
       });
@@ -187,7 +187,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
   
       toast.success('Review submitted!', {
         iconTheme: {
-            primary: '#08e2ff',
+            primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #3604ff, #6adcff, #ffffff)',
             secondary: '#fff',
         },
       });

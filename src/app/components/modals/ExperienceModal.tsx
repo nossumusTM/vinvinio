@@ -570,7 +570,7 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
               : 'Listing submitted for review',
             {
               iconTheme: {
-                primary: '#08e2ff',
+                primary: 'linear-gradient(135deg, #3604ff, #04aaff, #3604ff, #6adcff, #ffffff)',
                 secondary: '#fff',
               },
             }
@@ -661,7 +661,7 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
   //       .then(() => {
   //         toast.success('Listing created!', {
   //           iconTheme: {
-  //             primary: '#08e2ff',
+  //             primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #3604ff, #6adcff, #ffffff)',
   //             secondary: '#fff',
   //           },
   //         });

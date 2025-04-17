@@ -60,8 +60,8 @@ export async function POST(
 
               <p style="margin: 6px 0;"><strong>View your listing:</strong> 
                 <a href="https://vuoiaggio.it/listings/${listing.id}" 
-                  style="color: #08e2ff; text-decoration: none; font-weight: 600;
-                         border-bottom: 2px solid #08e2ff; padding-bottom: 2px; display: inline-block;">
+                  style="color: #3604ff; text-decoration: none; font-weight: 600;
+                         border-bottom: 2px solid #3604ff; padding-bottom: 2px; display: inline-block;">
                   ${listing.title}
                 </a>
               </p>

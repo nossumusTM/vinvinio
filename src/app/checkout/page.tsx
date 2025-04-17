@@ -184,7 +184,7 @@ const CheckoutPage = () => {
   
       toast.success('Payment confirmed! Reservation created.', {
         iconTheme: {
-          primary: '#08e2ff',
+          primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #3604ff, #6adcff, #ffffff)',
           secondary: '#fff',
         },
       });
@@ -326,8 +326,8 @@ const CheckoutPage = () => {
 
                 <p style="margin-bottom: 12px;"><strong>Listing ID:</strong> 
                   <a href="https://vuoiaggio.it/listings/${listingId}"
-                    style="color: #08e2ff; text-decoration: none; font-weight: 600;
-                          border-bottom: 2px solid #08e2ff; padding-bottom: 2px; display: inline-block;">
+                    style="color: #3604ff; text-decoration: none; font-weight: 600;
+                          border-bottom: 2px solid #3604ff; padding-bottom: 2px; display: inline-block;">
                     ${listingId}
                   </a>
                 </p>

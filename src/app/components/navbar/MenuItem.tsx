@@ -38,7 +38,12 @@ interface MenuItemProps {
       <div onClick={onClick} className="relative px-4 py-2 hover:bg-neutral-100 transition cursor-pointer flex items-center justify-between">
         <span>{label}</span>
         {badgeCount && badgeCount > 0 && (
-          <span className="ml-2 text-xs bg-[#08e2ff] text-white rounded-full px-2 py-0.5">
+          <span 
+          className="ml-2 text-xs text-white rounded-full px-2 py-0.5"
+          style={{
+            background: 'linear-gradient(135deg, #08e2ff, #04aaff, #3604ff, #6adcff, #ffffff)',
+          }}
+          >
             {badgeCount > 99 ? '99+' : badgeCount}
           </span>
         )}

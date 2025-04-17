@@ -273,7 +273,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
       // setPopupMessage('Withdraw method saved!');
       toast.success('Withdraw method saved!', {
         iconTheme: {
-            primary: '#08e2ff',
+            primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #3604ff, #6adcff, #ffffff)',
             secondary: '#fff',
         }
       });
@@ -293,7 +293,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
       // setPopupMessage('Withdraw method deleted!');
       toast.success('Withdraw method deleted!', {
         iconTheme: {
-            primary: '#08e2ff',
+            primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #3604ff, #6adcff, #ffffff)',
             secondary: '#fff',
         }
       });
@@ -420,7 +420,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
       </div>
 
       {/* Avatar & name */}
-      <div className="pl-5 pt-3 pr-5 pb-6 rounded-xl shadow-sm">
+      <div className="pl-5 pt-14 pr-5 pb-6 rounded-xl shadow-sm">
         {/* Divider */}
         <div className="flex items-center gap-4 mt-4">
           <div
@@ -437,9 +437,12 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
               />
             ) : (
               <div className={twMerge(
-                "w-[60px] h-[60px] rounded-full flex items-center justify-center text-white font-bold text-xl",
-                getRandomColor()
-              )}>
+                "w-[60px] h-[60px] rounded-full flex items-center justify-center text-white font-bold text-xl bg-black",
+              )}
+              // style={{
+              //   background: 'linear-gradient(135deg, #08e2ff, #04aaff, #3604ff, #6adcff, #ffffff)',
+              // }}
+              >
                 {initials}
               </div>
             )}
@@ -798,7 +801,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                           // setPopupMessage('Password updated successfully!');
                           toast.success('Password updated successfully!', {
                             iconTheme: {
-                                primary: '#08e2ff',
+                                primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #3604ff, #6adcff, #ffffff)',
                                 secondary: '#fff',
                             }
                           });
@@ -1419,7 +1422,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                       // setPopupMessage('Card saved successfully!');
                       toast.success('Card saved successfully!', {
                         iconTheme: {
-                            primary: '#08e2ff',
+                            primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #3604ff, #6adcff, #ffffff)',
                             secondary: '#fff',
                         }
                       });

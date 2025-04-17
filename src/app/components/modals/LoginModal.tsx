@@ -21,11 +21,14 @@ import Input from "../inputs/Input";
 import Heading from "../Heading";
 import Button from "../Button";
 
+import axios from "axios";
+
 const LoginModal = () => {
     const router = useRouter();
     const loginModal = useLoginModal();
     const registerModal = useRegisterModal();
     const [isLoading, setIsLoading] = useState(false);
+    const [showGoogleConfirm, setShowGoogleConfirm] = useState(false);
 
     const {
         register,
@@ -53,7 +56,7 @@ const LoginModal = () => {
         if (callback?.ok) {
           toast.success('Logged in', {
             iconTheme: {
-                primary: '#08e2ff',
+                primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #3604ff, #6adcff, #ffffff)',
                 secondary: '#fff',
             },
           });
@@ -65,6 +68,19 @@ const LoginModal = () => {
       
         if (callback?.error) {
           toast.error(callback.error);
+        }
+      };      
+
+      const handleGoogleLogin = async () => {
+        try {
+          setIsLoading(true);
+      
+          await signIn('google', { callbackUrl: '/' });
+        } catch (err) {
+          console.error(err);
+          toast.error('Google login failed.');
+        } finally {
+          setIsLoading(false);
         }
       };      
 
@@ -108,7 +124,7 @@ const LoginModal = () => {
                 outline
                 label="Continue with Google"
                 icon={FcGoogle}
-                onClick={() => signIn('google')}
+                onClick={handleGoogleLogin}
             />
             {/* <Button
                 outline

@@ -80,7 +80,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
     try {
       const res = await axios.post('/api/analytics/withdraw', { userId: targetUserId });
       toast.success(res.data.message, {
-        iconTheme: { primary: '#08e2ff', secondary: '#fff' },
+        iconTheme: { primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #3604ff, #6adcff, #ffffff)', secondary: '#fff' },
       });
       setTargetUserId('');
     } catch {
@@ -93,7 +93,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
     try {
       const res = await axios.post('/api/analytics/host/withdraw', { userId: targetUserId });
       toast.success(res.data.message, {
-        iconTheme: { primary: '#08e2ff', secondary: '#fff' },
+        iconTheme: { primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #3604ff, #6adcff, #ffffff)', secondary: '#fff' },
       });
       setTargetUserId('');
     } catch {
@@ -121,7 +121,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
       // ❌ Delete reservation
       await axios.delete(`/api/reservations/${id}`);
       toast.success('Reservation cancelled', {
-        iconTheme: { primary: '#08e2ff', secondary: '#fff' },
+        iconTheme: { primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #3604ff, #6adcff, #ffffff)', secondary: '#fff' },
       });
   
       // 📉 Decrement referral analytics if referralId exists

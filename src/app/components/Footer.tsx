@@ -306,16 +306,16 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
           {/* <h3 className="font-semibold text-lg mb-4 underline">Social channels</h3> */}
             <div className="flex space-x-4 text-xl">
               <div className='shadow-lg p-3 rounded-full'>
-                <a href="#"><TbBrandTelegram className="hover:text-[#08e2ff] text-3xl transition" /></a>
+                <a href="#"><TbBrandTelegram className="hover:text-[#3604ff] text-3xl transition" /></a>
                 </div>
               <div className='shadow-lg p-3 rounded-full'>
-                <a href="#"><FiYoutube className="hover:text-[#08e2ff] text-3xl transition" /></a>
+                <a href="#"><FiYoutube className="hover:text-[#3604ff] text-3xl transition" /></a>
                 </div>
               <div className='shadow-lg p-3 rounded-full'>
-                <a href="#"><TbBrandTiktok className="hover:text-[#08e2ff] text-3xl transition" /></a>
+                <a href="#"><TbBrandTiktok className="hover:text-[#3604ff] text-3xl transition" /></a>
                 </div>
               <div className='shadow-lg p-3 rounded-full'>
-                <a href="#"><TbBrandInstagram className="hover:text-[#08e2ff] text-3xl transition" /></a>
+                <a href="#"><TbBrandInstagram className="hover:text-[#3604ff] text-3xl transition" /></a>
                 </div>
             </div>
         </div>

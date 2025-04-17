@@ -73,7 +73,7 @@ const RegisterModal = () => {
             .then(() => {
                 toast.success('Welcome to Vuoiaggio! Please log in to start exploring.', {
                     iconTheme: {
-                        primary: '#08e2ff',
+                        primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #3604ff, #6adcff, #ffffff)',
                         secondary: '#fff',
                     },
                   });
@@ -253,7 +253,7 @@ const RegisterModal = () => {
             outline
             label="Continue with Google"
             icon={FcGoogle}
-            onClick={() => signIn('google')}
+            onClick={() => signIn('google', { callbackUrl: '/' })}
           />
         </div>
       </div>
