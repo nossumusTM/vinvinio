@@ -215,10 +215,10 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
       <Avatar src={currentUser.image} />
     ) : (
       <div
-        className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm bg-black"
-        // style={{
-        //   background: 'linear-gradient(135deg, #08e2ff, #04aaff, #3604ff, #6adcff, #ffffff)',
-        // }}
+        className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
+        style={{
+          background: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
+        }}
       >
         {initials}
       </div>
@@ -241,7 +241,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
       className="absolute -top-1 -right-1 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center"
       style={{
-        background: 'linear-gradient(135deg, #08e2ff, #04aaff, #3604ff, #6adcff, #ffffff)',
+        background: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
       }}
     >
       {messenger.unreadCount}
