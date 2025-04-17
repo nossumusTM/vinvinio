@@ -420,7 +420,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
       </div>
 
       {/* Avatar & name */}
-      <div className="pl-5 pt-8 pr-5 pb-6 rounded-xl shadow-sm">
+      <div className="pl-5 pr-5 pb-6 rounded-xl shadow-sm">
         {/* Divider */}
         <div className="flex items-center gap-4 mt-4">
           <div

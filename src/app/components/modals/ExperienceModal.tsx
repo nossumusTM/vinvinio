@@ -822,7 +822,7 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
         <Heading title="Experience details" subtitle="Tell us about your event style and group size" />
         <Input
           id="hostDescription"
-          label="Describe your experience as a host (max 300 characters)"
+          label="Describe your experience as a host"
           disabled={isLoading}
           register={register}
           errors={errors}
@@ -909,7 +909,7 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
   
         <Input
           id="locationDescription"
-          label="Describe the location (max 300 characters)"
+          label="Describe the location"
           disabled={isLoading}
           register={register}
           errors={errors}

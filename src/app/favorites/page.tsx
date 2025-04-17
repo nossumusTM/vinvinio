@@ -15,8 +15,8 @@ const ListingPage = async () => {
             <ClientOnly>
                 <div className="flex flex-col justify-center items-center">
                     <EmptyState
-                    title="No favorites found"
-                    subtitle="Looks like you have no favorite listings."
+                    title="Nothing Saved Yet"
+                    subtitle="Browse our collection and find your favorites."
                     />
                     
                 </div>
