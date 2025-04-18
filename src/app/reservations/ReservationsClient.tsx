@@ -42,7 +42,7 @@ const ReservationsClient: React.FC<ReservationsClientProps> = ({
             <div className="mb-8 pl-6">
                 <Heading
                     title="Bookings"
-                    subtitle="Bookings on your listings"
+                    subtitle="Here&rsquo;s who said ' Yes! ' to your experience"
                 />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 mt-10">
@@ -52,15 +52,16 @@ const ReservationsClient: React.FC<ReservationsClientProps> = ({
                         data={reservation.listing}
                         reservation={reservation}
                         actionId={reservation.id}
-                        onAction={() =>
-                            onCancel(
-                              reservation.id,
-                              reservation.user?.email || '',
-                              reservation.listing?.id
-                            )
-                          }
+                        onAction={() => {
+                            if (!reservation.user?.email || !reservation.listing?.id) {
+                              toast.error("Missing guest email or listing ID.");
+                              return;
+                            }
+                          
+                            onCancel(reservation.id, reservation.user.email, reservation.listing.id);
+                          }}
                         disabled={deletingId === reservation.id}
-                        actionLabel="Cancel guest reservation"
+                        // actionLabel="Cancel guest reservation"
                         currentUser={currentUser}
                     />
                 ))}

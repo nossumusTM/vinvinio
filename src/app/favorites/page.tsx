@@ -13,7 +13,7 @@ const ListingPage = async () => {
     if (listings.length === 0) {
         return (
             <ClientOnly>
-                <div className="flex flex-col justify-center items-center">
+                <div className="flex flex-col justify-center items-center px-10">
                     <EmptyState
                     title="Nothing Saved Yet"
                     subtitle="Browse the collection and find your favorites."

@@ -21,10 +21,12 @@ const TripsPage = async () => {
     if (reservations.length === 0) {
         return (
             <ClientOnly>
+                <div className="px-10">
                 <EmptyState
                     title="No Experiences Booked"
-                    subtitle="Start exploring and create unforgettable memories."
+                    subtitle="Start exploring to create unforgettable memories."
                     />
+                </div>
             </ClientOnly>
         );
     }

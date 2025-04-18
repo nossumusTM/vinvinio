@@ -21,13 +21,14 @@ const EmptyState: React.FC<EmptyStateProps> = ({
     return (
         <div
             className="
-        h-[60vh]
-        flex 
-        flex-col 
-        gap-2 
-        justify-center 
-        items-center 
-      "
+            flex 
+            flex-col 
+            gap-2 
+            justify-center 
+            items-center 
+            pt-24
+            mt-12
+        "
         >
             <Heading
                 center

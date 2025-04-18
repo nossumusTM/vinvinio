@@ -40,7 +40,7 @@ const Calendar: React.FC<CalendarProps> = ({
   bookedSlots = [],
 }) => {
   const selectedDateKey = value.startDate
-  ? new Date(value.startDate).toLocaleDateString('sv-SE', { timeZone: 'Europe/Rome' }) // 'sv-SE' keeps YYYY-MM-DD format
+  ? format(value.startDate, 'yyyy-MM-dd')
   : '';
 
   const bookedTimesForDate = useMemo(() => {
@@ -154,7 +154,7 @@ const Calendar: React.FC<CalendarProps> = ({
         date={value.startDate}
         onChange={handleSelect}
         minDate={new Date()}
-        disabledDates={[...disabledDates, new Date()]}
+        disabledDates={[...disabledDates]}
         showDateDisplay={false}
         color="#262626"
       />
@@ -197,7 +197,9 @@ const Calendar: React.FC<CalendarProps> = ({
             const [hour, minute] = time.split(':').map(Number);
             const timeDate = new Date();
             timeDate.setHours(hour, minute, 0, 0);
-            const isPast = isToday && now > timeDate;
+            const threeHoursLater = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+            const isPast = isToday && threeHoursLater > timeDate;
+            // const isPast = isToday && now > timeDate;
 
             const isDisabled = isBooked || isPast;
 

@@ -60,8 +60,6 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
       return;
     }
 
-    setIsLoading(true); 
-  
     const selectedDateKey = new Date(dateRange.startDate).toLocaleDateString('sv-SE', {
       timeZone: 'Europe/Rome',
     });
@@ -88,6 +86,8 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
       toast.error('This time slot is not available. Please choose another.');
       return;
     }
+
+    setIsLoading(true); 
   
     const searchParams = new URLSearchParams({
       listingId,
