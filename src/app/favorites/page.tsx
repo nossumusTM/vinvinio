@@ -13,14 +13,14 @@ const ListingPage = async () => {
     if (listings.length === 0) {
         return (
             <ClientOnly>
-                <div className="flex flex-col justify-center items-center px-10">
+                <div className="flex flex-col justify-center items-center p-4">
                     <EmptyState
                     title="Nothing Saved Yet"
-                    subtitle="Browse the collection and find your favorites."
+                    subtitle="Find and keep inspiring experiences."
                     />
                     <a
                     href="/"
-                    className="ml-4 px-4 py-2 bg-black text-white rounded-xl hover:bg-neutral-800 transition"
+                    className="ml-2 px-4 py-2 bg-black text-white rounded-xl hover:bg-neutral-800 transition"
                     >
                     Browse Collection
                 </a>

@@ -29,6 +29,7 @@ const BookingConfirmed = () => {
   const reviewCount = getParam('reviewCount');
   const categoryLabel = getParam('categoryLabel');
   const startDate = getParam('startDate');
+  const timeParam = getParam('time'); // ✅ Add this
 
   const messenger = useMessenger();
   const loginModal = useLoginModal();
@@ -204,27 +205,32 @@ const BookingConfirmed = () => {
           <p><strong>Email:</strong> {email}</p>
           <p><strong>Contact:</strong> {contact}</p>
           {startDate && (() => {
-                try {
-                    const dateObj = new Date(startDate);
-                    const datePart = dateObj.toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                    });
-                    const timePart = dateObj.toLocaleTimeString('en-US', {
-                    hour: 'numeric',
-                    minute: '2-digit',
-                    hour12: true,
-                    });
-                    return (
-                    <p className="text-neutral-600 text-sm">
-                        <strong>Date:</strong> {datePart} at {timePart}
-                    </p>
-                    );
-                } catch {
-                    return <p className="text-neutral-600 text-sm">Date: Invalid</p>;
-                }
-            })()}
+            try {
+              const dateObj = new Date(startDate);
+              if (timeParam) {
+                const [hour, minute] = timeParam.split(':').map(Number);
+                dateObj.setHours(hour);
+                dateObj.setMinutes(minute);
+              }
+              const datePart = dateObj.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+              });
+              const timePart = dateObj.toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true,
+              });
+              return (
+                <p className="text-neutral-600 text-sm">
+                  <strong>Date:</strong> {datePart} at {timePart}
+                </p>
+              );
+            } catch {
+              return <p className="text-neutral-600 text-sm">Date: Invalid</p>;
+            }
+          })()}
           <hr />
           <h3 className="font-semibold mt-4">Billing Address</h3>
           <p>{street}{apt ? `, ${apt}` : ''}</p>

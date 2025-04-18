@@ -196,6 +196,8 @@ const CheckoutPage = () => {
             legalName,
             email,
             contact,
+            startDate: startDate || '',
+            time: time || '', // ✅ Add this line
             street: addressFields.street,
             apt: addressFields.apt,
             city: addressFields.city,
@@ -235,6 +237,7 @@ const CheckoutPage = () => {
           listingId: listingId || '',
           guests: guests.toString(),
           startDate: startDate || '',
+          time: time || '', // ✅ Add this line
           price: listingData?.price?.toString() || '0',
           auth: isAuthenticated ? 'true' : '',
           averageRating: (
