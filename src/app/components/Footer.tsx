@@ -309,16 +309,16 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
           {/* <h3 className="font-semibold text-lg mb-4 underline">Social channels</h3> */}
             <div className="flex space-x-4 text-xl">
               <div className=''>
-                <a href="#"><FaTelegram className="hover:text-[#3604ff] text-3xl transition" /></a>
+                <a href="#"><FaTelegram size={40} className="text-neutral-700 hover:text-neutral-800 text-3xl transition" /></a>
                 </div>
               <div className=''>
-                <a href="#"><FaYoutube className="hover:text-[#3604ff] text-3xl transition" /></a>
+                <a href="#"><FaYoutube size={44} className="text-neutral-700 hover:text-neutral-800 text-3xl transition" /></a>
                 </div>
               <div className=''>
-                <a href="#"><PiTiktokLogoFill className="hover:text-[#3604ff] text-3xl transition" /></a>
+                <a href="#"><PiTiktokLogoFill size={40} className="text-neutral-700 hover:text-neutral-800 text-3xl transition" /></a>
                 </div>
               <div className=''>
-                <a href="#"><PiInstagramLogoFill className="hover:text-[#3604ff] text-3xl transition" /></a>
+                <a href="#"><PiInstagramLogoFill size={40} className="text-neutral-700 hover:text-neutral-800 text-3xl transition" /></a>
                 </div>
             </div>
         </div>

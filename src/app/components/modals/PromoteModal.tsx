@@ -89,7 +89,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
 
       <div 
       ref={scrollRef}
-      className="relative w-full max-w-[280px] md:max-w-xs rounded-xl overflow-hidden overflow-y-auto max-h-[400px] md:max-h-none">
+      className="relative w-full max-w-[280px] md:max-w-xs rounded-xl overflow-hidden overflow-y-auto max-h-[400px] md:max-h-none pt-3">
         <Image
           src="/images/promo-banner.png"
           alt="Promo-Banner"
@@ -100,7 +100,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
           onLoad={() => setIsReady(true)}
           className="w-full h-auto object-cover rounded-xl scale-[0.85] md:scale-100 -translate-y-4 md:translate-y-0 transition"
         />
-        <div className="absolute bottom-[20%] left-[40%] -translate-x-1/2 bg-white p-2 rounded-xl shadow-lg w-32 h-32 flex items-center justify-center">
+        <div className="absolute bottom-12 md:bottom-[18%] left-[40.5%] -translate-x-1/2 bg-white p-2 rounded-xl shadow-lg w-32 h-32 flex items-center justify-center">
           <div className="relative w-full h-full flex items-center justify-center">
             <QRCodeCanvas
               value={`https://vuoiaggio.netlify.app/reference/${referenceId}`}
@@ -128,7 +128,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
             </div> */}
           </div>
         </div>
-        <div className="pt-2 -translate-y-4 md:translate-y-0 flex justify-center items-center">
+        <div className="-translate-y-4 md:translate-y-0 flex justify-center items-center">
           {!copied ? (
             <button
               onClick={() => {
@@ -137,7 +137,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
                 setCopied(true);
                 setTimeout(() => setCopied(false), 2000); // reset after 2s
               }}
-              className="text-sm text-black border-b border-black bg-transparent hover:opacity-70 transition"
+              className="text-sm text-black border-b border-black bg-transparent hover:opacity-70 transition  pt-2"
             >
               Copy Reference Link
             </button>

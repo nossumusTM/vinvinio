@@ -162,8 +162,13 @@ const RegisterModal = () => {
                       font-medium 
                       transition 
                       shadow-md hover:shadow-lg
-                      ${isSelected ? 'bg-black text-white' : 'bg-white text-black hover:bg-neutral-100'}
+                      ${isSelected ? 'text-white bg-neutral-800' : 'bg-white text-black hover:bg-neutral-100'}
                     `}
+                    // style={{
+                    //   background: isSelected
+                    //     ? 'linear-gradient(45deg, #047dff,rgb(0, 64, 255),rgb(74, 8, 255))'
+                    //     : undefined,
+                    // }}
                     disabled={isLoading}
                   >
                     <span className="text-xl">{icon}</span>
