@@ -269,7 +269,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
               bg-white 
               overflow-hidden 
               right-0 
-              top-12 
+              top-14 
               text-sm"
           >
           <div className="flex flex-col cursor-pointer">

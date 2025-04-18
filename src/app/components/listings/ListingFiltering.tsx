@@ -100,7 +100,7 @@ const ListingFilter = () => {
           className="flex items-center gap-2 bg-white py-2 px-4 rounded-full shadow-md hover:shadow-lg cursor-pointer font-medium text-neutral-700"
         >
           {/* {sort ? filterOptions.find(o => o.value === sort)?.label : <div className="flex flex-row justify-center items-center gap-2 w-50"> <PiSortDescending /> Sort By </div>} */}
-          <div className="flex flex-row justify-center items-center gap-2 w-50">
+          <div className="flex flex-row justify-center items-center gap-2 w-70">
             <PiSortDescending />
             {filterOptions.find(o => o.value === sort)?.label || 'Sort By'}
           </div>

@@ -5,6 +5,8 @@ import { FaYoutube } from "react-icons/fa";
 import { FiYoutube } from "react-icons/fi";
 import { PiTiktokLogoFill } from "react-icons/pi";
 import { PiInstagramLogoFill } from "react-icons/pi";
+import { TfiPinterestAlt } from "react-icons/tfi";
+import { PiPinterestLogoDuotone } from "react-icons/pi";
 import useMessenger from '@/app/hooks/useMessager';
 import Modal from './modals/Modal';
 import useLoginModal from '../hooks/useLoginModal';
@@ -69,13 +71,6 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
       <p>
         If you have any questions about our cancellation policy or need assistance with your booking, feel free to reach out.
       </p>
-      <div className="space-y-1 text-sm">
-        <p><strong>Vuoiaggio International Srls.</strong></p>
-        <p>P.IVA 57483813574</p>
-        <p>Via Novacella 18, Rome, Italy</p>
-        <p>Phone: +39 371 528 4911</p>
-        <p>Email: <a href="mailto:privacy@vuoiaggio.it" className="text-blue-600 underline">privacy@vuoiaggio.it</a></p>
-      </div>
     </div>
   );  
 
@@ -112,14 +107,7 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
       <p>
         Our support team is always here to help you succeed. For any questions regarding your account, referral tracking, or earnings, please reach out to us at <a href="mailto:promoters@vuoiaggio.it" className="text-blue-600 underline">promoters@vuoiaggio.it</a>.
       </p>
-  
-      <div className="space-y-1 text-sm">
-        <p><strong>Vuoiaggio International Srls.</strong></p>
-        <p>P.IVA 57483813574</p>
-        <p>Via Novacella 18, Rome, Italy</p>
-        <p>Phone: +39 371 528 4911</p>
-        <p>Email: <a href="mailto:privacy@vuoiaggio.it" className="text-blue-600 underline">privacy@vuoiaggio.it</a></p>
-      </div>
+
     </div>
   );  
 
@@ -176,13 +164,6 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
         We may update this Privacy Policy periodically. Changes will be posted on this page and, where appropriate, notified to you via email.
       </p>
   
-      <div className="space-y-1 text-sm">
-        <p><strong>Vuoiaggio International Srls.</strong></p>
-        <p>P.IVA 57483813574</p>
-        <p>Via Novacella 18, Rome, Italy</p>
-        <p>Phone: +39 371 528 4911</p>
-        <p>Email: <a href="mailto:privacy@vuoiaggio.it" className="text-blue-600 underline">privacy@vuoiaggio.it</a></p>
-      </div>
     </div>
   );  
 
@@ -236,13 +217,7 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
       <p>
         For questions or concerns regarding these terms, please contact us at:
       </p>
-      <div className="space-y-1 text-sm">
-        <p><strong>Vuoiaggio International Srls.</strong></p>
-        <p>P.IVA 57483813574</p>
-        <p>Via Novacella 18, Rome, Italy</p>
-        <p>Phone: +39 371 528 4911</p>
-        <p>Email: <a href="mailto:privacy@vuoiaggio.it" className="text-blue-600 underline">privacy@vuoiaggio.it</a></p>
-      </div>
+
     </div>
   );  
 
@@ -269,13 +244,13 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
                 }}
                 className="hover:underline transition"
               >
-                Help Center
+                Text Operator
               </button>
             </li>
 
             <li>
             <button onClick={() => setIsCancellationOpen(true)} className="hover:underline transition">
-                  Cancellation options
+                  Cancellation Policy
                 </button>
             </li>
             <li>
@@ -319,6 +294,9 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
                 </div>
               <div className=''>
                 <a href="#"><PiInstagramLogoFill size={40} className="text-neutral-700 hover:text-neutral-800 text-3xl transition" /></a>
+                </div>
+              <div className=''>
+                <a href="#"><TfiPinterestAlt size={38} className="text-neutral-700 hover:text-neutral-800 text-3xl transition" /></a>
                 </div>
             </div>
         </div>

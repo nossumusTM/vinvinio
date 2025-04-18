@@ -97,7 +97,12 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
           width={869}
           height={600}
           unoptimized
-          onLoad={() => setIsReady(true)}
+          onLoad={() => {
+            const timeout = setTimeout(() => {
+              setIsReady(true);
+            }, 100); // short delay after load
+            return () => clearTimeout(timeout);
+          }}
           className="w-full h-auto object-cover rounded-xl scale-[0.85] md:scale-100 -translate-y-4 md:translate-y-0 transition"
         />
         <div className="absolute bottom-12 md:bottom-[18%] left-[40.5%] -translate-x-1/2 bg-white p-2 rounded-xl shadow-lg w-32 h-32 flex items-center justify-center">
