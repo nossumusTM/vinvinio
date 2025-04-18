@@ -238,8 +238,8 @@ const TripsClient: React.FC<TripsClientProps> = ({
     <Container>
       <div className="pl-6">
       <Heading
-        title="Trips"
-        subtitle="Where you've been and where you're going"
+        title="Booked Voyages"
+        subtitle="Tracing your steps — behind and ahead"
       />
       </div>
       <div className="

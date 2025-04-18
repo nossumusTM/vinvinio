@@ -63,7 +63,7 @@ const AnnouncementModal = () => {
   if (!isOpen || !imageLoaded) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] p-8">
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] p-2">
       <div
         ref={modalRef}
         className="bg-white rounded-2xl p-8 sm:p-12 max-w-md w-full relative"

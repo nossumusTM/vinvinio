@@ -150,7 +150,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
 
           "
                 > */}
-            <div className="pt-5 pb-1">
+            <div className="pt-6 pb-1">
                 <hr />
                 </div>
                 <div className="p-5 flex flex-col gap-4 text-left pt-5">

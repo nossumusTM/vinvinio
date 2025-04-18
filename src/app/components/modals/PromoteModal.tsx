@@ -185,7 +185,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
                   includeMargin={false}
                   className="bg-white p-1"
                 />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center pointer-events-none">
+                {/* <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center pointer-events-none">
                   <div className="absolute inset-0 bg-[#3604ff]/80 blur-[6px] rounded-full scale-110 z-10" />
                   <img
                     src="/images/qrlogo.png"
@@ -199,7 +199,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
                       display: 'block'
                     }}
                   />
-                </div>
+                </div> */}
               </div>
             </div>
           </div>

@@ -16,7 +16,7 @@ const ListingPage = async () => {
                 <div className="flex flex-col justify-center items-center">
                     <EmptyState
                     title="Nothing Saved Yet"
-                    subtitle="Browse our collection and find your favorites."
+                    subtitle="Browse the collection and find your favorites."
                     />
                     
                 </div>

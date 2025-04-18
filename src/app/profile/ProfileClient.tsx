@@ -273,7 +273,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
       // setPopupMessage('Withdraw method saved!');
       toast.success('Withdraw method saved!', {
         iconTheme: {
-            primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #0066ff, #ffffff)',
+            primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
             secondary: '#fff',
         }
       });
@@ -293,7 +293,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
       // setPopupMessage('Withdraw method deleted!');
       toast.success('Withdraw method deleted!', {
         iconTheme: {
-            primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #0066ff, #ffffff)',
+            primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
             secondary: '#fff',
         }
       });
@@ -440,7 +440,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                 "w-[60px] h-[60px] rounded-full flex items-center justify-center text-white font-bold text-xl bg-black",
               )}
               // style={{
-              //   background: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #0066ff, #ffffff)',
+              //   background: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
               // }}
               >
                 {initials}
@@ -801,7 +801,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                           // setPopupMessage('Password updated successfully!');
                           toast.success('Password updated successfully!', {
                             iconTheme: {
-                                primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #0066ff, #ffffff)',
+                                primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
                                 secondary: '#fff',
                             }
                           });
@@ -1422,7 +1422,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                       // setPopupMessage('Card saved successfully!');
                       toast.success('Card saved successfully!', {
                         iconTheme: {
-                            primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #0066ff, #ffffff)',
+                            primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
                             secondary: '#fff',
                         }
                       });

@@ -296,7 +296,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
 
                 {userRole === 'customer' && (
                   <>
-                    <MenuItem label="Trips" onClick={() => {
+                    <MenuItem label="The Voyage" onClick={() => {
                       setIsOpen(false);
                       router.push('/trips');
                     }} />
@@ -328,7 +328,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                           onPromote();
                         }} />
                     </div>
-                    <MenuItem label="Trips" 
+                    <MenuItem label="The Voyage" 
                       onClick={() => {
                         setIsOpen(false);
                         router.push('/trips')
@@ -361,7 +361,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                     }} />
                     <hr className="my-2" />
                     </div>
-                    <MenuItem label="Trips" 
+                    <MenuItem label="The Voyage" 
                       onClick={() => {
                         setIsOpen(false);
                         router.push('/trips')
@@ -398,7 +398,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                     }} />
                     <hr className="my-2" />
                     </div>
-                    <MenuItem label="Trips" 
+                    <MenuItem label="The Voyage" 
                       onClick={() => {
                         setIsOpen(false);
                         router.push('/trips')
