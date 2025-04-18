@@ -142,9 +142,9 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
           <div key={user.id}>
             <div
               onClick={() => onSelect(user)}
-              className="flex items-center justify-between gap-3 cursor-pointer hover:bg-neutral-100 p-2 rounded-xl"
+              className="flex items-center justify-between gap-3 cursor-pointer bg-neutral-100 hover:bg-neutral-200 p-2 rounded-xl"
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 ml-3">
               <div className="relative">
                 <Avatar src={user.image} name={user.name} size={48} />
 
@@ -174,10 +174,10 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
                 </div>
               </div>
               {user.hasUnread && (
-                <span className="text-xs text-red-500 font-semibold ml-auto">New</span>
+                <span className="text-xs text-red-500 font-semibold ml-auto mr-2">New</span>
               )}
             </div>
-            <hr className="my-2" />
+            {/* <hr className="my-2" /> */}
           </div>
         ))
       ) : (

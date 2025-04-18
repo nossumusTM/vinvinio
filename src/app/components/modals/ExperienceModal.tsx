@@ -969,7 +969,7 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
         <Heading title="Pricing" subtitle="Set your price per person" />
         <Input
           id="price"
-          label="Price"
+          label="Price / person"
           type="number"
           formatPrice
           disabled={isLoading}

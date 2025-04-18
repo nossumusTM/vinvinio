@@ -63,13 +63,13 @@ const AnnouncementModal = () => {
   if (!isOpen || !imageLoaded) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] p-2">
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] p-6">
       <div
         ref={modalRef}
         className="bg-white rounded-2xl p-8 sm:p-12 max-w-md w-full relative"
       >
 
-      <div className="p-10 rounded-3xl">
+      <div className="p-5 rounded-3xl">
         <button
           onClick={handleClose}
           className="absolute top-3 right-3 text-gray-500 hover:text-black transition"

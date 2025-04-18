@@ -92,7 +92,7 @@ const BookingConfirmed = () => {
       // Cleanup
       setTimeout(() => {
         document.body.removeChild(canvas);
-      }, duration + 500);
+      }, duration + 5000);
     };
   
     runConfetti();
