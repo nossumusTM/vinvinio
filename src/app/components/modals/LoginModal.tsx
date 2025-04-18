@@ -92,8 +92,8 @@ const LoginModal = () => {
     const bodyContent = (
         <div className="flex flex-col gap-4">
             <Heading
-                title="Good to See You Again"
-                subtitle="Sign in to plan your next adventure."
+                title="The world&apos;s calling. You in?"
+                subtitle="Proceed with your account to plan your next adventure."
             />
             <Input
                 id="email"
@@ -135,7 +135,7 @@ const LoginModal = () => {
             
             <div className="
       text-neutral-800 text-center mt-4 font-light">
-                <p>First time using Vuoiaggio?
+                <p>New on <strong>Vuoiaggio</strong>?
                     <span
                         onClick={onToggle}
                         className="

@@ -9,6 +9,7 @@ import { FaPeopleGroup } from "react-icons/fa6";
 import { BsTranslate } from "react-icons/bs";
 import { GrCycle } from "react-icons/gr";
 import { FaRegFaceSmileBeam } from "react-icons/fa6";
+import { FaPiedPiperHat } from "react-icons/fa";
 import LocationDescription from '../LocationDescription';
 
 import { useEffect, useState } from "react";
@@ -133,7 +134,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                         )}
                         
                         {hostDescription && (
-                        <p className="md:pl-5 md:pr-5 text-sm text-neutral-600 mt-2 text-justify whitespace-pre-line">
+                        <p className="px-5 py-5 text-sm text-neutral-600 mt-2 text-justify whitespace-pre-line">
                             {hostDescription}
                         </p>
                         )}
@@ -149,13 +150,13 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
 
           "
                 > */}
-            <div className="pt-4 pb-1">
+            <div className="pt-5 pb-1">
                 <hr />
                 </div>
                 <div className="p-5 flex flex-col gap-4 text-left pt-5">
                 {/* Guest Count */}
                 <div className="flex flex-row gap-3 items-start">
-                    <FaRegFaceSmileBeam className="text-neutral-600 mt-1 w-6 h-6 md:w-[30px] md:h-[30px]" />
+                    <FaPiedPiperHat className="text-neutral-600 mt-1 w-8 h-8 md:w-[40px] md:h-[40px]" />
                     <div>
                     <p className="text-xl font-medium text-black">
                         Up to {guestCount} guest{guestCount > 1 ? 's' : ''}
@@ -234,21 +235,23 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
             )}
             <hr />
 
-            <Heading title="About experience" />
+            <div className="ml-4">
+                <Heading title="About experience" />
+            </div>
 
-            <div className="text-md md:p-5 text-neutral-600 text-justify whitespace-pre-line">
+            <div className="px-5 py-5 text-md md:p-5 text-neutral-600 text-justify whitespace-pre-line">
                 {description}
             </div>
             <hr />
 
             <div className="flex flex-row gap-2 items-center">
 
-            <div className="pt-1">
+            <div className="pt-1 ml-3">
                 <TbPointerPin size={24}/>
             </div>
 
                 {meetingPoint && (
-                <p className="text-lg text-neutral-600 mt-2 text-center">
+                <p className="text-lg text-neutral-600 mt-2 ml-1 text-center">
                     Meeting Point: <strong>{meetingPoint}</strong>
                 </p>
                 )}

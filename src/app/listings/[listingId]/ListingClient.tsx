@@ -242,7 +242,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                         }}
                         className="text-lg text-white bg-black hover:bg-neutral-800 p-4 rounded-xl font-medium mt-1"
                         >
-                        Contact {listing.user?.name?.split(' ')[0] ?? 'Host'}
+                        Message {listing.user?.name?.split(' ')[0] ?? 'Host'}
                     </button>
 
                     {/* <Button

@@ -189,7 +189,7 @@ const RegisterModal = () => {
               </button> */}
             <Heading
               title='Begin your journey with us'
-              subtitle='Start curating your own unforgettable journey!'
+              subtitle='Start curating your own unforgettable experience!'
               center
             />
             <Input
