@@ -60,10 +60,12 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
     daily: EarningsEntry[];
     monthly: EarningsEntry[];
     yearly: EarningsEntry[];
+    dailyProfit: number;
   }>({
     daily: [],
     monthly: [],
     yearly: [],
+    dailyProfit: 0,
   });  
 
   const [activeSection, setActiveSection] = useState<string | null>(null);
@@ -157,10 +159,17 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
     const fetchEarnings = async () => {
       try {
         const res = await axios.get('/api/analytics/earnings');
+        const daily = res.data.daily;
+  
+        const today = new Date().toISOString().split('T')[0];
+        const todayEntry = daily.find((entry: { date: string }) => entry.date === today);
+        const dailyProfit = todayEntry?.amount || 0;
+  
         setEarnings({
-          daily: res.data.daily,
+          daily,
           monthly: res.data.monthly,
           yearly: res.data.yearly,
+          dailyProfit, // 👈 new field for today’s profit
         });
       } catch (err) {
         console.error("Earnings fetch failed:", err);
@@ -170,7 +179,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
     if (['host', 'promoter'].includes(currentUser.role)) {
       fetchEarnings();
     }
-  }, [currentUser.role]);
+  }, [currentUser.role]);  
 
   useEffect(() => {
     const fetchSavedCard = async () => {

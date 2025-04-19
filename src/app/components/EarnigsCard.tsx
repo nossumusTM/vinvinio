@@ -40,10 +40,31 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
       <CardContent>
         <div className="flex flex-col gap-6">
           {/* Header */}
-          <div className="flex flex-col justify-between items-baseline sm:flex-row sm:justify-between sm:items-center">
+          <div className="pt-4 flex flex-col justify-between items-baseline sm:flex-row sm:justify-between sm:items-center">
             <div>
                 <p className="text-sm text-gray-500 uppercase tracking-wide">{roleLabel} Earnings</p>
                 <h2 className="text-2xl font-bold text-black mb-2">{title || 'Earnings Overview'}</h2>
+            </div>
+
+            <div className="mb-3 md:mb-0 flex flex-wrap sm:flex-row sm:justify-baseline gap-4">
+                <div className="flex flex-col">
+                    <p className="text-sm text-gray-500">Daily Profit</p>
+                    <p className="text-lg font-semibold text-black">
+                    {formatCurrency(dailyData?.[dailyData.length - 1]?.amount || 0)}
+                    </p>
+                </div>
+                
+                <div className="flex flex-col">
+                    <p className="text-sm text-gray-500">Total Earnings</p>
+                    <p className="text-lg font-semibold text-black">
+                    {formatCurrency(
+                        [...dailyData, ...monthlyData, ...yearlyData].reduce(
+                        (acc, cur) => acc + cur.amount,
+                        0
+                        )
+                    )}
+                    </p>
+                </div>
             </div>
 
             <div className="flex gap-2 mt-4 sm:mt-0">

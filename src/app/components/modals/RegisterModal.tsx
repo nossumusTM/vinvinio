@@ -4,6 +4,7 @@ import axios from "axios";
 import { AiFillGithub } from "react-icons/ai";
 import { MdOutlineSwitchAccount } from "react-icons/md";
 import { RiShieldUserLine } from "react-icons/ri";
+import { MdOutlineModeOfTravel } from "react-icons/md";
 import { BiNavigation } from "react-icons/bi";
 import { PiBarcode } from "react-icons/pi";
 import { signIn } from "next-auth/react";
@@ -138,9 +139,9 @@ const RegisterModal = () => {
               subtitle="Choose your journey to move forward"
               center 
             />
-            <div className="flex justify-center items-center gap-4 flex-wrap pt-6">
+            <div className="flex justify-center items-center gap-2 flex-wrap pt-6">
               {[
-                { key: 'customer', icon: <RiShieldUserLine size={14} />, label: 'Guest' },
+                { key: 'customer', icon: <MdOutlineModeOfTravel size={14} />, label: 'Traveller' },
                 { key: 'host', icon: <BiNavigation size={14} />, label: 'Host' },
                 { key: 'promoter', icon: <PiBarcode size={14} />, label: 'Promoter' }
               ].map(({ key, icon, label }) => {
@@ -158,7 +159,7 @@ const RegisterModal = () => {
                       flex items-center gap-2 
                       px-3 py-2 sm:px-6 sm:py-3 
                       rounded-xl 
-                      text-sm sm:text-base 
+                      text-[11px] sm:text-base 
                       font-medium 
                       transition 
                       shadow-md hover:shadow-lg
