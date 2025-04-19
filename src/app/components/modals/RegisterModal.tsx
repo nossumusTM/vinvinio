@@ -134,7 +134,7 @@ const RegisterModal = () => {
         {step === 1 ? (
           <>
             <Heading 
-              title={`Continue as a ${role === 'customer' ? 'Guest' : role === 'host' ? 'Host' : 'Promoter'}`} 
+              title={`Continue as a ${role === 'customer' ? 'Traveller' : role === 'host' ? 'Host' : 'Promoter'}`} 
               subtitle="Choose your journey to move forward"
               center 
             />

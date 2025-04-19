@@ -30,6 +30,11 @@ interface ProfileClientProps {
   };
 }
 
+interface EarningsEntry {
+  date: string;
+  amount: number;
+}
+
 const getRandomColor = () => {
   const colors = [
     'bg-[#08e2ff]'
@@ -51,7 +56,15 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   const [isCropping, setIsCropping] = useState(false);
   const [showConfirmDeletePayout, setShowConfirmDeletePayout] = useState(false);
 
-  const [earnings, setEarnings] = useState({ monthly: 0, yearly: 0 });
+  const [earnings, setEarnings] = useState<{
+    daily: EarningsEntry[];
+    monthly: EarningsEntry[];
+    yearly: EarningsEntry[];
+  }>({
+    daily: [],
+    monthly: [],
+    yearly: [],
+  });  
 
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [editingField, setEditingField] = useState<string | null>(null);
@@ -144,7 +157,11 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
     const fetchEarnings = async () => {
       try {
         const res = await axios.get('/api/analytics/earnings');
-        setEarnings({ monthly: res.data.monthlyTotal, yearly: res.data.yearlyTotal });
+        setEarnings({
+          daily: res.data.daily,
+          monthly: res.data.monthly,
+          yearly: res.data.yearly,
+        });
       } catch (err) {
         console.error("Earnings fetch failed:", err);
       }
@@ -153,7 +170,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
     if (['host', 'promoter'].includes(currentUser.role)) {
       fetchEarnings();
     }
-  }, [currentUser.role]);  
+  }, [currentUser.role]);
 
   useEffect(() => {
     const fetchSavedCard = async () => {
@@ -1738,13 +1755,17 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
       )}
 
       {(currentUser.role === 'host' || currentUser.role === 'promoter') && !activeSection && (
-        <EarningsCard
-          title="Your Earnings"
-          // subtitle={`As a ${currentUser.role}`}
-          monthly={earnings.monthly}
-          yearly={earnings.yearly}
-          roleLabel={currentUser.role === 'host' ? 'Host' : 'Promoter'}
-        />
+        <>
+        <div className="mt-10">
+          <EarningsCard
+            title="What You’ve Achieved"
+            roleLabel={currentUser.role === 'host' ? 'Host' : 'Promoter'}
+            dailyData={earnings.daily}
+            monthlyData={earnings.monthly}
+            yearlyData={earnings.yearly}
+          />
+        </div>
+        </>
       )}
   
       {/* Crop Modal */}

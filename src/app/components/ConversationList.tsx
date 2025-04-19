@@ -206,7 +206,7 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
                 </div>
               </div>
               {user.hasUnread && (
-                <span className="text-3xl text-red-500 font-semibold ml-auto mr-2">•</span>
+                <span className="text-3xl text-black-500 font-semibold ml-auto mr-2">•</span>
               )}
             </div>
             {/* <hr className="my-2" /> */}

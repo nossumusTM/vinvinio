@@ -40,42 +40,47 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
       <CardContent>
         <div className="flex flex-col gap-6">
           {/* Header */}
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col justify-between items-baseline sm:flex-row sm:justify-between sm:items-center">
             <div>
-              <p className="text-sm text-gray-500 uppercase tracking-wide">{roleLabel} Earnings</p>
-              <h2 className="text-2xl font-bold text-black mb-2">{title || 'Earnings Overview'}</h2>
+                <p className="text-sm text-gray-500 uppercase tracking-wide">{roleLabel} Earnings</p>
+                <h2 className="text-2xl font-bold text-black mb-2">{title || 'Earnings Overview'}</h2>
             </div>
 
-            <div className="flex gap-2">
-              {(['daily', 'monthly', 'yearly'] as const).map((type) => (
+            <div className="flex gap-2 mt-4 sm:mt-0">
+                {(['daily', 'monthly', 'yearly'] as const).map((type) => (
                 <button
-                  key={type}
-                  onClick={() => setView(type)}
-                  className={`px-4 py-2 rounded-full text-sm transition ${
+                    key={type}
+                    onClick={() => setView(type)}
+                    className={`px-4 py-2 rounded-full text-sm transition ${
                     view === type
-                      ? 'bg-black text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
+                        ? 'bg-black text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
                 >
-                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                    {type.charAt(0).toUpperCase() + type.slice(1)}
                 </button>
-              ))}
+                ))}
             </div>
-          </div>
+            </div>
 
           {/* Chart */}
           <div className="w-full h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={currentData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid strokeDasharray="6 6" />
                 <XAxis dataKey="date" tick={{ fontSize: 12 }} />
                 <YAxis tickFormatter={(val) => `€${val}`} />
+                <YAxis label={{ value: 'Income (€)', angle: -90, position: 'insideLeft' }} />
+                <Tooltip
+                    formatter={(value: number) => [`€${value}`, 'Income']} // Label override
+                />
                 <Tooltip
                   formatter={(value: number) => formatCurrency(value)}
                   labelFormatter={(label: string) => `Date: ${label}`}
                   contentStyle={{ borderRadius: '10px', fontSize: '14px' }}
+                  cursor={{ stroke: '#3604ff', strokeWidth: 1 }}
                 />
-                <Line type="monotone" dataKey="amount" stroke="#0072ff" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="amount" stroke="#3604ff" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>

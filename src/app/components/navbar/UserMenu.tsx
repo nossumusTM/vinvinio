@@ -239,10 +239,10 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
       animate={{ scale: 1 }}
       exit={{ scale: 0 }}
       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-      className="absolute -top-1 -right-1 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center"
-      style={{
-        background: 'linear-gradient(135deg, #3604ff, #04aaff, #3604ff',
-      }}
+      className="absolute -top-1 -right-1 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center bg-black"
+      // style={{
+      //   background: 'linear-gradient(135deg, #3604ff, #04aaff, #3604ff',
+      // }}
     >
       {messenger.unreadCount}
     </motion.div>
@@ -305,7 +305,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                         setIsOpen(false);
                         router.push('/favorites')
                       }} />
-                    {(userRole === 'customer' || userRole === 'promoter' || userRole === 'host' || userRole === 'moder') && (
+                    {(userRole === 'customer') && (
                         <>
                           <MenuItem label="Account" 
                             onClick={() => {
@@ -340,7 +340,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                       }}/>
                     {(userRole === 'promoter' || userRole === 'promoter' || userRole === 'host' || userRole === 'moder') && (
                         <>
-                          <MenuItem label="Account" 
+                          <MenuItem label="Dashboard" 
                             onClick={() => {
                               setIsOpen(false);
                               router.push('/profile')
@@ -371,6 +371,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                         setIsOpen(false);
                         router.push('/favorites')
                       }}/>
+                          <hr className="my-2" />
                     <MenuItem label="Bookings" 
                       onClick={() => {
                         setIsOpen(false);
@@ -378,7 +379,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                       }}/>
                     {(userRole === 'host') && (
                         <>
-                          <MenuItem label="Account" 
+                          <MenuItem label="Dashboard" 
                             onClick={() => {
                               setIsOpen(false);
                               router.push('/profile')
