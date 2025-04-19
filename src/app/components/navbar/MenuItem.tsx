@@ -39,9 +39,9 @@ interface MenuItemProps {
         <span>{label}</span>
         {badgeCount && badgeCount > 0 && (
           <span 
-          className="ml-2 text-xs text-white rounded-full px-2 py-0.5"
+          className="text-white w-4 h-4 text-[10px] rounded-full flex justify-center items-center"
           style={{
-            background: 'linear-gradient(135deg, #3d08ff, #04aaff, #3604ff, #0066ff, #3d08ff)',
+            background: 'linear-gradient(135deg, #3604ff, #04aaff, #3604ff',
           }}
           >
             {badgeCount > 99 ? '99+' : badgeCount}

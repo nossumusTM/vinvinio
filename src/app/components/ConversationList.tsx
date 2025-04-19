@@ -142,7 +142,7 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
           <div key={user.id}>
             <div
               onClick={() => onSelect(user)}
-              className="flex items-center justify-between gap-3 cursor-pointer bg-neutral-100 hover:bg-neutral-200 p-2 rounded-xl"
+              className="flex items-center justify-between gap-3 cursor-pointer shadow-md hover:bg-neutral-100 transition p-2 rounded-xl"
             >
               <div className="flex items-center gap-3 ml-3">
               <div className="relative">
@@ -150,7 +150,7 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
 
                 {user.id === CUSTOMER_SERVICE_ID && (
                   <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-gradient-to-r from-[#08e2ff] via-[#3d08ff] to-[#3604ff] flex items-center justify-center shadow-md">
-                    <MdVerified className="text-white w-3.5 h-3.5" />
+                    <MdVerified className="text-[#00ddff] w-3.5 h-3.5" />
                   </div>
                 )}
               </div>
@@ -174,7 +174,7 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
                 </div>
               </div>
               {user.hasUnread && (
-                <span className="text-xs text-red-500 font-semibold ml-auto mr-2">New</span>
+                <span className="text-3xl text-red-500 font-semibold ml-auto mr-2">•</span>
               )}
             </div>
             {/* <hr className="my-2" /> */}

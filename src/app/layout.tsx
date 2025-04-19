@@ -1,6 +1,9 @@
 import { Nunito } from 'next/font/google';
 import Script from 'next/script';
 
+import "slick-carousel/slick/slick.css"; 
+import "slick-carousel/slick/slick-theme.css";
+
 export const dynamic = 'force-dynamic';
 
 import NavBar from '@/app/components/navbar/NavBar';

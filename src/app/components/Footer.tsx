@@ -222,7 +222,7 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
   );  
 
   return (
-    <footer id="vuoiaggio-footer" className="bg-[#F9F9F9] text-gray-800 px-6 py-10">
+    <footer id="vuoiaggio-footer" className="bg-[#fcfcfc] text-gray-800 px-6 py-10">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-y-8 md:gap-x-4">
         {/* Support Section */}
         <div className="flex flex-col justify-center md:pl-10 md:ml-10">
@@ -244,7 +244,7 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
                 }}
                 className="hover:underline transition"
               >
-                Text Operator
+                Contact Operator
               </button>
             </li>
 
@@ -275,7 +275,7 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
                 Terms and Conditions
               </button>
             </li>
-            <li><a href="#" className="hover:underline transition">Sitemap</a></li>
+            <li><a href="#" className="hover:underline transition">Cookie Policy | GPDR</a></li>
           </ul>
         </div>
 

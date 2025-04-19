@@ -1,8 +1,10 @@
 
-import EmptyState from "@/app/components/EmptyState";
+import EmptyStateFavorites from "@/app/components/EmptyStateFavorites";
 import ClientOnly from "@/app/components/ClientOnly";
 import getCurrentUser from "../actions/getCurrentUser";
 import getFavoriteListings from "@/app/actions/getFavoriteListings";
+import getListings from "@/app/actions/getListings";
+import ListingSlider from "../components/listings/ListingSlider";
 
 import FavoritesClient from "./FavoritesClient";
 
@@ -11,19 +13,25 @@ const ListingPage = async () => {
     const currentUser = await getCurrentUser();
 
     if (listings.length === 0) {
+        const all = await getListings({});
+        const randomListings = all.sort(() => 0.5 - Math.random()).slice(0, 10);
         return (
             <ClientOnly>
-                <div className="flex flex-col justify-center items-center p-4">
-                    <EmptyState
-                    title="Nothing Saved Yet"
-                    subtitle="Find and keep inspiring experiences."
+                <div className="flex flex-col justify-center items-center">
+                    <EmptyStateFavorites
+                    title="Nothing Saved Yet :)"
+                    subtitle="Explore and keep inspiring experiences."
                     />
                     <a
                     href="/"
-                    className="ml-2 px-4 py-2 bg-black text-white rounded-xl hover:bg-neutral-800 transition"
+                    className="md:ml-2 px-4 py-2 font-semibold bg-black text-white rounded-xl hover:bg-neutral-800 transition mb-8 md:mb-0"
                     >
-                    Browse Collection
+                    Find Your Next Story..
                 </a>
+                </div>
+                <div className="md:pt-20">
+                {/* 👇 Render vertical scrollable slider */}
+                <ListingSlider listings={randomListings} currentUser={currentUser} />
                 </div>
             </ClientOnly>
         );

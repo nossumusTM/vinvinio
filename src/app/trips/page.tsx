@@ -1,9 +1,12 @@
 
-import EmptyState from "@/app/components/EmptyState";
+import EmptyStateFavorites from "@/app/components/EmptyStateFavorites";
 import ClientOnly from "@/app/components/ClientOnly";
 
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import getReservations from "@/app/actions/getReservations";
+import getListings from "@/app/actions/getListings";
+
+import ListingSlider from "../components/listings/ListingSlider";
 
 import { redirect } from "next/navigation";
 
@@ -19,13 +22,26 @@ const TripsPage = async () => {
     const reservations = await getReservations({ userId: currentUser.id });
 
     if (reservations.length === 0) {
+        const all = await getListings({});
+        const randomListings = all.sort(() => 0.5 - Math.random()).slice(0, 10);
+
         return (
             <ClientOnly>
-                <div className="px-10">
-                <EmptyState
+                <div className="flex flex-col justify-center items-center">
+                <EmptyStateFavorites
                     title="No Experiences Booked"
                     subtitle="Start exploring to create unforgettable memories."
                     />
+                    <a
+                        href="/"
+                        className="md:ml-2 px-4 py-2 font-semibold bg-black text-white rounded-xl hover:bg-neutral-800 transition mb-8 md:mb-0"
+                    >
+                        Find Your Next Story..
+                    </a>
+                </div>
+
+                <div className="md:pt-20">
+                    <ListingSlider listings={randomListings} currentUser={currentUser} />
                 </div>
             </ClientOnly>
         );
