@@ -5,6 +5,7 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { SafeUser } from '@/app/types';
 import { useRouter } from 'next/navigation';
+import PlatformCard from '../components/PlatformCard';
 import { AxiosError } from 'axios';
 
 interface Listing {
@@ -30,13 +31,37 @@ interface ModerationClientProps {
   currentUser: SafeUser | null;
 }
 
+type DataEntry = {
+  date: string;
+  revenue: number;
+  platformFee: number;
+  bookingCount: number;
+};
+
 const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
   const [listings, setListings] = useState<Listing[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [targetUserId, setTargetUserId] = useState('');
+  const [platformData, setPlatformData] = useState<{
+    daily: DataEntry[];
+    monthly: DataEntry[];
+    yearly: DataEntry[];
+    totalRevenue: number;
+  }>({
+    daily: [],
+    monthly: [],
+    yearly: [],
+    totalRevenue: 0,
+  });
+    
   const router = useRouter();
 
   const [selectedReservationId, setSelectedReservationId] = useState('');
+  const [hostLookup, setHostLookup] = useState('');
+  const [promoterLookup, setPromoterLookup] = useState('');
+  const [hostAnalytics, setHostAnalytics] = useState<any>(null);
+  const [promoterAnalytics, setPromoterAnalytics] = useState<any>(null);
+
 
   const fetchListings = async () => {
     try {
@@ -101,9 +126,65 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
     }
   };  
 
+  const handleHostAnalytics = async () => {
+    try {
+      const res = await axios.post('/api/analytics/host/get', { identifier: hostLookup });
+      const payout = await axios.post('/api/users/get-payout-method', { identifier: res.data.userId });
+  
+      setHostAnalytics({
+        totalBooks: res.data.totalBooks,
+        totalRevenue: res.data.totalRevenue,
+        payoutMethod: payout?.data?.method || 'None',
+        payoutNumber: payout?.data?.number || '',
+      });
+    } catch (err) {
+      toast.error('Host not found or error fetching data');
+    }
+  };
+  
+  const handlePromoterAnalytics = async () => {
+    try {
+      const res = await axios.post('/api/analytics/get', { identifier: promoterLookup });
+      const payout = await axios.post('/api/users/get-payout-method', { userId: res.data.userId });
+  
+      setPromoterAnalytics({
+        totalBooks: res.data.totalBooks,
+        qrScans: res.data.qrScans,
+        totalRevenue: res.data.totalRevenue,
+        payoutMethod: payout?.data?.type || 'None',
+      });
+    } catch (err) {
+      toast.error('Promoter not found or error fetching data');
+    }
+  };  
+
   useEffect(() => {
     fetchListings();
   }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const res = await axios.get('/api/analytics/platform');
+      const platform = res.data;
+  
+      const normalize = (arr: any[]) =>
+        arr.map((entry) => ({
+          date: entry.date,
+          revenue: Number(entry.revenue || 0),
+          platformFee: Number(entry.platformFee || 0),
+          bookingCount: Number(entry.bookingCount || 0),
+        }));
+  
+      setPlatformData({
+        daily: normalize(platform.daily),
+        monthly: normalize(platform.monthly),
+        yearly: normalize(platform.yearly),
+        totalRevenue: res.data.totalRevenue,
+      });
+    };
+  
+    fetchData();
+  }, []);  
 
   const onCancel = async (id: string) => {
     if (!id) return toast.error('Reservation ID required');
@@ -156,15 +237,24 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
   }
 
   return (
-    <div className="px-6 py-10 grid grid-cols-1 lg:grid-cols-12 gap-10 max-w-7xl mx-auto shadow-lg rounded-3xl mt-10">
+    <>
+    <div className="px-5 md:px-60 pt-2 md:pt-20 pb-10">
+      <PlatformCard
+          daily={platformData.daily}
+          monthly={platformData.monthly}
+          yearly={platformData.yearly}
+          totalRevenue={platformData.totalRevenue}
+        />
+      </div>
+      <div className="px-6 py-10 grid grid-cols-1 lg:grid-cols-12 gap-10 max-w-7xl mx-auto rounded-3xl md:mt-10 h-[700px]">
       {/* Listings */}
-      <div className="lg:col-span-8 space-y-6">
-        <h1 className="text-2xl font-semibold mb-4">Pending Listings</h1>
+      <div className="lg:col-span-8 space-y-6 max-h-[670px] overflow-y-auto pr-2">
+        <h1 className="text-2xl font-semibold mb-4 ml-8">Pending Listings</h1>
         {listings.length === 0 ? (
           <p className="text-neutral-500">No listings pending moderation.</p>
         ) : (
           listings.map((listing) => (
-            <div key={listing.id} className="border p-6 rounded-xl shadow-lg space-y-4">
+            <div key={listing.id} className="p-6 rounded-xl shadow-lg space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2 pt-2">
                 {listing.imageSrc.map((src, i) => (
                   <img key={i} src={src} alt={`media-${i}`} className="w-full h-40 object-cover rounded-lg" />
@@ -206,7 +296,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
       </div>
 
       {/* Withdraw for Promoter */}
-      <div className="lg:col-span-4 space-y-6">
+      <div className="lg:col-span-4 space-y-6 pt-0 md:pt-14">
         {/* Withdraw */}
         <div className="shadow-lg p-6 rounded-xl bg-white">
             <h2 className="text-lg font-semibold mb-4">Withdraw for Promoter</h2>
@@ -264,6 +354,61 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
         </div>
         </div>
     </div>
+
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-10 px-60 pt-16">
+      {/* Host Lookup */}
+      <div className="bg-white p-6 rounded-xl shadow-lg space-y-4">
+        <h2 className="text-lg font-bold text-black">Host Analytics Lookup</h2>
+        <input
+          type="text"
+          placeholder="Enter Host userId or Email"
+          value={hostLookup}
+          onChange={(e) => setHostLookup(e.target.value)}
+          className="w-full p-2 border rounded-lg"
+        />
+        <button
+          onClick={handleHostAnalytics}
+          className="w-full py-2 bg-black text-white rounded-lg hover:bg-neutral-800"
+        >
+          Fetch Host Data
+        </button>
+        {hostAnalytics && (
+          <div className="text-sm text-neutral-700 space-y-1">
+            <p><strong>Total Bookings:</strong> {hostAnalytics.totalBooks}</p>
+            <p><strong>Total Revenue:</strong> €{hostAnalytics.totalRevenue * 0.9}</p>
+            <p><strong>Payout Method:</strong> {hostAnalytics.payoutMethod.toUpperCase()}</p>
+            <p><strong>Payout Number:</strong> {hostAnalytics.payoutNumber}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Promoter Lookup */}
+      <div className="bg-white p-6 rounded-xl shadow-lg space-y-4">
+        <h2 className="text-lg font-bold text-black">Promoter Analytics Lookup</h2>
+        <input
+          type="text"
+          placeholder="Enter Promoter userId or Email"
+          value={promoterLookup}
+          onChange={(e) => setPromoterLookup(e.target.value)}
+          className="w-full p-2 border rounded-lg"
+        />
+        <button
+          onClick={handlePromoterAnalytics}
+          className="w-full py-2 bg-black text-white rounded-lg hover:bg-neutral-800"
+        >
+          Fetch Promoter Data
+        </button>
+        {promoterAnalytics && (
+          <div className="text-sm text-neutral-700 space-y-1">
+            <p><strong>Total Books:</strong> {promoterAnalytics.totalBooks}</p>
+            <p><strong>QR Code Scans:</strong> {promoterAnalytics.qrScans}</p>
+            <p><strong>Total Revenue:</strong> €{promoterAnalytics.totalRevenue}</p>
+            <p><strong>Payout Method:</strong> {promoterAnalytics.payoutMethod}</p>
+          </div>
+        )}
+      </div>
+    </div>
+    </>
   );
 };
 

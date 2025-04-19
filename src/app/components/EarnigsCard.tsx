@@ -15,6 +15,7 @@ interface EarningsCardProps {
   dailyData: EarningsEntry[];
   monthlyData: EarningsEntry[];
   yearlyData: EarningsEntry[];
+  totalEarnings: number; // ✅ new field
   roleLabel: 'Host' | 'Promoter';
 }
 
@@ -24,8 +25,10 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
   monthlyData,
   yearlyData,
   roleLabel,
+  totalEarnings
 }) => {
-  const [view, setView] = useState<'daily' | 'monthly' | 'yearly'>('monthly');
+
+  const [view, setView] = useState<'daily' | 'monthly' | 'yearly' | 'all'>('monthly');
 
   const dataMap = {
     daily: dailyData,
@@ -33,7 +36,12 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
     yearly: yearlyData,
   };
 
-  const currentData = dataMap[view];
+  const currentData = view === 'all'
+  ? Array.from(new Set([...dailyData.map(d => d.date)])) // Deduplicate if needed
+      .map(date => dailyData.find(d => d.date === date)!)
+  : dataMap[view];
+
+  const total = currentData.reduce((sum, entry) => sum + entry.amount, 0);
 
   return (
     <Card className="w-full bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-all">
@@ -55,20 +63,17 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
                 </div>
                 
                 <div className="flex flex-col">
-                    <p className="text-sm text-gray-500">Total Earnings</p>
+                    <p className="text-sm text-gray-500">
+                        {view === 'all' ? 'Total Earnings' : `${view.charAt(0).toUpperCase() + view.slice(1)} Total`}
+                    </p>
                     <p className="text-lg font-semibold text-black">
-                    {formatCurrency(
-                        [...dailyData, ...monthlyData, ...yearlyData].reduce(
-                        (acc, cur) => acc + cur.amount,
-                        0
-                        )
-                    )}
+                        {formatCurrency(total)}
                     </p>
                 </div>
             </div>
 
             <div className="flex gap-2 mt-4 sm:mt-0">
-                {(['daily', 'monthly', 'yearly'] as const).map((type) => (
+            {(['daily', 'monthly', 'yearly', 'all'] as const).map((type) => (
                 <button
                     key={type}
                     onClick={() => setView(type)}
@@ -78,7 +83,7 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                 >
-                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                    {type === 'all' ? 'All Time' : type.charAt(0).toUpperCase() + type.slice(1)}
                 </button>
                 ))}
             </div>

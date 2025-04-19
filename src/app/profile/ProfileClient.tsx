@@ -61,11 +61,13 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
     monthly: EarningsEntry[];
     yearly: EarningsEntry[];
     dailyProfit: number;
+    totalEarnings: number;
   }>({
     daily: [],
     monthly: [],
     yearly: [],
     dailyProfit: 0,
+    totalEarnings: 0,
   });  
 
   const [activeSection, setActiveSection] = useState<string | null>(null);
@@ -169,7 +171,8 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
           daily,
           monthly: res.data.monthly,
           yearly: res.data.yearly,
-          dailyProfit, // 👈 new field for today’s profit
+          dailyProfit,
+          totalEarnings: res.data.totalEarnings,
         });
       } catch (err) {
         console.error("Earnings fetch failed:", err);
@@ -1772,6 +1775,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
             dailyData={earnings.daily}
             monthlyData={earnings.monthly}
             yearlyData={earnings.yearly}
+            totalEarnings={earnings.totalEarnings}
           />
         </div>
         </>

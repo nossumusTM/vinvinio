@@ -393,10 +393,10 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                 {userRole === 'moder' && (
                   <>
                     <div className="md:hidden">
-                      <MenuItem label="Add Experience"  onClick={() => {
+                      {/* <MenuItem label="Add Experience"  onClick={() => {
                       setIsOpen(false);
                       onRent();
-                    }} />
+                    }} /> */}
                     <hr className="my-2" />
                     </div>
                     <MenuItem label="The Voyage" 
@@ -415,6 +415,12 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                             onClick={() => {
                               setIsOpen(false);
                               router.push('/profile')
+                            }} />
+                          <hr className="my-2" />
+                            <MenuItem label="Dashboard" 
+                            onClick={() => {
+                              setIsOpen(false);
+                              router.push('/moderation')
                             }} />
                           <hr className="my-2" />
                         </>

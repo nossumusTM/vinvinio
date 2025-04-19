@@ -224,3 +224,11 @@ model Earning {
   role      Role     @default(customer)
   createdAt DateTime @default(now())
 }
+
+model PlatformEconomy {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  bookingCount  Int
+  revenue       Float
+  platformFee   Float     // e.g., 10% of revenue
+  createdAt     DateTime  @default(now())
+}

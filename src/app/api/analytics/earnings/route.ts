@@ -46,9 +46,12 @@ export async function GET() {
   const monthly = groupByDate(earnings, 'monthly');
   const yearly = groupByDate(earnings, 'yearly');
 
+  const totalEarnings = earnings.reduce((sum, entry) => sum + entry.amount, 0);
+
   return NextResponse.json({
     daily,
     monthly,
     yearly,
+    totalEarnings,
   });
 }

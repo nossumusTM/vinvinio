@@ -108,6 +108,14 @@ export async function POST(request: Request) {
         });
       }
     }
+    
+    await prisma.platformEconomy.create({
+      data: {
+        bookingCount: 1,
+        revenue: totalPrice,
+        platformFee: totalPrice * 0.1, // 10% platform cut
+      }
+    });
 
     const formattedDateTime = (() => {
       try {
