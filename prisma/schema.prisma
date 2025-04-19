@@ -25,7 +25,7 @@ enum ListingStatus {
 
 model User {
   id                String             @id @default(auto()) @map("_id") @db.ObjectId
-  name              String?            
+  name              String?
   email             String?            @unique
   emailVerified     DateTime?
   image             String?
@@ -42,6 +42,7 @@ model User {
   referralAnalytics ReferralAnalytics?
   hostAnalytics     HostAnalytics?
   reviews           Review[]
+  earnings          Earning[]
 
   payout Payout? @relation("UserPayout")
 
@@ -50,11 +51,11 @@ model User {
   removedConversation RemovedConversation[] @relation("Remover")
   wasRemovedByUsers   RemovedConversation[] @relation("Removed")
 
-  phone               String?
-  contact             String?
-  legalName           String?
-  address             String?
-  hostName            String?
+  phone     String?
+  contact   String?
+  legalName String?
+  address   String?
+  hostName  String?
 
   @@map("User")
 }
@@ -103,25 +104,25 @@ model Listing {
 }
 
 model Reservation {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId       String?  @db.ObjectId
-  user         User?    @relation(fields: [userId], references: [id])
+  id     String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId String? @db.ObjectId
+  user   User?   @relation(fields: [userId], references: [id])
 
-  listingId    String   @db.ObjectId
-  listing      Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listingId String  @db.ObjectId
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
-  startDate    DateTime
-  endDate      DateTime
-  totalPrice   Int
-  referralId   String?
-  guestCount   Int?
-  time         String
-  createdAt    DateTime @default(now())
+  startDate  DateTime
+  endDate    DateTime
+  totalPrice Int
+  referralId String?
+  guestCount Int?
+  time       String
+  createdAt  DateTime @default(now())
 
-  guestName     String?
-  guestContact  String?
+  guestName    String?
+  guestContact String?
 
-  review       Review?
+  review Review?
 }
 
 model Card {
@@ -166,14 +167,14 @@ model ReferralAnalytics {
 }
 
 model HostAnalytics {
-  id            String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId        String   @unique @db.ObjectId
-  totalBooks    Int      @default(0)
-  totalRevenue  Int      @default(0)
-  user          User     @relation(fields: [userId], references: [id])
+  id           String @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String @unique @db.ObjectId
+  totalBooks   Int    @default(0)
+  totalRevenue Int    @default(0)
+  user         User   @relation(fields: [userId], references: [id])
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Review {
@@ -213,4 +214,13 @@ model RemovedConversation {
 
   remover     User @relation("Remover", fields: [removerId], references: [id])
   removedUser User @relation("Removed", fields: [removedId], references: [id])
+}
+
+model Earning {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId // ✅ MongoDB ObjectId
+  userId    String   @db.ObjectId // ✅ Must match User.id type
+  user      User     @relation(fields: [userId], references: [id]) // ✅ Relation
+  amount    Float
+  role      Role     @default(customer)
+  createdAt DateTime @default(now())
 }

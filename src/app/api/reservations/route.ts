@@ -3,6 +3,7 @@ import prisma from "@/app/libs/prismadb";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 export const dynamic = 'force-dynamic';
 import { Prisma } from '@prisma/client';
+import { Role } from '@prisma/client';
 
 export async function POST(request: Request) {
   try {
@@ -60,6 +61,10 @@ export async function POST(request: Request) {
       include: { user: true },
     });
 
+    if (!fullListing || !fullListing.user) {
+      return new NextResponse("Listing or host not found", { status: 404 });
+    }    
+
     // ✅ Update HostAnalytics (not User anymore)
     if (fullListing?.user?.id) {
       await prisma.hostAnalytics.upsert({
@@ -74,6 +79,34 @@ export async function POST(request: Request) {
           totalRevenue: totalPrice || 0,
         },
       });
+    }
+
+    // ✅ Track host earnings
+    await prisma.earning.create({
+      data: {
+        userId: fullListing.user.id,
+        amount: totalPrice * 0.9,
+        role: Role.host,
+      }
+    });
+
+    // ✅ Track promoter earnings if applicable
+    if (referralId) {
+      const promoterUser = await prisma.user.findFirst({
+        where: { referenceId: referralId },
+      });
+
+      if (promoterUser?.id) {
+        const promoterCut = totalPrice * 0.1;
+
+        await prisma.earning.create({
+          data: {
+            userId: promoterUser.id,
+            amount: promoterCut,
+            role: Role.promoter,
+          }
+        });
+      }
     }
 
     const formattedDateTime = (() => {

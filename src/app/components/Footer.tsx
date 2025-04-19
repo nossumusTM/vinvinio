@@ -228,6 +228,11 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
         <div className="flex flex-col justify-center md:pl-10 md:ml-10">
           <h3 className="font-semibold text-lg mb-4">Support</h3>
           <ul className="space-y-2">
+          <li>
+            <button onClick={() => setIsCancellationOpen(true)} className="hover:underline transition">
+                  Help Center
+                </button>
+            </li>
             <li>
               <button
                 onClick={() => {
@@ -244,7 +249,7 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
                 }}
                 className="hover:underline transition"
               >
-                Contact Operator
+                Real-Time Assist
               </button>
             </li>
 
@@ -255,7 +260,7 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
             </li>
             <li>
             <button onClick={() => setIsPromoterGuideOpen(true)} className="hover:underline transition">
-                  Promoters Guide
+                The User&rsquo;s Playbook
                 </button>
             </li>
           </ul>
@@ -271,11 +276,20 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
               </button>
             </li>
             <li>
-              <button onClick={() => setIsTermsOpen(true)} className="hover:underline transition">
-                Terms and Conditions
+              <button onClick={() => setIsPrivacyOpen(true)} className="hover:underline transition">
+                Payment Terms
               </button>
             </li>
-            <li><a href="#" className="hover:underline transition">Cookie Policy | GPDR</a></li>
+            <li>
+              <button onClick={() => setIsTermsOpen(true)} className="hover:underline transition">
+                Terms of Service
+              </button>
+            </li>
+            <li>
+              <button onClick={() => setIsTermsOpen(true)} className="hover:underline transition">
+                Cookies & Data Policy
+              </button>
+            </li>
           </ul>
         </div>
 
@@ -330,7 +344,7 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
         isOpen={isPromoterGuideOpen}
         onClose={() => setIsPromoterGuideOpen(false)}
         onSubmit={() => setIsPromoterGuideOpen(false)}
-        title="Promoters Guide"
+        title="The User&rsquo;s Playbook"
         body={promotersGuideContent}
         actionLabel="Close"
         className="max-h-[65vh] overflow-y-auto"

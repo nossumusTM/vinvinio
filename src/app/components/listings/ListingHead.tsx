@@ -128,7 +128,7 @@ const ListingHead: React.FC<ListingHeadProps> = ({
 
   return (
     <>
-    <div className='flex flex-col pt-4'>
+    <div className='flex flex-col pt-4 pl-4'>
       <Heading title={title} subtitle={''} />
       <div className='flex flex-row gap-2 items-center'>
 

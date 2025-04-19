@@ -188,8 +188,8 @@ const RegisterModal = () => {
                 ← Back
               </button> */}
             <Heading
-              title='Begin your journey with us'
-              subtitle='Start curating your own unforgettable experience!'
+              title='Your Journey Starts Here'
+              subtitle='Lights, camera… just need your info to start the show.'
               center
             />
             <Input
@@ -255,7 +255,7 @@ const RegisterModal = () => {
               onClick={onToggle}
               className="text-normal font-normal cursor-pointer underline"
             >
-              Log in
+              Sign In
             </span>
           </p>
         </div>

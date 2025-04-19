@@ -20,7 +20,7 @@ const ListingPage = async () => {
                 <div className="flex flex-col justify-center items-center">
                     <EmptyStateFavorites
                     title="Nothing Saved Yet :)"
-                    subtitle="Explore and keep inspiring experiences."
+                    subtitle="Explore and keep inspiring experiences"
                     />
                     <a
                     href="/"

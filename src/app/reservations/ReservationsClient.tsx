@@ -39,7 +39,7 @@ const ReservationsClient: React.FC<ReservationsClientProps> = ({
 
     return (
         <Container>
-            <div className="mb-8 pl-6">
+            <div className="mb-8 pl-6 pt-4 md:pt-6">
                 <Heading
                     title="Bookings"
                     subtitle="Here&rsquo;s who said ' Yes! ' to your experience"

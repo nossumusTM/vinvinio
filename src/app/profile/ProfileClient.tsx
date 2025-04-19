@@ -18,6 +18,7 @@ import { CgUserlane } from "react-icons/cg";
 import { MdOutlineSecurity } from "react-icons/md";
 import { RiSecurePaymentLine } from "react-icons/ri";
 import ConfirmPopup from "../components/ConfirmPopup";
+import EarningsCard from "../components/EarnigsCard";
 import toast from "react-hot-toast";
 export const dynamic = 'force-dynamic';
 
@@ -49,6 +50,8 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [isCropping, setIsCropping] = useState(false);
   const [showConfirmDeletePayout, setShowConfirmDeletePayout] = useState(false);
+
+  const [earnings, setEarnings] = useState({ monthly: 0, yearly: 0 });
 
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [editingField, setEditingField] = useState<string | null>(null);
@@ -136,6 +139,21 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
     totalBooks: 0,
     totalRevenue: 0,
   });  
+
+  useEffect(() => {
+    const fetchEarnings = async () => {
+      try {
+        const res = await axios.get('/api/analytics/earnings');
+        setEarnings({ monthly: res.data.monthlyTotal, yearly: res.data.yearlyTotal });
+      } catch (err) {
+        console.error("Earnings fetch failed:", err);
+      }
+    };
+  
+    if (['host', 'promoter'].includes(currentUser.role)) {
+      fetchEarnings();
+    }
+  }, [currentUser.role]);  
 
   useEffect(() => {
     const fetchSavedCard = async () => {
@@ -1717,6 +1735,16 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
             )}
           </div>
         </div>
+      )}
+
+      {(currentUser.role === 'host' || currentUser.role === 'promoter') && !activeSection && (
+        <EarningsCard
+          title="Your Earnings"
+          // subtitle={`As a ${currentUser.role}`}
+          monthly={earnings.monthly}
+          yearly={earnings.yearly}
+          roleLabel={currentUser.role === 'host' ? 'Host' : 'Promoter'}
+        />
       )}
   
       {/* Crop Modal */}

@@ -149,8 +149,40 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
                 <Avatar src={user.image} name={user.name} size={48} />
 
                 {user.id === CUSTOMER_SERVICE_ID && (
-                  <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-gradient-to-r from-[#08e2ff] via-[#3d08ff] to-[#3604ff] flex items-center justify-center shadow-md">
-                    <MdVerified className="text-[#00ddff] w-3.5 h-3.5" />
+                  <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 50 50"
+                      width="20"
+                      height="20"
+                      style={{
+                        display: 'inline-block',
+                        verticalAlign: 'middle',
+                      }}
+                    >
+                      <defs>
+                        <linearGradient id="verifiedGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="#08e2ff" />
+                          <stop offset="50%" stopColor="#3d08ff" />
+                          <stop offset="100%" stopColor="#3604ff" />
+                        </linearGradient>
+                      </defs>
+
+                      {/* Outer burst */}
+                      <path
+                        d="M45.103,24.995l3.195-6.245l-5.892-3.807l-0.354-7.006l-7.006-0.35l-3.81-5.89l-6.242,3.2l-6.245-3.196l-3.806,5.893
+                        L7.938,7.948l-0.352,7.007l-5.89,3.81l3.2,6.242L1.702,31.25l5.892,3.807l0.354,7.006l7.006,0.35l3.81,5.891l6.242-3.2l6.245,3.195
+                        l3.806-5.893l7.005-0.354l0.352-7.006l5.89-3.81L45.103,24.995z"
+                        fill="url(#verifiedGradient)"
+                      />
+
+                      {/* Checkmark only */}
+                      <path
+                        d="M22.24,32.562l-6.82-6.819l2.121-2.121l4.732,4.731l10.202-9.888l2.088,2.154L22.24,32.562z"
+                        fill="white"
+                      />
+                    </svg>
+
                   </div>
                 )}
               </div>

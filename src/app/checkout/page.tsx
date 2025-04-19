@@ -101,7 +101,7 @@ const CheckoutPage = () => {
 
   const referralId = localStorage.getItem('scannedReferenceId');
   console.log("ReferralId", referralId);
-  console.log("Storage", localStorage);
+  // console.log("Storage", localStorage);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCardInfo({ ...cardInfo, [e.target.name]: e.target.value });
