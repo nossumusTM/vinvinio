@@ -130,44 +130,44 @@ const TripsClient: React.FC<TripsClientProps> = ({
     setShowCancelModal(true);
   }, []);  
   
-  const onCancel = useCallback(async (id: string) => {
-    if (currentUser?.role !== 'moder') return;
+  // const onCancel = useCallback(async (id: string) => {
+  //   if (currentUser?.role !== 'moder') return;
   
-    try {
-      setDeletingId(id);
+  //   try {
+  //     setDeletingId(id);
   
-      // Fetch reservation to get potential referenceId
-      const res = await axios.get(`/api/reservations/${id}`);
-      const reservation = res.data;
-      const referralId = reservation?.referralId;
-      const totalPrice = reservation?.totalPrice ?? 0;
+  //     // Fetch reservation to get potential referenceId
+  //     const res = await axios.get(`/api/reservations/${id}`);
+  //     const reservation = res.data;
+  //     const referralId = reservation?.referralId;
+  //     const totalPrice = reservation?.totalPrice ?? 0;
   
-      // Cancel reservation
-      await axios.delete(`/api/reservations/${id}`);
-      toast.success('Reservation cancelled!', {
-        iconTheme: {
-          primary: 'linear-gradient(135deg, #3d08ff, #04aaff, #3604ff, #0066ff, #3d08ff)',
-          secondary: '#fff',
-        }
-      });
+  //     // Cancel reservation
+  //     await axios.delete(`/api/reservations/${id}`);
+  //     toast.success('Reservation cancelled!', {
+  //       iconTheme: {
+  //         primary: 'linear-gradient(135deg, #3d08ff, #04aaff, #3604ff, #0066ff, #3d08ff)',
+  //         secondary: '#fff',
+  //       }
+  //     });
   
-      // Update referral analytics if referenceId exists
-      if (referralId) {
-        await axios.post('/api/analytics/decreament', {
-          reservationId: id,
-          totalBooksIncrement: -1,
-          totalRevenueIncrement: -totalPrice,
-        });
-      }
+  //     // Update referral analytics if referenceId exists
+  //     if (referralId) {
+  //       await axios.post('/api/analytics/decreament', {
+  //         reservationId: id,
+  //         totalBooksIncrement: -1,
+  //         totalRevenueIncrement: -totalPrice,
+  //       });
+  //     }
   
-      router.refresh();
-    } catch (error) {
-      const err = error as AxiosError<{ error?: string }>;
-      toast.error(err.response?.data?.error || 'Cancellation failed.');
-    } finally {
-      setDeletingId('');
-    }
-  }, [router, currentUser]);
+  //     router.refresh();
+  //   } catch (error) {
+  //     const err = error as AxiosError<{ error?: string }>;
+  //     toast.error(err.response?.data?.error || 'Cancellation failed.');
+  //   } finally {
+  //     setDeletingId('');
+  //   }
+  // }, [router, currentUser]);
 
   const handleReviewSubmit = async (reservationId: string, listingId: string) => {
     const { rating, comment } = reviewInputs[reservationId] || {};
@@ -262,8 +262,18 @@ const TripsClient: React.FC<TripsClientProps> = ({
           return (
             <div
               key={reservation.id}
-              className="bg-white border border-neutral-200 rounded-2xl shadow-md hover:shadow-lg transition duration-300 overflow-hidden"
+              className="relative bg-white border border-neutral-200 rounded-2xl shadow-md hover:shadow-lg transition duration-300 overflow-hidden"
             >
+              {/* ✅ Status Label with fallback */}
+              {reservation.status === 'cancelled' ? (
+                <div className="absolute top-4 left-4 px-3 py-1 bg-red-100 text-red-600 text-xs font-bold uppercase rounded-lg shadow-md z-10">
+                  Cancelled
+                </div>
+              ) : (
+                <div className="absolute top-4 left-4 px-3 py-1 bg-green-100 text-green-600 text-xs font-bold uppercase rounded-lg shadow-md z-10">
+                  Confirmed
+                </div>
+              )}
               {Array.isArray(reservation.listing.imageSrc) && reservation.listing.imageSrc.length > 0 && (
                 <Image
                   src={reservation.listing.imageSrc[0]}
@@ -272,6 +282,16 @@ const TripsClient: React.FC<TripsClientProps> = ({
                   width={500}
                   height={500}
                 />
+              )}
+
+              {reservation.status === 'cancelled' ? (
+                <div className="absolute top-4 left-4 px-3 py-1 bg-red-100 text-red-600 text-xs font-bold uppercase rounded-lg shadow-md z-10">
+                  Cancelled
+                </div>
+              ) : (
+                <div className="absolute top-4 left-4 px-3 py-1 bg-green-100 text-green-600 text-xs font-bold uppercase rounded-lg shadow-md z-10">
+                  Confirmed
+                </div>
               )}
 
               <div className="p-4 flex flex-col gap-2">

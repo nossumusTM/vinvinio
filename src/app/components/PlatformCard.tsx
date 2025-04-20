@@ -47,6 +47,7 @@ const PlatformCard: React.FC<PlatformCardProps> = ({
   };
 
   const currentData = dataMap[view];
+  console.log(`📊 [${view.toUpperCase()} DATA]`, currentData);
 
   const latest = currentData[currentData.length - 1] || {
     revenue: 0,
@@ -75,23 +76,31 @@ const PlatformCard: React.FC<PlatformCardProps> = ({
       <h2 className="text-2xl font-bold text-black mb-2">Economic Overview</h2>
     </div>
 
-    <div className="mb-3 md:mb-0 flex flex-wrap sm:flex-row sm:justify-baseline gap-6">
+    <div className="mb-3 md:mb-0 flex flex-wrap sm:flex-row sm:justify-baseline gap-6 md:pt-2 pt-2">
       <div className="flex flex-col items-center">
-        <p className="text-sm text-gray-500">D.B.C</p>
+        <p className="text-sm text-black bg-gradient-to-br from-gray-100 to-gray-200 p-3 font-semibold rounded-xl mb-2 select-none">D.B.C</p>
         <p className="text-lg font-semibold text-black">
           {daily?.[daily.length - 1]?.bookingCount || 0}
         </p>
       </div>
 
       <div className="flex flex-col items-center">
-        <p className="text-sm text-gray-500">D.P.V</p>
+        <p className="text-sm text-white bg-gradient-to-br from-[#08e2ff] to-[#3F00FF] font-semibold p-3 rounded-xl mb-2 select-none">D.P.V</p>
         <p className="text-lg font-semibold text-black">
           €{daily?.[daily.length - 1]?.platformFee?.toFixed(2) || '0.00'}
         </p>
       </div>
 
       <div className="flex flex-col items-center">
-        <p className="text-sm text-gray-500">T.R.V</p>
+      <p className="text-sm text-black bg-gradient-to-br from-gray-100 to-gray-200 p-3 font-semibold rounded-xl mb-2 select-none">
+        {view === 'daily'
+            ? 'D.R.V'
+            : view === 'monthly'
+            ? 'M.R.V'
+            : view === 'yearly'
+            ? 'Y.R.V'
+            : 'ALL'}
+        </p>
         <p className="text-lg font-semibold text-black">
             €{view === 'all'
         ? totalRevenue.toFixed(2)               // ✅ true all-time revenue
@@ -128,42 +137,41 @@ const PlatformCard: React.FC<PlatformCardProps> = ({
                 <XAxis dataKey="date" tick={{ fontSize: 12 }} />
                 <YAxis />
                 <Tooltip
-                  formatter={(value: number, name: string) => {
-                    const labelMap: Record<string, string> = {
-                      revenue: 'Total Revenue',
-                      platformFee: 'Platform Fee',
-                      bookingCount: 'Bookings',
-                    };
-                    return [`€${value}`, labelMap[name] ?? name];
-                  }}
-                  labelFormatter={(label: string) => `Date: ${label}`}
-                  contentStyle={{
-                    borderRadius: '10px',
-                    fontSize: '14px',
-                  }}
-                  cursor={{ stroke: '#3604ff', strokeWidth: 1 }}
-                />
+                    formatter={(value: number, name: string) => {
+                        if (name === 'bookingCount') {
+                        return [value, 'Bookings'];
+                        } else if (name === 'platformFee') {
+                        return [`€${value}`, 'Platform Fee'];
+                        } else if (name === 'revenue') {
+                        return [`€${value}`, 'Total Revenue'];
+                        }
+                        return [value, name];
+                    }}
+                    labelFormatter={(label: string) => `Date: ${label}`}
+                    contentStyle={{
+                        borderRadius: '10px',
+                        fontSize: '14px',
+                    }}
+                    cursor={{ stroke: '#3604ff', strokeWidth: 1 }}
+                    />
                 <Line
-                  type="monotone"
-                  dataKey="revenue"
-                  stroke="#3604ff"
-                  strokeWidth={2}
-                  name="Total Revenue"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="platformFee"
-                  stroke="#06b6d4"
-                  strokeWidth={2}
-                  name="Platform Fee"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="bookingCount"
-                  stroke="#10b981"
-                  strokeWidth={2}
-                  name="Bookings"
-                />
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="#3604ff"
+                    strokeWidth={2}
+                    />
+                    <Line
+                    type="monotone"
+                    dataKey="platformFee"
+                    stroke="#06b6d4"
+                    strokeWidth={2}
+                    />
+                    <Line
+                    type="monotone"
+                    dataKey="bookingCount"
+                    stroke="#10b981"
+                    strokeWidth={2}
+                    />
               </LineChart>
             </ResponsiveContainer>
           </div>

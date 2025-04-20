@@ -41,7 +41,10 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
       .map(date => dailyData.find(d => d.date === date)!)
   : dataMap[view];
 
-  const total = currentData.reduce((sum, entry) => sum + entry.amount, 0);
+  //   const total = currentData.reduce((sum, entry) => sum + entry.amount, 0);
+  const total = view === 'daily'
+    ? totalEarnings
+    : currentData.reduce((sum, entry) => sum + entry.amount, 0);
 
   return (
     <Card className="w-full bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-all">
@@ -54,17 +57,21 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
                 <h2 className="text-2xl font-bold text-black mb-2">{title || 'Earnings Overview'}</h2>
             </div>
 
-            <div className="mb-3 md:mb-0 flex flex-wrap sm:flex-row sm:justify-baseline gap-4">
-                <div className="flex flex-col">
-                    <p className="text-sm text-gray-500">Daily Profit</p>
+            <div className="mb-3 md:mb-0 pt-3 flex flex-wrap sm:flex-row sm:justify-baseline gap-4">
+                <div className="flex flex-col justify-center items-center">
+                    <p className="text-sm text-white bg-gradient-to-br from-[#08e2ff] to-[#3F00FF] p-3 rounded-xl mb-2 select-none">Daily Profit</p>
                     <p className="text-lg font-semibold text-black">
                     {formatCurrency(dailyData?.[dailyData.length - 1]?.amount || 0)}
                     </p>
                 </div>
                 
-                <div className="flex flex-col">
-                    <p className="text-sm text-gray-500">
-                        {view === 'all' ? 'Total Earnings' : `${view.charAt(0).toUpperCase() + view.slice(1)} Total`}
+                <div className="flex flex-col justify-center items-center">
+                    <p className="text-sm text-white bg-gradient-to-br from-gray-800 to-gray-700 p-3 rounded-xl mb-2 select-none">
+                    {view === 'daily'
+                        ? 'Total Revenue'
+                        : view === 'all'
+                        ? 'Total Revenue'
+                        : `${view.charAt(0).toUpperCase() + view.slice(1)} Total`}
                     </p>
                     <p className="text-lg font-semibold text-black">
                         {formatCurrency(total)}
@@ -83,7 +90,7 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                 >
-                    {type === 'all' ? 'All Time' : type.charAt(0).toUpperCase() + type.slice(1)}
+                    {type === 'all' ? 'All' : type.charAt(0).toUpperCase() + type.slice(1)}
                 </button>
                 ))}
             </div>
@@ -98,14 +105,12 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
                 <YAxis tickFormatter={(val) => `€${val}`} />
                 <YAxis label={{ value: 'Income (€)', angle: -90, position: 'insideLeft' }} />
                 <Tooltip
-                    formatter={(value: number) => [`€${value}`, 'Income']} // Label override
+                    formatter={(value: number) => [`€${value}`, 'Income']}
+                    labelFormatter={(label: string) => `Date: ${label}`}
+                    contentStyle={{ borderRadius: '10px', fontSize: '14px' }}
+                    cursor={{ stroke: '#3604ff', strokeWidth: 1 }}
                 />
-                <Tooltip
-                  formatter={(value: number) => formatCurrency(value)}
-                  labelFormatter={(label: string) => `Date: ${label}`}
-                  contentStyle={{ borderRadius: '10px', fontSize: '14px' }}
-                  cursor={{ stroke: '#3604ff', strokeWidth: 1 }}
-                />
+
                 <Line type="monotone" dataKey="amount" stroke="#3604ff" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>

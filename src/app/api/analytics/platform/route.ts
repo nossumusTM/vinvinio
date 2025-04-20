@@ -9,9 +9,10 @@ function groupPlatformData(data: any[], type: 'daily' | 'monthly' | 'yearly') {
     let key = '';
 
     if (type === 'daily') {
-      key = date.toISOString().split('T')[0]; // YYYY-MM-DD
+      // key = date.toISOString().split('T')[0]; // YYYY-MM-DD
+      key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; // ✅ Uses local time
     } else if (type === 'monthly') {
-      key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`; // YYYY-MM
+      key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
     } else if (type === 'yearly') {
       key = `${date.getFullYear()}`;
     }

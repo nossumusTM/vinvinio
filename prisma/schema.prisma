@@ -23,6 +23,11 @@ enum ListingStatus {
   rejected
 }
 
+enum ReservationStatus {
+  active
+  cancelled
+}
+
 model User {
   id                String             @id @default(auto()) @map("_id") @db.ObjectId
   name              String?
@@ -123,6 +128,8 @@ model Reservation {
   guestContact String?
 
   review Review?
+
+  status      ReservationStatus @default(active)
 }
 
 model Card {
@@ -223,6 +230,8 @@ model Earning {
   amount    Float
   role      Role     @default(customer)
   createdAt DateTime @default(now())
+
+  reservationId String?   @db.ObjectId
 }
 
 model PlatformEconomy {
@@ -231,4 +240,6 @@ model PlatformEconomy {
   revenue       Float
   platformFee   Float     // e.g., 10% of revenue
   createdAt     DateTime  @default(now())
+
+  reservationId String?   @db.ObjectId
 }

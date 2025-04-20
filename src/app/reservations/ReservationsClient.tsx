@@ -47,23 +47,51 @@ const ReservationsClient: React.FC<ReservationsClientProps> = ({
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 mt-10">
                 {reservations.map((reservation: any) => (
+                    // <ListingCard
+                    //     key={reservation.id}
+                    //     data={reservation.listing}
+                    //     reservation={reservation}
+                    //     actionId={reservation.id}
+                    //     onAction={() => {
+                    //         if (!reservation.user?.email || !reservation.listing?.id) {
+                    //           toast.error("Missing guest email or listing ID.");
+                    //           return;
+                    //         }
+                          
+                    //         onCancel(reservation.id, reservation.user.email, reservation.listing.id);
+                    //       }}
+                    //     disabled={deletingId === reservation.id}
+                    //     // actionLabel="Cancel guest reservation"
+                    //     currentUser={currentUser}
+                    // />
+                    <div key={reservation.id} className="relative">
+                    {reservation.status === 'cancelled' ? (
+                        <div className="absolute top-8 left-8 px-2 py-1 bg-red-100 text-red-600 text-xs font-semibold uppercase rounded-md z-10">
+                        Cancelled
+                        </div>
+                    ) : (
+                        <div className="absolute top-8 left-8 px-2 py-1 bg-green-100 text-green-600 text-xs font-semibold uppercase rounded-md z-10">
+                        Confirmed
+                        </div>
+                    )}
+
                     <ListingCard
-                        key={reservation.id}
                         data={reservation.listing}
                         reservation={reservation}
                         actionId={reservation.id}
                         onAction={() => {
-                            if (!reservation.user?.email || !reservation.listing?.id) {
-                              toast.error("Missing guest email or listing ID.");
-                              return;
-                            }
-                          
-                            onCancel(reservation.id, reservation.user.email, reservation.listing.id);
-                          }}
+                        if (!reservation.user?.email || !reservation.listing?.id) {
+                            toast.error("Missing guest email or listing ID.");
+                            return;
+                        }
+
+                        onCancel(reservation.id, reservation.user.email, reservation.listing.id);
+                        }}
                         disabled={deletingId === reservation.id}
-                        // actionLabel="Cancel guest reservation"
                         currentUser={currentUser}
                     />
+                    </div>
+
                 ))}
             </div>
 

@@ -86,6 +86,7 @@ export async function POST(request: Request) {
       data: {
         userId: fullListing.user.id,
         amount: totalPrice * 0.9,
+        reservationId: reservation.id,
         role: Role.host,
       }
     });
@@ -103,6 +104,7 @@ export async function POST(request: Request) {
           data: {
             userId: promoterUser.id,
             amount: promoterCut,
+            reservationId: reservation.id,
             role: Role.promoter,
           }
         });
@@ -113,6 +115,7 @@ export async function POST(request: Request) {
       data: {
         bookingCount: 1,
         revenue: totalPrice,
+        reservationId: reservation.id,
         platformFee: totalPrice * 0.1, // 10% platform cut
       }
     });

@@ -76,7 +76,12 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
     setIsLoading(true);
     try {
       await axios.post(`/api/listings/${listingId}/approve`);
-      toast.success('Listing approved');
+      toast.success('Listing approved', {
+        iconTheme: {
+            primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
+            secondary: '#fff',
+        }
+      });
       fetchListings();
     } catch (error: any) {
       console.error('❌ Approve error:', error);
@@ -90,7 +95,12 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
     setIsLoading(true);
     try {
       await axios.post(`/api/listings/${listingId}/reject`);
-      toast.success('Listing rejected');
+      toast.success('Listing rejected', {
+        iconTheme: {
+            primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
+            secondary: '#fff',
+        }
+      });
       fetchListings();
     } catch (error: any) {
       console.error('Reject failed:', error);
@@ -136,6 +146,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
         totalRevenue: res.data.totalRevenue,
         payoutMethod: payout?.data?.method || 'None',
         payoutNumber: payout?.data?.number || '',
+        userId: res.data.userId || '',
       });
     } catch (err) {
       toast.error('Host not found or error fetching data');
@@ -145,13 +156,15 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
   const handlePromoterAnalytics = async () => {
     try {
       const res = await axios.post('/api/analytics/get', { identifier: promoterLookup });
-      const payout = await axios.post('/api/users/get-payout-method', { userId: res.data.userId });
+      const payout = await axios.post('/api/users/get-payout-method', { identifier: res.data.userId });
   
       setPromoterAnalytics({
         totalBooks: res.data.totalBooks,
         qrScans: res.data.qrScans,
         totalRevenue: res.data.totalRevenue,
-        payoutMethod: payout?.data?.type || 'None',
+        payoutMethod: payout?.data?.method || 'None',
+        payoutNumber: payout?.data?.number || '',
+        userId: res.data.userId || '',
       });
     } catch (err) {
       toast.error('Promoter not found or error fetching data');
@@ -200,10 +213,17 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
       const hostId = reservation?.listing?.userId;
   
       // ❌ Delete reservation
-      await axios.delete(`/api/reservations/${id}`);
+      // await axios.delete(`/api/reservations/${id}`);
+      await axios.patch(`/api/reservations/${id}/cancel`);
       toast.success('Reservation cancelled', {
         iconTheme: { primary: 'linear-gradient(135deg, #3d08ff, #04aaff, #3604ff, #0066ff, #3d08ff)', secondary: '#fff' },
       });
+
+      await axios.post('/api/analytics/remove-reservation', {
+        reservationId: id
+      });
+      await axios.post('/api/analytics/platform/remove', { reservationId: id });
+      await axios.post('/api/analytics/earnings/remove', { reservationId: id });
   
       // 📉 Decrement referral analytics if referralId exists
       if (referralId) {
@@ -238,7 +258,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
 
   return (
     <>
-    <div className="px-5 md:px-60 pt-2 md:pt-20 pb-10">
+    <div className="px-5 md:px-60 pt-2 md:pt-10 pb-0">
       <PlatformCard
           daily={platformData.daily}
           monthly={platformData.monthly}
@@ -262,30 +282,37 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
               </div>
               <h2 className="text-xl font-bold">{listing.title}</h2>
               <p className="text-neutral-700">{listing.description}</p>
-              <div className="text-sm text-neutral-500">
+              <div className="text-sm text-neutral-500 gap-2 flex flex-col">
                 <p><strong>Submitted by:</strong> {listing.user.name} ({listing.user.email})</p>
-                <p><strong>Status:</strong> {listing.status}</p>
+                <div className='flex flex-row gap-1'><strong>Status:</strong> <p className='text-red-500 font-semibold'>{listing.status.toUpperCase()}</p></div>
                 <p><strong>Host Description:</strong> {listing.hostDescription}</p>
                 <p><strong>Guest Capacity:</strong> {listing.guestCount}</p>
                 <p><strong>Duration:</strong> {listing.experienceHour} hours</p>
                 <p><strong>Meeting Point:</strong> {listing.meetingPoint}</p>
                 <p><strong>Languages:</strong> {listing.languages?.join(', ')}</p>
-                <p><strong>Location Types:</strong> {listing.locationType?.join(', ')}</p>
+                <div className='flex flex-row gap-1'><strong>Location Types:</strong><p> {listing.locationType?.join(', ').toUpperCase()}</p></div>
                 <p><strong>Location Description:</strong> {listing.locationDescription}</p>
               </div>
               
               <div className="flex gap-4 pt-4">
-                <button
-                  onClick={() => handleApprove(listing.id)}
-                  disabled={isLoading}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  Approve
-                </button>
+              <button
+                onClick={() => handleApprove(listing.id)}
+                disabled={isLoading}
+                className="relative px-4 py-2 text-white rounded-lg overflow-hidden group"
+              >
+                <span className="relative z-10">Approve</span>
+
+                {/* Base Gradient */}
+                <span className="absolute inset-0 bg-gradient-to-br from-[#08e2ff] to-[#3F00FF] transition-opacity duration-300 opacity-100 group-hover:opacity-0"></span>
+
+                {/* Hover Gradient */}
+                <span className="absolute inset-0 bg-gradient-to-br from-[#3F00FF] to-[#08e2ff] transition-opacity duration-300 opacity-0 group-hover:opacity-100"></span>
+              </button>
+
                 <button
                   onClick={() => handleReject(listing.id)}
                   disabled={isLoading}
-                  className="px-4 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-700"
+                  className="px-4 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition"
                 >
                   Reject
                 </button>
@@ -337,7 +364,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
 
         {/* Cancel Reservation */}
         <div className="shadow-lg p-6 rounded-xl bg-white">
-            <h3 className="text-md font-semibold mb-2">Moderator Cancellation Tool</h3>
+            <h3 className="text-lg font-semibold mb-4">Moderator Cancellation Tool</h3>
             <input
             type="text"
             placeholder="Enter Reservation ID"
@@ -355,7 +382,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
         </div>
     </div>
 
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-10 px-60 pt-16">
+    <div className="grid grid-cols-1 lg:grid-cols-2 px-5 md:px-60 gap-10 mt-10  pt-16">
       {/* Host Lookup */}
       <div className="bg-white p-6 rounded-xl shadow-lg space-y-4">
         <h2 className="text-lg font-bold text-black">Host Analytics Lookup</h2>
@@ -378,6 +405,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
             <p><strong>Total Revenue:</strong> €{hostAnalytics.totalRevenue * 0.9}</p>
             <p><strong>Payout Method:</strong> {hostAnalytics.payoutMethod.toUpperCase()}</p>
             <p><strong>Payout Number:</strong> {hostAnalytics.payoutNumber}</p>
+            <p><strong>User ID:</strong> {hostAnalytics.userId}</p>
           </div>
         )}
       </div>
@@ -402,8 +430,10 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
           <div className="text-sm text-neutral-700 space-y-1">
             <p><strong>Total Books:</strong> {promoterAnalytics.totalBooks}</p>
             <p><strong>QR Code Scans:</strong> {promoterAnalytics.qrScans}</p>
-            <p><strong>Total Revenue:</strong> €{promoterAnalytics.totalRevenue}</p>
-            <p><strong>Payout Method:</strong> {promoterAnalytics.payoutMethod}</p>
+            <p><strong>Total Revenue:</strong> €{promoterAnalytics.totalRevenue * 0.1}</p>
+            <p><strong>Payout Method:</strong> {promoterAnalytics.payoutMethod.toUpperCase()}</p>
+            <p><strong>Payout Number:</strong> {promoterAnalytics.payoutNumber}</p>
+            <p><strong>User ID:</strong> {promoterAnalytics.userId}</p>
           </div>
         )}
       </div>

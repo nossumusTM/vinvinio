@@ -278,7 +278,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
           setSavedPayout(res.data);
         }
       } catch (err) {
-        console.error('Failed to fetch withdraw method', err);
+        console.error('Failed to fetch withdrawal method', err);
       }
     };
   
@@ -318,7 +318,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
       });
   
       // setPopupMessage('Withdraw method saved!');
-      toast.success('Withdraw method saved!', {
+      toast.success('Withdrawal method saved!', {
         iconTheme: {
             primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
             secondary: '#fff',
@@ -327,9 +327,9 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
       
       setPayoutUpdated((prev) => !prev);
     } catch (err) {
-      console.error('Failed to save withdraw method', err);
+      console.error('Failed to save withdrawal method', err);
       // setPopupMessage('Error saving withdraw method.');
-      toast.error('Error saving withdraw method.')
+      toast.error('Error saving withdrawal method.')
     }
   };  
   
@@ -338,16 +338,16 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
       await axios.delete('/api/users/delete-payout-method');
       setSavedPayout(null);
       // setPopupMessage('Withdraw method deleted!');
-      toast.success('Withdraw method deleted!', {
+      toast.success('Withdrawal method deleted!', {
         iconTheme: {
             primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
             secondary: '#fff',
         }
       });
     } catch (err) {
-      console.error('Failed to delete withdraw method', err);
+      console.error('Failed to delete withdrawal method', err);
       // setPopupMessage('Error deleting withdraw method.');
-      toast.error('Error deleting withdraw method.');
+      toast.error('Error deleting withdrawal method.');
     }
   };  
 
@@ -1039,7 +1039,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
 
               {activePaymentTab === 'payout' && ['promoter', 'host'].includes(currentUser.role) && (
                 <>
-                  <Heading title="Withdraw Method" subtitle="Manage your withdraw credentials" />
+                  <Heading title="Withdrawal Method" subtitle="Manage your withdrawal credentials" />
 
                   {savedPayout ? (
                     <>
@@ -1107,7 +1107,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                           onClick={() => setShowConfirmDeletePayout(true)}
                           className="border px-4 py-2 rounded-lg hover:bg-black hover:text-white transition"
                         >
-                          Delete Withdraw Method
+                          Delete Method
                         </button>
                       </div>
                     </>
@@ -1115,7 +1115,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                     <>
                       {/* Select Method */}
                       <div className="mt-4">
-                        <label className="block mb-2 font-semibold">Withdraw Method</label>
+                        <label className="block mb-2 font-semibold">Withdrawal Method</label>
                         <select
                           value={payoutInfo.method}
                           onChange={(e) => setPayoutInfo({ ...payoutInfo, method: e.target.value })}
@@ -1210,8 +1210,8 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
 
           {showConfirmDeletePayout && (
             <ConfirmPopup
-              title="Delete Withdraw Method"
-              message="Are you sure you want to delete your withdraw method?"
+              title="Delete Withdrawal Method"
+              message="Are you sure you want to delete your withdrawal method?"
               onCancel={() => setShowConfirmDeletePayout(false)}
               onConfirm={async () => {
                 try {
@@ -1518,7 +1518,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
             >
               <div className="text-4xl text-[#000] mb-4"><RiSecurePaymentLine /></div>
               <p className="text-lg font-semibold">Payments & Withdraw</p>
-              <p className="text-sm text-neutral-600">View and update your withdraw methods</p>
+              <p className="text-sm text-neutral-600">View and update your withdrawal methods</p>
             </div>
           </div>
         </>
@@ -1531,7 +1531,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
               <div className="p-6 rounded-xl shadow-md hover:shadow-lg">
                 <p className="text-lg font-semibold mb-2">Referral Activities</p>
                 <p className="text-sm text-neutral-600 mb-4">
-                  Track your referral performance and earnings.
+                  Performance and Earnings overview — renewed twice a month.
                 </p>
 
                 <div className="space-y-4 p-5">
@@ -1554,7 +1554,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
 
               {/* Total Earned */}
               <div className="p-6 rounded-xl shadow-md hover:shadow-lg flex flex-col">
-                <p className="text-lg font-semibold mb-2">Total Earned</p>
+                <p className="text-lg font-semibold mb-2">Pre-Withdrawal Revenue</p>
                 <p className="text-sm text-neutral-600 mb-4">
                   Earning 10% from each referral booking made through your code.
                 </p>
@@ -1567,7 +1567,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
 
               {/* Withdraw Details */}
               <div className="p-6 rounded-xl shadow-md hover:shadow-lg">
-                <p className="text-lg font-semibold mb-2">Withdraw Method</p>
+                <p className="text-lg font-semibold mb-2">Withdrawal Method</p>
                 <p className="text-sm text-neutral-600 mb-4">Deposits processed twice per month.</p>
 
                 {savedPayout ? (
@@ -1656,9 +1656,9 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
         <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Reservation Activities */}
           <div className="p-6 rounded-xl shadow-md hover:shadow-lg">
-            <p className="text-lg font-semibold mb-2">Reservation Activity</p>
+            <p className="text-lg font-semibold mb-2">Booking Activity</p>
             <p className="text-sm text-neutral-600 mb-4">
-              Track your hosted bookings and earnings.
+              Earnings and Bookings overview — renewed twice a month.
             </p>
 
             <div className="space-y-4 p-5">
@@ -1676,9 +1676,9 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
 
           {/* Host Total Earned */}
           <div className="p-6 rounded-xl shadow-md hover:shadow-lg flex flex-col">
-            <p className="text-lg font-semibold mb-2">Total Earned</p>
+            <p className="text-lg font-semibold mb-2">Pre-Withdrawal Revenue</p>
             <p className="text-sm text-neutral-600 mb-4">
-              As a host, you earn 90% of your experience revenue.
+              As a host, you earn 90% of your listing revenue.
             </p>
             <div className="rounded-xl p-10 pl-8 pr-8 flex justify-center md:items-center md:h-52 hover:shadow-sm">
               <p className="text-3xl text-black font-semibold">
@@ -1689,7 +1689,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
 
           {/* Withdraw Method */}
           <div className="p-6 rounded-xl shadow-md hover:shadow-lg">
-            <p className="text-lg font-semibold mb-2">Withdraw Method</p>
+            <p className="text-lg font-semibold mb-2">Withdrawal Method</p>
             <p className="text-sm text-neutral-600 mb-4">Deposits processed twice per month.</p>
 
             {savedPayout ? (
@@ -1748,7 +1748,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
               </div>
             ) : (
               <div className="bg-neutral-100 p-4 rounded-xl flex items-center justify-between">
-                <p className="text-sm text-neutral-600">Withdraw method is not provided</p>
+                <p className="text-sm text-neutral-600">Withdrawal method is not provided</p>
                 <button
                   onClick={() => {
                     setActiveSection('payments');
