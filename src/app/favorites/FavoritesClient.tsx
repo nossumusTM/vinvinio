@@ -15,10 +15,10 @@ const FavoritesClient: React.FC<FavoritesClientProps> = ({
 }) => {
     return (
         <Container>
-            <div className="pl-6 pt-4 md:pt-6">
+            <div className="pl-4 pt-4 md:pt-6">
             <Heading
-                title="Wishlist"
-                subtitle="List of experiences you favorited!"
+                title="To-Do"
+                subtitle="Moments You've Bookmarked"
             />
             </div>
             <div

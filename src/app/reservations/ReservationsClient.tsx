@@ -71,10 +71,10 @@ const ReservationsClient: React.FC<ReservationsClientProps> = ({
 
     return (
         <Container>
-            <div className="mb-8 pl-6 pt-4 md:pt-6">
+            <div className="mb-8 pl-4 pt-4 md:pt-6">
                 <Heading
                     title="Bookings"
-                    subtitle="Here&rsquo;s who said ' YesSsSs! ' to your experience"
+                    subtitle="Who said ' YesSsSs! ' to your experience"
                 />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 mt-10">

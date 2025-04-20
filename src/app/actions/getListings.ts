@@ -11,6 +11,8 @@ export interface IListingsParams {
   locationValue?: string;
   category?: string;
   sort?: 'rating' | 'priceLow' | 'priceHigh' | 'random';
+  skip?: number;
+  take?: number;
 }
 
 export default async function getListings(params: IListingsParams) {
@@ -90,6 +92,8 @@ export default async function getListings(params: IListingsParams) {
       include: {
         reviews: true, // include related reviews
       },
+      skip: params.skip ?? 0,
+      take: params.take ?? 12,
     });
 
     // const safeListings = listings.map((listing: any) => ({

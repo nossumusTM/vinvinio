@@ -97,7 +97,7 @@ const ConfirmPopup: React.FC<ConfirmPopupProps> = ({
                 className="px-4 py-2 bg-black text-white rounded-xl hover:opacity-90 transition flex items-center justify-center min-w-[100px]"
               >
                 {isLoading ? (
-                  <span className="loader inline-block w-5 h-5 border-2 border-t-transparent border-white rounded-full animate-spin"></span>
+                  <span className="loader inline-block w-5 h-5 mt-1 border-2 border-t-transparent border-white rounded-full animate-spin"></span>
                 ) : (
                   confirmLabel
                 )}

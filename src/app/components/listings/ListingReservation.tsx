@@ -140,7 +140,7 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
       <div className="p-4">
         {isLoading ? (
           <div className="w-full text-center py-3">
-            <span className="loader inline-block w-5 h-5 border-2 border-t-transparent border-black rounded-full animate-spin" />
+            <span className="loader inline-block w-5 h-5 mt-1 border-2 border-t-transparent border-black rounded-full animate-spin" />
           </div>
         ) : (
           <Button label="Book Now" onClick={handleReserve} />

@@ -267,7 +267,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
   return (
     <>
     <Container>
-      <div className="pl-6 pt-4 md:pt-6">
+      <div className="pl-4 pt-4 md:pt-6">
       <Heading
         title="Booked Voyages"
         subtitle="Tracing your steps — behind and ahead"
@@ -582,7 +582,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
             className="px-6 py-2 rounded-full bg-black text-white hover:bg-neutral-800 transition text-sm"
           >
             {loadingMore ? (
-              <div className="loader inline-block w-5 h-5 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
+              <div className="loader inline-block w-5 h-5 mt-1 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
             ) : (
               "Load More"
             )}
