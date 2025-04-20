@@ -100,7 +100,7 @@ const CheckoutPage = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const referralId = localStorage.getItem('scannedReferenceId');
-  console.log("ReferralId", referralId);
+  // console.log("ReferralId", referralId);
   // console.log("Storage", localStorage);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -400,6 +400,8 @@ const CheckoutPage = () => {
 
   useEffect(() => {
     const fetchProfileInfo = async () => {
+      if (!isAuthenticated) return;
+
       try {
         const res = await axios.get('/api/users/profile-info');
         const { contact, address, legalName} = res.data;
@@ -431,13 +433,16 @@ const CheckoutPage = () => {
     };
   
     fetchProfileInfo();
-  }, []);  
+  }, [isAuthenticated]);  
 
   useEffect(() => {
     if (hasFetched.current || !listingId) return;
     hasFetched.current = true;
   
     const fetchData = async () => {
+      if (hasFetched.current || !listingId || !isAuthenticated) return;
+      hasFetched.current = true;
+
       try {
         const reviewRes = await fetch('/api/reviews/get-by-listing', {
           method: 'POST',
@@ -454,7 +459,7 @@ const CheckoutPage = () => {
           const key = process.env.CARD_SECRET_KEY;
   
           if (!key) {
-            console.warn('❗️Missing CARD_SECRET_KEY');
+            console.warn('Missing CARD_SECRET_KEY');
             return;
           }
   
@@ -493,28 +498,49 @@ const CheckoutPage = () => {
     };
   
     fetchData();
-  }, [listingId]);  
+  }, [listingId, isAuthenticated]);  
+
+  // useEffect(() => {
+  //   const checkUser = async () => {
+  //     try {
+  //       const res = await axios.get('/api/users/current');
+  //       if (res?.data?.id) {
+  //         if (!isAuthenticated) {
+  //           setCheckoutMode('auth');
+  //         }
+  //         setIsAuthenticated(true);
+  //         if (res.data.legalName) setLegalName(res.data.legalName);
+  //         if (res.data.email) setEmail(res.data.email);
+  //       }
+  //     } catch (err) {
+  //       console.log('User not authenticated');
+  //       setIsAuthenticated(false); // ✅ Add this line
+  //     }
+  //   };
+  
+  //   checkUser();
+  // }, []);  
 
   useEffect(() => {
+    if (checkoutMode === 'guest') return;
+
     const checkUser = async () => {
       try {
         const res = await axios.get('/api/users/current');
         if (res?.data?.id) {
-          if (!isAuthenticated) {
-            setCheckoutMode('auth');
-          }
           setIsAuthenticated(true);
+          setCheckoutMode('auth');
           if (res.data.legalName) setLegalName(res.data.legalName);
           if (res.data.email) setEmail(res.data.email);
         }
       } catch (err) {
-        console.log('User not authenticated');
-        setIsAuthenticated(false); // ✅ Add this line
+        console.log('Guest checkout mode activated');
+        setIsAuthenticated(false);
       }
     };
   
     checkUser();
-  }, []);  
+  }, [checkoutMode]);  
 
   const total = listingData ? listingData.price * guests + serviceFee : 0;
 

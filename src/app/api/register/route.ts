@@ -14,6 +14,10 @@ export async function POST(request: Request) {
       return NextResponse.json("Missing required fields", { status: 400 });
     }
 
+    if (role === 'moder') {
+      return NextResponse.json("Registration with 'moder' role is not allowed.", { status: 403 });
+    }
+
     const trimmedEmail = email.trim().toLowerCase();
     const trimmedName = name.trim();
 

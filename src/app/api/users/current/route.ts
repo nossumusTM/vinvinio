@@ -3,10 +3,18 @@ import { NextResponse } from 'next/server';
 import getCurrentUser from '@/app/actions/getCurrentUser';
 
 export async function GET() {
-  const user = await getCurrentUser();
-  if (!user) {
-    return new NextResponse('Unauthorized', { status: 401 });
-  }
+  try {
+    const user = await getCurrentUser();
 
-  return NextResponse.json(user);
+    // Always return a 200 response with either user or null
+    return NextResponse.json(user ?? null, {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error in /api/users/current:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
 }

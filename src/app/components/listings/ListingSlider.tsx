@@ -7,8 +7,8 @@ const sliderSettings = {
   dots: true,
   infinite: true,
   speed: 500,
-  autoplay: true,              // ✅ enable auto scrolling
-  autoplaySpeed: 4000,
+  autoplay: true,
+  autoplaySpeed: 3000,
   slidesToScroll: 1,
   // verticalSwiping: true,
   arrows: false,

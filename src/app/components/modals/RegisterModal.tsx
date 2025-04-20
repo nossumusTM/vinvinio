@@ -73,7 +73,7 @@ const RegisterModal = () => {
 
         axios.post('/api/register', formData)
             .then(() => {
-                toast.success('Welcome to Vuoiaggio! Please log in to start exploring.', {
+                toast.success('Welcome to Vuoiaggio! Please sign in to start exploring.', {
                     iconTheme: {
                         primary: 'linear-gradient(135deg, #3d08ff, #04aaff, #3604ff, #0066ff, #3d08ff)',
                         secondary: '#fff',
@@ -100,6 +100,8 @@ const RegisterModal = () => {
                   } else {
                     setPopupMessage("Something went wrong.");
                   }
+                } else if (error.response?.status === 403) {
+                  setPopupMessage("Only administrators can register as a moderator.");
                 } else {
                   setPopupMessage("Unexpected error occurred.");
                 }
@@ -108,7 +110,6 @@ const RegisterModal = () => {
                 setIsLoading(false);
             });
     };
-    
 
     const onToggle = useCallback(() => {
         registerModal.onClose();

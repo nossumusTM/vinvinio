@@ -11,6 +11,7 @@ import useSearchModal from "@/app/hooks/useSearchModal";
 
 import Modal from "./Modal";
 import Calendar from "../inputs/Calendar";
+import SearchCalendar from "../inputs/SaerchCalendar";
 import Counter from "../inputs/Counter";
 import CountrySelect, {
     CountrySelectValue
@@ -140,7 +141,7 @@ const SearchModal = () => {
                     title="When do you plan to go?"
                     subtitle="Make sure everyone is free!"
                 />
-                <Calendar
+                <SearchCalendar
                     onChange={(value) => setDateRange(value.selection)}
                     value={dateRange}
                 />

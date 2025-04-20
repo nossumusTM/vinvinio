@@ -177,6 +177,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
               height={869}
               unoptimized
               className="w-full h-full object-cover"
+              priority
             />
 
             <div className="absolute bottom-[20%] left-[40%] -translate-x-1/2 bg-white p-3 rounded-xl shadow-lg w-48 h-48 flex items-center justify-center">

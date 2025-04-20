@@ -7,6 +7,7 @@ import Avatar from '@/app/components/Avatar';
 
 import useMessenger from '@/app/hooks/useMessager';
 import useLoginModal from '@/app/hooks/useLoginModal';
+import getCurrentUser from '../actions/getCurrentUser';
 
 const BookingConfirmed = () => {
   const searchParams = useSearchParams();
@@ -99,9 +100,63 @@ const BookingConfirmed = () => {
     runConfetti();
   }, []);  
 
+  // const handleContactHost = async () => {
+  //   try {
+  //     const res = await fetch('/api/users/current');
+
+  //     // Check if user is authenticated
+  //     if (!res.ok) {
+  //       if (res.status === 401) {
+  //         console.log('👤 Guest mode: not authenticated');
+  //         loginModal.onOpen();
+  //         return;
+  //       } else {
+  //         throw new Error(`Unexpected status: ${res.status}`);
+  //       }
+  //     }
+
+  //     const user = await res.json();
+  
+  //     if (!user?.id) {
+  //       loginModal.onOpen();
+  //       return;
+  //     }
+  
+  //     if (listing?.user?.id) {
+  //       messenger.openChat({
+  //         id: listing.user.id,
+  //         name: listing.user.name ?? 'Host',
+  //         image: listing.user.image ?? '',
+  //       });
+  //     }
+  //   } catch (err) {
+  //     console.error('Auth check failed:', err);
+  //     loginModal.onOpen();
+  //   }
+  // };  
+
   const handleContactHost = async () => {
     try {
       const res = await fetch('/api/users/current');
+  
+      const contentType = res.headers.get('content-type') || '';
+  
+      // Check if user is authenticated
+      if (!res.ok) {
+        if (res.status === 401) {
+          console.log('👤 Guest mode: not authenticated');
+          loginModal.onOpen();
+          return;
+        } else {
+          throw new Error(`Unexpected status: ${res.status}`);
+        }
+      }
+  
+      // Ensure response is JSON
+      if (!contentType.includes('application/json')) {
+        throw new Error('Unexpected response format');
+      }
+  
       const user = await res.json();
   
       if (!user?.id) {
@@ -120,8 +175,8 @@ const BookingConfirmed = () => {
       console.error('Auth check failed:', err);
       loginModal.onOpen();
     }
-  };  
-
+  };
+  
   return (
     <div className="max-w-screen-xl mx-auto p-6 pt-8 pb-4 flex flex-col lg:flex-row gap-10 md:mt-8">
       {/* Listing Info */}

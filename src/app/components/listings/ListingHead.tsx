@@ -234,6 +234,8 @@ const ListingHead: React.FC<ListingHeadProps> = ({
                     alt="Main Cover"
                     fill
                     className="object-cover rounded-xl"
+                    priority
+                    sizes="(max-width: 768px) 100vw, 50vw"
                   />
                 </div>
               )
@@ -253,6 +255,8 @@ const ListingHead: React.FC<ListingHeadProps> = ({
                   alt={`gallery-${index}`}
                   fill
                   className="object-cover rounded-md"
+                  priority
+                  sizes="(max-width: 768px) 100vw, 25vw"
                 />
               </div>
             ))}

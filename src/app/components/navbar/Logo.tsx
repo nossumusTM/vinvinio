@@ -16,6 +16,7 @@ const Logo = () => {
                 height="44"
                 width="44"
                 alt="Logo"
+                priority
             />
         </div>
     );

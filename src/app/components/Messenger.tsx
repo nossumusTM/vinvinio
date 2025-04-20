@@ -17,6 +17,7 @@ interface MessengerProps {
 
 const Messenger = ({ currentUser }: MessengerProps) => {
   const isMobile = useMediaQuery({ maxWidth: 768 });
+  const nodeRef = useRef(null);
 
   const {
     isOpen,
@@ -45,10 +46,12 @@ const Messenger = ({ currentUser }: MessengerProps) => {
           )}
         >
           <Draggable
+            nodeRef={nodeRef}
             handle=".messenger-header"
             disabled={isMobile}
           >
             <div
+              ref={nodeRef}
               className={clsx(
                 'bg-white shadow-sm hover:shadow-xl border rounded-t-3xl pointer-events-auto flex flex-col',
                 isMobile ? 'w-full h-full' : 'w-[500px] h-[700px] max-h-[90vh]'

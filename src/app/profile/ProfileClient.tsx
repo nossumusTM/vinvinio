@@ -19,6 +19,7 @@ import { MdOutlineSecurity } from "react-icons/md";
 import { RiSecurePaymentLine } from "react-icons/ri";
 import ConfirmPopup from "../components/ConfirmPopup";
 import EarningsCard from "../components/EarnigsCard";
+import FAQ from "../components/FAQ";
 import toast from "react-hot-toast";
 export const dynamic = 'force-dynamic';
 
@@ -156,6 +157,39 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
     totalBooks: 0,
     totalRevenue: 0,
   });  
+
+  const personalInfoFAQ = [
+    {
+      question: 'How can I update my legal name?',
+      answer: 'Click "Edit" next to Legal Name, update the field, and click Save.',
+    },
+    {
+      question: 'Why is my address important?',
+      answer: 'Your billing and payout depend on your correct address. Make sure it’s up to date.',
+    },
+  ];
+
+  const loginSecurityFAQ = [
+    {
+      question: 'How can I change my password?',
+      answer: 'Click "Update" next to Password, enter your current and new passwords, and confirm.',
+    },
+    {
+      question: 'What if I forgot my password?',
+      answer: 'Click "Forgot password" on the login screen to reset it via email.',
+    },
+  ];
+
+  const paymentsFAQ = [
+    {
+      question: 'How do I save my payment card?',
+      answer: 'Click Add Card or Edit Card, fill in your billing info, and click Save.',
+    },
+    {
+      question: 'When are payouts processed?',
+      answer: 'Payouts are processed twice a month. Make sure your withdrawal method is added.',
+    },
+  ];  
 
   useEffect(() => {
     const fetchEarnings = async () => {
@@ -511,7 +545,8 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   
           {activeSection === 'personal-info' && (
             <>
-              <div className="mt-8 pt-10 pl-5 max-w-[600px] bg-white rounded-xl shadow-md hover:shadow-lg p-6">
+            <div className="mt-8 pt-0 md:pt-5 w-full flex flex-col lg:flex-row items-start gap-10">
+              <div className="w-full lg:w-1/2 bg-white rounded-xl shadow-md hover:shadow-lg p-6">
                 <div className="flex justify-between items-center mb-6">
                   <div className="flex items-center gap-3">
                     <button
@@ -520,7 +555,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                     >
                       ←
                     </button>
-                    <h2 className="text-xl font-bold">Personal Area</h2>
+                    <h2 className="text-md md:text-xl font-bold">Personal Area</h2>
                   </div>
                 </div>
 
@@ -717,7 +752,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                           </>
                         )
                       ) : (
-                        <p className="text-lg font-medium break-words">
+                        <div className="text-lg font-medium break-words">
                           {key === 'address' ? (
                             fieldValues.country || fieldValues.street || fieldValues.city || fieldValues.state || fieldValues.zip ? (
                               <div className="text-md text-neutral-800 space-y-1">
@@ -744,7 +779,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                               : 'Not provided'}
                           </p>
                           )}
-                        </p>
+                        </div>
                       )}
                     </div>
                     <button
@@ -776,23 +811,30 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
               </div>
 
               </div>
+              {/* Right: FAQ Block */}
+              <div className="w-full lg:w-1/2 lg:sticky lg:top-36 px-5">
+                <FAQ items={personalInfoFAQ} />
+              </div>
+              </div>
             </>
           )}
 
           {activeSection === 'login-security' && (
-            <div className="mt-8 pt-10 pl-5 max-w-[600px] bg-white rounded-xl shadow-md hover:shadow-lg p-6">
-              {/* Header */}
-              <div className="flex justify-between items-center mb-6">
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setActiveSection(null)}
-                    className="text-sm text-black hover:underline"
-                  >
-                    ←
-                  </button>
-                  <h2 className="text-xl font-bold">Login & Security</h2>
+              <div className="mt-8 pt-0 md:pt-5 w-full flex flex-col lg:flex-row items-start gap-10">
+              {/* Left: Login & Security */}
+              <div className="w-full lg:w-1/2 bg-white rounded-xl shadow-md hover:shadow-lg p-6">
+                {/* Header */}
+                <div className="flex justify-between items-center mb-6">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setActiveSection(null)}
+                      className="text-sm text-black hover:underline"
+                    >
+                      ←
+                    </button>
+                    <h2 className="text-md md:text-xl font-bold">Login & Security</h2>
+                  </div>
                 </div>
-              </div>
 
               {/* Password Update */}
               <div className="space-y-2 mb-10">
@@ -880,12 +922,20 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                 </div>
               </div>
             </div>
+            {/* Right: FAQ */}
+              <div className="w-full lg:w-1/2 lg:sticky lg:top-36 px-5">
+                <FAQ items={loginSecurityFAQ} />
+              </div>
+            </div>
           )}
 
           {activeSection === 'payments' && (
-            <div className="mt-8 pt-10 pl-5 max-w-[600px] bg-white rounded-xl shadow-md hover:shadow-lg p-6">
+            <>
+            <div className="mt-8 pt-0 md:pt-5 flex flex-col lg:flex-row gap-10 w-full items-start">
+              <div className="w-full lg:w-1/2 bg-white rounded-xl shadow-md hover:shadow-lg p-6">
+
               {/* Header */}
-              <div className="flex justify-between items-center mb-6">
+                <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => setActiveSection(null)}
@@ -893,319 +943,323 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                   >
                     ←
                   </button>
-                  <h2 className="text-xl font-bold">Payments & Withdraw</h2>
+                  <h2 className="text-md md:text-xl font-bold">Payments & Withdrawal</h2>
                 </div>
               </div>
-
-              {/* Tabs */}
-              {currentUser.role === 'promoter' && (
-              <div className="flex gap-4 mb-6">
-                {/* <button
-                  className={`px-4 py-2 rounded-lg ${activePaymentTab === 'payout' ? 'bg-black text-white' : 'border'}`}
-                  onClick={() => setActivePaymentTab('payout')}
-                >
-                  Payout
-                </button> */}
-              </div>
-              )}
-
-              {/* Tabs */}
-              {currentUser.role === 'customer' && (
-              <div className="flex gap-4 mb-6">
-                {/* <button
-                  className={`px-4 py-2 rounded-lg ${activePaymentTab === 'payment' ? 'bg-black text-white' : 'border'}`}
-                  onClick={() => setActivePaymentTab('payment')}
-                >
-                  Payment
-                </button> */}
-              </div>
-              )}
-
-              {activePaymentTab === 'payment' && currentUser.role === 'customer' && (
-                <>
-                  <Heading title="Payment Method" subtitle="Manage your cards and payment methods" />
-                  {!savedCard ? (
-                    <button
-                      className="mt-4 px-4 border py-2 bg-black text-white transition hover:bg-white hover:text-black rounded-lg"
-                      onClick={() => setShowCardModal(true)}
-                    >
-                      Add Card
-                    </button>
-                  ) : (
-                    <div className="flex gap-4 mt-4">
-                    {/* Edit Button */}
-                    <button
-                      className="px-4 py-2 border border-black text-black rounded-lg hover:bg-black hover:text-white transition"
-                      onClick={() => setShowCardModal(true)}
-                    >
-                      Edit Card
-                    </button>
-
-                    {/* Delete Button */}
-                    <button
-                      className="px-4 py-2 border border-black text-black rounded-lg hover:bg-black hover:text-white transition"
-                      onClick={() => setShowConfirmDelete(true)}
-                    >
-                      Delete Card
-                    </button>
-                  </div>
-                  )}
-
-                  {savedCard && (
-                  <div
-                    className="relative w-full max-w-sm h-56 perspective mt-6"
-                    onClick={() => setIsFlipped(prev => !prev)}
+                {/* Tabs */}
+                {currentUser.role === 'promoter' && (
+                <div className="flex gap-4 mb-6">
+                  {/* <button
+                    className={`px-4 py-2 rounded-lg ${activePaymentTab === 'payout' ? 'bg-black text-white' : 'border'}`}
+                    onClick={() => setActivePaymentTab('payout')}
                   >
-                    <div
-                      className={`absolute w-full h-full sm:h-full h-[90%] duration-700 transform transition-transform preserve-3d ${
-                        isFlipped ? 'rotate-y-180' : ''
-                      }`}
+                    Payout
+                  </button> */}
+                </div>
+                )}
+
+                {/* Tabs */}
+                {currentUser.role === 'customer' && (
+                <div className="flex gap-4 mb-6">
+                  {/* <button
+                    className={`px-4 py-2 rounded-lg ${activePaymentTab === 'payment' ? 'bg-black text-white' : 'border'}`}
+                    onClick={() => setActivePaymentTab('payment')}
+                  >
+                    Payment
+                  </button> */}
+                </div>
+                )}
+
+                {activePaymentTab === 'payment' && currentUser.role === 'customer' && (
+                  <>
+                    <Heading title="Payment Method" subtitle="Manage your cards and payment methods" />
+                    {!savedCard ? (
+                      <button
+                        className="mt-4 px-4 border py-2 bg-black text-white transition hover:bg-white hover:text-black rounded-lg"
+                        onClick={() => setShowCardModal(true)}
                       >
-                      {/* FRONT SIDE */}
-                      {/* <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-xl flex items-center justify-center">
-                        <p className="text-lg font-semibold tracking-widest">Payment Card</p>
-                      </div> */}
-                      <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-xl flex items-center justify-center">
-                        <Image
-                          src={
-                            savedCard?.number?.replace(/\D/g, '').startsWith('4')
-                              ? '/images/Visa.png'
-                              : savedCard?.number?.replace(/\D/g, '').startsWith('5')
-                              ? '/images/MasterCard.png'
-                              : savedCard?.number?.replace(/\D/g, '').startsWith('3')
-                              ? '/images/americanexpress.png'
-                              : savedCard?.number?.replace(/\D/g, '').startsWith('6')
-                              ? '/images/Discover.png'
-                              : '/images/card.png'
-                          }
-                          alt="Card Type"
-                          className="w-24 h-auto object-contain"
-                          width={64}
-                          height={32}
-                        />
-                      </div>
+                        Add Card
+                      </button>
+                    ) : (
+                      <div className="flex gap-4 mt-4">
+                      {/* Edit Button */}
+                      <button
+                        className="px-4 py-2 border border-black text-black rounded-lg hover:bg-black hover:text-white transition"
+                        onClick={() => setShowCardModal(true)}
+                      >
+                        Edit Card
+                      </button>
 
+                      {/* Delete Button */}
+                      <button
+                        className="px-4 py-2 border border-black text-black rounded-lg hover:bg-black hover:text-white transition"
+                        onClick={() => setShowConfirmDelete(true)}
+                      >
+                        Delete Card
+                      </button>
+                    </div>
+                    )}
 
-                      {/* BACK SIDE */}
-                      <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-xl rotate-y-180 p-6 flex flex-col justify-between">
-                        <div className="text-sm tracking-wider text-gray-400">Payment Method</div>
-
-                        <div className="text-xl font-mono tracking-widest text-center my-4">
-                          **** **** **** {savedCard.number.slice(-4)}
+                    {savedCard && (
+                    <div
+                      className="relative w-full max-w-sm h-56 perspective mt-6"
+                      onClick={() => setIsFlipped(prev => !prev)}
+                    >
+                      <div
+                        className={`absolute w-full h-full sm:h-full h-[90%] duration-700 transform transition-transform preserve-3d ${
+                          isFlipped ? 'rotate-y-180' : ''
+                        }`}
+                        >
+                        {/* FRONT SIDE */}
+                        {/* <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-xl flex items-center justify-center">
+                          <p className="text-lg font-semibold tracking-widest">Payment Card</p>
+                        </div> */}
+                        <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-xl flex items-center justify-center">
+                          <Image
+                            src={
+                              savedCard?.number?.replace(/\D/g, '').startsWith('4')
+                                ? '/images/Visa.png'
+                                : savedCard?.number?.replace(/\D/g, '').startsWith('5')
+                                ? '/images/MasterCard.png'
+                                : savedCard?.number?.replace(/\D/g, '').startsWith('3')
+                                ? '/images/americanexpress.png'
+                                : savedCard?.number?.replace(/\D/g, '').startsWith('6')
+                                ? '/images/Discover.png'
+                                : '/images/card.png'
+                            }
+                            alt="Card Type"
+                            className="w-24 h-auto object-contain"
+                            width={64}
+                            height={32}
+                          />
                         </div>
 
-                        <div className="flex justify-between text-sm tracking-wider">
-                          <div>
-                            <p className="text-gray-400">Exp</p>
-                            <p className="font-semibold">**/*{savedCard.expiration?.slice(-1)}</p>
+
+                        {/* BACK SIDE */}
+                        <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-xl rotate-y-180 p-6 flex flex-col justify-between">
+                          <div className="text-sm tracking-wider text-gray-400">Payment Method</div>
+
+                          <div className="text-xl font-mono tracking-widest text-center my-4">
+                            **** **** **** {savedCard.number.slice(-4)}
                           </div>
-                          <div>
-                            <p className="text-gray-400">CVV</p>
-                            <p className="font-semibold">{savedCard.cvv?.[0]}**</p>
+
+                          <div className="flex justify-between text-sm tracking-wider">
+                            <div>
+                              <p className="text-gray-400">Exp</p>
+                              <p className="font-semibold">**/*{savedCard.expiration?.slice(-1)}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-400">CVV</p>
+                              <p className="font-semibold">{savedCard.cvv?.[0]}**</p>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  )}
+
+                    <div className="mt-10">
+                      <Heading title="Coupon" subtitle="Have a discount code?" />
+                      {showCouponInput ? (
+                        <div className="mt-4">
+                          <input
+                            type="text"
+                            value={couponCode}
+                            onChange={(e) => setCouponCode(e.target.value)}
+                            placeholder="Enter your coupon code"
+                            className="w-full border p-2 rounded-lg"
+                          />
+                          <div className="flex gap-2 mt-2">
+                            <button className="bg-black text-white px-4 py-1 rounded-lg hover:bg-neutral-800 transition">Apply</button>
+                            <button className="border px-4 py-1 rounded-lg hover:bg-black hover:text-white transition" onClick={() => setShowCouponInput(false)}>Cancel</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          className="mt-2 text-sm underline text-black"
+                          onClick={() => setShowCouponInput(true)}
+                        >
+                          Add Coupon
+                        </button>
+                      )}
+                    </div>
+                  </>
                 )}
 
-                  <div className="mt-10">
-                    <Heading title="Coupon" subtitle="Have a discount code?" />
-                    {showCouponInput ? (
-                      <div className="mt-4">
-                        <input
-                          type="text"
-                          value={couponCode}
-                          onChange={(e) => setCouponCode(e.target.value)}
-                          placeholder="Enter your coupon code"
-                          className="w-full border p-2 rounded-lg"
-                        />
-                        <div className="flex gap-2 mt-2">
-                          <button className="bg-black text-white px-4 py-1 rounded-lg hover:bg-neutral-800 transition">Apply</button>
-                          <button className="border px-4 py-1 rounded-lg hover:bg-black hover:text-white transition" onClick={() => setShowCouponInput(false)}>Cancel</button>
-                        </div>
-                      </div>
-                    ) : (
-                      <button
-                        className="mt-2 text-sm underline text-black"
-                        onClick={() => setShowCouponInput(true)}
-                      >
-                        Add Coupon
-                      </button>
-                    )}
-                  </div>
-                </>
-              )}
+                {activePaymentTab === 'payout' && ['promoter', 'host'].includes(currentUser.role) && (
+                  <>
+                    <Heading title="Withdrawal Method" subtitle="Manage your withdrawal credentials" />
 
-              {activePaymentTab === 'payout' && ['promoter', 'host'].includes(currentUser.role) && (
-                <>
-                  <Heading title="Withdrawal Method" subtitle="Manage your withdrawal credentials" />
-
-                  {savedPayout ? (
-                    <>
-                      {/* Flip Card */}
-                      <div
-                        className="relative w-full max-w-sm h-56 perspective mt-6 cursor-pointer"
-                        onClick={() => setIsFlipped(prev => !prev)}
-                      >
+                    {savedPayout ? (
+                      <>
+                        {/* Flip Card */}
                         <div
-                          className={`absolute w-full h-full sm:h-full h-[90%] duration-700 transform transition-transform preserve-3d ${
-                            isFlipped ? 'rotate-y-180' : ''
-                          }`}
+                          className="relative w-full max-w-sm h-56 perspective mt-6 cursor-pointer"
+                          onClick={() => setIsFlipped(prev => !prev)}
+                        >
+                          <div
+                            className={`absolute w-full h-full sm:h-full h-[90%] duration-700 transform transition-transform preserve-3d ${
+                              isFlipped ? 'rotate-y-180' : ''
+                            }`}
+                            >
+                            {/* FRONT */}
+                            <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-xl flex items-center justify-center">
+                              {/* <p className="text-lg font-bold tracking-widest uppercase border-b border-white">
+                                {savedPayout.method}
+                              </p> */}
+                              <Image
+                                  src={
+                                    savedPayout.method === 'paypal'
+                                      ? '/images/paypal.png'
+                                      : savedPayout.method === 'iban'
+                                      ? '/images/iban.png'
+                                      : savedPayout.method === 'revolut'
+                                      ? '/images/revolut.png'
+                                      : savedPayout.method === 'card' &&
+                                        savedPayout.number?.replace(/\D/g, '').startsWith('4')
+                                      ? '/images/Visa.png'
+                                      : savedPayout.method === 'card' &&
+                                        savedPayout.number?.replace(/\D/g, '').startsWith('5')
+                                      ? '/images/MasterCard.png'
+                                      : savedPayout.method === 'card' &&
+                                        savedPayout.number?.replace(/\D/g, '').startsWith('3')
+                                      ? '/images/americanexpress.png'
+                                      : savedPayout.method === 'card' &&
+                                        savedPayout.number?.replace(/\D/g, '').startsWith('6')
+                                      ? '/images/Discover.png'
+                                      : '/images/card.png'
+                                  }
+                                  alt={savedPayout.method}
+                                  className="w-24 h-auto object-contain"
+                                  width={64}
+                                  height={32}
+                                />
+                            </div>
+
+                            {/* BACK SIDE */}
+                            <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-xl rotate-y-180 p-6 flex flex-col justify-center items-center gap-4">
+                              <p className="text-xs tracking-wider text-gray-400">Withdraw Info</p>
+                              <p className="text-lg font-mono text-center">
+                                {savedPayout.method === 'paypal'
+                                  ? savedPayout.number
+                                  : savedPayout.number && savedPayout.number.length >= 8
+                                  ? `${savedPayout.number.slice(0, 4)} ${'*'.repeat(8)} ${savedPayout.number.slice(-4)}`
+                                  : '****'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Delete Button Only */}
+                        <div className="flex gap-4 mt-6">
+                          <button
+                            onClick={() => setShowConfirmDeletePayout(true)}
+                            className="border px-4 py-2 rounded-lg hover:bg-black hover:text-white transition"
                           >
-                          {/* FRONT */}
-                          <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-xl flex items-center justify-center">
-                            {/* <p className="text-lg font-bold tracking-widest uppercase border-b border-white">
-                              {savedPayout.method}
-                            </p> */}
-                             <Image
-                                src={
-                                  savedPayout.method === 'paypal'
-                                    ? '/images/paypal.png'
-                                    : savedPayout.method === 'iban'
-                                    ? '/images/iban.png'
-                                    : savedPayout.method === 'revolut'
-                                    ? '/images/revolut.png'
-                                    : savedPayout.method === 'card' &&
-                                      savedPayout.number?.replace(/\D/g, '').startsWith('4')
-                                    ? '/images/Visa.png'
-                                    : savedPayout.method === 'card' &&
-                                      savedPayout.number?.replace(/\D/g, '').startsWith('5')
-                                    ? '/images/MasterCard.png'
-                                    : savedPayout.method === 'card' &&
-                                      savedPayout.number?.replace(/\D/g, '').startsWith('3')
-                                    ? '/images/americanexpress.png'
-                                    : savedPayout.method === 'card' &&
-                                      savedPayout.number?.replace(/\D/g, '').startsWith('6')
-                                    ? '/images/Discover.png'
-                                    : '/images/card.png'
-                                }
-                                alt={savedPayout.method}
-                                className="w-24 h-auto object-contain"
-                                width={64}
-                                height={32}
-                              />
-                          </div>
-
-                          {/* BACK SIDE */}
-                          <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-xl rotate-y-180 p-6 flex flex-col justify-center items-center gap-4">
-                            <p className="text-xs tracking-wider text-gray-400">Withdraw Info</p>
-                            <p className="text-lg font-mono text-center">
-                              {savedPayout.method === 'paypal'
-                                ? savedPayout.number
-                                : savedPayout.number && savedPayout.number.length >= 8
-                                ? `${savedPayout.number.slice(0, 4)} ${'*'.repeat(8)} ${savedPayout.number.slice(-4)}`
-                                : '****'}
-                            </p>
-                          </div>
+                            Delete Method
+                          </button>
                         </div>
-                      </div>
+                      </>
+                    ) : (
+                      <>
+                        {/* Select Method */}
+                        <div className="mt-4">
+                          <label className="block mb-2 font-semibold">Withdrawal Method</label>
+                          <select
+                            value={payoutInfo.method}
+                            onChange={(e) => setPayoutInfo({ ...payoutInfo, method: e.target.value })}
+                            className="w-full border border-neutral-300 rounded-md px-4 py-3"
+                          >
+                            <option value="card">Credit/Debit Card</option>
+                            <option value="iban">IBAN</option>
+                            <option value="revolut">Revolut</option>
+                            <option value="paypal">PayPal</option>
+                          </select>
+                        </div>
 
-                      {/* Delete Button Only */}
-                      <div className="flex gap-4 mt-6">
-                        <button
-                          onClick={() => setShowConfirmDeletePayout(true)}
-                          className="border px-4 py-2 rounded-lg hover:bg-black hover:text-white transition"
-                        >
-                          Delete Method
-                        </button>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      {/* Select Method */}
-                      <div className="mt-4">
-                        <label className="block mb-2 font-semibold">Withdrawal Method</label>
-                        <select
-                          value={payoutInfo.method}
-                          onChange={(e) => setPayoutInfo({ ...payoutInfo, method: e.target.value })}
-                          className="w-full border border-neutral-300 rounded-md px-4 py-3"
-                        >
-                          <option value="card">Credit/Debit Card</option>
-                          <option value="iban">IBAN</option>
-                          <option value="revolut">Revolut</option>
-                          <option value="paypal">PayPal</option>
-                        </select>
-                      </div>
+                        {/* Input with Animated Label & Icon */}
+                        <div className="relative w-full mt-6">
+                        <input
+                            value={payoutInfo.number}
+                            onChange={(e) => {
+                              let val = e.target.value;
 
-                      {/* Input with Animated Label & Icon */}
-                      <div className="relative w-full mt-6">
-                      <input
-                          value={payoutInfo.number}
-                          onChange={(e) => {
-                            let val = e.target.value;
+                              // format for card/revolut
+                              if (['card', 'revolut'].includes(payoutInfo.method)) {
+                                val = val.replace(/\D/g, '').slice(0, 16).replace(/(.{4})/g, '$1 ').trim();
+                              }
 
-                            // format for card/revolut
-                            if (['card', 'revolut'].includes(payoutInfo.method)) {
-                              val = val.replace(/\D/g, '').slice(0, 16).replace(/(.{4})/g, '$1 ').trim();
-                            }
+                              // format for iban
+                              if (payoutInfo.method === 'iban') {
+                                val = val.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 27);
+                              }
 
-                            // format for iban
-                            if (payoutInfo.method === 'iban') {
-                              val = val.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 27);
-                            }
-
-                            setPayoutInfo({ ...payoutInfo, number: val });
-                          }}
-                          className="peer w-full border border-neutral-300 rounded-lg px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black pr-14"
-                        />
-
-                        <label
-                          htmlFor="payoutInput"
-                          className="absolute left-4 top-3 text-base text-neutral-500 transition-all duration-200 ease-in-out
-                            peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-neutral-400
-                            peer-focus:top-2 peer-focus:text-sm peer-focus:text-black"
-                        >
-                          {payoutInfo.method === 'iban'
-                            ? 'IBAN (Starts with IT)'
-                            : payoutInfo.method === 'paypal'
-                            ? 'PayPal username or phone'
-                            : payoutInfo.method === 'revolut'
-                            ? 'Revolut 16-digit number'
-                            : 'Card number'}
-                        </label>
-
-                        {/* Right-side Logo */}
-                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                          <Image
-                            src={
-                              payoutInfo.method === 'paypal'
-                                ? '/images/paypal.png'
-                                : payoutInfo.method === 'iban'
-                                ? '/images/iban.png'
-                                : payoutInfo.method === 'revolut'
-                                ? '/images/revolut.png'
-                                : payoutInfo.number.replace(/\D/g, '').startsWith('4')
-                                ? '/images/Visa.png'
-                                : payoutInfo.number.replace(/\D/g, '').startsWith('5')
-                                ? '/images/MasterCard.png'
-                                : payoutInfo.number.replace(/\D/g, '').startsWith('3')
-                                ? '/images/americanexpress.png'
-                                : '/images/card.png'
-                            }
-                            alt="Method"
-                            className="w-8 h-5 object-contain"
-                            width={50}
-                            height={50}
+                              setPayoutInfo({ ...payoutInfo, number: val });
+                            }}
+                            className="peer w-full border border-neutral-300 rounded-lg px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black pr-14"
                           />
+
+                          <label
+                            htmlFor="payoutInput"
+                            className="absolute left-4 top-3 text-base text-neutral-500 transition-all duration-200 ease-in-out
+                              peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-neutral-400
+                              peer-focus:top-2 peer-focus:text-sm peer-focus:text-black"
+                          >
+                            {payoutInfo.method === 'iban'
+                              ? 'IBAN (Starts with IT)'
+                              : payoutInfo.method === 'paypal'
+                              ? 'PayPal username or phone'
+                              : payoutInfo.method === 'revolut'
+                              ? 'Revolut 16-digit number'
+                              : 'Card number'}
+                          </label>
+
+                          {/* Right-side Logo */}
+                          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                            <Image
+                              src={
+                                payoutInfo.method === 'paypal'
+                                  ? '/images/paypal.png'
+                                  : payoutInfo.method === 'iban'
+                                  ? '/images/iban.png'
+                                  : payoutInfo.method === 'revolut'
+                                  ? '/images/revolut.png'
+                                  : payoutInfo.number.replace(/\D/g, '').startsWith('4')
+                                  ? '/images/Visa.png'
+                                  : payoutInfo.number.replace(/\D/g, '').startsWith('5')
+                                  ? '/images/MasterCard.png'
+                                  : payoutInfo.number.replace(/\D/g, '').startsWith('3')
+                                  ? '/images/americanexpress.png'
+                                  : '/images/card.png'
+                              }
+                              alt="Method"
+                              className="w-8 h-5 object-contain"
+                              width={50}
+                              height={50}
+                            />
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Save Button */}
-                      <div className="flex gap-4 mt-6">
-                        <button
-                          onClick={handleSavePayoutMethod}
-                          className="bg-black text-white px-4 py-2 rounded-lg"
-                        >
-                          Save Payout
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </>
-              )}
+                        {/* Save Button */}
+                        <div className="flex gap-4 mt-6">
+                          <button
+                            onClick={handleSavePayoutMethod}
+                            className="bg-black text-white px-4 py-2 rounded-lg"
+                          >
+                            Save Payout
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
+              </div>
 
+              <div className="w-full lg:w-1/2 lg:sticky lg:top-32 px-5">
+                <FAQ items={paymentsFAQ} />
+              </div>
             </div>
+            </>
           )}
 
           {showConfirmDeletePayout && (
@@ -1517,7 +1571,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
               className="cursor-pointer p-6 rounded-xl shadow-md hover:shadow-lg transition"
             >
               <div className="text-4xl text-[#000] mb-4"><RiSecurePaymentLine /></div>
-              <p className="text-lg font-semibold">Payments & Withdraw</p>
+              <p className="text-lg font-semibold">Payments & Withdrawal</p>
               <p className="text-sm text-neutral-600">View and update your withdrawal methods</p>
             </div>
           </div>

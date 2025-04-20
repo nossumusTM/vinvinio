@@ -202,11 +202,13 @@ const ListingCard: React.FC<ListingCardProps> = ({
                 <Image
                   key={i}
                   fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   className={`object-cover h-full w-full absolute top-0 left-0 rounded-xl transition-opacity duration-700 ease-in-out ${
                     i === activeImageIndex ? 'opacity-100' : 'opacity-0'
                   }`}
                   src={img}
                   alt={`Listing ${i}`}
+                  priority
                 />
               ))
             )}
