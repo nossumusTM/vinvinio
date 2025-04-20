@@ -160,34 +160,75 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
 
   const personalInfoFAQ = [
     {
+      question: 'Why should my username be unique?',
+      answer:
+        'Your username helps identify you on the platform. A unique name prevents confusion and ensures others can easily recognize and connect with you.',
+    },
+    {
+      question: 'Why is my email address required?',
+      answer:
+        'Your email is used for account verification, important updates, and booking confirmations. Make sure it’s always valid and accessible.',
+    },
+    {
+      question: 'Do I need to provide a phone number?',
+      answer:
+        'Phone number is optional. However, adding it can help in urgent communication between you and your host or guest, especially during travel.',
+    },
+    {
+      question: 'Why should I provide a preferred contact method?',
+      answer:
+        'Choosing a preferred contact method helps us know how to best reach you, and ensures smoother communication between you, travelers, and hosts.',
+    },
+    {
       question: 'How can I update my legal name?',
-      answer: 'Click "Edit" next to Legal Name, update the field, and click Save.',
+      answer:
+        'Click "Edit" next to Legal Name, make the necessary changes, and hit Save. Your legal name helps with billing and identity verification.',
     },
     {
       question: 'Why is my address important?',
-      answer: 'Your billing and payout depend on your correct address. Make sure it’s up to date.',
+      answer:
+        'Your address is used for billing and helps speed up the checkout process. It also ensures that invoices and payout info are correctly generated.',
     },
-  ];
+  ];  
 
   const loginSecurityFAQ = [
     {
       question: 'How can I change my password?',
-      answer: 'Click "Update" next to Password, enter your current and new passwords, and confirm.',
+      answer:
+        'Click "Update" next to Password. For security reasons, you’ll need to enter your current password, then your new password and confirm it. Note: Passwords are securely stored as encrypted hashes — meaning even we can’t see them.',
     },
     {
       question: 'What if I forgot my password?',
-      answer: 'Click "Forgot password" on the login screen to reset it via email.',
+      answer:
+        'No worries! Just click "Forgot password" on the login screen. We’ll send you a secure email link to reset your password.',
     },
-  ];
+    {
+      question: 'Can I deactivate my account?',
+      answer:
+        'Yes, you can. Click "Deactivate" in the Account section. Please note: This action is permanent. Once confirmed, your account will be deactivated and removed from the platform — it cannot be undone.',
+    },
+  ];  
 
   const paymentsFAQ = [
     {
       question: 'How do I save my payment card?',
-      answer: 'Click Add Card or Edit Card, fill in your billing info, and click Save.',
+      answer:
+        'Click "Add Card" or "Edit Card" to enter your billing details. Your card number is encrypted before being stored in our database, ensuring maximum security. If you prefer not to save it, you can enter it at checkout — it won’t be stored on our platform.',
+    },
+    {
+      question: 'What withdrawal methods are supported?',
+      answer:
+        'We support Credit/Debit Cards, Revolut, IBAN, and PayPal for payouts. We only store the essential parts securely: card number for cards, IBAN number for IBAN, and either username or phone number for PayPal.',
     },
     {
       question: 'When are payouts processed?',
-      answer: 'Payouts are processed twice a month. Make sure your withdrawal method is added.',
+      answer:
+        'Payouts are processed twice a month. To ensure timely payments, make sure your withdrawal method is correctly added and up to date.',
+    },
+    {
+      question: 'Can I delete my saved payment or withdrawal method?',
+      answer:
+        'Absolutely. You can delete your stored card or withdrawal method at any time and update it with new credentials as needed.',
     },
   ];  
 
@@ -555,7 +596,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                     >
                       ←
                     </button>
-                    <h2 className="text-md md:text-xl font-bold">Personal Area</h2>
+                    <h2 className="text-md md:text-lg font-bold">Personal Area</h2>
                   </div>
                 </div>
 
@@ -812,7 +853,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
 
               </div>
               {/* Right: FAQ Block */}
-              <div className="w-full lg:w-1/2 lg:sticky lg:top-36 px-5">
+              <div className="w-full lg:w-1/2 lg:sticky lg:top-36 px-5 md:px-20">
                 <FAQ items={personalInfoFAQ} />
               </div>
               </div>
@@ -822,7 +863,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
           {activeSection === 'login-security' && (
               <div className="mt-8 pt-0 md:pt-5 w-full flex flex-col lg:flex-row items-start gap-10">
               {/* Left: Login & Security */}
-              <div className="w-full lg:w-1/2 bg-white rounded-xl shadow-md hover:shadow-lg p-6">
+              <div className="w-full lg:w-1/2 bg-white rounded-xl shadow-md hover:shadow-lg p-6 mt-0 md:mt-9">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-6">
                   <div className="flex items-center gap-3">
@@ -832,7 +873,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                     >
                       ←
                     </button>
-                    <h2 className="text-md md:text-xl font-bold">Login & Security</h2>
+                    <h2 className="text-md md:text-lg font-bold">Login & Security</h2>
                   </div>
                 </div>
 
@@ -900,7 +941,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                           toast.error('Failed to update password. Check current password.')
                         }
                       }}
-                      className="text-sm text-white bg-[#000] hover:bg-neutral-700 p-2 rounded-lg"
+                      className="text-sm text-white bg-[#000] hover:bg-neutral-800 p-2 rounded-lg"
                     >
                       Update Password
                     </button>
@@ -923,7 +964,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
               </div>
             </div>
             {/* Right: FAQ */}
-              <div className="w-full lg:w-1/2 lg:sticky lg:top-36 px-5">
+              <div className="w-full lg:w-1/2 lg:sticky lg:top-36 px-5 md:px-20">
                 <FAQ items={loginSecurityFAQ} />
               </div>
             </div>
@@ -943,7 +984,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                   >
                     ←
                   </button>
-                  <h2 className="text-md md:text-xl font-bold">Payments & Withdrawal</h2>
+                  <h2 className="text-md md:text-lg font-bold">Payments & Withdrawal</h2>
                 </div>
               </div>
                 {/* Tabs */}
@@ -1255,7 +1296,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                 )}
               </div>
 
-              <div className="w-full lg:w-1/2 lg:sticky lg:top-32 px-5">
+              <div className="w-full lg:w-1/2 lg:sticky lg:top-32 px-5 md:px-20 mt-0 md:mt-5">
                 <FAQ items={paymentsFAQ} />
               </div>
             </div>

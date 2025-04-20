@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import Image from 'next/image';
 
 interface FAQItem {
   question: string;
@@ -20,8 +21,20 @@ const FAQ: React.FC<FAQProps> = ({ items }) => {
   };
 
   return (
-    <div className="mt-10 space-y-4">
-      <h3 className="text-xl font-semibold text-center">Things You Might Wonder</h3>
+    <div className="relative mt-10 space-y-4">
+      {/* Background Logo */}
+      {/* <div className="absolute w-full flex justify-center items-center top-1/2 -translate-y-1/2 pointer-events-none z-0">
+        <Image
+          src="/images/question.png"
+          alt="Vuoiaggio Logo"
+          width={300}
+          height={300}
+          priority
+          className="opacity-10"
+        />
+      </div> */}
+
+      <h3 className="text-md md:text-xl font-semibold text-center">Things You Might Wonder</h3>
       {items.map((item, index) => {
         const isOpen = openIndex === index;
         return (
