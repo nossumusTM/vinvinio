@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface ConfirmPopupProps {
@@ -28,6 +28,7 @@ const ConfirmPopup: React.FC<ConfirmPopupProps> = ({
 }) => {
 
   const popupRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
@@ -42,36 +43,13 @@ const ConfirmPopup: React.FC<ConfirmPopupProps> = ({
     };
   }, []);
 
-  // return (
-  //   <div className="p-4 fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm rounded-3xl">
-  //     <div ref={popupRef} className="bg-white p-6 rounded-xl max-w-sm w-full shadow-lg">
-  //       <h3 className="text-lg font-semibold mb-2">{title}</h3>
-  //       {message && <p className="text-sm text-neutral-700 mb-6">{message}</p>}
-  //       {!hideActions && (
-  //       <div className="flex justify-end gap-3">
-  //         {!hideCancel && (
-  //           <button
-  //             onClick={onCancel}
-  //             className="px-4 py-2 border border-neutral-400 rounded-xl hover:bg-neutral-100 transition"
-  //           >
-  //             {cancelLabel}
-  //           </button>
-  //         )}
-  //         <button
-  //           onClick={onConfirm}
-  //           className="px-4 py-2 bg-black text-white rounded-xl
-            
-            
-            
-  //            hover:opacity-90 transition"
-  //         >
-  //           {confirmLabel}
-  //         </button>
-  //       </div>
-  //       )}
-  //     </div>
-  //   </div>
-  // );
+  const handleConfirm = async () => {
+    if (!onConfirm) return;
+    setIsLoading(true);
+    await onConfirm();
+    setIsLoading(false);
+    onCancel?.(); // Close popup after confirmation
+  };
 
   return (
     <AnimatePresence>
@@ -106,11 +84,23 @@ const ConfirmPopup: React.FC<ConfirmPopupProps> = ({
                   {cancelLabel}
                 </button>
               )}
-              <button
-                onClick={onConfirm}
-                className="px-4 py-2 bg-black text-white rounded-xl hover:opacity-90 transition"
+             <button
+                onClick={async () => {
+                  if (onConfirm) {
+                    setIsLoading(true);
+                    await onConfirm();         // Wait for the async action
+                    setIsLoading(false);
+                    onCancel?.();              // Close the popup AFTER toast
+                  }
+                }}
+                disabled={isLoading}
+                className="px-4 py-2 bg-black text-white rounded-xl hover:opacity-90 transition flex items-center justify-center min-w-[100px]"
               >
-                {confirmLabel}
+                {isLoading ? (
+                  <span className="loader inline-block w-5 h-5 border-2 border-t-transparent border-white rounded-full animate-spin"></span>
+                ) : (
+                  confirmLabel
+                )}
               </button>
             </div>
           )}

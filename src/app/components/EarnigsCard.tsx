@@ -28,7 +28,7 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
   totalEarnings
 }) => {
 
-  const [view, setView] = useState<'daily' | 'monthly' | 'yearly' | 'all'>('monthly');
+  const [view, setView] = useState<'daily' | 'monthly' | 'yearly' | 'all'>('daily');
 
   const dataMap = {
     daily: dailyData,

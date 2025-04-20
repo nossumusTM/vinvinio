@@ -6,6 +6,7 @@ import { toast } from 'react-hot-toast';
 import { SafeUser } from '@/app/types';
 import { useRouter } from 'next/navigation';
 import PlatformCard from '../components/PlatformCard';
+import ConfirmPopup from '../components/ConfirmPopup';
 import { AxiosError } from 'axios';
 
 interface Listing {
@@ -20,6 +21,8 @@ interface Listing {
   languages: string[];
   locationType: string[];
   locationDescription: string;
+  locationValue?: any;
+  location?: any;
   imageSrc: string[];
   user: {
     name: string;
@@ -62,7 +65,15 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
   const [hostAnalytics, setHostAnalytics] = useState<any>(null);
   const [promoterAnalytics, setPromoterAnalytics] = useState<any>(null);
 
+  const [hostUserId, setHostUserId] = useState('');
+  const [promoterUserId, setPromoterUserId] = useState('');
 
+  const [showConfirmPopup, setShowConfirmPopup] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<() => void>(() => {});
+
+  const [showHostWithdrawConfirm, setShowHostWithdrawConfirm] = useState(false);
+  const [showPromoterWithdrawConfirm, setShowPromoterWithdrawConfirm] = useState(false);
+  
   const fetchListings = async () => {
     try {
       const res = await axios.get('/api/listings/pending');
@@ -110,31 +121,38 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
     }
   };  
 
-  const handleWithdraw = async () => {
-    if (!targetUserId) return alert('Please provide a promoter userId');
+  const handleWithdraw = async (userId: string) => {
+    if (!userId) return alert('Please provide a promoter userId');
     try {
-      const res = await axios.post('/api/analytics/withdraw', { userId: targetUserId });
+      const res = await axios.post('/api/analytics/withdraw', { userId });
       toast.success(res.data.message, {
-        iconTheme: { primary: 'linear-gradient(135deg, #3d08ff, #04aaff, #3604ff, #0066ff, #3d08ff)', secondary: '#fff' },
+        iconTheme: {
+          primary: 'linear-gradient(135deg, #3d08ff, #04aaff, #3604ff, #0066ff, #3d08ff)',
+          secondary: '#fff',
+        },
       });
-      setTargetUserId('');
+      
+      setPromoterUserId('');
     } catch {
       toast.error('Failed to withdraw for this promoter.');
     }
   };
 
-  const handleWithdrawForHosts = async () => {
-    if (!targetUserId) return alert('Please provide a host userId');
+  const handleWithdrawForHosts = async (userId: string) => {
+    if (!userId) return alert('Please provide a host userId');
     try {
-      const res = await axios.post('/api/analytics/host/withdraw', { userId: targetUserId });
+      const res = await axios.post('/api/analytics/host/withdraw', { userId });
       toast.success(res.data.message, {
-        iconTheme: { primary: 'linear-gradient(135deg, #3d08ff, #04aaff, #3604ff, #0066ff, #3d08ff)', secondary: '#fff' },
-      });
-      setTargetUserId('');
+        iconTheme: {
+          primary: 'linear-gradient(135deg, #3d08ff, #04aaff, #3604ff, #0066ff, #3d08ff)',
+          secondary: '#fff',
+        },
+      });      
+      setHostUserId('');
     } catch {
       toast.error('Failed to withdraw for this host.');
     }
-  };  
+  };
 
   const handleHostAnalytics = async () => {
     try {
@@ -281,6 +299,9 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
                 ))}
               </div>
               <h2 className="text-xl font-bold">{listing.title}</h2>
+              {listing.locationValue && (
+                <p><strong>Location:</strong> {listing.locationValue.toUpperCase() || 'N/A'}</p>
+              )}
               <p className="text-neutral-700">{listing.description}</p>
               <div className="text-sm text-neutral-500 gap-2 flex flex-col">
                 <p><strong>Submitted by:</strong> {listing.user.name} ({listing.user.email})</p>
@@ -330,17 +351,23 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
             <input
             type="text"
             placeholder="Enter Promoter userId"
-            value={targetUserId}
-            onChange={(e) => setTargetUserId(e.target.value)}
+            value={promoterUserId}
+            onChange={(e) => setPromoterUserId(e.target.value)}
             className="border p-2 rounded-lg w-full mb-3"
-            />
-            <button
-            onClick={handleWithdraw}
+          />
+          <button
+            onClick={() => {
+              if (!promoterUserId.trim()) {
+                toast.error("Please provide a promoter userId.");
+                return;
+              }
+              setShowPromoterWithdrawConfirm(true);
+            }}
             disabled={isLoading}
             className="w-full px-4 py-2 bg-black text-white rounded-lg hover:bg-neutral-800 transition"
-            >
+          >
             Withdraw
-            </button>
+          </button>
         </div>
 
         {/* Withdraw for Host */}
@@ -349,12 +376,18 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
           <input
             type="text"
             placeholder="Enter Host userId"
-            value={targetUserId}
-            onChange={(e) => setTargetUserId(e.target.value)}
+            value={hostUserId}
+            onChange={(e) => setHostUserId(e.target.value)}
             className="border p-2 rounded-lg w-full mb-3"
           />
           <button
-            onClick={handleWithdrawForHosts}
+            onClick={() => {
+              if (!hostUserId.trim()) {
+                toast.error("Please provide a host userId.");
+                return;
+              }
+              setShowHostWithdrawConfirm(true);
+            }}
             disabled={isLoading}
             className="w-full px-4 py-2 bg-black text-white rounded-lg hover:bg-neutral-800 transition"
           >
@@ -373,10 +406,17 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
             className="w-full border p-2 mb-2 rounded-lg"
             />
             <button
-            onClick={() => onCancel(selectedReservationId)}
-            className="w-full bg-black text-white py-2 rounded-lg hover:bg-neutral-800"
+              onClick={() => {
+                if (!selectedReservationId.trim()) {
+                  toast.error("Please provide a reservation ID.");
+                  return;
+                }
+                setConfirmAction(() => () => onCancel(selectedReservationId));
+                setShowConfirmPopup(true);
+              }}
+              className="w-full bg-black text-white py-2 rounded-lg hover:bg-neutral-800"
             >
-            Cancel Reservation
+              Cancel Reservation
             </button>
         </div>
         </div>
@@ -438,6 +478,42 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
         )}
       </div>
     </div>
+
+    {showConfirmPopup && (
+      <ConfirmPopup
+        title="Confirm Action"
+        message="Are you sure you want to proceed?"
+        confirmLabel="Confirm"
+        cancelLabel="Cancel"
+        onConfirm={() => {
+          confirmAction();
+          setShowConfirmPopup(false);
+        }}
+        onCancel={() => setShowConfirmPopup(false)}
+      />
+    )}
+
+    {showPromoterWithdrawConfirm && (
+      <ConfirmPopup
+        title="Confirm Withdrawal"
+        message="Are you sure you want to withdraw for this promoter?"
+        onConfirm={() => handleWithdraw(promoterUserId)}
+        onCancel={() => setShowPromoterWithdrawConfirm(false)}
+        confirmLabel="Confirm"
+        cancelLabel="Cancel"
+      />
+    )}
+
+    {showHostWithdrawConfirm && (
+      <ConfirmPopup
+        title="Confirm Withdrawal"
+        message="Are you sure you want to withdraw for this host?"
+        onConfirm={() => handleWithdrawForHosts(hostUserId)}
+        onCancel={() => setShowHostWithdrawConfirm(false)}
+        confirmLabel="Confirm"
+        cancelLabel="Cancel"
+      />
+    )}
     </>
   );
 };

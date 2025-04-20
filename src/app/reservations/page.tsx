@@ -17,7 +17,7 @@ const ReservationsPage = async () => {
             redirect('/');
     }
 
-    const reservations = await getReservations({ authorId: currentUser.id });
+    const reservations = await getReservations({ authorId: currentUser.id, skip: 0, take: 4 });
 
     if (reservations.length === 0) {
         return (

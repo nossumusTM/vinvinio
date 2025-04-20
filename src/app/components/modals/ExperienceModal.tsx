@@ -1,236 +1,3 @@
-// 'use client';
-
-// import axios from 'axios';
-// import { useState, useMemo } from 'react';
-// import { useForm, FieldValues, SubmitHandler } from 'react-hook-form';
-// import dynamic from 'next/dynamic';
-// import { useRouter } from 'next/navigation';
-// import toast from 'react-hot-toast';
-
-// import Modal from './Modal';
-// import Input from '../inputs/Input';
-// import Heading from '../Heading';
-// import ImageUpload from '../inputs/ImageUpload';
-// import CountrySelect from '../inputs/CountrySelect';
-// import Counter from '../inputs/Counter';
-// import CategoryInput from '../inputs/CategoryInput';
-// import { categories } from '../navbar/Categories';
-
-// import useExperienceModal from '@/app/hooks/useExperienceModal';
-
-// enum STEPS {
-//   CATEGORY = 0,
-//   LOCATION = 1,
-//   INFO = 2,
-//   IMAGES = 3,
-//   DESCRIPTION = 4,
-//   PRICE = 5,
-// }
-
-// const ExperienceModal = () => {
-//   const experienceModal = useExperienceModal();
-//   const router = useRouter();
-
-//   const [step, setStep] = useState(STEPS.CATEGORY);
-//   const [isLoading, setIsLoading] = useState(false);
-
-//   const {
-//     register,
-//     handleSubmit,
-//     setValue,
-//     watch,
-//     reset,
-//     formState: { errors }
-//   } = useForm<FieldValues>({
-//     defaultValues: {
-//       category: '',
-//       location: null,
-//       guestCount: 1,
-//       imageSrc: [],
-//       title: '',
-//       description: '',
-//       price: 100,
-//     }
-//   });
-
-//   const category = watch('category');
-//   const location = watch('location');
-//   const guestCount = watch('guestCount');
-//   const imageSrc = watch('imageSrc');
-
-//   const Map = useMemo(
-//     () => dynamic(() => import('../Map'), { ssr: false }),
-//     [location]
-//   );
-
-//   const setCustomValue = (id: string, value: any) => {
-//     setValue(id, value, {
-//       shouldDirty: true,
-//       shouldTouch: true,
-//       shouldValidate: true,
-//     });
-//   };
-
-//   const onBack = () => setStep((prev) => prev - 1);
-//   const onNext = () => setStep((prev) => prev + 1);
-
-//   const onSubmit: SubmitHandler<FieldValues> = (data) => {
-//     if (step !== STEPS.PRICE) {
-//       return onNext();
-//     }
-
-//     setIsLoading(true);
-
-//     axios.post('/api/listings', data)
-//       .then(() => {
-//         toast.success('Tour created!');
-//         reset();
-//         experienceModal.onClose();
-//         router.refresh();
-//         setStep(STEPS.CATEGORY);
-//       })
-//       .catch(() => toast.error('Something went wrong.'))
-//       .finally(() => setIsLoading(false));
-//   };
-
-//   const actionLabel = useMemo(() => (
-//     step === STEPS.PRICE ? 'Create' : 'Next'
-//   ), [step]);
-
-//   const secondaryActionLabel = useMemo(() => (
-//     step === STEPS.CATEGORY ? undefined : 'Back'
-//   ), [step]);
-
-//   // Step content
-//   let bodyContent: JSX.Element = <div />;
-
-//   if (step === STEPS.CATEGORY) {
-//     bodyContent = (
-//       <div className="flex flex-col gap-8">
-//         <Heading
-//           title="What type of experience are you offering?"
-//           subtitle="Pick a category"
-//         />
-//         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto">
-//           {categories.map((item) => (
-//             <div key={item.label} className="col-span-1">
-//               <CategoryInput
-//                 onClick={(category) => setCustomValue('category', category)}
-//                 selected={category === item.label}
-//                 label={item.label}
-//                 icon={item.icon}
-//               />
-//             </div>
-//           ))}
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   if (step === STEPS.LOCATION) {
-//     bodyContent = (
-//       <div className="flex flex-col gap-8">
-//         <Heading title="Where is your tour located?" subtitle="Choose a location" />
-//         <CountrySelect
-//           value={location}
-//           onChange={(value) => setCustomValue('location', value)}
-//         />
-//         <Map center={location?.latlng} />
-//       </div>
-//     );
-//   }
-
-//   if (step === STEPS.INFO) {
-//     bodyContent = (
-//       <div className="flex flex-col gap-8">
-//         <Heading title="Tour details" subtitle="How many people can join?" />
-//         <Counter
-//           title="Guests"
-//           subtitle="Maximum number of guests"
-//           value={guestCount}
-//           onChange={(value) => setCustomValue('guestCount', value)}
-//         />
-//       </div>
-//     );
-//   }
-
-//   if (step === STEPS.IMAGES) {
-//     bodyContent = (
-//       <div className="flex flex-col gap-8">
-//         <Heading
-//           title="Upload photos and video"
-//           subtitle="Show your experience! Up to 10 images and 1 video (max 30MB)"
-//         />
-//         <ImageUpload
-//           multiple
-//           maxImages={10}
-//           maxVideoSizeMB={30}
-//           value={imageSrc}
-//           onChange={(value: string[]) => setCustomValue('imageSrc', value)}
-//         />
-//       </div>
-//     );
-//   }  
-
-//   if (step === STEPS.DESCRIPTION) {
-//     bodyContent = (
-//       <div className="flex flex-col gap-8">
-//         <Heading title="Describe your tour" subtitle="Make it exciting and fun!" />
-//         <Input
-//           id="title"
-//           label="Title"
-//           disabled={isLoading}
-//           register={register}
-//           errors={errors}
-//           required
-//         />
-//         <Input
-//           id="description"
-//           label="Description"
-//           disabled={isLoading}
-//           register={register}
-//           errors={errors}
-//           required
-//         />
-//       </div>
-//     );
-//   }
-
-//   if (step === STEPS.PRICE) {
-//     bodyContent = (
-//       <div className="flex flex-col gap-8">
-//         <Heading title="Pricing" subtitle="Set your price per person" />
-//         <Input
-//           id="price"
-//           label="Price"
-//           type="number"
-//           formatPrice
-//           disabled={isLoading}
-//           register={register}
-//           errors={errors}
-//           required
-//         />
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <Modal
-//       disabled={isLoading}
-//       isOpen={experienceModal.isOpen}
-//       title="Add an Experience"
-//       actionLabel={actionLabel}
-//       onSubmit={handleSubmit(onSubmit)}
-//       secondaryActionLabel={secondaryActionLabel}
-//       secondaryAction={step === STEPS.CATEGORY ? undefined : onBack}
-//       onClose={experienceModal.onClose}
-//       body={bodyContent}
-//     />
-//   );
-// };
-
-// export default ExperienceModal;
-
 'use client';
 
 import axios from 'axios';
@@ -559,22 +326,17 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
   
       const submissionData = {
         ...data,
-        status: currentUser?.role === 'moder' ? 'approved' : 'pending',
+        status: 'pending',
       };
   
       axios.post('/api/listings', submissionData)
         .then(() => {
-          toast.success(
-            currentUser?.role === 'moder'
-              ? 'Listing published!'
-              : 'Listing submitted for review',
-            {
-              iconTheme: {
-                primary: 'linear-gradient(135deg, #3604ff, #04aaff, #3604ff, #0066ff, #ffffff)',
-                secondary: '#fff',
-              },
-            }
-          );
+          toast.success('Listing submitted for review', {
+            iconTheme: {
+              primary: 'linear-gradient(135deg, #3604ff, #04aaff, #3604ff, #0066ff, #ffffff)',
+              secondary: '#fff',
+            },
+          });          
           reset();
           experienceModal.onClose();
           router.refresh();
@@ -584,96 +346,6 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
         .finally(() => setIsLoading(false));
     }
   };  
-
-  // const onSubmit: SubmitHandler<FieldValues> = (data) => {
-  //   // CATEGORY
-  //   if (step === STEPS.CATEGORY) {
-  //     if (!category || (Array.isArray(category) && category.length === 0)) {
-  //       toast.error('Please select a category to continue.');
-  //       return;
-  //     }
-  //     return onNext();
-  //   }
-  
-  //   // LOCATION
-  //   if (step === STEPS.LOCATION) {
-  //     if (!location || !location.value) {
-  //       toast.error('Please select a location.');
-  //       return;
-  //     }
-  //     return onNext();
-  //   }
-  
-  //   // INFO1
-  //   if (step === STEPS.INFO1) {
-  //     if (!data.hostDescription || data.guestCount < 1) {
-  //       toast.error('Please fill in host description and guest count.');
-  //       return;
-  //     }
-  //     return onNext();
-  //   }
-  
-  //   // INFO2
-  //   if (step === STEPS.INFO2) {
-  //     if (!data.experienceHour || !data.meetingPoint) {
-  //       toast.error('Please provide duration and meeting point.');
-  //       return;
-  //     }
-  //     return onNext();
-  //   }
-  
-  //   // INFO3
-  //   if (step === STEPS.INFO3) {
-  //     if (
-  //       !data.languages || data.languages.length === 0 ||
-  //       !data.locationType || data.locationType.length === 0 ||
-  //       !data.locationDescription
-  //     ) {
-  //       toast.error('Please provide languages, location type, and description.');
-  //       return;
-  //     }
-  //     return onNext();
-  //   }
-  
-  //   // IMAGES
-  //   if (step === STEPS.IMAGES) {
-  //     if (!imageSrc || !Array.isArray(imageSrc) || imageSrc.length === 0) {
-  //       toast.error('Please upload at least one image or video.');
-  //       return;
-  //     }
-  //     return onNext();
-  //   }
-  
-  //   // DESCRIPTION
-  //   if (step === STEPS.DESCRIPTION) {
-  //     if (!data.title || !data.description) {
-  //       toast.error('Please provide a title and description.');
-  //       return;
-  //     }
-  //     return onNext();
-  //   }
-  
-  //   // PRICE (final submit)
-  //   if (step === STEPS.PRICE) {
-  //     setIsLoading(true);
-  
-  //     axios.post('/api/listings', data)
-  //       .then(() => {
-  //         toast.success('Listing created!', {
-  //           iconTheme: {
-  //             primary: 'linear-gradient(135deg, #3d08ff, #04aaff, #3604ff, #0066ff, #3d08ff)',
-  //             secondary: '#fff',
-  //           },
-  //         });
-  //         reset();
-  //         experienceModal.onClose();
-  //         router.refresh();
-  //         setStep(STEPS.CATEGORY);
-  //       })
-  //       .catch(() => toast.error('Something went wrong.'))
-  //       .finally(() => setIsLoading(false));
-  //   }
-  // };  
   
   const actionLabel = useMemo(() => (
     step === STEPS.PRICE ? 'Create' : 'Next'
@@ -692,7 +364,7 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
           title="What type of experience are you offering?"
           subtitle="Select one category to continue"
         />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[30vh] md:max-h-[50vh] overflow-y-auto">
           {categories.map((item) => {
             const isSelected = Array.isArray(category) && category.includes(item.label);
   
@@ -718,103 +390,18 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
 
   if (step === STEPS.LOCATION) {
     bodyContent = (
-      <div className="flex flex-col gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-1 gap-3 max-h-[40vh] md:max-h-[60vh] overflow-y-auto pr-1">
         <Heading title="Where is your event located?" subtitle="Choose a location" />
         <CountrySelect
           value={location}
           onChange={(value) => setCustomValue('location', value)}
         />
+        <div className='pt-5 md:pt-10'>
         <Map center={location?.latlng} />
+        </div>
       </div>
     );
   }
-
-  // if (step === STEPS.INFO) {
-  //   bodyContent = (
-  //     <div className="flex flex-col gap-8 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-  //       <Heading title="Tour details" subtitle="" />
-  //       <Input
-  //         id="hostDescription"
-  //         label="Describe your experience as a host (max 300 characters)"
-  //         disabled={isLoading}
-  //         register={register}
-  //         errors={errors}
-  //         required
-  //         maxLength={300}
-  //       />
-  //       <Counter
-  //         title="Guests"
-  //         subtitle="Maximum number of guests"
-  //         value={guestCount}
-  //         onChange={(value) => setCustomValue('guestCount', value)}
-  //       />
-  //       <div className="flex flex-col gap-2">
-  //         <label className="text-md font-medium">How long is your experience?</label>
-  //         <Select
-  //           options={hourOptions}
-  //           value={watch('experienceHour')}
-  //           onChange={(value: any) => setCustomValue('experienceHour', value)}
-  //           styles={{
-  //             menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-  //             menu: (base) => ({ ...base, zIndex: 9999 }),
-  //           }}
-  //         />
-  //       </div>
-  //       <Input
-  //         id="meetingPoint"
-  //         label="Where should guests meet you?"
-  //         disabled={isLoading}
-  //         register={register}
-  //         errors={errors}
-  //         required
-  //       />
-  //       <div className="flex flex-col gap-2">
-  //         <label className="text-md font-medium">Which languages can you provide the tour in?</label>
-  //         <Select
-  //           options={languageOptions}
-  //           value={watch('languages')}
-  //           onChange={(value: any) => setCustomValue('languages', value)}
-  //           styles={{
-  //             menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-  //             menu: (base) => ({ ...base, zIndex: 9999 }),
-  //           }}
-  //           isMulti
-  //         />
-  //       </div>
-
-  //         <label className="text-md font-medium">Location type</label>
-  //       <Select
-  //           placeholder="What type of location is it? (up to 3)"
-  //           options={locationTypeOptions}
-  //           value={watch('locationTypes')}
-  //           onChange={(selected: any) => {
-  //             if (selected.length <= 3) {
-  //               setCustomValue('locationType', selected);
-  //             }
-  //           }}
-  //           isMulti
-  //           closeMenuOnSelect={false}
-  //           maxMenuHeight={250}
-  //           styles={{
-  //             menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-  //             menu: (base) => ({ ...base, zIndex: 9999 }),
-  //           }}
-  //         />
-
-  //         <Input
-  //           id="locationDescription"
-  //           label="Describe the location (max 300 characters)"
-  //           disabled={isLoading}
-  //           register={register}
-  //           errors={errors}
-  //           required
-  //           maxLength={300}
-  //           textarea
-  //         />
-
-  //     </div>
-  //   );
-  // }
 
   if (step === STEPS.INFO1) {
     bodyContent = (
@@ -870,7 +457,7 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
 
   if (step === STEPS.INFO3) {
     bodyContent = (
-      <div className="flex flex-col gap-8 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+      <div className="flex flex-col gap-8 max-h-[40vh] md:max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
         <Heading title="Languages and location" subtitle="Help guests know what to expect" />
         
         <div className="flex flex-col gap-2">
@@ -882,6 +469,10 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
             styles={{
               menuPortal: (base) => ({ ...base, zIndex: 9999 }),
               menu: (base) => ({ ...base, zIndex: 9999 }),
+              placeholder: (base) => ({
+                ...base,
+                fontSize: '0.875rem', // text-sm
+              }),
             }}
             isMulti
           />
@@ -904,6 +495,10 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
           styles={{
             menuPortal: (base) => ({ ...base, zIndex: 9999 }),
             menu: (base) => ({ ...base, zIndex: 9999 }),
+            placeholder: (base) => ({
+              ...base,
+              fontSize: '0.875rem', // text-sm
+            }),
           }}
         />
   
@@ -969,7 +564,7 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
         <Heading title="Pricing" subtitle="Set your price per person" />
         <Input
           id="price"
-          label="Price / person"
+          label="Price / Person"
           type="number"
           formatPrice
           disabled={isLoading}

@@ -41,12 +41,15 @@ const useFavorite = ({ listingId, currentUser }: IUseFavorite) => {
 
             await request();
             router.refresh();
-            toast.success('Added to favorites', {
-                iconTheme: {
+            toast.success(
+                hasFavorited ? 'Removed from Wishlist' : 'Saved to Wishlist',
+                {
+                  iconTheme: {
                     primary: 'linear-gradient(135deg, #3d08ff, #04aaff, #3604ff, #0066ff, #3d08ff)',
                     secondary: '#fff',
+                  }
                 }
-            });
+              );              
             
         } catch (error) {
             toast.error('Something went wrong.');

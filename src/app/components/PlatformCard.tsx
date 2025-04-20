@@ -94,12 +94,12 @@ const PlatformCard: React.FC<PlatformCardProps> = ({
       <div className="flex flex-col items-center">
       <p className="text-sm text-black bg-gradient-to-br from-gray-100 to-gray-200 p-3 font-semibold rounded-xl mb-2 select-none">
         {view === 'daily'
-            ? 'D.R.V'
+            ? 'A.T.V'
             : view === 'monthly'
             ? 'M.R.V'
             : view === 'yearly'
             ? 'Y.R.V'
-            : 'ALL'}
+            : 'A.T.V'}
         </p>
         <p className="text-lg font-semibold text-black">
             €{view === 'all'

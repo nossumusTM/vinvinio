@@ -36,6 +36,12 @@ const TripsClient: React.FC<TripsClientProps> = ({
   const [reviewInputs, setReviewInputs] = useState<Record<string, { rating: number; comment: string; hoverRating?: number }>>({});
   const [submittedReviews, setSubmittedReviews] = useState<Record<string, { rating: number; comment: string }>>({});
 
+  const [loadedReservations, setLoadedReservations] = useState(reservations);
+  const [page, setPage] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(reservations.length === 4);
+
+
   const messenger = useMessenger();
 
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -233,6 +239,31 @@ const TripsClient: React.FC<TripsClientProps> = ({
     fetchReviews();
   }, [reservations]);  
 
+  const loadMoreReservations = async () => {
+    setLoadingMore(true);
+    try {
+      const res = await axios.get(`/api/reservations/load?skip=${page * 4}&take=4`);
+      const newData = res.data;
+      setLoadedReservations((prev) => [...prev, ...newData]);
+      setPage((prev) => prev + 1);
+      if (newData.length === 4) setHasMore(false);
+    } catch (err) {
+      toast.error("Failed to load more reservations.");
+    } finally {
+      setLoadingMore(false);
+    }
+  };  
+  
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY < 50 && hasMore && !loadingMore) {
+        loadMoreReservations();
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [hasMore, loadingMore]);
+
   return (
     <>
     <Container>
@@ -254,7 +285,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
         max-w-screen-2xl
         mx-auto
       ">
-        {reservations.map((reservation) => {
+        {loadedReservations.map((reservation) => {
           const host = reservation.listing?.user ?? {};
           const hostName = host?.name ?? 'Unknown';
           const hostImage = host?.image ?? '';         
@@ -542,6 +573,23 @@ const TripsClient: React.FC<TripsClientProps> = ({
           />        
         )}
       </div>
+
+      {hasMore && (
+        <div className="flex justify-center mt-20">
+          <button
+            onClick={loadMoreReservations}
+            disabled={loadingMore}
+            className="px-6 py-2 rounded-full bg-black text-white hover:bg-neutral-800 transition text-sm"
+          >
+            {loadingMore ? (
+              <div className="loader inline-block w-5 h-5 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
+            ) : (
+              "Load More"
+            )}
+          </button>
+        </div>
+      )}
+
     </Container>
     <div>
       {/* {currentUser?.role === 'moder' && (

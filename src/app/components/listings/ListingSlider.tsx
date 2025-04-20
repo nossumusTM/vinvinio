@@ -10,7 +10,7 @@ const sliderSettings = {
   autoplay: true,              // ✅ enable auto scrolling
   autoplaySpeed: 4000,
   slidesToScroll: 1,
-  verticalSwiping: true,
+  // verticalSwiping: true,
   arrows: false,
   responsive: [
     {

@@ -16,13 +16,17 @@ interface IReservationParams {
   userId?: string;
   listingId?: string;
   authorId?: string; // ✅ Add this
+  skip?: number;
+  take?: number;
 }
 
 export default async function getReservations(params: IReservationParams) {
   try {
-    const { userId, listingId, authorId } = params;
+    const { userId, listingId, authorId, skip = 0, take = 4 } = params;
 
     const reservations = await prisma.reservation.findMany({
+      skip,
+      take,
       where: {
         // status: {
         //   not: 'cancelled', // ✅ Exclude cancelled reservations

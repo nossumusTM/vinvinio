@@ -3,7 +3,7 @@
 import { toast } from "react-hot-toast";
 export const dynamic = 'force-dynamic';
 import axios from "axios";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import { SafeReservation, SafeUser } from "@/app/types"
@@ -32,38 +32,53 @@ const ReservationsClient: React.FC<ReservationsClientProps> = ({
     listingId: string;
     } | null>(null);
 
+    const [loadedReservations, setLoadedReservations] = useState(reservations);
+    const [page, setPage] = useState(1);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [hasMore, setHasMore] = useState(reservations.length === 4);
+
     const onCancel = useCallback((id: string, guestEmail: string, listingId: string) => {
         setPendingCancel({ id, guestEmail, listingId });
         setShowConfirm(true);
     }, []);
+
+    const loadMoreReservations = async () => {
+        setLoadingMore(true);
+        try {
+          const res = await axios.get(`/api/reservations/load?skip=${page * 4}&take=4`); // 👈 Fetch 4
+          const newReservations = res.data || [];
+          setLoadedReservations((prev) => [...prev, ...newReservations]);
+          setPage((prev) => prev + 1);
+          if (newReservations.length < 4) setHasMore(false); // 👈 Stop when fewer than 4
+        } catch (err) {
+          toast.error("Failed to load more reservations.");
+        } finally {
+          setLoadingMore(false);
+        }
+      };      
+
+    useEffect(() => {
+        const handleScroll = () => {
+          const { scrollTop } = document.documentElement;
+          if (scrollTop < 100 && hasMore && !loadingMore) {
+            loadMoreReservations();
+          }
+        };
+      
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+      }, [hasMore, loadingMore]);      
 
     return (
         <Container>
             <div className="mb-8 pl-6 pt-4 md:pt-6">
                 <Heading
                     title="Bookings"
-                    subtitle="Here&rsquo;s who said ' Yes! ' to your experience"
+                    subtitle="Here&rsquo;s who said ' YesSsSs! ' to your experience"
                 />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 mt-10">
-                {reservations.map((reservation: any) => (
-                    // <ListingCard
-                    //     key={reservation.id}
-                    //     data={reservation.listing}
-                    //     reservation={reservation}
-                    //     actionId={reservation.id}
-                    //     onAction={() => {
-                    //         if (!reservation.user?.email || !reservation.listing?.id) {
-                    //           toast.error("Missing guest email or listing ID.");
-                    //           return;
-                    //         }
-                          
-                    //         onCancel(reservation.id, reservation.user.email, reservation.listing.id);
-                    //       }}
-                    //     disabled={deletingId === reservation.id}
-                    //     // actionLabel="Cancel guest reservation"
-                    //     currentUser={currentUser}
-                    // />
+                {loadedReservations.map((reservation: any) => (
                     <div key={reservation.id} className="relative">
                     {reservation.status === 'cancelled' ? (
                         <div className="absolute top-8 left-8 px-2 py-1 bg-red-100 text-red-600 text-xs font-semibold uppercase rounded-md z-10">
@@ -94,6 +109,22 @@ const ReservationsClient: React.FC<ReservationsClientProps> = ({
 
                 ))}
             </div>
+
+            {hasMore && (
+            <div className="flex justify-center mt-20">
+                <button
+                onClick={loadMoreReservations}
+                disabled={loadingMore}
+                className="px-6 py-2 rounded-full bg-black text-white hover:bg-neutral-800 transition text-sm"
+                >
+                {loadingMore ? (
+                    <div className="loader inline-block w-5 h-5 border-2 border-t-transparent border-white rounded-full animate-spin mt-1"></div>
+                ) : (
+                    "Load More"
+                )}
+                </button>
+            </div>
+            )}
 
             {showConfirm && pendingCancel && (
                 <ConfirmPopup
