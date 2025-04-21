@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import { FaQuoteLeft } from "react-icons/fa";
+import { PiSealQuestionFill } from "react-icons/pi";
 import Image from 'next/image';
 
 interface FAQItem {
@@ -34,7 +36,10 @@ const FAQ: React.FC<FAQProps> = ({ items }) => {
         />
       </div> */}
 
-      <h3 className="text-md md:text-xl font-semibold text-center">Things You Might Wonder</h3>
+      <div className='flex flex-row gap-2 justify-center items-center'>
+        <PiSealQuestionFill size={30} />
+        <h3 className="text-md md:text-xl font-semibold text-center">Things You Might Wonder</h3>
+      </div>
       {items.map((item, index) => {
         const isOpen = openIndex === index;
         return (

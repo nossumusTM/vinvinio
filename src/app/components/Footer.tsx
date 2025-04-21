@@ -244,7 +244,7 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
                   messenger.openChat({
                     id: '67ef2895f045b7ff3d0cf6fc',
                     name: 'Operator',
-                    image: '/images/operator.jpg',
+                    image: '/images/operator.png',
                   });
                 }}
                 className="hover:underline transition"

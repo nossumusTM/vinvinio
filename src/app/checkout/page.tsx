@@ -668,7 +668,7 @@ const CheckoutPage = () => {
                 <div className="flex items-center gap-4 ">
                 <Image width={50} height={50} src="/images/visa.png" alt="Visa" className="h-12 w-auto object-contain" />
                 <Image width={50} height={50} src="/images/mastercard.png" alt="MasterCard" className="h-6 w-auto object-contain" />
-                <Image width={50} height={50} src="/images/AmericanExpress.png" alt="American Express" className="h-6 w-auto object-contain" />
+                <Image width={50} height={50} src="/images/revolut.png" alt="Revolut" className="h-4.5 w-auto object-contain" />
                 </div>
             )}
 

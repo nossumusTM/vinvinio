@@ -177,7 +177,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
     {
       question: 'Why should I provide a preferred contact method?',
       answer:
-        'Choosing a preferred contact method helps us know how to best reach you, and ensures smoother communication between you, travelers, and hosts.',
+        'Choosing a preferred contact method helps us know how to best reach you, and ensures smoother communication between you, travelers, and hosts. Format e.g, Whatsapp: +1212 555 4567 / Telegram: @username',
     },
     {
       question: 'How can I update my legal name?',
@@ -213,12 +213,12 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
     {
       question: 'How do I save my payment card?',
       answer:
-        'Click "Add Card" or "Edit Card" to enter your billing details. Your card number is encrypted before being stored in our database, ensuring maximum security. If you prefer not to save it, you can enter it at checkout — it won’t be stored on our platform.',
+        'Click "Add Card" to enter your billing details. Your card number is encrypted before being stored in our database, ensuring maximum security. If you prefer not to save it, you can enter it at checkout — it won’t be stored on our platform.',
     },
     {
       question: 'What withdrawal methods are supported?',
       answer:
-        'We support Credit/Debit Cards, Revolut, IBAN, and PayPal for payouts. We only store the essential parts securely: card number for cards, IBAN number for IBAN, and either username or phone number for PayPal.',
+        'We support Credit/Debit Cards, Revolut, IBAN, and PayPal for payouts. We only store the essential parts securely: card number for cards, IBAN credential for IBAN, and either username or phone number for PayPal.',
     },
     {
       question: 'When are payouts processed?',
@@ -230,6 +230,10 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
       answer:
         'Absolutely. You can delete your stored card or withdrawal method at any time and update it with new credentials as needed.',
     },
+    {
+      question: 'Are these settings relevant for travelers?',
+      answer: 'Only the payment method section is relevant for travelers — it lets you store your card for faster checkout. The withdrawal section is only for hosts and promoters who receive payouts.',
+    }    
   ];  
 
   useEffect(() => {

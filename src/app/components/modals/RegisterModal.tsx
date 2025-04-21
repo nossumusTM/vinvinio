@@ -189,11 +189,12 @@ const RegisterModal = () => {
               >
                 ← Back
               </button> */}
-            <Heading
-              title='Your Journey Starts Here'
-              subtitle='Lights, camera… just need your info to start the show.'
-              center
-            />
+            <div className="mb-4">
+              <Heading
+                title='Your Journey Starts Here'
+                subtitle='Lights, camera… just need your info to run the show.'
+              />
+            </div>
             <Input
               id="email"
               label="Email"

@@ -16,6 +16,9 @@ import { useRouter } from "next/navigation";
 import useRegisterModal from "@/app/hooks/useRegisterModal";
 import useLoginModal from "@/app/hooks/useLoginModal";
 
+import ForgetPasswordModal from "./ForgetPasswordModal";
+import useForgetPasswordModal from "@/app/hooks/useForgetPasswordModal";
+
 import Modal from "./Modal";
 import Input from "../inputs/Input";
 import Heading from "../Heading";
@@ -29,6 +32,8 @@ const LoginModal = () => {
     const registerModal = useRegisterModal();
     const [isLoading, setIsLoading] = useState(false);
     const [showGoogleConfirm, setShowGoogleConfirm] = useState(false);
+
+    const forgetPasswordModal = useForgetPasswordModal();
 
     const {
         register,
@@ -114,6 +119,18 @@ const LoginModal = () => {
                 required
                 inputClassName="rounded-xl"
             />
+            <button
+                onClick={() => {
+                    loginModal.onClose();
+                    forgetPasswordModal.onOpen();
+                }}
+                className="text-sm text-black
+                            font-normal
+                            cursor-pointer 
+                            mt-1 px-1 self-start"
+                >
+                Need help signing in?
+            </button>
         </div>
     )
 

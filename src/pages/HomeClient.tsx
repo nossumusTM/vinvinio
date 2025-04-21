@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import Container from "@/app/components/Container";
 import ListingCard from "@/app/components/listings/ListingCard";
 import EmptyState from "@/app/components/EmptyState";
-import ListingFilter from "@/app/components/listings/ListingFiltering";
+import ListingFilter from "@/app/components/listings/ListingFilter";
 import ClientOnly from "@/app/components/ClientOnly";
 import axios from "axios";
 import { SafeUser } from "@/app/types";

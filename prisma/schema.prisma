@@ -62,6 +62,8 @@ model User {
   address   String?
   hostName  String?
 
+  resetTokens PasswordResetToken[]
+
   @@map("User")
 }
 
@@ -242,4 +244,13 @@ model PlatformEconomy {
   createdAt     DateTime  @default(now())
 
   reservationId String?   @db.ObjectId
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid()) @map("_id") 
+  token     String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  expires   DateTime
+  createdAt DateTime @default(now())
 }

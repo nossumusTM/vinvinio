@@ -12,6 +12,7 @@ import RegisterModal from '@/app/components/modals/RegisterModal';
 import SearchModal from '@/app/components/modals/SearchModal';
 import RentModal from '@/app/components/modals/RentModal';
 import PromoteModal from './components/modals/PromoteModal';
+import ForgetPasswordModal from './components/modals/ForgetPasswordModal';
 import Messenger from './components/Messenger';
 
 import ToasterProvider from '@/app/providers/ToasterProvider';
@@ -56,6 +57,7 @@ export default async function RootLayout({
           <AnnouncementModal />
           <LoginModal />
           <RegisterModal />
+          <ForgetPasswordModal />
           <SearchModal />
           <RentModal />
           <ExperienceModal currentUser={currentUser}/>

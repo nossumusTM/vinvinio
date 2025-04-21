@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { MdVerified } from "react-icons/md";
+import { FiSearch } from 'react-icons/fi';
 import Avatar from './Avatar';
 
 interface User {
@@ -22,6 +23,11 @@ interface ConversationListProps {
 const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUserId }) => {
   const [users, setUsers] = useState<User[]>([]);
   const CUSTOMER_SERVICE_ID = '67ef2895f045b7ff3d0cf6fc';
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredUsers = users.filter((user) =>
+    user.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   // useEffect(() => {
   //   if (!currentUserId) return;
@@ -70,7 +76,7 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
       const customerServiceUser: User = {
         id: CUSTOMER_SERVICE_ID,
         name: 'Operator',
-        image: '/images/operator.jpg',
+        image: '/images/operator.png',
         hasUnread: realCS?.hasUnread ?? false,
         latestMessage: realCS?.latestMessage || '🚀 Ping us anytime!',
         latestMessageCreatedAt: realCS?.latestMessageCreatedAt || new Date().toISOString(),
@@ -100,7 +106,7 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
         const mergedCustomerServiceUser: User = {
           id: CUSTOMER_SERVICE_ID,
           name: 'Operator',
-          image: '/images/operator.jpg',
+          image: '/images/operator.png',
           hasUnread: customerServiceData?.hasUnread ?? false,
           latestMessage: customerServiceData?.latestMessage || '🚀 Ping us anytime!',
           latestMessageCreatedAt: customerServiceData?.latestMessageCreatedAt || new Date().toISOString(),
@@ -129,7 +135,7 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
   const customerServiceUser: User = {
     id: CUSTOMER_SERVICE_ID,
     name: 'Operator',
-    image: '/images/operator.jpg', // optional default avatar
+    image: '/images/operator.png', // optional default avatar
     hasUnread: false,
     latestMessage: '🚀 Ping us anytime!',
     latestMessageCreatedAt: new Date().toISOString(),
@@ -137,8 +143,18 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
 
   return (
     <div className="p-4 space-y-3 overflow-y-auto h-full">
-      {users.length > 0 ? (
-        users.map((user) => (
+      <div className="relative mb-3">
+        <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-lg" />
+        <input
+          type="text"
+          placeholder="Search conversations..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-10 p-2 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-black"
+        />
+      </div>
+      {filteredUsers.length > 0 ? (
+        filteredUsers.map((user) => (
           <div key={user.id}>
             <div
               onClick={() => onSelect(user)}
