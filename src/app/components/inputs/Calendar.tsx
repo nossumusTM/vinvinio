@@ -28,9 +28,12 @@ const availableTimes = [
 ];
 
 const normalizeTime = (time: string) => {
-  const [h, m = '00'] = time.split(':');
-  return `${h.padStart(2, '0')}:${m.padStart(2, '0')}`;
+  const [h, m] = time.split(':').slice(0, 2);
+  return `${h.padStart(2, '0')}:${m?.padStart(2, '0') ?? '00'}`;
 };
+
+const getDateKey = (date: Date | string) =>
+  typeof date === 'string' ? date.slice(0, 10) : format(date, 'yyyy-MM-dd');
 
 const Calendar: React.FC<CalendarProps> = ({
   value,
@@ -39,14 +42,19 @@ const Calendar: React.FC<CalendarProps> = ({
   onTimeChange,
   bookedSlots = [],
 }) => {
+  // const selectedDateKey = value.startDate
+  // ? new Date(value.startDate).toLocaleDateString('sv-SE', { timeZone: 'Europe/Rome' }) // 'sv-SE' keeps YYYY-MM-DD format
+  // : '';
   const selectedDateKey = value.startDate
-  ? new Date(value.startDate).toLocaleDateString('sv-SE', { timeZone: 'Europe/Rome' }) // 'sv-SE' keeps YYYY-MM-DD format
+  ? format(value.startDate, 'yyyy-MM-dd')
   : '';
+
+  const userHasPickedTime = useRef(false);
 
   const bookedTimesForDate = useMemo(() => {
     return bookedSlots
       .filter((slot) => slot.date === selectedDateKey)
-      .map((slot) => normalizeTime(slot.time));
+      .map((slot) => slot.time);
   }, [bookedSlots, selectedDateKey]);
 
   const disabledDates = useMemo(() => {
@@ -77,18 +85,15 @@ const Calendar: React.FC<CalendarProps> = ({
       const testDate = new Date(now);
       testDate.setDate(now.getDate() + i);
   
-      const dateKey = testDate.toLocaleDateString('sv-SE', {
-        timeZone: 'Europe/Rome',
-      });
+      const testDateKey = getDateKey(testDate);
   
       const bookedTimes = bookedSlots
-        .filter((slot) => slot.date === dateKey)
+        .filter((slot) => getDateKey(slot.date) === testDateKey)
         .map((slot) => normalizeTime(slot.time));
   
       if (bookedTimes.length < availableTimes.length) {
         const availableTime = availableTimes.find((t) => !bookedTimes.includes(t)) ?? null;
   
-        // ⛳️ Set both date and time inline before render
         onChange({
           selection: {
             startDate: testDate,
@@ -102,41 +107,38 @@ const Calendar: React.FC<CalendarProps> = ({
         break;
       }
     }
-  }, [bookedSlots, value.startDate, onChange, onTimeChange]);  
+  }, [bookedSlots, value.startDate, onChange, onTimeChange]);
 
   useEffect(() => {
-    if (!value.startDate) return;
+    if (!value.startDate || userHasPickedTime.current) return;
   
-    const formatted = format(value.startDate, 'yyyy-MM-dd');
-    const booked = bookedSlots
-      .filter((slot) => slot.date === formatted)
+    // const dateKey = getDateKey(value.startDate);
+    const dateKey = getDateKey(value.startDate);
+    const matches = bookedSlots.filter((slot) => getDateKey(slot.date.trim()) === dateKey)
+    // console.log("📅 Matched booked slots:", matches);
+  
+    const bookedTimes = bookedSlots
+      .filter((slot) => slot.date === dateKey) // no getDateKey!
       .map((slot) => normalizeTime(slot.time));
   
-    const firstAvailable = availableTimes.find((t) => !booked.includes(t));
+    // console.log('📅 Date Key:', dateKey);
+    // console.log('🔒 Booked Times:', bookedTimes);
   
-    if (firstAvailable) {
-      onTimeChange?.(firstAvailable);
-    } else {
-      onTimeChange?.(null); // 🔥 important!
+    const availableTimesForDate = availableTimes.filter((t) => !bookedTimes.includes(t));
+    // console.log('✅ Available Times:', availableTimesForDate);
+  
+    if (!selectedTime || bookedTimes.includes(selectedTime)) {
+      if (availableTimesForDate.length > 0) {
+        onTimeChange?.(availableTimesForDate[0]);
+      } else {
+        onTimeChange?.('');
+      }
     }
-  }, [value.startDate, bookedSlots]); 
-  
+  }, [value.startDate, bookedSlots, selectedTime, onTimeChange]);  
+
   useEffect(() => {
-    if (!value.startDate) return;
-  
-    const formatted = format(value.startDate, 'yyyy-MM-dd');
-    const timesBooked = bookedSlots
-      .filter((slot) => slot.date === formatted)
-      .map((slot) => normalizeTime(slot.time));
-  
-    const available = availableTimes.find((t) => !timesBooked.includes(t));
-  
-    if (available) {
-      onTimeChange?.(available);
-    } else {
-      onTimeChange?.('');
-    }
-  }, [value.startDate, bookedSlots]);  
+    userHasPickedTime.current = false;
+  }, [value.startDate]);
 
   const handleSelect = (date: Date) => {
     onChange({
@@ -159,33 +161,17 @@ const Calendar: React.FC<CalendarProps> = ({
         color="#262626"
       />
 
-      {/* {value.startDate && (
-        <div className="flex flex-col gap-2 p-4">
-          <label className="text-xl font-medium">Pick an Available Time</label>
-          <select
-            value={selectedTime}
-            onChange={(e) => onTimeChange?.(e.target.value)}
-            className="border border-neutral-300 rounded-md px-3 py-2 text-xl"
-          >
-            {availableTimes.map((time) => {
-              const isBooked = bookedTimesForDate.includes(time);
-
-              return (
-                <option key={time} value={time} disabled={isBooked}>
-                  {time} {isBooked ? '(Booked)' : ''}
-                </option>
-              );
-            })}
-          </select>
-        </div>
-      )} */}
       {value.startDate && (
       <div className="flex flex-col gap-2 p-4">
         <label className="text-xl font-medium">Pick an Available Time</label>
         <select
           value={selectedTime ?? ''}
-          onChange={(e) => onTimeChange?.(e.target.value)}
-          className="border border-neutral-300 rounded-xl px-3 py-2 text-m"
+          // onChange={(e) => onTimeChange?.(e.target.value)}
+          onChange={(e) => {
+            userHasPickedTime.current = true; // Mark as user-selected
+            onTimeChange?.(e.target.value);
+          }}
+          className="shadow-md rounded-3xl px-3 py-2 text-m"
         >
           {availableTimes.map((time) => {
             // const isBooked = bookedTimesForDate.includes(time);

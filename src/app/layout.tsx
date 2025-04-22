@@ -51,7 +51,8 @@ export default async function RootLayout({
       <body className={`font-snpro min-h-screen flex flex-col overflow-x-hidden`}>
         <Script
           src="https://widget.cloudinary.com/v2.0/global/all.js"
-          strategy="beforeInteractive"
+          // strategy="beforeInteractive"
+          strategy="afterInteractive"
         />
 
         <ClientOnly>

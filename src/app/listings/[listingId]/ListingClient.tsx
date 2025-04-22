@@ -10,6 +10,8 @@ import useMessenger from "@/app/hooks/useMessager";
 import Button from "@/app/components/Button";
 export const dynamic = 'force-dynamic';
 
+import { format } from 'date-fns';
+
 import useLoginModal from "@/app/hooks/useLoginModal";
 import { SafeListing, SafeReservation, SafeUser } from "@/app/types";
 import getCurrentUser from "@/app/actions/getCurrentUser";
@@ -69,12 +71,26 @@ const ListingClient: React.FC<ListingClientProps> = ({
         return dates;
     }, [reservations]);
 
-    const bookedSlots = useMemo(() => {
+    // const bookedSlots = useMemo(() => {
+    //     return reservations.map((reservation) => ({
+    //         date: reservation.startDate.split('T')[0],
+    //         time: reservation.time,
+    //     }));
+    // }, [reservations]);
+
+    // console.log("🕓 Raw reservation times:", reservations.map(r => r.time));
+
+    const normalizeTime = (time: string) => {
+        const [h, m] = time.split(':').slice(0, 2);
+        return `${h.padStart(2, '0')}:${m?.padStart(2, '0') ?? '00'}`;
+      };
+      
+      const bookedSlots = useMemo(() => {
         return reservations.map((reservation) => ({
-            date: reservation.startDate.split('T')[0],
-            time: reservation.time,
+          date: reservation.startDate.split('T')[0],
+          time: normalizeTime(reservation.time),
         }));
-    }, [reservations]);
+      }, [reservations]);          
 
     const category = useMemo(() => {
         const cat = listing.category;
@@ -106,14 +122,22 @@ const ListingClient: React.FC<ListingClientProps> = ({
         }
         setIsLoading(true);
 
+        // axios.post('/api/reservations', {
+        //     totalPrice,
+        //     startDate: dateRange.startDate,
+        //     endDate: dateRange.endDate,
+        //     listingId: listing?.id,
+        //     selectedTime,
+        //     guestCount,
+        // })
         axios.post('/api/reservations', {
             totalPrice,
-            startDate: dateRange.startDate,
-            endDate: dateRange.endDate,
+            startDate: format(dateRange.startDate!, 'yyyy-MM-dd'),
+            endDate: format(dateRange.endDate!, 'yyyy-MM-dd'),
             listingId: listing?.id,
             selectedTime,
             guestCount,
-        })
+          })
             .then(() => {
                 toast.success('Listing reserved!', {
                     iconTheme: {
@@ -137,7 +161,8 @@ const ListingClient: React.FC<ListingClientProps> = ({
         router,
         currentUser,
         loginModal,
-        selectedTime
+        selectedTime,
+        guestCount
     ]);
 
     useEffect(() => {
@@ -145,7 +170,6 @@ const ListingClient: React.FC<ListingClientProps> = ({
           setTotalPrice(listing.price * guestCount);
         }
     }, [dateRange, listing.price, guestCount]);   
-
     
     useEffect(() => {
         const fetchReviews = async () => {
@@ -245,35 +269,6 @@ const ListingClient: React.FC<ListingClientProps> = ({
                         Message {listing.user?.name?.split(' ')[0] ?? 'Host'}
                     </button>
 
-                    {/* <Button
-                    label="Contact Host"
-                    onClick={() => {
-                        // 🔐 Check auth first
-                        if (!currentUser) {
-                        loginModal.onOpen();
-                        return;
-                        }
-
-                        const isHost = currentUser?.id === listing.user.id;
-
-                        const recipient = isHost
-                        ? {
-                            id: reservations[0]?.user?.id ?? '',
-                            name: reservations[0]?.user?.name ?? 'Guest',
-                            image: reservations[0]?.user?.image ?? '',
-                            }
-                        : {
-                            id: listing.user.id,
-                            name: listing.user.name ?? 'Host',
-                            image: listing.user.image ?? '',
-                            };
-
-                        if (recipient.id) {
-                        messenger.openChat(recipient);
-                        }
-                    }}
-                    /> */}
-                    
                     <div className="grid grid-cols-1 md:grid-cols-7 md:gap-10 mt-6 relative">
                         <ListingInfo
                             user={listing.user}

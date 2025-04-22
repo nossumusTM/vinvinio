@@ -22,6 +22,9 @@ export async function POST(request: Request) {
       contact,
     } = body;
 
+    const [h, m = '00'] = selectedTime.split(':');
+    const normalizedTime = `${h.padStart(2, '0')}:${m.padStart(2, '0')}`;
+
     if (!listingId || !startDate || !endDate || !totalPrice || !selectedTime) {
       return new NextResponse("Missing required fields", { status: 400 });
     }
@@ -32,19 +35,23 @@ export async function POST(request: Request) {
       ? {
           user: { connect: { id: currentUser.id } },
           listing: { connect: { id: listingId } },
-          startDate,
-          endDate,
+          // startDate,
+          // endDate,
+          startDate: new Date(`${startDate}T00:00:00.000Z`),
+          endDate: new Date(`${endDate}T00:00:00.000Z`),
           totalPrice,
-          time: selectedTime,
+          time: normalizedTime,
           referralId: referralId || null,
           guestCount: resolvedGuestCount,
         }
       : {
           listing: { connect: { id: listingId } },
-          startDate,
-          endDate,
+          // startDate,
+          // endDate,
+          startDate: new Date(`${startDate}T00:00:00.000Z`),
+          endDate: new Date(`${endDate}T00:00:00.000Z`),
           totalPrice,
-          time: selectedTime,
+          time: normalizedTime,
           referralId: referralId || null,
           guestCount: resolvedGuestCount,
           guestName: legalName || 'Guest',

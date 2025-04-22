@@ -174,10 +174,21 @@ const CheckoutPage = () => {
     setIsLoading(true);
   
     try {
+      // await axios.post('/api/reservations', {
+      //   totalPrice: listingData.price * guests + serviceFee,
+      //   startDate,
+      //   endDate,
+      //   listingId,
+      //   selectedTime: time,
+      //   guestCount: guests,
+      //   legalName,
+      //   contact,
+      //   referralId,
+      // });
       await axios.post('/api/reservations', {
         totalPrice: listingData.price * guests + serviceFee,
-        startDate,
-        endDate,
+        startDate: format(new Date(startDate), 'yyyy-MM-dd'),
+        endDate: format(new Date(endDate), 'yyyy-MM-dd'),
         listingId,
         selectedTime: time,
         guestCount: guests,

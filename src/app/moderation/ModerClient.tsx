@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { SafeUser } from '@/app/types';
@@ -272,10 +273,16 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
     }
   };  
 
-  if (!currentUser || currentUser.role !== 'moder') {
-    router.push('/');
-    // return <p className="text-center text-neutral-500 py-10">Unauthorized or loading...</p>;
-  }
+  // if (!currentUser || currentUser.role !== 'moder') {
+  //   router.push('/');
+  //   // return <p className="text-center text-neutral-500 py-10">Unauthorized or loading...</p>;
+  // }
+
+  useEffect(() => {
+    if (!currentUser || currentUser.role !== 'moder') {
+      router.push('/');
+    }
+  }, [currentUser, router]);
 
   return (
     <>
@@ -298,12 +305,22 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
             <div key={listing.id} className="p-6 rounded-xl shadow-lg space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2 pt-2">
                 {listing.imageSrc.map((src, i) => (
-                  <img key={i} src={src} alt={`media-${i}`} className="w-full h-40 object-cover rounded-lg" />
+                  // <img key={i} src={src} alt={`media-${i}`} className="w-full h-40 object-cover rounded-lg" />
+                  <Image
+                    key={i}
+                    src={src}
+                    alt={`media-${i}`}
+                    width={500}
+                    height={300}
+                    className="w-full h-40 object-cover rounded-lg"
+                    unoptimized // optional if using external URLs or Cloudinary
+                  />
+
                 ))}
               </div>
               <h2 className="text-xl font-bold">{listing.title}</h2>
               {listing.locationValue && (
-                <p><strong>Location:</strong> {listing.locationValue.toUpperCase() || 'N/A'}</p>
+                <p><strong>Location:</strong> {listing.locationValue!.toUpperCase() || 'N/A'}</p>
               )}
               <p className="text-neutral-700">{listing.description}</p>
               <div className="text-sm text-neutral-500 gap-2 flex flex-col">

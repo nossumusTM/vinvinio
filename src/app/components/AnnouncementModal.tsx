@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { IoClose } from 'react-icons/io5';
 import { FaCheck } from 'react-icons/fa';
 import { FaHeart } from "react-icons/fa6";
+import Image from 'next/image';
 
 const AnnouncementModal = () => {
   const pathname = usePathname();
@@ -33,18 +34,19 @@ const AnnouncementModal = () => {
 
   useEffect(() => {
     if (!mounted || !isListingPage) return;
-
-    const timer = setTimeout(() => {
-      setImageLoaded(true);
-    }, 1500); // fallback in case onLoad doesn't fire
-
+  
     const hasSeen = sessionStorage.getItem('announcementDismissed');
     if (!hasSeen) {
-      const timer = setTimeout(() => {
-        setIsOpen(true);
-      }, 5000); // 20 seconds
-
-      return () => clearTimeout(timer);
+      // Preload the image
+      const img = new window.Image();
+      img.src = '/images/paperplane.png';
+      img.onload = () => {
+        setImageLoaded(true);
+  
+        setTimeout(() => {
+          setIsOpen(true);
+        }, 10000); // slight delay after image load
+      };
     }
   }, [mounted, isListingPage]);
 
@@ -82,11 +84,14 @@ const AnnouncementModal = () => {
         </button>
 
         <div className="flex flex-col items-center justify-center gap-4 text-center">
-          <img
+        <Image
             src="/images/paperplane.png"
             alt="Vuoiaggio Promo"
-            className="w-88 h-auto mb-2"
+            width={352} // equivalent to w-88 (88 * 4 = 352px)
+            height={240} // or set a specific height like 240
+            className="h-auto mb-2"
             onLoad={() => setImageLoaded(true)}
+            priority
           />
           <h2 className="text-2xl text-left font-semibold text-gray-900">
             GET 5% OFF ON YOUR FIRST BOOKING ᥫ᭡
@@ -100,7 +105,7 @@ const AnnouncementModal = () => {
               onClick={handleCopy}
               className="bg-transparent border border-black border-dashed px-4 py-2 rounded-xl text-sm font-semibold text-black transition mb-2"
             >
-              {copied ? 'Copied to Clipboard!' : 'ESTATERM25'}
+              {copied ? 'Copied to Clipboard!' : 'ESTATE25'}
             </button>
 
             {/* {copied && (

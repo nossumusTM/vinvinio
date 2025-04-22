@@ -59,11 +59,11 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
     promoteModal.onOpen();
   };
 
-  useEffect(() => {
-    if (currentUser?.role === 'promoter') {
-      router.push('/profile');
-    }
-  }, [currentUser?.role]);
+  // useEffect(() => {
+  //   if (currentUser?.role === 'promoter') {
+  //     router.push('/profile');
+  //   }
+  // }, [currentUser?.role]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

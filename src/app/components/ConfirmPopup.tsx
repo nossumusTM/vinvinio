@@ -41,7 +41,7 @@ const ConfirmPopup: React.FC<ConfirmPopupProps> = ({
     return () => {
       document.removeEventListener('mousedown', handleOutsideClick);
     };
-  }, []);
+  }, [onCancel]);
 
   const handleConfirm = async () => {
     if (!onConfirm) return;

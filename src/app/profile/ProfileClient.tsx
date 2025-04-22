@@ -391,7 +391,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
     } else if (currentUser.role === 'customer') {
       setActivePaymentTab('payment');
     }
-  }, [currentUser.role]);  
+  }, [currentUser?.role]);  
 
   const handleSavePayoutMethod = async () => {
     try {
@@ -1274,7 +1274,9 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
 
                 {activePaymentTab === 'payout' && ['promoter', 'host'].includes(currentUser.role) && (
                   <>
+                  <div className="pt-4">
                     <Heading title="Withdrawal Method" subtitle="Manage your withdrawal credentials" />
+                    </div>
 
                     {savedPayout ? (
                       <>

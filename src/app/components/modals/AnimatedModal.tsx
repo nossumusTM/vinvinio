@@ -12,6 +12,16 @@ interface AnimatedModalProps {
 const AnimatedModal: React.FC<AnimatedModalProps> = ({ isOpen, onClose, children }) => {
   const modalRef = useRef<HTMLDivElement>(null);
 
+//   useEffect(() => {
+//     const handleOutsideClick = (e: MouseEvent) => {
+//       if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+//         onClose();
+//       }
+//     };
+//     if (isOpen) document.addEventListener('mousedown', handleOutsideClick);
+//     return () => document.removeEventListener('mousedown', handleOutsideClick);
+//   }, [isOpen]);
+
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
       if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
@@ -20,7 +30,7 @@ const AnimatedModal: React.FC<AnimatedModalProps> = ({ isOpen, onClose, children
     };
     if (isOpen) document.addEventListener('mousedown', handleOutsideClick);
     return () => document.removeEventListener('mousedown', handleOutsideClick);
-  }, [isOpen]);
+  }, [isOpen, onClose]);  
 
   return (
     <AnimatePresence>

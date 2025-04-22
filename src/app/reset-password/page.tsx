@@ -45,7 +45,7 @@ const ResetPasswordPage = () => {
     };
 
     validateToken();
-  }, [token]);
+  }, [token, forgetPasswordModal, router]);
 
   return (
     <div>
