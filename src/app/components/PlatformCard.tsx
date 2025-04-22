@@ -87,7 +87,10 @@ const PlatformCard: React.FC<PlatformCardProps> = ({
       <div className="flex flex-col items-center">
         <p className="text-sm text-white bg-gradient-to-br from-[#08e2ff] to-[#3F00FF] font-semibold p-3 rounded-xl mb-2 select-none">D.P.V</p>
         <p className="text-lg font-semibold text-black">
-          €{daily?.[daily.length - 1]?.platformFee?.toFixed(2) || '0.00'}
+          {/* €{daily?.[daily.length - 1]?.platformFee?.toFixed(2) || '0.00'} */}
+          €{(
+            daily.find(d => new Date(d.date).toDateString() === new Date().toDateString())?.platformFee?.toFixed(2) || '0.00'
+            )}
         </p>
       </div>
 

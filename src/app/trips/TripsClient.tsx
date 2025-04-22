@@ -293,7 +293,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
           return (
             <div
               key={reservation.id}
-              className="relative bg-white border border-neutral-200 rounded-2xl shadow-md hover:shadow-lg transition duration-300 overflow-hidden"
+              className="relative bg-white border border-neutral-200 rounded-3xl shadow-md hover:shadow-lg transition duration-300 overflow-hidden"
             >
               {/* ✅ Status Label with fallback */}
               {reservation.status === 'cancelled' ? (

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/app/libs/prismadb";
 import getCurrentUser from "@/app/actions/getCurrentUser";
+import getListings from "@/app/actions/getListings";
+import { IListingsParams } from "@/app/actions/getListings";
 import nodemailer from "nodemailer";
 export const dynamic = 'force-dynamic';
 
@@ -110,7 +112,7 @@ export async function POST(request: Request) {
             </p>
             <p style="font-size: 14px; color: #555;">We will notify you once it's approved and publicly listed.</p>
             <p style="margin-top: 32px;">Thank you for using <strong>Vuoiaggio</strong>! ✨</p>
-            <p style="font-size: 12px; color: #aaa; margin-top: 24px;">Vuoiaggio International Srls</p>
+            <p style="font-size: 12px; color: #aaa; margin-top: 24px;">Vuoiaggio Network Srls</p>
           </div>
         </div>
       `,
@@ -120,5 +122,28 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Error creating listing:", error);
     return new NextResponse("Internal Server Error", { status: 500 });
+  }
+}
+
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const params = Object.fromEntries(url.searchParams.entries()) as unknown as IListingsParams;
+
+  const formattedParams: IListingsParams = {
+    ...params,
+    roomCount: params.roomCount ? Number(params.roomCount) : undefined,
+    guestCount: params.guestCount ? Number(params.guestCount) : undefined,
+    bathroomCount: params.bathroomCount ? Number(params.bathroomCount) : undefined,
+    skip: params.skip ? Number(params.skip) : undefined,
+    take: params.take ? Number(params.take) : undefined,
+    category: Array.isArray(params.category) ? params.category[0] : params.category,
+  };
+
+  try {
+    const listings = await getListings(formattedParams);
+    return NextResponse.json(listings);
+  } catch (error) {
+    console.error("GET /api/listings error:", error);
+    return new NextResponse("Failed to fetch listings", { status: 500 });
   }
 }

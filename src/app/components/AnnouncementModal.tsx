@@ -1,16 +1,20 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 import { IoClose } from 'react-icons/io5';
 import { FaCheck } from 'react-icons/fa';
 import { FaHeart } from "react-icons/fa6";
 
 const AnnouncementModal = () => {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
+
+  const isListingPage = pathname?.startsWith('/listings/');
 
   const handleCopy = () => {
     navigator.clipboard.writeText('ESTATERM');
@@ -28,7 +32,7 @@ const AnnouncementModal = () => {
   }, []);
 
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted || !isListingPage) return;
 
     const timer = setTimeout(() => {
       setImageLoaded(true);
@@ -42,7 +46,7 @@ const AnnouncementModal = () => {
 
       return () => clearTimeout(timer);
     }
-  }, [mounted]);
+  }, [mounted, isListingPage]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -66,7 +70,7 @@ const AnnouncementModal = () => {
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] p-6">
       <div
         ref={modalRef}
-        className="bg-white rounded-2xl p-8 sm:p-12 max-w-md w-full relative"
+        className="bg-white rounded-3xl p-8 sm:p-12 max-w-md w-full relative"
       >
 
       <div className="p-5 rounded-3xl">

@@ -50,7 +50,7 @@ export const categories = [
         description: 'Vespa Sidecar Tour with Pickup, Drop-off',
     },
     {
-        label: 'Alla Italiana',
+        label: 'La Moda',
         icon: HiOutlineShoppingBag,
         description: "Discover Italy’s finest fashion and artisanal treasures on an exclusive shopping tour."
     },

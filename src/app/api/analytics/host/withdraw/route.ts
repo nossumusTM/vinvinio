@@ -64,7 +64,7 @@ export async function POST(req: Request) {
               <p style="font-size: 14px;">Thank you for hosting with Vuoiaggio! 🧳</p>
               <p style="margin-top: 32px;">— Vuoiaggio Team</p>
               <hr style="margin-top: 40px;" />
-              <p style="font-size: 13px; color: #888;">Vuoiaggio International Srls.</p>
+              <p style="font-size: 13px; color: #888;">Vuoiaggio Network Srls.</p>
               <p style="font-size: 13px; color: #888;">P.IVA 57483813574</p>
               <p style="font-size: 13px; color: #888;">Via Novacella 18, Rome, RM, Italy</p>
               <p style="font-size: 13px; color: #888;">🇮🇹 +39 371 528 4911</p>

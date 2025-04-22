@@ -32,7 +32,7 @@ export async function POST(req: Request) {
       },
     });
 
-    const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${token}`;
+    const resetLink = `${process.env.NEXTAUTH_URL}/reset-password?token=${token}`;
 
     await sendResetPasswordEmail(email, resetLink);
 

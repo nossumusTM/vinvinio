@@ -307,6 +307,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                       }} />
                     {(userRole === 'customer') && (
                         <>
+                        <hr className="my-2" />
                           <MenuItem label="Account" 
                             onClick={() => {
                               setIsOpen(false);

@@ -12,6 +12,9 @@ module.exports = {
       animation: {
         scaleIn: 'scaleIn 0.2s ease-out',
       },
+      fontFamily: {
+        snpro: ['"SN Pro"', 'sans-serif'],
+      },
     },
   },
   plugins: [],

@@ -7,9 +7,12 @@ import ListingCard from "@/app/components/listings/ListingCard";
 import EmptyState from "@/app/components/EmptyState";
 import ListingFilter from "@/app/components/listings/ListingFilter";
 import ClientOnly from "@/app/components/ClientOnly";
+import { useSearchParams } from 'next/navigation';
+import Loader from "@/app/components/Loader";
 import axios from "axios";
 import { SafeUser } from "@/app/types";
 import toast from "react-hot-toast";
+import qs from 'query-string';
 
 interface HomeProps {
   initialListings: any[];
@@ -17,18 +20,59 @@ interface HomeProps {
 }
 
 const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
-  const [listings, setListings] = useState(initialListings);
+  // const [listings, setListings] = useState(initialListings);
+  const [listings, setListings] = useState<any[] | null>(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(initialListings.length === 12);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [isFiltering, setIsFiltering] = useState(false);
+  const searchParams = useSearchParams();
+
+  // 👉 Filter support
+  useEffect(() => {
+    const fetchFilteredListings = async () => {
+      setIsFiltering(true);
+
+      const query = qs.stringify({
+        ...Object.fromEntries(searchParams!.entries()),
+      });
+
+      try {
+        const res = await axios.get(`/api/listings?${query}`);
+        setListings(res.data);
+        setPage(1);
+        setHasMore(res.data.length === 12);
+      } catch (err) {
+        toast.error('Failed to fetch filtered listings.');
+      } finally {
+        setIsFiltering(false);
+      }
+    };
+
+    fetchFilteredListings();
+  }, [searchParams]);
+
+  useEffect(() => {
+    setListings(initialListings);
+  }, [initialListings]);
 
   const loadMoreListings = async () => {
     if (loadingMore || !hasMore) return;
+  
     setLoadingMore(true);
+  
+    const query = qs.stringify({
+      ...Object.fromEntries(searchParams!.entries()),
+      skip: page * 12,
+      take: 12,
+    }, { skipNull: true, skipEmptyString: true });
+    
+  
     try {
-      const res = await axios.get(`/api/listings/load?skip=${page * 12}&take=12`);
+      const res = await axios.get(`/api/listings/load?${query}`);
       const newListings = res.data;
-      setListings((prev) => [...prev, ...newListings]);
+      // setListings((prev) => [...prev, ...newListings]);
+      setListings((prev) => [...(prev || []), ...newListings]);
       setPage((prev) => prev + 1);
       if (newListings.length < 12) setHasMore(false);
     } catch (err) {
@@ -36,7 +80,7 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
     } finally {
       setLoadingMore(false);
     }
-  };
+  };  
 
 //   useEffect(() => {
 //     const handleScroll = () => {
@@ -48,6 +92,9 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
 //     return () => window.removeEventListener("scroll", handleScroll);
 //   }, [hasMore, loadingMore]);
 
+  // if (listings.length === 0) return <EmptyState showReset />;
+
+  if (!listings) return <div className="pt-0"><Loader /></div>;
   if (listings.length === 0) return <EmptyState showReset />;
 
   return (

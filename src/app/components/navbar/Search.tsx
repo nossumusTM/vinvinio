@@ -23,7 +23,7 @@ const Search = () => {
             return getByValue(locationValue as string)?.label;
         }
 
-        return 'Anywhere';
+        return 'Destination';
     }, [locationValue, getByValue]);
 
     const durationLabel = useMemo(() => {
@@ -39,28 +39,27 @@ const Search = () => {
             return `${diff} Days`;
         }
 
-        return 'Any Week'
+        return 'Pick a Date'
     }, [startDate, endDate]);
 
     const guestLabel = useMemo(() => {
         if (guestCount) {
-            return `${guestCount} Guests`;
+            return `${guestCount} Travellers`;
         }
 
-        return 'Add Guests';
+        return 'Travellers';
     }, [guestCount]);
 
     return (
         <div
             onClick={searchModal.onOpen}
             className="
-        border-[1px] 
         w-full 
         md:w-auto 
         py-2 
         rounded-full 
-        shadow-sm 
-        hover:shadow-md 
+        shadow-md 
+        hover:shadow-lg 
         transition 
         cursor-pointer
       "
@@ -75,8 +74,9 @@ const Search = () => {
             >
                 <div
                     className="
+            pr-2
             text-sm 
-            font-semibold 
+            font-medium 
             px-6
           "
                 >
@@ -85,9 +85,9 @@ const Search = () => {
                 <div
                     className="
             hidden 
-            sm:block 
+            lg:block 
             text-sm 
-            font-semibold 
+            font-medium 
             px-6 
             border-x-[1px] 
             flex-1 
@@ -108,7 +108,7 @@ const Search = () => {
             gap-3
           "
                 >
-                    <div className="hidden sm:block">{guestLabel}</div>
+                    <div className="hidden lg:block font-medium text-black">{guestLabel}</div>
                     <div
                         className="
               p-2 

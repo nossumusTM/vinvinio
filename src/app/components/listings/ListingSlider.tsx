@@ -4,7 +4,7 @@ import Slider from "react-slick";
 import ListingCard from "@/app/components/listings/ListingCard";
 
 const sliderSettings = {
-  dots: true,
+  // dots: true,
   infinite: true,
   speed: 500,
   autoplay: true,

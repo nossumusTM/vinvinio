@@ -179,7 +179,7 @@ export async function POST(request: Request) {
 
             <p style="margin-top: 32px;">Thanks for staying connected with <strong>Vuoiaggio</strong> 💙</p>
 
-            <p style="font-size: 13px; color: #888; margin-top: 40px;">Vuoiaggio International Srls.<br/>
+            <p style="font-size: 13px; color: #888; margin-top: 40px;">Vuoiaggio Network Srls.<br/>
             P.IVA 57483813574<br/>
             Via Novacella 18, Rome, RM, Italy<br/>
             🇮🇹 +39 371 528 4911<br/>

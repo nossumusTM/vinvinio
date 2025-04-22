@@ -102,7 +102,7 @@ const ListingFilter = () => {
           {/* {sort ? filterOptions.find(o => o.value === sort)?.label : <div className="flex flex-row justify-center items-center gap-2 w-50"> <PiSortDescending /> Sort By </div>} */}
           <div className="flex flex-row justify-center items-center gap-2 w-70 select-none">
             <PiSortDescending />
-            {filterOptions.find(o => o.value === sort)?.label || 'Sort By'}
+            {filterOptions.find(o => o.value === sort)?.label || 'Make By'}
           </div>
 
         </div>

@@ -1,4 +1,5 @@
-import { Nunito } from 'next/font/google';
+// import { Nunito } from 'next/font/google';
+
 import Script from 'next/script';
 
 import "slick-carousel/slick/slick.css"; 
@@ -24,6 +25,8 @@ import getCurrentUser from './actions/getCurrentUser';
 import ExperienceModal from './components/modals/ExperienceModal';
 import Footer from './components/Footer';
 
+import SessionProviderWrapper from './providers/SessionProviderWrapper';
+
 export const metadata = {
   title: 'Vuoiaggio | Wanna Go? Let\'s Go!',
   description: 'Wanna Go? Let\'s Go!',
@@ -32,9 +35,9 @@ export const metadata = {
   },
 };
 
-const font = Nunito({
-  subsets: ['latin'],
-});
+// const font = Nunito({
+//   subsets: ['latin'],
+// });
 
 export default async function RootLayout({
   children,
@@ -45,7 +48,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <body className={`${font.className} min-h-screen flex flex-col overflow-x-hidden`}>
+      <body className={`font-snpro min-h-screen flex flex-col overflow-x-hidden`}>
         <Script
           src="https://widget.cloudinary.com/v2.0/global/all.js"
           strategy="beforeInteractive"
@@ -66,9 +69,11 @@ export default async function RootLayout({
         </ClientOnly>
 
         {/* <div className="pb-20 pt-28 min-h-screen"> */}
-        <main className="flex-grow pb-0 pt-28">
-          {children}
-        </main>
+        <SessionProviderWrapper>
+          <main className="flex-grow pb-0 pt-28">
+            {children}
+          </main>
+        </SessionProviderWrapper>
 
         <div className="w-full pt-20">
           <Footer currentUser={currentUser}/>

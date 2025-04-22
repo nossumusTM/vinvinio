@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     });
 
     await transporter.sendMail({
-      from: `"Voiaggio International Srls." <${process.env.EMAIL_USER}>`,
+      from: `"Vuoiaggio Network Srls." <${process.env.EMAIL_USER}>`,
       to,
       subject,
       html,

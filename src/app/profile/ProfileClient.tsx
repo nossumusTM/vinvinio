@@ -13,6 +13,8 @@ import Cropper from 'react-easy-crop';
 import getCroppedImg from '@/app/utils/cropImage';
 import CountrySelect from "../components/inputs/CountrySelect";
 import { CountrySelectValue } from "@/app/components/inputs/CountrySelect";
+import AnimatedModal from "../components/modals/AnimatedModal";
+import { AnimatePresence, motion } from 'framer-motion';
 import { TbUserCircle, TbLock, TbCreditCard } from "react-icons/tb";
 import { CgUserlane } from "react-icons/cg";
 import { MdOutlineSecurity } from "react-icons/md";
@@ -103,6 +105,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   const [showCardModal, setShowCardModal] = useState(false);
   const [showCouponInput, setShowCouponInput] = useState(false);
   const [couponCode, setCouponCode] = useState('');
+  const [userCoupon, setUserCoupon] = useState<string | null>(null);
 
   const [savedCard, setSavedCard] = useState<any>(null);
   const [cardUpdated, setCardUpdated] = useState(false);
@@ -308,6 +311,21 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
     // Clear interval on unmount
     return () => clearInterval(interval);
   }, []);  
+
+  useEffect(() => {
+    const fetchUserCoupon = async () => {
+      try {
+        const res = await axios.get('/api/coupon/getusercoupon');
+        setUserCoupon(res.data?.code || null);
+      } catch (err) {
+        console.error('Failed to fetch coupon:', err);
+      }
+    };
+  
+    if (currentUser?.role === 'customer') {
+      fetchUserCoupon();
+    }
+  }, [currentUser]);  
 
   useEffect(() => {
     if (currentUser?.role !== 'host') return;
@@ -546,7 +564,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
       </div>
 
       {/* Avatar & name */}
-      <div className="pl-5 pr-5 pb-6 rounded-xl shadow-sm">
+      <div className="pl-5 pr-5 pb-6 rounded-xl border-b-[1px]">
         {/* Divider */}
         <div className="flex items-center gap-4 mt-4">
           <div
@@ -563,7 +581,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
               />
             ) : (
               <div className={twMerge(
-                "w-[60px] h-[60px] rounded-full flex items-center justify-center text-white font-bold text-xl bg-black",
+                "w-[60px] h-[60px] rounded-full flex items-center justify-center text-white font-medium text-xl bg-black",
               )}
               // style={{
               //   background: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
@@ -592,7 +610,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
             <>
             <div className="mt-8 pt-0 md:pt-5 w-full flex flex-col lg:flex-row items-start gap-10">
               <div className="w-full lg:w-1/2 bg-white rounded-xl shadow-md hover:shadow-lg p-6">
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex justify-between items-center mb-4">
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => setActiveSection(null)}
@@ -617,10 +635,19 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                     <div className="flex-1">
                       <p className="text-sm text-neutral-500">{label}</p>
 
+                      <AnimatePresence>
                       {editingField === key ? (
                         key === 'address' ? (
                           <>
                             <div className="space-y-4 pt-4">
+                              <motion.div
+                                  key="address-edit"
+                                  initial={{ opacity: 0, y: -8 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, y: -8 }}
+                                  transition={{ duration: 0.25 }}
+                                  className="space-y-4 pt-4"
+                                >
                               {/* CountrySelect */}
                               <CountrySelect
                                 value={fieldValues.country ?? undefined}
@@ -633,7 +660,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                               />
 
                               {/* Address fields */}
-                              <div className="relative w-full">
+                              <div className="relative w-full px-1">
                                 <input
                                   type="text"
                                   id="street"
@@ -659,7 +686,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                               </div>
 
                               {/* Apt */}
-                              <div className="relative w-full">
+                              <div className="relative w-full px-1">
                                 <input
                                   type="text"
                                   id="apt"
@@ -685,7 +712,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                               </div>
 
                               {/* City */}
-                              <div className="relative w-full">
+                              <div className="relative w-full px-1">
                                 <input
                                   type="text"
                                   id="city"
@@ -711,7 +738,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                               </div>
 
                               {/* State */}
-                              <div className="relative w-full">
+                              <div className="relative w-full px-1">
                                 <input
                                   type="text"
                                   id="state"
@@ -737,7 +764,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                               </div>
 
                               {/* ZIP */}
-                              <div className="relative w-full">
+                              <div className="relative w-full px-1">
                                 <input
                                   type="text"
                                   id="zip"
@@ -769,10 +796,19 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                               >
                                 Save
                               </button>
+                              </motion.div>
                             </div>
                           </>
                         ) : (
                           <>
+                          <motion.div
+                            key="address-edit"
+                            initial={{ opacity: 0, y: -8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -8 }}
+                            transition={{ duration: 0.25 }}
+                            className="space-y-4 pt-4"
+                          >
                             <input
                               type="text"
                               className="mt-2 text-base border rounded-xl p-4 w-full"
@@ -794,9 +830,18 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                             >
                               Apply
                             </button>
+                            </motion.div>
                           </>
                         )
                       ) : (
+                        <motion.div
+                          key="address-edit"
+                          initial={{ opacity: 0, y: -8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -8 }}
+                          transition={{ duration: 0.25 }}
+                          className="space-y-4 pt-4"
+                        >
                         <div className="text-lg font-medium break-words">
                           {key === 'address' ? (
                             fieldValues.country || fieldValues.street || fieldValues.city || fieldValues.state || fieldValues.zip ? (
@@ -825,7 +870,9 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                           </p>
                           )}
                         </div>
+                        </motion.div>
                       )}
+                      </AnimatePresence>
                     </div>
                     <button
                       onClick={() => setEditingField(editingField === key ? null : key)}
@@ -869,7 +916,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
               {/* Left: Login & Security */}
               <div className="w-full lg:w-1/2 bg-white rounded-xl shadow-md hover:shadow-lg p-6 mt-0 md:mt-9">
                 {/* Header */}
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex justify-between items-center mb-4">
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => setActiveSection(null)}
@@ -894,63 +941,70 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                 </div>
                 <p className="text-xs text-neutral-400">Last updated: {new Date(currentUser.updatedAt).toLocaleDateString()}</p>
 
-                {editingField === 'password' && (
-                  <div className="space-y-4 pt-4">
-                    <input
-                      type="password"
-                      placeholder="Current password"
-                      className="w-full border-b p-2 outline-none"
-                      id="currentPassword"
-                    />
-                    <input
-                      type="password"
-                      placeholder="New password"
-                      className="w-full border-b p-2 outline-none"
-                      id="newPassword"
-                    />
-                    <input
-                      type="password"
-                      placeholder="Confirm new password"
-                      className="w-full border-b p-2 outline-none"
-                      id="confirmNewPassword"
-                    />
-                    <button
-                      onClick={async () => {
-                        const currentPassword = (document.getElementById('currentPassword') as HTMLInputElement).value;
-                        const newPassword = (document.getElementById('newPassword') as HTMLInputElement).value;
-                        const confirmNewPassword = (document.getElementById('confirmNewPassword') as HTMLInputElement).value;
+                <AnimatePresence>
+                  {editingField === 'password' && (
+                    <motion.div
+                      key="password-edit"
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.25 }}
+                      className="space-y-4 pt-4"
+                    >
+                      <input
+                        type="password"
+                        placeholder="Current password"
+                        className="w-full border-b p-2 outline-none"
+                        id="currentPassword"
+                      />
+                      <input
+                        type="password"
+                        placeholder="New password"
+                        className="w-full border-b p-2 outline-none"
+                        id="newPassword"
+                      />
+                      <input
+                        type="password"
+                        placeholder="Confirm new password"
+                        className="w-full border-b p-2 outline-none"
+                        id="confirmNewPassword"
+                      />
+                      <button
+                        onClick={async () => {
+                          const currentPassword = (document.getElementById('currentPassword') as HTMLInputElement).value;
+                          const newPassword = (document.getElementById('newPassword') as HTMLInputElement).value;
+                          const confirmNewPassword = (document.getElementById('confirmNewPassword') as HTMLInputElement).value;
 
-                        if (!currentPassword || !newPassword || newPassword !== confirmNewPassword) {
-                          // setPopupMessage('Please check your input fields.');
-                          toast.error('Please check your input fields.');
-                          return;
-                        }
+                          if (!currentPassword || !newPassword || newPassword !== confirmNewPassword) {
+                            toast.error('Please check your input fields.');
+                            return;
+                          }
 
-                        try {
-                          await axios.put('/api/users/update-password', {
-                            currentPassword,
-                            newPassword,
-                            confirmPassword: confirmNewPassword
-                          });
-                          // setPopupMessage('Password updated successfully!');
-                          toast.success('Password updated successfully!', {
-                            iconTheme: {
+                          try {
+                            await axios.put('/api/users/update-password', {
+                              currentPassword,
+                              newPassword,
+                              confirmPassword: confirmNewPassword
+                            });
+                            toast.success('Password updated successfully!', {
+                              iconTheme: {
                                 primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
                                 secondary: '#fff',
-                            }
-                          });
-                          setEditingField(null);
-                        } catch (err) {
-                          // setPopupMessage('Failed to update password. Check current password.');
-                          toast.error('Failed to update password. Check current password.')
-                        }
-                      }}
-                      className="text-sm text-white bg-[#000] hover:bg-neutral-800 p-2 rounded-lg"
-                    >
-                      Update Password
-                    </button>
-                  </div>
-                )}
+                              }
+                            });
+                            setEditingField(null);
+                          } catch (err) {
+                            toast.error('Failed to update password. Check current password.');
+                          }
+                        }}
+                        className="text-sm text-white bg-[#000] hover:bg-neutral-800 p-2 rounded-lg"
+                      >
+                        Update Password
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                
               </div>
 
               {/* Account Deactivation */}
@@ -980,7 +1034,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
               <div className="w-full lg:w-1/2 bg-white rounded-xl shadow-md hover:shadow-lg p-6">
 
               {/* Header */}
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex justify-between items-center mb-0">
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => setActiveSection(null)}
@@ -1020,7 +1074,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                     <Heading title="Payment Method" subtitle="Manage your cards and payment methods" />
                     {!savedCard ? (
                       <button
-                        className="mt-4 px-4 border py-2 bg-black text-white transition hover:bg-white hover:text-black rounded-lg"
+                        className="mt-4 px-4 border py-2 bg-black text-white transition hover:bg-neutral-800 rounded-lg"
                         onClick={() => setShowCardModal(true)}
                       >
                         Add Card
@@ -1029,7 +1083,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                       <div className="flex gap-4 mt-4">
                       {/* Edit Button */}
                       <button
-                        className="px-4 py-2 border border-black text-black rounded-lg hover:bg-black hover:text-white transition"
+                        className="px-4 py-2 shadow-sm hover:shadow-md text-black rounded-lg hover:bg-neutral-100 transition"
                         onClick={() => setShowCardModal(true)}
                       >
                         Edit Card
@@ -1037,7 +1091,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
 
                       {/* Delete Button */}
                       <button
-                        className="px-4 py-2 border border-black text-black rounded-lg hover:bg-black hover:text-white transition"
+                        className="px-4 py-2 shadow-sm hover:shadow-md text-black rounded-xl hover:bg-black hover:text-white transition"
                         onClick={() => setShowConfirmDelete(true)}
                       >
                         Delete Card
@@ -1068,8 +1122,8 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                                 ? '/images/MasterCard.png'
                                 : savedCard?.number?.replace(/\D/g, '').startsWith('3')
                                 ? '/images/americanexpress.png'
-                                : savedCard?.number?.replace(/\D/g, '').startsWith('6')
-                                ? '/images/Discover.png'
+                                // : savedCard?.number?.replace(/\D/g, '').startsWith('6')
+                                // ? '/images/Discover.png'
                                 : '/images/card.png'
                             }
                             alt="Card Type"
@@ -1082,7 +1136,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
 
                         {/* BACK SIDE */}
                         <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-xl rotate-y-180 p-6 flex flex-col justify-between">
-                          <div className="text-sm tracking-wider text-gray-400">Payment Method</div>
+                          <div className="text-sm tracking-wider text-gray-400">Encrypted</div>
 
                           <div className="text-xl font-mono tracking-widest text-center my-4">
                             **** **** **** {savedCard.number.slice(-4)}
@@ -1103,7 +1157,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                     </div>
                   )}
 
-                    <div className="mt-10">
+                    {/* <div className="mt-10">
                       <Heading title="Coupon" subtitle="Have a discount code?" />
                       {showCouponInput ? (
                         <div className="mt-4">
@@ -1115,7 +1169,20 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                             className="w-full border p-2 rounded-lg"
                           />
                           <div className="flex gap-2 mt-2">
-                            <button className="bg-black text-white px-4 py-1 rounded-lg hover:bg-neutral-800 transition">Apply</button>
+                            <button className="bg-black text-white px-4 py-1 rounded-lg hover:bg-neutral-800 transition"
+                              onClick={async () => {
+                                if (!couponCode) return toast.error('Enter a coupon code');
+                            
+                                try {
+                                  const res = await axios.post('/api/coupon/addcoupon', { code: couponCode });
+                                  toast.success(`Coupon "${couponCode}" applied!`);
+                                  setCouponCode('');
+                                  setShowCouponInput(false);
+                                } catch (err: any) {
+                                  toast.error(err?.response?.data || 'Coupon invalid or expired');
+                                }
+                              }}
+                            >Apply</button>
                             <button className="border px-4 py-1 rounded-lg hover:bg-black hover:text-white transition" onClick={() => setShowCouponInput(false)}>Cancel</button>
                           </div>
                         </div>
@@ -1127,7 +1194,81 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                           Add Coupon
                         </button>
                       )}
+                    </div> */}
+                    <div className="mt-10">
+                      <Heading
+                        title="Voucher"
+                        subtitle=""
+                      />
+
+                      <p className="mt-2 text-lg text-neutral-700 gap-2">
+                          Active coupon:{' '}
+                          <span className="inline-block px-3 py-1 border border-dashed border-black rounded-lg bg-neutral-50">
+                            {userCoupon}
+                          </span>
+                        </p>
+
+                  <AnimatePresence mode="wait">
+                    {showCouponInput ? (
+                      <motion.div
+                        key="couponInput"
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.25 }}
+                        className="mt-4"
+                      >
+                        <input
+                          type="text"
+                          value={couponCode}
+                          onChange={(e) => setCouponCode(e.target.value)}
+                          placeholder="Enter your coupon code"
+                          className="w-full shadow-md p-2 rounded-lg"
+                        />
+                        <div className="flex gap-2 mt-5">
+                          <button
+                            className="bg-black text-white px-4 py-1 rounded-lg hover:bg-neutral-800 transition"
+                            onClick={async () => {
+                              if (!couponCode) return toast.error('Enter a coupon code');
+                              try {
+                                const res = await axios.post('/api/coupon/addcoupon', { code: couponCode });
+                                toast.success(`Coupon "${couponCode}" applied!`);
+                                setCouponCode('');
+                                setShowCouponInput(false);
+                                setUserCoupon(couponCode);
+                              } catch (err: any) {
+                                // toast.error(err?.response?.data || 'Coupon invalid or expired');
+                                const errorMsg = err?.response?.data;
+                                toast.error(typeof errorMsg === 'string' ? errorMsg : errorMsg?.error || 'Coupon invalid or expired');
+                              }
+                            }}
+                          >
+                            Apply
+                          </button>
+                          <button
+                            className="border px-4 py-1 rounded-lg hover:bg-neutral-100 hover:text-black transition"
+                            onClick={() => setShowCouponInput(false)}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </motion.div>
+                    ) : (
+                      <motion.button
+                        key="addCouponBtn"
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="mt-2 text-sm underline text-black"
+                        onClick={() => setShowCouponInput(true)}
+                      >
+                        {userCoupon ? 'Edit Coupon' : 'Add Coupon'}
+                      </motion.button>
+                    )}
+                  </AnimatePresence>
                     </div>
+
                   </>
                 )}
 
@@ -1169,9 +1310,9 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                                       : savedPayout.method === 'card' &&
                                         savedPayout.number?.replace(/\D/g, '').startsWith('3')
                                       ? '/images/americanexpress.png'
-                                      : savedPayout.method === 'card' &&
-                                        savedPayout.number?.replace(/\D/g, '').startsWith('6')
-                                      ? '/images/Discover.png'
+                                      // : savedPayout.method === 'card' &&
+                                      //   savedPayout.number?.replace(/\D/g, '').startsWith('6')
+                                      // ? '/images/Discover.png'
                                       : '/images/card.png'
                                   }
                                   alt={savedPayout.method}
@@ -1183,7 +1324,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
 
                             {/* BACK SIDE */}
                             <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-xl rotate-y-180 p-6 flex flex-col justify-center items-center gap-4">
-                              <p className="text-xs tracking-wider text-gray-400">Withdraw Info</p>
+                              <p className="text-xs tracking-wider text-gray-400">Credential</p>
                               <p className="text-lg font-mono text-center">
                                 {savedPayout.method === 'paypal'
                                   ? savedPayout.number
@@ -1275,7 +1416,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                                   ? '/images/MasterCard.png'
                                   : payoutInfo.number.replace(/\D/g, '').startsWith('3')
                                   ? '/images/americanexpress.png'
-                                  : '/images/card.png'
+                                  : '/images/card4.png'
                               }
                               alt="Method"
                               className="w-8 h-5 object-contain"
@@ -1391,201 +1532,212 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
             />
           )}
 
-      {showCardModal && (
-        <div className="fixed inset-0 z-50 p-5 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
-          <div className="bg-white rounded-xl w-full max-w-md max-h-[90vh] p-5 flex flex-col">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Payment Card Details</h3>
-              <button onClick={() => setShowCardModal(false)} className="text-sm">✕</button>
-            </div>
+      <AnimatedModal isOpen={showCardModal} onClose={() => setShowCardModal(false)}>
+      <div className="flex flex-col max-h-[60vh]">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold">Card Details</h3>
+          <button onClick={() => setShowCardModal(false)} className="text-sm">✕</button>
+        </div>
 
-            {cardInfo.method === 'card' && (
-              <>
-                <div className="flex items-center gap-4 mb-4">
-                  <Image width={50} height={50} src="/images/Visa.png" alt="Visa" className="w-8" />
-                  <Image width={50} height={50} src="/images/MasterCard.png" alt="MasterCard" className="w-6" />
-                  <Image width={50} height={50} src="/images/americanexpress.png" alt="AMEX" className="w-6" />
-                  <Image width={50} height={50} src="/images/Discover.png" alt="Discover" className="w-8" />
-                </div>
+          {cardInfo.method === 'card' && (
+            <>
+              <div className="flex flex-row gap-1 items-center">
+                <Image width={50} height={50} src="/images/Visa.png" alt="Visa" className="w-10" />
+                <Image width={50} height={50} src="/images/MasterCard.png" alt="MasterCard" className="w-8" />
+                <Image width={50} height={50} src="/images/americanexpress.png" alt="AMEX" className="w-6" />
+              </div>
 
-              <div className="overflow-y-auto mt-2 mb-4 space-y-4">
-                {/* Card Number with floating label */}
-                <div className="relative w-full mb-4">
-                  <input
-                    type="text"
-                    id="cardNumber"
-                    name="number"
-                    placeholder=" "
-                    value={cardInfo.number}
-                    onChange={(e) => {
-                      const formatted = e.target.value
-                        .replace(/\D/g, '')
-                        .slice(0, 16)
-                        .replace(/(.{4})/g, '$1 ')
-                        .trim();
-                      setCardInfo({ ...cardInfo, number: formatted });
-                      setCardType(detectCardType(formatted));
-                    }}
-                    className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black pr-14"
-                  />
-                  <label
-                    htmlFor="cardNumber"
-                    className="absolute left-4 top-3 text-base text-neutral-500 transition-all
-                      duration-200 ease-in-out peer-placeholder-shown:top-4 peer-placeholder-shown:text-base
-                      peer-placeholder-shown:text-neutral-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-black"
-                  >
-                    Card number
-                  </label>
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    <Image
-                      src={
-                        cardInfo.number.trim() === ''
-                          ? '/images/card.png'
-                          : `/images/${cardType || 'card'}.png`
-                      }
-                      alt="Card Type"
-                      className="w-8 h-5 object-contain"
-                      width={50}
-                      height={50}
-                    />
-                  </div>
-                </div>
-
-                {/* Expiration & CVV */}
-                <div className="flex gap-4 mb-4">
-                  <div className="relative w-1/2">
+                <div className="overflow-y-auto mt-2 mb-4 space-y-4 h-[40vh] sm:h-[20vh] md:h-auto">
+                  {/* Card Number with floating label */}
+                  <div className="relative w-full mb-4 px-1 pt-1">
                     <input
                       type="text"
-                      name="expiration"
-                      id="cardExpiration"
+                      id="cardNumber"
+                      name="number"
                       placeholder=" "
-                      value={cardInfo.expiration}
+                      value={cardInfo.number}
                       onChange={(e) => {
-                        let val = e.target.value.replace(/\D/g, '').slice(0, 4);
-                        if (val.length >= 3) val = `${val.slice(0, 2)}/${val.slice(2)}`;
-                        setCardInfo({ ...cardInfo, expiration: val });
+                        const formatted = e.target.value
+                          .replace(/\D/g, '')
+                          .slice(0, 16)
+                          .replace(/(.{4})/g, '$1 ')
+                          .trim();
+                        setCardInfo({ ...cardInfo, number: formatted });
+                        setCardType(detectCardType(formatted));
                       }}
-                      className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
+                      className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black pr-14"
                     />
                     <label
-                      htmlFor="cardExpiration"
+                      htmlFor="cardNumber"
                       className="absolute left-4 top-3 text-base text-neutral-500 transition-all
                         duration-200 ease-in-out peer-placeholder-shown:top-4 peer-placeholder-shown:text-base
                         peer-placeholder-shown:text-neutral-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-black"
                     >
-                      (MM/YY)
+                      Card number
                     </label>
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <Image
+                        src={
+                          cardInfo.number.trim() === ''
+                            ? '/images/card4.png'
+                            : `/images/${cardType || 'card'}.png`
+                        }
+                        alt="Card Type"
+                        className="w-8 h-5 object-contain"
+                        width={50}
+                        height={50}
+                      />
+                    </div>
                   </div>
 
-                  <div className="relative w-1/2">
-                    <input
-                      type="text"
-                      name="cvv"
-                      id="cardCVV"
-                      placeholder=" "
-                      value={cardInfo.cvv}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/\D/g, '').slice(0, 3);
-                        setCardInfo({ ...cardInfo, cvv: val });
-                      }}
-                      className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
-                    />
-                    <label
-                      htmlFor="cardCVV"
-                      className="absolute left-4 top-3 text-base text-neutral-500 transition-all
-                        duration-200 ease-in-out peer-placeholder-shown:top-4 peer-placeholder-shown:text-base
-                        peer-placeholder-shown:text-neutral-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-black"
-                    >
-                      CVV
-                    </label>
-                  </div>
-                </div>
-
-                {/* Billing Address */}
-                <div className="space-y-4 mb-4">
-                  <h3 className="text-md font-semibold">Billing Address</h3>
-
-                  {[
-                    { name: 'address', label: 'Street address' },
-                    { name: 'apt', label: 'Apt or suite number' },
-                    { name: 'city', label: 'City' },
-                    { name: 'state', label: 'State' },
-                    { name: 'zip', label: 'ZIP Code' }
-                  ].map(({ name, label }) => (
-                    <div key={name} className="relative w-full">
+                  {/* Expiration & CVV */}
+                  <div className="flex gap-4 mb-4">
+                    <div className="relative w-1/2 px-1">
                       <input
                         type="text"
-                        name={name}
-                        id={`billing-${name}`}
+                        name="expiration"
+                        id="cardExpiration"
                         placeholder=" "
-                        value={cardInfo[name as keyof typeof cardInfo] as string}
-                        onChange={handleCardChange}
+                        value={cardInfo.expiration}
+                        onChange={(e) => {
+                          let val = e.target.value.replace(/\D/g, '').slice(0, 4);
+                          if (val.length >= 3) val = `${val.slice(0, 2)}/${val.slice(2)}`;
+                          setCardInfo({ ...cardInfo, expiration: val });
+                        }}
                         className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
                       />
                       <label
-                        htmlFor={`billing-${name}`}
+                        htmlFor="cardExpiration"
                         className="absolute left-4 top-3 text-base text-neutral-500 transition-all
                           duration-200 ease-in-out peer-placeholder-shown:top-4 peer-placeholder-shown:text-base
                           peer-placeholder-shown:text-neutral-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-black"
                       >
-                        {label}
+                        (MM/YY)
                       </label>
                     </div>
-                  ))}
 
-                  <CountrySelect
-                    value={cardInfo.country}
-                    onChange={(value) => setCardInfo({ ...cardInfo, country: value })}
-                  />
-                </div>
-                </div>
+                    <div className="relative w-1/2 px-1">
+                      <input
+                        type="text"
+                        name="cvv"
+                        id="cardCVV"
+                        placeholder=" "
+                        value={cardInfo.cvv}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, '').slice(0, 3);
+                          setCardInfo({ ...cardInfo, cvv: val });
+                        }}
+                        className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
+                      />
+                      <label
+                        htmlFor="cardCVV"
+                        className="absolute left-4 top-3 text-base text-neutral-500 transition-all
+                          duration-200 ease-in-out peer-placeholder-shown:top-4 peer-placeholder-shown:text-base
+                          peer-placeholder-shown:text-neutral-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-black"
+                      >
+                        CVV
+                      </label>
+                    </div>
+                  </div>
 
-                <button
-                  className="bg-black text-white px-4 py-3 rounded-xl w-full"
-                  onClick={async () => {
-                    try {
-                      if (savedCard) {
-                        await axios.delete('/api/users/delete-card');
-                      }
+                  {/* Billing Address */}
+                  <div className="space-y-4 mb-4">
+                    <h3 className="text-md font-semibold ml-2">Billing Address</h3>
 
-                      const payload = { ...cardInfo };
-                      await axios.post('/api/users/save-card', payload);
-                      setCardUpdated(prev => !prev);
-                      setShowCardModal(false);
+                    {[
+                      { name: 'address', label: 'Street address' },
+                      { name: 'apt', label: 'Apt or suite number' },
+                      { name: 'city', label: 'City' },
+                      { name: 'state', label: 'State' },
+                      { name: 'zip', label: 'ZIP Code' }
+                    ].map(({ name, label }) => (
+                      <div key={name} className="relative w-full px-1">
+                        <input
+                          type="text"
+                          name={name}
+                          id={`billing-${name}`}
+                          placeholder=" "
+                          value={cardInfo[name as keyof typeof cardInfo] as string}
+                          onChange={handleCardChange}
+                          className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
+                        />
+                        <label
+                          htmlFor={`billing-${name}`}
+                          className="absolute left-4 top-3 text-base text-neutral-500 transition-all
+                            duration-200 ease-in-out peer-placeholder-shown:top-4 peer-placeholder-shown:text-base
+                            peer-placeholder-shown:text-neutral-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-black"
+                        >
+                          {label}
+                        </label>
+                      </div>
+                    ))}
 
-                      const cardRes = await axios.get('/api/users/get-card');
-                      const CARD_SECRET_KEY = process.env.CARD_SECRET_KEY || '';
-                      const decrypt = (text: string) =>
-                        CryptoJS.AES.decrypt(text, CARD_SECRET_KEY).toString(CryptoJS.enc.Utf8);
+                    <div className="px-1">
+                      <CountrySelect
+                        value={cardInfo.country}
+                        onChange={(value) => setCardInfo({ ...cardInfo, country: value })}
+                      />
+                    </div>
+                  </div>
+                  </div>
 
-                      setSavedCard({
-                        number: decrypt(cardRes.data.number),
-                        expiration: decrypt(cardRes.data.expiration),
-                        cvv: decrypt(cardRes.data.cvv),
-                        name: decrypt(cardRes.data.name),
-                      });
-
-                      // setPopupMessage('Card saved successfully!');
-                      toast.success('Card saved successfully!', {
-                        iconTheme: {
-                            primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
-                            secondary: '#fff',
+                  <button
+                    className="bg-black text-white px-4 py-3 rounded-xl w-full hover:bg-neutral-800 transition"
+                    onClick={async () => {
+                      try {
+                        if (savedCard) {
+                          await axios.delete('/api/users/delete-card');
                         }
-                      });
-                    } catch (err) {
-                      console.error(err);
-                      // setPopupMessage('Failed to save card. Please try again.');
-                      toast.error('Failed to save card. Please try again.');
-                    }
-                  }}
-                >
-                  Save Card
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+
+                        const payload = { ...cardInfo };
+                        await axios.post('/api/users/save-card', payload);
+                        setCardUpdated(prev => !prev);
+                        setShowCardModal(false);
+
+                        // Immediately sync card address to user's profile address
+                        await axios.put('/api/users/profile-info', {
+                          address: JSON.stringify({
+                            street: cardInfo.address,
+                            apt: cardInfo.apt,
+                            city: cardInfo.city,
+                            state: cardInfo.state,
+                            zip: cardInfo.zip,
+                            country: cardInfo.country,
+                          }),
+                        });
+
+                        const cardRes = await axios.get('/api/users/get-card');
+                        const CARD_SECRET_KEY = process.env.CARD_SECRET_KEY || '';
+                        const decrypt = (text: string) =>
+                          CryptoJS.AES.decrypt(text, CARD_SECRET_KEY).toString(CryptoJS.enc.Utf8);
+
+                        setSavedCard({
+                          number: decrypt(cardRes.data.number),
+                          expiration: decrypt(cardRes.data.expiration),
+                          cvv: decrypt(cardRes.data.cvv),
+                          name: decrypt(cardRes.data.name),
+                        });
+
+                        // setPopupMessage('Card saved successfully!');
+                        toast.success('Card saved successfully!', {
+                          iconTheme: {
+                              primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
+                              secondary: '#fff',
+                          }
+                        });
+                      } catch (err) {
+                        console.error(err);
+                        // setPopupMessage('Failed to save card. Please try again.');
+                        toast.error('Failed to save card. Please try again.');
+                      }
+                    }}
+                  >
+                    Save Card
+                  </button>
+                </>
+              )}
+            </div>
+        </AnimatedModal>
   
       {/* ✅ SECTION: DEFAULT OVERVIEW */}
       {!activeSection && (
@@ -1703,9 +1855,9 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                               : savedPayout.method === 'card' &&
                                 savedPayout.number?.replace(/\D/g, '').startsWith('3')
                               ? '/images/americanexpress.png'
-                              : savedPayout.method === 'card' &&
-                                savedPayout.number?.replace(/\D/g, '').startsWith('6')
-                              ? '/images/Discover.png'
+                              // : savedPayout.method === 'card' &&
+                              //   savedPayout.number?.replace(/\D/g, '').startsWith('6')
+                              // ? '/images/Discover.png'
                               : '/images/card.png'
                           }
                           alt={savedPayout.method}
@@ -1718,7 +1870,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
 
                       {/* BACK SIDE */}
                       <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-xl rotate-y-180 p-6 flex flex-col justify-center items-center gap-4">
-                        <p className="text-xs tracking-wider text-gray-400">Withdraw Info</p>
+                        <p className="text-xs tracking-wider text-gray-400">Credentials</p>
                         <p className="text-lg font-mono text-center">
                           {savedPayout.method === 'paypal'
                             ? savedPayout.number
@@ -1820,9 +1972,9 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                           : savedPayout.method === 'card' &&
                             savedPayout.number?.replace(/\D/g, '').startsWith('3')
                           ? '/images/americanexpress.png'
-                          : savedPayout.method === 'card' &&
-                            savedPayout.number?.replace(/\D/g, '').startsWith('6')
-                          ? '/images/Discover.png'
+                          // : savedPayout.method === 'card' &&
+                          //   savedPayout.number?.replace(/\D/g, '').startsWith('6')
+                          // ? '/images/Discover.png'
                           : '/images/card.png'
                       }
                       alt={savedPayout.method}
@@ -1834,7 +1986,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
 
                   {/* BACK SIDE */}
                   <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-xl rotate-y-180 p-6 flex flex-col justify-center items-center gap-4">
-                    <p className="text-xs tracking-wider text-gray-400">Withdraw Info</p>
+                    <p className="text-xs tracking-wider text-gray-400">Credentials</p>
                     <p className="text-lg font-mono text-center">
                       {savedPayout.method === 'paypal'
                         ? savedPayout.number

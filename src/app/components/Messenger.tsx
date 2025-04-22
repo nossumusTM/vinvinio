@@ -59,7 +59,7 @@ const Messenger = ({ currentUser }: MessengerProps) => {
             >
               {/* Header */}
               <div className="messenger-header flex justify-between items-center p-3 border-b cursor-move">
-                <p className="font-semibold text-xl pl-2">Messenger</p>
+                <p className="font-medium text-xl pl-2">Messenger</p>
                 <button className="pr-2" onClick={closeMessenger}>✕</button>
               </div>
   

@@ -190,8 +190,10 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
   };  
 
   useEffect(() => {
-    fetchListings();
-  }, []);
+    if (currentUser?.role === 'moder') {
+      fetchListings();
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -271,7 +273,8 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
   };  
 
   if (!currentUser || currentUser.role !== 'moder') {
-    return <p className="text-center text-neutral-500 py-10">Unauthorized or loading...</p>;
+    router.push('/');
+    // return <p className="text-center text-neutral-500 py-10">Unauthorized or loading...</p>;
   }
 
   return (

@@ -67,7 +67,7 @@ export async function POST(
               </p>
 
               <hr style="margin-top: 40px;" />
-              <p style="font-size: 13px; color: #888;">Vuoiaggio International Srls.</p>
+              <p style="font-size: 13px; color: #888;">Vuoiaggio Network Srls.</p>
               <p style="font-size: 13px; color: #888;">Via Novacella 18, Rome, RM, Italy</p>
               <p style="font-size: 13px; color: #888;">🇮🇹 +39 371 528 4911</p>
               <p style="font-size: 13px; color: #888;">ciao@vuoiaggio.it</p>

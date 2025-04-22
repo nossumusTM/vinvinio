@@ -39,7 +39,7 @@ const ReviewsModal: React.FC<ReviewsModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center">
-      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-lg relative max-h-[90vh] overflow-y-auto p-6">
+      <div className="w-full max-w-4xl bg-white rounded-3xl shadow-lg relative max-h-[90vh] overflow-y-auto p-6">
         <div className="flex justify-between items-center border-b pb-4 mb-4">
         {/* Overall Rating */}
         <div className="flex items-center gap-2">
@@ -73,7 +73,7 @@ const ReviewsModal: React.FC<ReviewsModalProps> = ({
           {reviews.map((review, i) => (
             <div
               key={i}
-              className="rounded-2xl p-4 shadow-md hover:shadow-lg"
+              className="rounded-3xl p-4 shadow-md hover:shadow-lg"
             >
               {/* Stars */}
               <div className="flex gap-1 mb-2">

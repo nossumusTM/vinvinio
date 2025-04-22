@@ -55,6 +55,8 @@ const CheckoutPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const { data: session, status } = useSession();
+
   const [listingData, setListingData] = useState<any>(null);
   const [popupMessage, setPopupMessage] = useState<string | null>(null);
   const [invalidFields, setInvalidFields] = useState<string[]>([]);
@@ -98,10 +100,20 @@ const CheckoutPage = () => {
   const registerModal = useRegisterModal();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [referralId, setReferralId] = useState<string | null>(null);
 
-  const referralId = localStorage.getItem('scannedReferenceId');
+  const [userCoupon, setUserCoupon] = useState<string | null>(null);
+  const [couponCode, setCouponCode] = useState('');
+  const [discountPercentage, setDiscountPercentage] = useState<number>(0);
+
   // console.log("ReferralId", referralId);
   // console.log("Storage", localStorage);
+
+
+  useEffect(() => {
+    const stored = localStorage.getItem('scannedReferenceId');
+    setReferralId(stored);
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCardInfo({ ...cardInfo, [e.target.name]: e.target.value });
@@ -345,7 +357,7 @@ const CheckoutPage = () => {
 
                 <p style="margin-top: 32px;">We look forward to hosting you, <br> <strong>${legalName}</strong>! ✨</p>
 
-                <p style="font-size: 13px; color: #888; margin-top: 40px;">Vuoiaggio International Srls.</p>
+                <p style="font-size: 13px; color: #888; margin-top: 40px;">Vuoiaggio Network Srls.</p>
                 <p style="font-size: 13px; color: #888;">P.IVA 57483813574</p>
                 <p style="font-size: 13px; color: #888;">Via Novacella 18, Rome, RM, Italy</p>
                 <p style="font-size: 13px; color: #888;">🇮🇹 +39 371 528 4911</p>
@@ -519,10 +531,19 @@ const CheckoutPage = () => {
   //   };
   
   //   checkUser();
-  // }, []);  
+  // }, []); 
+  
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.email) {
+      setIsAuthenticated(true);
+      setCheckoutMode('auth');
+      if (session.user.name) setLegalName(session.user.name);
+      if (session.user.email) setEmail(session.user.email);
+    }
+  }, [session, status]);
 
   useEffect(() => {
-    if (checkoutMode === 'guest') return;
+    // if (checkoutMode === 'guest') return;
 
     const checkUser = async () => {
       try {
@@ -542,7 +563,29 @@ const CheckoutPage = () => {
     checkUser();
   }, [checkoutMode]);  
 
-  const total = listingData ? listingData.price * guests + serviceFee : 0;
+  useEffect(() => {
+    if (!isAuthenticated) return;
+  
+    const fetchCoupon = async () => {
+      try {
+        const res = await axios.get('/api/coupon/getusercoupon');
+        if (res?.data?.code && res?.data?.discount) {
+          setUserCoupon(res.data.code);
+          setDiscountPercentage(res.data.discount);
+        }
+      } catch (err) {
+        console.error('No active coupon:', err);
+      }
+    };
+  
+    fetchCoupon();
+  }, [isAuthenticated]);  
+
+  // const total = listingData ? listingData.price * guests + serviceFee : 0;
+
+  const subtotal = listingData ? listingData.price * guests : 0;
+  const discountAmount = subtotal * (discountPercentage / 100);
+  const total = subtotal - discountAmount + serviceFee;
 
   return (
     <div className="flex flex-col lg:flex-row max-w-screen-xl mx-auto px-4 py-10 gap-10">
@@ -581,7 +624,7 @@ const CheckoutPage = () => {
                 }}
                 className={`text-sm font-medium ${checkoutMode === 'auth' ? 'text-black underline' : 'text-neutral-500'}`}
               >
-                Login / Sign Up
+                Sign In / Sign Up
               </button>
             </div>
           </div>
@@ -665,10 +708,10 @@ const CheckoutPage = () => {
             <h3 className="text-md font-semibold pt-1">Payment Method</h3>
 
             {cardInfo.method === 'card' && (
-                <div className="flex items-center gap-4 ">
+                <div className="flex items-center gap-3 ">
                 <Image width={50} height={50} src="/images/visa.png" alt="Visa" className="h-12 w-auto object-contain" />
-                <Image width={50} height={50} src="/images/mastercard.png" alt="MasterCard" className="h-6 w-auto object-contain" />
-                <Image width={50} height={50} src="/images/revolut.png" alt="Revolut" className="h-4.5 w-auto object-contain" />
+                <Image width={50} height={50} src="/images/MasterCard.png" alt="MasterCard" className="h-6 w-auto object-contain ml-1" />
+                <Image width={50} height={50} src="/images/revolut1.png" alt="Revolut" className="h-12 w-auto object-contain" />
                 </div>
             )}
 
@@ -724,7 +767,7 @@ const CheckoutPage = () => {
                 <Image
                   src={
                     cardInfo.number.trim() === ''
-                      ? '/images/card.png'
+                      ? '/images/cardcheckout.png'
                       : `/images/${cardType || 'card'}.png`
                   }
                   alt="Card Type"
@@ -978,11 +1021,11 @@ const CheckoutPage = () => {
 
         {/* ✅ Show correct button based on selected method */}
         {cardInfo.method === 'gpay' ? (
-          <button className="mt-4 bg-black text-white p-3 rounded font-semibold w-full">
+          <button className="mt-4 bg-[#000] hover:bg-[#0D652D] transition text-white p-3 rounded-xl font-semibold w-full">
             Pay with Google Pay
           </button>
         ) : cardInfo.method === 'paypal' ? (
-          <button className="mt-4 bg-[#003087] text-white p-3 rounded font-semibold w-full">
+          <button className="mt-4 bg-[#0079C1] hover:bg-[#003087] transition text-white p-3 rounded-xl font-semibold w-full">
             Proceed with PayPal
           </button>
         ) : isLoading ? (
@@ -1075,6 +1118,54 @@ const CheckoutPage = () => {
               </div>
             </div>
             <hr />
+
+            <div className="space-y-2 pt-1">
+              {userCoupon && (
+                <div className="text-lg text-neutral-800 font-semibold">
+                  Voucher: <span className="bg-green-100 border border-green-400 rounded px-2 py-1">{userCoupon}</span>
+                </div>
+              )}
+
+              {!userCoupon && (
+                <>
+                  <input
+                    type="text"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    placeholder="Enter voucher code"
+                    className="w-full shadow-md p-4 rounded-lg"
+                  />
+                  <button
+                    className="mt-2 bg-black rounded-lg text-white px-4 py-2 rounded-lg hover:bg-neutral-800 transition"
+                    onClick={async () => {
+                      if (!couponCode) return toast.error('Enter a coupon code');
+                      try {
+                        const res = await axios.post('/api/coupon/addcoupon', { code: couponCode });
+                        toast.success(`Coupon "${couponCode}" applied!`);
+                        setUserCoupon(couponCode);
+                        setCouponCode('');
+                        setDiscountPercentage(res.data.discount || 0); // if your API returns it
+                      } catch (err: any) {
+                        toast.error(err?.response?.data?.error || 'Coupon invalid or expired');
+                      }
+                    }}
+                  >
+                    Apply
+                  </button>
+                </>
+              )}
+            </div>
+
+            <hr />
+
+            {subtotal > 0 && (
+              <div className="flex justify-between">
+                <span>Discount</span>
+                <span className={discountAmount > 0 ? 'text-green-700 font-semibold' : ''}>
+                  -€{discountAmount.toFixed(2)}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between font-bold text-lg">
               <span>Total in EUR</span>
               <span>€{total}</span>

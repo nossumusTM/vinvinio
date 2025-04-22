@@ -124,7 +124,8 @@ const LoginModal = () => {
                     loginModal.onClose();
                     forgetPasswordModal.onOpen();
                 }}
-                className="text-sm text-black
+                className="text-sm text-neutral-600
+                            hover:text-neutral-800
                             font-normal
                             cursor-pointer 
                             mt-1 px-1 self-start"

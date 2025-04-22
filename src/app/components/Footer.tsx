@@ -77,7 +77,7 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
   const promotersGuideContent = (
     <div className="text-gray-700 text-sm space-y-5 leading-relaxed">
       <p>
-        Welcome to the <strong>Vuoiaggio International Promoters Program</strong> — a unique opportunity for passionate individuals who want to grow with our global travel platform. Whether you&rsquo;re a content creator, travel enthusiast, digital marketer, or just someone who loves connecting people with amazing experiences, we invite you to become a part of our journey.
+        Welcome to the <strong>Vuoiaggio Network Promoters Program</strong> — a unique opportunity for passionate individuals who want to grow with our global travel platform. Whether you&rsquo;re a content creator, travel enthusiast, digital marketer, or just someone who loves connecting people with amazing experiences, we invite you to become a part of our journey.
       </p>
   
       <h3 className="text-base font-semibold mt-6">How to Become a Promoter</h3>
@@ -114,7 +114,7 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
   const privacyPolicyContent = (
     <div className="text-gray-700 text-sm space-y-5 leading-relaxed">
       <p>
-        At <strong>Vuoiaggio International Srls</strong>, we respect your privacy and are committed to protecting your personal data. This Privacy Policy explains how we collect, use, and safeguard your information when you interact with our platform and services.
+        At <strong>Vuoiaggio Network Srls</strong>, we respect your privacy and are committed to protecting your personal data. This Privacy Policy explains how we collect, use, and safeguard your information when you interact with our platform and services.
       </p>
   
       <h3 className="text-base font-semibold mt-6">1. Information We Collect</h3>
@@ -170,7 +170,7 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
   const termsContent = (
     <div className="text-gray-700 text-sm space-y-5 leading-relaxed">
       <p>
-        Welcome to <strong>Vuoiaggio International Srls</strong>. By accessing or using our platform, you agree to comply with and be bound by the following Terms of Service. These terms apply to all users, including guests, promoters, and hosts.
+        Welcome to <strong>Vuoiaggio Network Srls</strong>. By accessing or using our platform, you agree to comply with and be bound by the following Terms of Service. These terms apply to all users, including guests, promoters, and hosts.
       </p>
   
       <h3 className="text-base font-semibold mt-6">1. Use of Our Services</h3>
@@ -195,7 +195,7 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
   
       <h3 className="text-base font-semibold mt-6">4. Intellectual Property</h3>
       <p>
-        All content on the platform — including logos, media, listings, and design — is owned or licensed by Vuoiaggio International and protected by intellectual property laws. You may not copy, reproduce, or distribute our content without written consent.
+        All content on the platform — including logos, media, listings, and design — is owned or licensed by Vuoiaggio Network and protected by intellectual property laws. You may not copy, reproduce, or distribute our content without written consent.
       </p>
   
       <h3 className="text-base font-semibold mt-6">5. Limitation of Liability</h3>
@@ -323,7 +323,7 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
     <div className="flex flex-col md:flex-row justify-between items-center md:items-center text-center md:text-left gap-4 mt-8 w-full md:pl-10 md:ml-10">
     {/* Left side on desktop */}
     <div className="flex flex-col md:flex-row md:items-center md:space-x-4">
-        <p className="text-sm">&copy; 2025 Vuoiaggio International Srls.</p>
+        <p className="text-sm">&copy; 2025 Vuoiaggio Network Srls.</p>
         <p className="text-sm">P.IVA 57483813574</p>
     </div>
     </div>

@@ -90,7 +90,7 @@ const FooterModal: React.FC<FooterModalProps> = ({
             >
               <div
                 ref={modalRef}
-                className="h-full lg:h-auto md:h-auto border-0 rounded-2xl shadow-lg relative flex flex-col w-full bg-white outline-none focus:outline-none"
+                className="h-full lg:h-auto md:h-auto border-0 rounded-3xl shadow-lg relative flex flex-col w-full bg-white outline-none focus:outline-none"
               >
                 {/* Header */}
                 <div className="flex items-center p-6 rounded-t justify-center relative border-b-[1px]">

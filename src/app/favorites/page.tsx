@@ -20,13 +20,13 @@ const ListingPage = async () => {
                 <div className="flex flex-col justify-center items-center">
                     <EmptyStateFavorites
                     title="Nothing Saved Yet :)"
-                    subtitle="Explore and keep inspiring experiences"
+                    subtitle="Navigate and keep inspiring experiences"
                     />
                     <a
                     href="/"
-                    className="md:ml-2 px-4 py-2 font-semibold bg-black text-white rounded-xl hover:bg-neutral-800 transition mb-8 md:mb-0"
+                    className="md:ml-2 px-4 py-2 font-medium bg-black text-white rounded-xl hover:bg-neutral-800 transition mb-8 md:mb-0"
                     >
-                    Find Your Next Story..
+                    Explore the Moment..
                 </a>
                 </div>
                 <div className="md:pt-20">

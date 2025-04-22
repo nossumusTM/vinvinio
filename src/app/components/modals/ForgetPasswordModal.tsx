@@ -1,29 +1,39 @@
 'use client';
 
-import { useEffect, useState } from "react";
 import { useForm, FieldValues, SubmitHandler } from "react-hook-form";
 import axios from "axios";
 import { useSearchParams } from "next/navigation";
 import { toast } from "react-hot-toast";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
-import Modal from "./Modal";
+import ResetModal from "./ResetModal";
 import Input from "../inputs/Input";
 import Heading from "../Heading";
 import useForgetPasswordModal from "@/app/hooks/useForgetPasswordModal";
 
-const ForgetPasswordModal = () => {
-  const forgetPasswordModal = useForgetPasswordModal();
-  const searchParams = useSearchParams();
-  const token = searchParams!.get('token');
+interface ForgetPasswordModalProps {
+    step?: number;
+    setStep?: (value: number) => void;
+  }
 
-  const [step, setStep] = useState(token ? 2 : 1);
+const ForgetPasswordModal: React.FC<ForgetPasswordModalProps> = ({
+    step: externalStep,
+    setStep: externalSetStep,
+  }) => {
+  const forgetPasswordModal = useForgetPasswordModal();
+  const { isOpen, step, setStep } = forgetPasswordModal;
+  const searchParams = useSearchParams();
+  const token = searchParams?.get('token');
   const [isLoading, setIsLoading] = useState(false);
+  const [internalStep, setInternalStep] = useState(token ? 2 : 1);
+
+  const router = useRouter();
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-    watch,
   } = useForm<FieldValues>({
     defaultValues: {
       email: '',
@@ -33,8 +43,10 @@ const ForgetPasswordModal = () => {
   });
 
   useEffect(() => {
-    if (token) setStep(2);
-  }, [token]);
+    if (!forgetPasswordModal.isOpen) {
+      setStep(1); // ✅ Reset to step 1 when modal closes
+    }
+  }, [forgetPasswordModal.isOpen, step, setStep]);
 
   const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     setIsLoading(true);
@@ -48,8 +60,8 @@ const ForgetPasswordModal = () => {
         if (response.data.success) {
           toast.success('Reset link sent! Check your email.', {
             iconTheme: {
-                primary: 'linear-gradient(135deg, #3d08ff, #04aaff, #3604ff, #0066ff, #3d08ff)',
-                secondary: '#fff',
+              primary: 'linear-gradient(135deg, #3d08ff, #04aaff, #3604ff, #0066ff, #3d08ff)',
+              secondary: '#fff',
             },
           });
           forgetPasswordModal.onClose();
@@ -69,25 +81,31 @@ const ForgetPasswordModal = () => {
           return;
         }
 
-        const res = await axios.post('/api/email/resetpassword/confirm', {
-          token,
-          newPassword: data.newPassword,
-        });
+        const res = await axios.post('/api/email/setpassword', {
+            token,
+            newPassword: data.newPassword,
+        });          
 
         if (res.data.success) {
-          toast.success('Password updated!');
+          toast.success('Password updated!', {
+            iconTheme: {
+              primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #3604ff, #0066ff, #ffffff)',
+              secondary: '#fff',
+            },
+          });    
           forgetPasswordModal.onClose();
+          router.push('/');
         } else {
           toast.error('Reset link expired or invalid.');
         }
       }
     } catch (error: any) {
-        if (error.response?.status === 404) {
-          toast.error('No account found for this email address..');
-        } else {
-          toast.error('Something went wrong. Please try again.');
-        }
-      } finally {
+      if (error.response?.status === 404) {
+        toast.error('No account found for this email address..');
+      } else {
+        toast.error('Something went wrong. Please try again.');
+      }
+    } finally {
       setIsLoading(false);
     }
   };
@@ -96,10 +114,10 @@ const ForgetPasswordModal = () => {
     step === 1 ? (
       <div className="flex flex-col gap-4">
         <div className="p-10">
-        <Heading
-          title="Forgot your password?"
-          subtitle="Enter your email to receive a reset link."
-        />
+          <Heading
+            title="Forgot your password?"
+            subtitle="Drop your email to receive a reset link."
+          />
         </div>
         <Input
           id="email"
@@ -139,10 +157,10 @@ const ForgetPasswordModal = () => {
     );
 
   return (
-    <Modal
+    <ResetModal
       disabled={isLoading}
       isOpen={forgetPasswordModal.isOpen}
-      title="Regain Account Access"
+      title="Restore Account"
       actionLabel={step === 1 ? "Send reset link" : "Update Password"}
       onClose={forgetPasswordModal.onClose}
       onSubmit={handleSubmit(onSubmit)}

@@ -37,11 +37,18 @@ export default async function getListings(params: IListingsParams) {
 
     query.status = 'approved';
 
+    // if (category) {
+    //   query.category = {
+    //     has: category,
+    //   };
+    // }    
+
     if (category) {
+      const value = Array.isArray(category) ? category[0] : category;
       query.category = {
-        has: category,
+        has: value,
       };
-    }    
+    }
 
     if (roomCount) {
       query.roomCount = {

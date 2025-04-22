@@ -5,11 +5,14 @@ import { IconType } from "react-icons";
 import Heading from "../Heading";
 
 import { TbUserCheck, TbClockPlay, TbLanguage, TbPointerPin } from "react-icons/tb";
+import { PiHandPointing } from "react-icons/pi";
 import { FaPeopleGroup } from "react-icons/fa6";
 import { BsTranslate } from "react-icons/bs";
 import { GrCycle } from "react-icons/gr";
 import { FaRegFaceSmileBeam } from "react-icons/fa6";
 import { FaPiedPiperHat } from "react-icons/fa";
+import { GiPointyHat } from "react-icons/gi";
+import { GiRobinHoodHat } from "react-icons/gi";
 import LocationDescription from '../LocationDescription';
 
 import { useEffect, useState } from "react";
@@ -104,8 +107,12 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                     "
                     >
                     <div className="flex items-center gap-2">
-                    <Avatar src={user?.image} name={user?.name} />
-                    <div>Guided by {user?.name}</div>
+                    <Avatar src={user?.image} name={user?.name} size={55}/>
+                    <div className="flex flex-col justify-start font-medium">Guided by 
+                        <div className="font-semibold">
+                        {user?.name}
+                        </div>
+                    </div>
                     </div>
 
                     {averageRating !== null && (
@@ -151,12 +158,12 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
           "
                 > */}
             <div className="pt-5 pb-1">
-                <hr />
+                <hr className="mb-3"/>
                 </div>
                 <div className="p-5 flex flex-col gap-4 text-left pt-5">
                 {/* Guest Count */}
                 <div className="flex flex-row gap-3 items-start">
-                    <FaPiedPiperHat className="text-neutral-600 mt-1 w-8 h-8 md:w-[40px] md:h-[40px]" />
+                    <GiRobinHoodHat className="text-neutral-600 mt-1 w-8 h-8 md:w-[40px] md:h-[40px]" />
                     <div>
                     <p className="text-xl font-medium text-black">
                         Up to {guestCount} guest{guestCount > 1 ? 's' : ''}
@@ -233,21 +240,21 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                     description={category?.description}
                 />
             )}
-            <hr />
+            <hr className="mb-5"/>
 
             <div className="ml-4">
                 <Heading title="About experience" />
-            </div>
-
-            <div className="px-5 py-5 text-md md:p-5 text-neutral-600 text-justify whitespace-pre-line">
+                <div className="mr-2 px-4 py-5 text-md md:p-5 text-neutral-600 text-justify whitespace-pre-line">
                 {description}
+                </div>
             </div>
-            <hr />
+            
+            <hr className="mb-2"/>
 
-            <div className="flex flex-row gap-2 items-center">
+            <div className="flex flex-row gap-0 items-center">
 
-            <div className="pt-1 ml-3">
-                <TbPointerPin size={24}/>
+            <div className="pt-2 ml-5">
+                <PiHandPointing size={24}/>
             </div>
 
                 {meetingPoint && (
@@ -258,7 +265,9 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
             </div>
 
             {/* <Map key={coordinates?.join(',') || 'default'} center={coordinates} /> */}
+            <div className="p-2 md:p-0 md:px-4">
             <Map searchQuery={meetingPoint}/>
+            </div>
 
         </div>
     );

@@ -63,7 +63,7 @@ export async function POST(
               <p style="margin-top: 32px;">If you have questions, feel free to contact <a href="mailto:ciao@vuoiaggio.it" style="color: #3604ff;">ciao@vuoiaggio.it</a></p>
 
               <hr style="margin-top: 40px;" />
-              <p style="font-size: 13px; color: #888;">Vuoiaggio International Srls.</p>
+              <p style="font-size: 13px; color: #888;">Vuoiaggio Network Srls.</p>
               <p style="font-size: 13px; color: #888;">P.IVA 57483813574</p>
               <p style="font-size: 13px; color: #888;">Via Novacella 18, Rome, RM, Italy</p>
               <p style="font-size: 13px; color: #888;">🇮🇹 +39 371 528 4911</p>
