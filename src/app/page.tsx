@@ -73,7 +73,7 @@
 
 import getListings from '@/app/actions/getListings';
 import getCurrentUser from '@/app/actions/getCurrentUser';
-import HomeClient from '@/pages/HomeClient';
+import HomeClient from '@/app/components/HomeClient';
 
 const Home = async () => {
   const initialListings = await getListings({ take: 12 });

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import HomeClient from '@/pages/HomeClient';
+import HomeClient from '@/app/components/HomeClient';
 import Loader from '../components/Loader';
 import getListings from '@/app/actions/getListings';
 import getCurrentUser from '@/app/actions/getCurrentUser';
