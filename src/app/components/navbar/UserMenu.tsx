@@ -116,7 +116,8 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
   
       try {
         const res = await fetch('/api/conversations', {
-          credentials: 'same-origin',
+          // credentials: 'same-origin',
+          credentials: 'include',
         });
         const data = await res.json();
   
@@ -341,6 +342,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                       }}/>
                     {(userRole === 'promoter' || userRole === 'promoter' || userRole === 'host' || userRole === 'moder') && (
                         <>
+                        <hr className="my-2" />
                           <MenuItem label="Dashboard" 
                             onClick={() => {
                               setIsOpen(false);

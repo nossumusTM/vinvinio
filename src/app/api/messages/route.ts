@@ -20,21 +20,41 @@ export async function GET(request: Request) {
   }
 
   try {
+    // const messages = await prisma.message.findMany({
+    //   where: {
+    //     OR: [
+    //       {
+    //         senderId: currentUser.id,
+    //         recipientId,
+    //       },
+    //       {
+    //         senderId: recipientId,
+    //         recipientId: currentUser.id,
+    //       },
+    //     ],
+    //   },
+    //   orderBy: { createdAt: 'asc' },
+    // });
+
     const messages = await prisma.message.findMany({
       where: {
         OR: [
-          {
-            senderId: currentUser.id,
-            recipientId,
-          },
-          {
-            senderId: recipientId,
-            recipientId: currentUser.id,
-          },
+          { senderId: currentUser.id },
+          { recipientId: currentUser.id },
         ],
       },
-      orderBy: { createdAt: 'asc' },
-    });
+      include: {
+        sender: {
+          select: { id: true, name: true, image: true },
+        },
+        recipient: {
+          select: { id: true, name: true, image: true },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });    
 
     return NextResponse.json(messages);
   } catch (error) {
