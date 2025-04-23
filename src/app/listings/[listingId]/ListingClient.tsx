@@ -202,13 +202,13 @@ const ListingClient: React.FC<ListingClientProps> = ({
                 const data = await res.json();
                 return {
                   ...review,
-                  userImage: data.image || '/images/placeholder.jpg',
+                  userImage: data.image || null,
                 };
               } catch (err) {
                 console.warn(`Failed to fetch image for ${review.userName}`, err);
                 return {
                   ...review,
-                  userImage: '/images/placeholder.jpg',
+                  userImage: null,
                 };
               }
             })
@@ -361,9 +361,9 @@ const ListingClient: React.FC<ListingClientProps> = ({
                                 <p className="text-neutral-700 text-justify">{review.comment}</p>
 
                                 {/* User info + date */}
-                                <div className="flex items-center gap-3 mt-4">
+                                {/* <div className="flex items-center gap-3 mt-4">
                                     {review.userImage && (
-                                    <Avatar src={review.userImage || '/images/placeholder.jpg'} name={review.userName} />
+                                    <Avatar src={review.userImage ?? '/images/placeholder.jpg'} name={review.userName} />
                                     )}
                                     <div>
                                     <p className="text-sm font-semibold text-neutral-800">{review.userName}</p>
@@ -371,7 +371,31 @@ const ListingClient: React.FC<ListingClientProps> = ({
                                         {new Date(review.createdAt).toLocaleString('en-US', { month: 'long', year: 'numeric' })}
                                     </p>
                                     </div>
+                                </div> */}
+                                {/* User info + date */}
+                                <div className="flex items-center gap-3 mt-4">
+                                {review.userImage ? (
+                                    <Avatar src={review.userImage} name={review.userName} size={30} />
+                                ) : (
+                                    <div
+                                    className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm bg-black"
+                                    >
+                                    {review.userName?.[0]?.toUpperCase() || 'U'}
+                                    </div>
+                                )}
+
+                                <div>
+                                    <p className="text-sm font-semibold text-neutral-800">{review.userName}</p>
+                                    <p className="text-xs text-neutral-500">
+                                    {new Date(review.createdAt).toLocaleString('en-US', {
+                                        month: 'long',
+                                        year: 'numeric',
+                                    })}
+                                    </p>
                                 </div>
+                                </div>
+
+
                                 </div>
                             ))}
                             </div>

@@ -228,23 +228,23 @@ const BookingConfirmed = () => {
 
               <h2 className="text-xl font-semibold">{listing.title}</h2>
 
-              <div className="flex items-center gap-3 mt-6">
-                <Avatar src={listing.user?.image} name={listing.user?.name} />
-                <div>
-                  <div className='flex flex-row gap-6'>
-                  <div className='flex flex-col justify-center'>
+              <div className="flex items-center justify-between mt-6">
+                {/* Left side: Avatar and host info */}
+                <div className="flex items-center gap-3">
+                  <Avatar src={listing.user?.image} name={listing.user?.name} />
+                  <div className="flex flex-col justify-center">
                     <p className="text-neutral-600 text-sm">Hosted by</p>
                     <p className="font-bold text-lg">{listing.user?.name}</p>
-                    </div>
+                  </div>
+                </div>
 
-                    <button
-                        onClick={handleContactHost}
-                        className="text-sm text-black p-4 shadow-md rounded-xl font-medium hover:shadow-lg"
-                        >
-                        Message
-                    </button>
-                </div>
-                </div>
+                {/* Right side: Message button */}
+                <button
+                  onClick={handleContactHost}
+                  className="text-sm text-black p-4 shadow-md rounded-xl font-medium hover:shadow-lg"
+                >
+                  Message
+                </button>
               </div>
             </div>
           </>

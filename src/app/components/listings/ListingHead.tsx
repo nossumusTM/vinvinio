@@ -103,13 +103,13 @@ const ListingHead: React.FC<ListingHeadProps> = ({
            const data = await res.json();
            return {
              ...review,
-             userImage: data.image || '/images/placeholder.jpg',
+             userImage: data.image || null,
            };
          } catch (err) {
            console.warn(`Failed to fetch image for ${review.userName}`, err);
           return {
             ...review,
-            userImage: '/images/placeholder.jpg',
+            userImage: null,
           };
         }
       })

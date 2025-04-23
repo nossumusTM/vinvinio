@@ -163,7 +163,7 @@ const Calendar: React.FC<CalendarProps> = ({
 
       {value.startDate && (
       <div className="flex flex-col gap-2 p-4">
-        <label className="text-xl font-medium">Pick an Available Time</label>
+        <label className="text-xl font-medium text-center">Schedule Your Activity</label>
         <select
           value={selectedTime ?? ''}
           // onChange={(e) => onTimeChange?.(e.target.value)}
@@ -171,7 +171,7 @@ const Calendar: React.FC<CalendarProps> = ({
             userHasPickedTime.current = true; // Mark as user-selected
             onTimeChange?.(e.target.value);
           }}
-          className="shadow-md rounded-3xl px-3 py-2 text-m"
+          className="shadow-md rounded-3xl px-3 py-2 text-m text-center"
         >
           {availableTimes.map((time) => {
             // const isBooked = bookedTimesForDate.includes(time);

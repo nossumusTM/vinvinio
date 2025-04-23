@@ -458,70 +458,70 @@ const CheckoutPage = () => {
     fetchProfileInfo();
   }, [isAuthenticated]);  
 
-  useEffect(() => {
-    if (hasFetched.current || !listingId) return;
-    hasFetched.current = true;
+  // useEffect(() => {
+  //   if (hasFetched.current || !listingId) return;
+  //   hasFetched.current = true;
   
-    const fetchData = async () => {
-      if (hasFetched.current || !listingId || !isAuthenticated) return;
-      hasFetched.current = true;
+  //   const fetchData = async () => {
+  //     if (hasFetched.current || !listingId || !isAuthenticated) return;
+  //     hasFetched.current = true;
 
-      try {
-        const reviewRes = await fetch('/api/reviews/get-by-listing', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ listingId }),
-        });
-        const reviewData = await reviewRes.json();
-        setReviews(reviewData || []);
+  //     try {
+  //       const reviewRes = await fetch('/api/reviews/get-by-listing', {
+  //         method: 'POST',
+  //         headers: { 'Content-Type': 'application/json' },
+  //         body: JSON.stringify({ listingId }),
+  //       });
+  //       const reviewData = await reviewRes.json();
+  //       setReviews(reviewData || []);
   
-        const cardRes = await axios.get('/api/users/get-card');
-        const saved = cardRes.data;
+  //       const cardRes = await axios.get('/api/users/get-card');
+  //       const saved = cardRes.data;
 
-          const CryptoJS = await import('crypto-js');
-          const key = process.env.CARD_SECRET_KEY;
+  //         const CryptoJS = await import('crypto-js');
+  //         const key = process.env.CARD_SECRET_KEY;
   
-          if (!key) {
-            console.warn('Missing CARD_SECRET_KEY');
-            return;
-          }
+  //         if (!key) {
+  //           console.warn('Missing CARD_SECRET_KEY');
+  //           return;
+  //         }
   
-          const decrypt = (txt: string) =>
-            CryptoJS.AES.decrypt(txt, key).toString(CryptoJS.enc.Utf8);
+  //         const decrypt = (txt: string) =>
+  //           CryptoJS.AES.decrypt(txt, key).toString(CryptoJS.enc.Utf8);
   
-          const looksEncrypted = (str: string) => /^[A-Za-z0-9+/=]+$/.test(str) && str.length > 16;
+  //         const looksEncrypted = (str: string) => /^[A-Za-z0-9+/=]+$/.test(str) && str.length > 16;
 
-          const rawNumber = looksEncrypted(saved.number) ? decrypt(saved.number) : saved.number;
-          const expiration = looksEncrypted(saved.expiration) ? decrypt(saved.expiration) : saved.expiration;
-          const cvv = looksEncrypted(saved.cvv) ? decrypt(saved.cvv) : saved.cvv;
+  //         const rawNumber = looksEncrypted(saved.number) ? decrypt(saved.number) : saved.number;
+  //         const expiration = looksEncrypted(saved.expiration) ? decrypt(saved.expiration) : saved.expiration;
+  //         const cvv = looksEncrypted(saved.cvv) ? decrypt(saved.cvv) : saved.cvv;
           
-          const formattedNumber = rawNumber
-            .replace(/\D/g, '')
-            .slice(0, 16)
-            .replace(/(.{4})/g, '$1 ')
-            .trim();
+  //         const formattedNumber = rawNumber
+  //           .replace(/\D/g, '')
+  //           .slice(0, 16)
+  //           .replace(/(.{4})/g, '$1 ')
+  //           .trim();
   
-          // 🔥 Final, working way: ONE update to state
-          setCardInfo((prev) => ({
-            ...prev,
-            method: 'card', // trigger visibility
-            number: formattedNumber,
-            expiration,
-            cvv,
-          }));          
+  //         // 🔥 Final, working way: ONE update to state
+  //         setCardInfo((prev) => ({
+  //           ...prev,
+  //           method: 'card', // trigger visibility
+  //           number: formattedNumber,
+  //           expiration,
+  //           cvv,
+  //         }));          
   
-          setCardType(detectCardType(formattedNumber));
-          setInvalidFields((prev) => prev.filter((field) => field !== 'number'));
+  //         setCardType(detectCardType(formattedNumber));
+  //         setInvalidFields((prev) => prev.filter((field) => field !== 'number'));
 
-          // console.log('formatted number', formattedNumber);
+  //         // console.log('formatted number', formattedNumber);
 
-      } catch (err) {
-        console.error('❌ Failed to fetch card:', err);
-      }
-    };
+  //     } catch (err) {
+  //       console.error('❌ Failed to fetch card:', err);
+  //     }
+  //   };
   
-    fetchData();
-  }, [listingId, isAuthenticated]);  
+  //   fetchData();
+  // }, [listingId, isAuthenticated]);  
 
   // useEffect(() => {
   //   const checkUser = async () => {
@@ -543,6 +543,75 @@ const CheckoutPage = () => {
   
   //   checkUser();
   // }, []); 
+ 
+  useEffect(() => {
+    if (!listingId || !isAuthenticated) return;
+  
+    const fetchSavedCard = async () => {
+      try {
+        const cardRes = await axios.get('/api/users/get-card');
+        const saved = cardRes.data;
+  
+        const CryptoJS = await import('crypto-js');
+        const key = process.env.CARD_SECRET_KEY;
+        if (!key) {
+          // console.warn('Missing CARD_SECRET_KEY');
+          return;
+        }
+  
+        const decrypt = (txt: string) =>
+          CryptoJS.AES.decrypt(txt, key).toString(CryptoJS.enc.Utf8);
+        const looksEncrypted = (str: string) =>
+          /^[A-Za-z0-9+/=]+$/.test(str) && str.length > 16;
+  
+        const rawNumber = looksEncrypted(saved.number) ? decrypt(saved.number) : saved.number;
+        const expiration = looksEncrypted(saved.expiration) ? decrypt(saved.expiration) : saved.expiration;
+        const cvv = looksEncrypted(saved.cvv) ? decrypt(saved.cvv) : saved.cvv;
+  
+        const formattedNumber = rawNumber
+          .replace(/\D/g, '')
+          .slice(0, 16)
+          .replace(/(.{4})/g, '$1 ')
+          .trim();
+  
+        setCardInfo((prev) => ({
+          ...prev,
+          method: 'card',
+          number: formattedNumber,
+          expiration,
+          cvv,
+        }));
+  
+        setCardType(detectCardType(formattedNumber));
+        setInvalidFields((prev) => prev.filter((field) => field !== 'number'));
+      } catch (err) {
+        console.error('❌ Failed to fetch saved card:', err);
+      }
+    };
+  
+    fetchSavedCard();
+  }, [listingId, isAuthenticated]);
+
+  useEffect(() => {
+    if (!listingId) return;
+  
+    const fetchReviews = async () => {
+      try {
+        const res = await fetch('/api/reviews/get-by-listing', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ listingId }),
+        });
+  
+        const reviewData = await res.json();
+        setReviews(reviewData || []);
+      } catch (error) {
+        console.error('Failed to fetch reviews:', error);
+      }
+    };
+  
+    fetchReviews();
+  }, [listingId]);
   
   useEffect(() => {
     if (status === 'authenticated' && session?.user?.email) {
@@ -1152,7 +1221,12 @@ const CheckoutPage = () => {
                       if (!couponCode) return toast.error('Enter a coupon code');
                       try {
                         const res = await axios.post('/api/coupon/addcoupon', { code: couponCode });
-                        toast.success(`Coupon "${couponCode}" applied!`);
+                        toast.success(`Coupon "${couponCode}" applied!`, {
+                          iconTheme: {
+                              primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
+                              secondary: '#fff',
+                          }
+                        });
                         setUserCoupon(couponCode);
                         setCouponCode('');
                         setDiscountPercentage(res.data.discount || 0); // if your API returns it

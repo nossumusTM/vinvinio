@@ -29,7 +29,7 @@ const Avatar: React.FC<AvatarProps> = ({ src, name = 'U', size = 40 }) => {
     />
   ) : (
     <div
-      className="flex items-center justify-center rounded-full text-white font-bold bg-black"
+      className="flex items-center justify-center rounded-full text-white font-medium bg-black"
       style={{
         width: size,
         height: size,

@@ -106,10 +106,10 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                         gap-2
                     "
                     >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 pt-2">
                     <Avatar src={user?.image} name={user?.name} size={55}/>
-                    <div className="flex flex-col justify-start font-medium">Guided by 
-                        <div className="font-semibold">
+                    <div className="flex flex-row justify-start gap-2 font-normal">Guided by 
+                        <div className="font-semibold border-b border-neutral-500">
                         {user?.name}
                         </div>
                     </div>

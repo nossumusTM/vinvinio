@@ -45,6 +45,6 @@ export async function POST(req: Request) {
   });
 
   return NextResponse.json({
-    image: user?.image || "/images/placeholder.jpg",
+    image: user?.image || null,
   });
 }
