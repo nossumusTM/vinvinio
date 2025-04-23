@@ -10,6 +10,7 @@ import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
 import { TbShare2 } from 'react-icons/tb';
 import ConfirmPopup from '../ConfirmPopup';
+import { CountrySelectValue } from '../inputs/CountrySelect';
 
 interface ListingHeadProps {
   title: string;
@@ -27,7 +28,8 @@ const ListingHead: React.FC<ListingHeadProps> = ({
   currentUser,
 }) => {
   const { getByValue } = useCountries();
-  const location = getByValue(locationValue);
+  // const location = getByValue(locationValue);
+  const location = getByValue(locationValue) as CountrySelectValue | undefined;
 
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);

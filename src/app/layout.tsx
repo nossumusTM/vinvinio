@@ -11,6 +11,7 @@ import NavBar from '@/app/components/navbar/NavBar';
 import LoginModal from '@/app/components/modals/LoginModal';
 import RegisterModal from '@/app/components/modals/RegisterModal';
 import SearchModal from '@/app/components/modals/SearchModal';
+import SearchExperienceModal from './components/modals/SearchExperienceModal';
 import RentModal from '@/app/components/modals/RentModal';
 import PromoteModal from './components/modals/PromoteModal';
 import ForgetPasswordModal from './components/modals/ForgetPasswordModal';
@@ -62,7 +63,8 @@ export default async function RootLayout({
           <LoginModal />
           <RegisterModal />
           <ForgetPasswordModal />
-          <SearchModal />
+          <SearchExperienceModal />
+          {/* <SearchModal /> */}
           <RentModal />
           <ExperienceModal currentUser={currentUser}/>
           <PromoteModal currentUser={currentUser} />

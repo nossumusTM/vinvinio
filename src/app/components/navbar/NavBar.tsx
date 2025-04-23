@@ -51,6 +51,7 @@ import Categories from "./Categories";
 import Container from "../Container";
 import Logo from "./Logo";
 import Search from "./Search";
+import SearchExperience from "./SearchExperience";
 import UserMenu from "./UserMenu";
 
 interface NavBarProps {
@@ -125,7 +126,7 @@ const NavBar: React.FC<NavBarProps> = ({ currentUser }) => {
 
             {/* Search left on desktop, centered on mobile/tablet */}
             <div className="flex-1 flex justify-center md:justify-start">
-              <Search />
+              <SearchExperience />
             </div>
 
             {/* User Menu always on right */}
