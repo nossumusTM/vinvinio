@@ -41,7 +41,7 @@ const SearchModal = () => {
         key: 'selection'
     });
 
-    const Map = useMemo(() => dynamic(() => import('../Map'), {
+    const SearchMap = useMemo(() => dynamic(() => import('../SearchMap'), {
         ssr: false
     }), [location]);
 
@@ -119,20 +119,25 @@ const SearchModal = () => {
     }, [step]);
 
     let bodyContent = (
-        <div className="flex flex-col gap-8">
-            <Heading
-                title="Where do you wanna go?"
-                subtitle="Find the perfect location!"
-            />
-            <CountrySelect
-                value={location}
-                onChange={(value) =>
-                    setLocation(value as CountrySelectValue)}
-            />
-            <hr />
-            <Map center={location?.latlng} />
+        <div className="flex flex-col gap-8 max-h-[50vh] overflow-y-auto sm:max-h-none">
+          <Heading
+            title="Where do you wanna go?"
+            subtitle="Find the perfect location!"
+          />
+          <CountrySelect
+            value={location}
+            onChange={(value) =>
+              setLocation(value as CountrySelectValue)
+            }
+          />
+          <hr />
+          <SearchMap
+            city={location?.city}
+            country={location?.label}
+            center={location?.latlng}
+          />
         </div>
-    )
+      );      
 
     if (step === STEPS.DATE) {
         bodyContent = (

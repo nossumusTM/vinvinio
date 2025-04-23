@@ -5,6 +5,7 @@ import { useMemo } from 'react';
 import { BiSearch } from 'react-icons/bi';
 import { differenceInDays } from 'date-fns';
 
+import ItalyFlagIcon from '@/app/utils/ItalyFlagIcon';
 import useSearchModal from '@/app/hooks/useSearchModal';
 import useCountries from '@/app/hooks/useCountries';
 
@@ -25,6 +26,17 @@ const Search = () => {
 
         return 'Destination';
     }, [locationValue, getByValue]);
+
+    // const locationLabel = useMemo(() => {
+    //     const label = locationValue ? getByValue(locationValue as string)?.label : 'Italy | Rome';
+      
+    //     return (
+    //       <span className="flex items-center gap-2">
+    //         <ItalyFlagIcon />
+    //         {label}
+    //       </span>
+    //     );
+    //   }, [locationValue, getByValue]);
 
     const durationLabel = useMemo(() => {
         if (startDate && endDate) {
@@ -74,10 +86,10 @@ const Search = () => {
             >
                 <div
                     className="
-            pr-2
+            ml-2
             text-sm 
             font-medium 
-            px-6
+            px-2
           "
                 >
                     {locationLabel}

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="40px" height="40px" viewBox="0 0 40 40" version="1.1">
+<g id="surface1">
+<path style=" stroke:none;fill-rule:evenodd;fill:rgb(92.941177%,23.921569%,0%);fill-opacity:1;" d="M -9.890625 -0.0273438 L 50.035156 -0.0273438 L 50.035156 39.972656 L -9.890625 39.972656 Z M -9.890625 -0.0273438 "/>
+<path style=" stroke:none;fill-rule:evenodd;fill:rgb(100%,81.960785%,0%);fill-opacity:1;" d="M -9.890625 15.691406 L -9.878906 24.277344 L 20.269531 19.984375 Z M -9.890625 15.691406 "/>
+<path style=" stroke:none;fill-rule:evenodd;fill:rgb(100%,81.960785%,0%);fill-opacity:1;" d="M -10 40 L 2.445312 39.976562 L 20.3125 19.867188 Z M -10 40 "/>
+<path style=" stroke:none;fill-rule:evenodd;fill:rgb(100%,81.960785%,0%);fill-opacity:1;" d="M 24.351562 39.972656 L 15.765625 39.964844 L 20.0625 20.128906 Z M 24.351562 39.972656 "/>
+<path style=" stroke:none;fill-rule:evenodd;fill:rgb(100%,81.960785%,0%);fill-opacity:1;" d="M 50.097656 -0.113281 L 37.652344 -0.0898438 L 19.785156 20.179688 Z M 50.097656 -0.113281 "/>
+<path style=" stroke:none;fill-rule:evenodd;fill:rgb(100%,81.960785%,0%);fill-opacity:1;" d="M 15.742188 0 L 24.328125 0.0078125 L 20.035156 19.839844 Z M 15.742188 0 "/>
+<path style=" stroke:none;fill-rule:evenodd;fill:rgb(100%,81.960785%,0%);fill-opacity:1;" d="M 50.039062 39.972656 L 37.59375 39.949219 L 19.726562 19.835938 Z M 50.039062 39.972656 "/>
+<path style=" stroke:none;fill-rule:evenodd;fill:rgb(100%,81.960785%,0%);fill-opacity:1;" d="M 50.039062 15.691406 L 50.027344 24.277344 L 19.878906 19.984375 Z M 50.039062 15.691406 "/>
+<path style=" stroke:none;fill-rule:evenodd;fill:rgb(100%,81.960785%,0%);fill-opacity:1;" d="M -9.917969 0 L 2.527344 0.0234375 L 20.394531 20.132812 Z M -9.917969 0 "/>
+<path style=" stroke:none;fill-rule:evenodd;fill:rgb(92.941177%,23.921569%,0%);fill-opacity:1;" d="M 27.066406 19.984375 C 27.066406 23.761719 23.929688 26.824219 20.0625 26.824219 C 16.191406 26.824219 13.054688 23.761719 13.054688 19.984375 C 13.054688 16.210938 16.191406 13.148438 20.0625 13.148438 C 23.929688 13.148438 27.066406 16.210938 27.066406 19.984375 Z M 27.066406 19.984375 "/>
+<path style=" stroke:none;fill-rule:evenodd;fill:rgb(100%,81.960785%,0%);fill-opacity:1;" d="M 26.523438 19.984375 C 26.523438 23.53125 23.628906 26.410156 20.058594 26.410156 C 16.492188 26.410156 13.597656 23.53125 13.597656 19.984375 C 13.597656 16.4375 16.492188 13.5625 20.058594 13.5625 C 23.628906 13.5625 26.523438 16.4375 26.523438 19.984375 Z M 26.523438 19.984375 "/>
+</g>
+</svg>
