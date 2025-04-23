@@ -109,23 +109,24 @@ const SearchExperience = () => {
     );
   }, [location]);  
 
+  const guestLabel = useMemo(() => {
+    const count = Number(guestCount);
+    if (!count || isNaN(count)) return 'Travellers';
+    return `${count} ${count === 1 ? 'Traveller' : 'Travellers'}`;
+  }, [guestCount]);
+  
   const durationLabel = useMemo(() => {
     if (startDate && endDate) {
       const start = new Date(startDate as string);
       const end = new Date(endDate as string);
       let diff = differenceInDays(end, start);
-
       if (diff === 0) diff = 1;
-
-      return `${diff} Days`;
+  
+      return `${diff} ${diff === 1 ? 'Day' : 'Days'}`;
     }
-
+  
     return 'Pick a Date';
   }, [startDate, endDate]);
-
-  const guestLabel = useMemo(() => {
-    return guestCount ? `${guestCount} Travellers` : 'Travellers';
-  }, [guestCount]);
 
   return (
     <div
