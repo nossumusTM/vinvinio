@@ -64,6 +64,7 @@ model User {
   hostName  String?
 
   resetTokens PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
 
   @@map("User")
 }
@@ -272,4 +273,12 @@ model PasswordResetToken {
   userId    String
   expires   DateTime
   createdAt DateTime @default(now())
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  token     String
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id]) // ✅ This now has a back reference
 }
