@@ -75,7 +75,7 @@ const SearchExperience = () => {
 
   const locationLabel = useMemo(() => {
     const fallback = (
-      <span className="flex items-center gap-2 mr-0 md:mr-3 whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
+      <span className="flex items-center gap-2 mr-0 md:mr-5 whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
         <Image
           src="/flags/it.svg"
           alt="Italy"
@@ -83,7 +83,7 @@ const SearchExperience = () => {
           height={16}
           className="rounded-full object-cover"
         />
-        Rome, Italy
+          Rome, Italy
       </span>
     );
   
@@ -132,7 +132,7 @@ const SearchExperience = () => {
     <div
       onClick={searchModal.onOpen}
       className="
-        w-full 
+        w-fit 
         md:w-auto 
         py-2 
         rounded-full 

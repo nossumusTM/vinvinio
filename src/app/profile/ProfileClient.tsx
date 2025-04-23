@@ -583,8 +583,8 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
               <Image
                 src={profileImage}
                 alt="User"
-                width={60}
-                height={60}
+                width={100}
+                height={100}
                 className="rounded-full object-cover shadow-xl hover:shadow-2xl"
               />
             ) : (
@@ -616,7 +616,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                   {currentUser?.legalName || currentUser?.name || "Unnamed"}
                 </p>
 
-                <div className="flex items-center gap-3">
+                {/* <div className="flex items-center gap-3">
                   <p className="text-md font-semibold">{currentUser?.email || ""}</p>
 
                   {currentUser?.emailVerified ? (
@@ -658,6 +658,51 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                       )}
                     </button>
                   )}
+                </div> */}
+                <div className="flex flex-col md:flex-row md:items-center md:gap-3">
+                  <p className="text-md font-semibold">{currentUser?.email || ""}</p>
+
+                  <div className="mt-2 md:mt-0">
+                    {currentUser?.emailVerified ? (
+                      <span className="text-xs font-semibold text-green-700 bg-green-100 border border-green-400 px-2 py-0.5 rounded-xl">
+                        Verified
+                      </span>
+                    ) : (
+                      <button
+                        onClick={async () => {
+                          if (verifying) return;
+
+                          setVerifying(true);
+                          try {
+                            await axios.post("/api/users/request-email-verification");
+                            toast.success('Verification email sent!', {
+                              iconTheme: {
+                                primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
+                                secondary: '#fff',
+                              }
+                            });
+                          } catch (err: any) {
+                            toast.error("Failed to send verification email.");
+                          } finally {
+                            setVerifying(false);
+                          }
+                        }}
+                        disabled={verifying}
+                        className={`text-sm font-medium border px-3 py-1.5 rounded-xl transition 
+                          ${verifying ? 'bg-neutral-200 text-neutral-500 pointer-events-none' : 'text-blue-600 hover:bg-neutral-100'}
+                        `}
+                      >
+                        {verifying ? (
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                            <span>Sending...</span>
+                          </div>
+                        ) : (
+                          'Verify Email'
+                        )}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
