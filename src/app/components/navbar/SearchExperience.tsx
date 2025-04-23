@@ -37,20 +37,58 @@ const SearchExperience = () => {
 
   const { location } = useExperienceSearchState();
 
+  // const locationLabel = useMemo(() => {
+  //   if (!location) {
+  //     return (
+  //       <span className="flex items-center gap-2 mr-0 md:mr-3 whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
+  //         <Image
+  //           src="/flags/it.svg"
+  //           alt="Italy"
+  //           width={24}
+  //           height={16}
+  //           className="rounded-full object-cover"
+  //         />
+  //         Rome, Italy
+  //       </span>
+  //     );
+  //   }
+  
+  //   if (location && location.value) {
+  //     const countryCode = location.value.includes('-')
+  //       ? location.value.split('-').pop()?.toLowerCase()
+  //       : location.value.toLowerCase();
+    
+  //     return (
+  //       <span className="flex items-center gap-2 mr-0 md:mr-3">
+  //         <Image
+  //           src={`/flags/${countryCode}.svg`}
+  //           alt={location.label}
+  //           width={24}
+  //           height={16}
+  //           className="rounded-full object-cover"
+  //         />
+  //         {location.city}, {location.label}
+  //       </span>
+  //     );
+  //   }    
+  // }, [location]);
+
   const locationLabel = useMemo(() => {
-    if (!location) {
-      return (
-        <span className="flex items-center gap-2">
-          <Image
-            src="/flags/it.svg"
-            alt="Italy"
-            width={24}
-            height={16}
-            className="rounded-full object-cover"
-          />
-          Rome, Italy
-        </span>
-      );
+    const fallback = (
+      <span className="flex items-center gap-2 mr-0 md:mr-3 whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
+        <Image
+          src="/flags/it.svg"
+          alt="Italy"
+          width={24}
+          height={16}
+          className="rounded-full object-cover"
+        />
+        Rome, Italy
+      </span>
+    );
+  
+    if (!location || !location.value) {
+      return fallback;
     }
   
     const countryCode = location.value.includes('-')
@@ -58,7 +96,7 @@ const SearchExperience = () => {
       : location.value.toLowerCase();
   
     return (
-      <span className="flex items-center gap-2">
+      <span className="flex items-center gap-2 mr-0 md:mr-3 whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
         <Image
           src={`/flags/${countryCode}.svg`}
           alt={location.label}
@@ -69,8 +107,7 @@ const SearchExperience = () => {
         {location.city}, {location.label}
       </span>
     );
-  }, [location]);
-  
+  }, [location]);  
 
   const durationLabel = useMemo(() => {
     if (startDate && endDate) {
@@ -105,7 +142,7 @@ const SearchExperience = () => {
       "
     >
       <div className="flex flex-row items-center justify-between">
-        <div className="ml-2 text-sm font-medium px-2">{locationLabel}</div>
+        <div className="ml-2 text-sm font-medium px-1">{locationLabel}</div>
         <div className="hidden lg:block text-sm font-medium px-6 border-x-[1px] flex-1 text-center">
           {durationLabel}
         </div>

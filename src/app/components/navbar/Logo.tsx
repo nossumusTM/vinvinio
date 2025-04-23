@@ -13,8 +13,8 @@ const Logo = () => {
                 // className="hidden md:block cursor-pointer"
                 className="block cursor-pointer"
                 src="/images/vuoiaggiologo.png"
-                height="44"
-                width="44"
+                height="40"
+                width="40"
                 alt="Logo"
                 priority
             />

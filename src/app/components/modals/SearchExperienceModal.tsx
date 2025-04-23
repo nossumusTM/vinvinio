@@ -14,7 +14,9 @@ import useCountries from '@/app/hooks/useCountries';
 
 import Modal from './Modal';
 import Calendar from '../inputs/Calendar';
-import CountrySelect, { CountrySelectValue } from '../inputs/CountrySelect';
+// import CountrySelect, { CountrySelectValue } from '../inputs/CountrySelect';
+import CountrySearchSelect, { CountrySelectValue } from '../inputs/CountrySearchSelect';
+
 import Counter from '../inputs/Counter';
 
 enum STEPS {
@@ -47,6 +49,11 @@ const SearchExperienceModal = () => {
   const onNext = useCallback(() => setStep((val) => val + 1), []);
 
   const onSubmit = useCallback(() => {
+
+    if (step === STEPS.LOCATION && !location) {
+        return;
+      }
+
     if (step !== STEPS.GUESTS) {
       return onNext();
     }
@@ -76,16 +83,21 @@ const SearchExperienceModal = () => {
     router.push(qs.stringifyUrl({ url: '/', query: updatedQuery }, { skipNull: true }));
   }, [step, modal, location, guestCount, dateRange, router, params, onNext, setLocation]);
 
-  const actionLabel = useMemo(() => step === STEPS.GUESTS ? 'Search' : 'Next', [step]);
+  const actionLabel = useMemo(() => {
+    if (step === STEPS.GUESTS) return 'Search';
+    if (step === STEPS.LOCATION && !location) return 'Select a country';
+    return 'Next';
+  }, [step, location]);
+
   const secondaryActionLabel = useMemo(() => step === STEPS.LOCATION ? undefined : 'Back', [step]);
 
   let bodyContent = (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-8 max-h-[50vh] overflow-y-auto sm:max-h-none">
         <Heading
             title="Where do you wanna go?"
             subtitle="Find the perfect location!"
           />
-      <CountrySelect
+      <CountrySearchSelect
         value={location}
         onChange={(value) => setLocation(value as CountrySelectValue)}
       />
