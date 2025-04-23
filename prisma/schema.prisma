@@ -179,6 +179,7 @@ model UserCoupon {
   userId    String   @db.ObjectId
   coupon    Coupon   @relation(fields: [couponId], references: [id])
   couponId  String   @db.ObjectId
+  used      Boolean  @default(false)
 }
 
 model ReferralAnalytics {

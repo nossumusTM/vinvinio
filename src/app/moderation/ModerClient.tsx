@@ -304,7 +304,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
           listings.map((listing) => (
             <div key={listing.id} className="p-6 rounded-xl shadow-lg space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2 pt-2">
-                {listing.imageSrc.map((src, i) => (
+                {/* {listing.imageSrc.map((src, i) => (
                   // <img key={i} src={src} alt={`media-${i}`} className="w-full h-40 object-cover rounded-lg" />
                   <Image
                     key={i}
@@ -316,12 +316,48 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
                     unoptimized // optional if using external URLs or Cloudinary
                   />
 
-                ))}
+                ))} */}
+                {listing.imageSrc.map((src, i) => {
+                  const isVideo = src.endsWith('.mp4') || src.endsWith('.webm') || src.endsWith('.mov');
+
+                  return isVideo ? (
+                    <video
+                      key={i}
+                      controls
+                      className="w-full h-40 object-cover rounded-lg"
+                    >
+                      <source src={src} type="video/mp4" />
+                      Your browser does not support the video tag.
+                    </video>
+                  ) : (
+                    <Image
+                      key={i}
+                      src={src}
+                      alt={`media-${i}`}
+                      width={500}
+                      height={300}
+                      className="w-full h-40 object-cover rounded-lg"
+                      unoptimized
+                    />
+                  );
+                })}
               </div>
               <h2 className="text-xl font-bold">{listing.title}</h2>
-              {listing.locationValue && (
+              {/* {listing.locationValue && (
                 <p><strong>Location:</strong> {listing.locationValue!.toUpperCase() || 'N/A'}</p>
-              )}
+              )} */}
+              <p>
+                <strong>Location:</strong>{' '}
+                {listing?.location?.city
+                  ? `${listing.location.city}, `
+                  : ''}
+                {listing?.location?.label
+                  ? listing.location.label.toUpperCase()
+                  : listing?.locationValue
+                  ? listing.locationValue.toUpperCase()
+                  : 'N/A'}
+              </p>
+
               <p className="text-neutral-700">{listing.description}</p>
               <div className="text-sm text-neutral-500 gap-2 flex flex-col">
                 <p><strong>Submitted by:</strong> {listing.user.name} ({listing.user.email})</p>

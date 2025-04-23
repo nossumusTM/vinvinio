@@ -25,6 +25,7 @@ const BookingConfirmed = () => {
   const zip = getParam('zip');
   const country = getParam('country');
   const countryFlag = getParam('countryFlag');
+  const countryValue = getParam('countryValue');
   const listingId = getParam('listingId');
   const averageRating = getParam('averageRating');
   const reviewCount = getParam('reviewCount');
@@ -290,12 +291,20 @@ const BookingConfirmed = () => {
           <h3 className="font-semibold mt-4">Billing Address</h3>
           <p>{street}{apt ? `, ${apt}` : ''}</p>
           <p>{city}, {state}, {zip}</p>
-          <p>
-            {countryFlag && (
-                <span className="mr-1 text-xl">{countryFlag}</span>
+          <p className="flex items-center gap-2">
+          {countryValue && (
+              <Image
+                src={`/flags/${countryValue}.svg`}
+                alt={country}
+                width={24}
+                height={16}
+                style={{ width: 'auto', height: '16px' }}
+                className="rounded-full object-cover"
+                unoptimized
+              />
             )}
-            {country}
-            </p>
+            <span>{country}</span>
+          </p>
           <hr />
           <p>
                 <strong>Guest Count:</strong> {searchParams?.get('guests') || 'N/A'}

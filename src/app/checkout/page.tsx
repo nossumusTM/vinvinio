@@ -212,6 +212,19 @@ const CheckoutPage = () => {
         },
       });
 
+      if (userCoupon) {
+        try {
+          const res = await axios.get('/api/coupon/getusercoupon');
+          const couponCode = res.data.code;
+      
+          if (couponCode === userCoupon) {
+            await axios.post('/api/coupon/markused', { code: couponCode });
+          }
+        } catch (err) {
+          console.warn('Failed to mark coupon as used:', err);
+        }
+      }      
+
       // ✅ Redirect or show confirmation message
       if (checkoutMode === 'auth') {
         if (checkoutMode === 'auth') {
@@ -227,10 +240,14 @@ const CheckoutPage = () => {
             state: addressFields.state,
             zip: addressFields.zip,
             country: addressFields.country?.label || '',
-            countryFlag: addressFields.country?.flag || '',
+            // countryFlag: addressFields.country?.flag || '',
+            countryValue: addressFields.country?.value?.split('-').pop()?.toLowerCase() || '',
             listingId: listingId || '',
             guests: guests.toString(),
-            price: listingData?.price?.toString() || '0',
+            // price: listingData?.price?.toString() || '0',
+            price: (discountPercentage
+              ? (listingData?.price * (1 - discountPercentage / 100)).toFixed(2)
+              : listingData?.price?.toString() || '0'),
             auth: isAuthenticated ? 'true' : '',
             averageRating: (
               reviews.length > 0
@@ -256,12 +273,16 @@ const CheckoutPage = () => {
           state: addressFields.state,
           zip: addressFields.zip,
           country: addressFields.country?.label || '',
-          countryFlag: addressFields.country?.flag || '',
+          // countryFlag: addressFields.country?.flag || '',
+          countryValue: addressFields.country?.value?.split('-').pop()?.toLowerCase() || '',
           listingId: listingId || '',
           guests: guests.toString(),
           startDate: startDate || '',
           time: time || '', // ✅ Add this line
-          price: listingData?.price?.toString() || '0',
+          // price: listingData?.price?.toString() || '0',
+          price: (discountPercentage
+            ? (listingData?.price * (1 - discountPercentage / 100)).toFixed(2)
+            : listingData?.price?.toString() || '0'),
           auth: isAuthenticated ? 'true' : '',
           averageRating: (
             reviews.length > 0
@@ -277,6 +298,8 @@ const CheckoutPage = () => {
         //   'Thank you for your booking <3'
         // );
       }
+
+      console.log('flag value:', addressFields.country?.value); // should be like "EU-IT"
   
       // ✅ Send booking email only in guest mode
       if (checkoutMode === 'guest') {
@@ -649,17 +672,25 @@ const CheckoutPage = () => {
     const fetchCoupon = async () => {
       try {
         const res = await axios.get('/api/coupon/getusercoupon');
-        if (res?.data?.code && res?.data?.discount) {
-          setUserCoupon(res.data.code);
-          setDiscountPercentage(res.data.discount);
+        const { code, discount, used } = res.data;
+  
+        if (code && !used && discount) {
+          setUserCoupon(code);
+          setDiscountPercentage(discount);
+        } else {
+          // Prevent applying used coupons
+          setUserCoupon(null);
+          setDiscountPercentage(0);
         }
       } catch (err) {
         console.error('No active coupon:', err);
+        setUserCoupon(null);
+        setDiscountPercentage(0);
       }
     };
   
     fetchCoupon();
-  }, [isAuthenticated]);  
+  }, [isAuthenticated]);    
 
   // const total = listingData ? listingData.price * guests + serviceFee : 0;
 
@@ -788,10 +819,10 @@ const CheckoutPage = () => {
             <h3 className="text-md font-semibold pt-1">Payment Method</h3>
 
             {cardInfo.method === 'card' && (
-                <div className="flex items-center gap-3 ">
-                <Image width={50} height={50} src="/images/visa.png" alt="Visa" className="h-12 w-auto object-contain" />
-                <Image width={50} height={50} src="/images/MasterCard.png" alt="MasterCard" className="h-6 w-auto object-contain ml-1" />
-                <Image width={50} height={50} src="/images/revolut1.png" alt="Revolut" className="h-12 w-auto object-contain" />
+                <div className="flex items-center gap-1 ">
+                <Image width={50} height={50} src="/images/visa.png" alt="Visa" className="h-8 w-auto object-contain" />
+                <Image width={50} height={50} src="/images/MasterCard.png" alt="MasterCard" className="h-4 w-auto object-contain ml-1" />
+                <Image width={50} height={50} src="/images/revolut1.png" alt="Revolut" className="h-8 w-auto object-contain" />
                 </div>
             )}
 
@@ -1200,45 +1231,53 @@ const CheckoutPage = () => {
             <hr />
 
             <div className="space-y-2 pt-1">
-              {userCoupon && (
-                <div className="text-lg text-neutral-800 font-semibold">
-                  Voucher: <span className="bg-green-100 border border-green-400 rounded px-2 py-1">{userCoupon}</span>
-                </div>
-              )}
+            {userCoupon && (
+              <div className="flex items-center justify-between text-lg text-neutral-800 font-semibold">
+                <span className='text-md font-normal border-b border-neutral-800'>Voucher</span>
+                <span className="bg-green-100 border border-green-400 rounded px-3 py-1 ml-4 text-sm font-medium whitespace-nowrap">
+                  {userCoupon}
+                </span>
+              </div>
+            )}
 
-              {!userCoupon && (
-                <>
+            {!userCoupon && (
+              <>
+                <div className="relative w-full">
                   <input
                     type="text"
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value)}
                     placeholder="Enter voucher code"
-                    className="w-full shadow-md p-4 rounded-lg"
+                    className="w-full shadow-md p-4 rounded-xl pr-24"
                   />
                   <button
-                    className="mt-2 bg-black rounded-lg text-white px-4 py-2 rounded-lg hover:bg-neutral-800 transition"
                     onClick={async () => {
                       if (!couponCode) return toast.error('Enter a coupon code');
+                      if (couponCode === userCoupon) return toast.error('You already applied this coupon');
+
                       try {
                         const res = await axios.post('/api/coupon/addcoupon', { code: couponCode });
                         toast.success(`Coupon "${couponCode}" applied!`, {
                           iconTheme: {
-                              primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
-                              secondary: '#fff',
-                          }
+                            primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
+                            secondary: '#fff',
+                          },
                         });
                         setUserCoupon(couponCode);
                         setCouponCode('');
-                        setDiscountPercentage(res.data.discount || 0); // if your API returns it
+                        setDiscountPercentage(res.data.discount || 0);
                       } catch (err: any) {
                         toast.error(err?.response?.data?.error || 'Coupon invalid or expired');
                       }
                     }}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black text-white px-4 py-2 rounded-xl hover:bg-neutral-800 transition text-sm"
                   >
                     Apply
                   </button>
-                </>
-              )}
+                </div>
+              </>
+            )}
+
             </div>
 
             <hr />

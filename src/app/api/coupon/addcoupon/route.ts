@@ -30,37 +30,41 @@ export async function POST(req: Request) {
     });
 
     if (!coupon || new Date(coupon.expiresAt) < new Date()) {
-        return NextResponse.json({ error: 'Coupon not found or expired' }, { status: 400 });
+      return NextResponse.json({ error: 'Coupon not found or expired' }, { status: 400 });
     }
 
-    const alreadyUsed = await prisma.userCoupon.findFirst({
+    const existingEntry = await prisma.userCoupon.findFirst({
       where: {
         userId: user.id,
         couponId: coupon.id,
       },
     });
 
-    // if (alreadyUsed) {
-    //   return NextResponse.json('You have already used this coupon', { status: 400 });
-    // }
+    // 🚫 Coupon was already used
+    if (existingEntry?.used === true) {
+      return NextResponse.json({ error: 'You have already used this coupon' }, { status: 400 });
+    }
 
-    if (alreadyUsed) {
-      await prisma.userCoupon.delete({
-        where: { id: alreadyUsed.id }
+    // 🟡 Coupon exists but unused (avoid duplicate insert)
+    if (existingEntry && !existingEntry.used) {
+      return NextResponse.json({
+        message: 'Coupon already applied',
+        discount: coupon.discount,
       });
     }
 
+    // ✅ First-time applying
     await prisma.userCoupon.create({
       data: {
         userId: user.id,
         couponId: coupon.id,
+        used: false,
       },
     });
 
-    // return NextResponse.json('Coupon applied successfully');
     return NextResponse.json({
       message: 'Coupon applied successfully',
-      discount: coupon.discount // ✅ Make sure this is an integer (e.g. 25)
+      discount: coupon.discount,
     });
   } catch (error) {
     console.error('[COUPON_ADD_ERROR]', error);

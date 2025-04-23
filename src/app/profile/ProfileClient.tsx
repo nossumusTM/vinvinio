@@ -316,9 +316,16 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
     const fetchUserCoupon = async () => {
       try {
         const res = await axios.get('/api/coupon/getusercoupon');
-        setUserCoupon(res.data?.code || null);
+        const { code, used } = res.data;
+  
+        if (used) {
+          setUserCoupon(null); // Do not show used coupons
+        } else {
+          setUserCoupon(code || null);
+        }
       } catch (err) {
         console.error('Failed to fetch coupon:', err);
+        setUserCoupon(null);
       }
     };
   
@@ -848,13 +855,19 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                               <div className="text-md text-neutral-800 space-y-1">
                                 {fieldValues.country && (
                                   <div className="flex items-center gap-2">
-                                    {fieldValues.country.flag && <span className="text-xl">{fieldValues.country.flag}</span>}
-                                    <span>{fieldValues.country.label}</span>
+                                    <Image
+                                      src={`/flags/${fieldValues.country.value?.split('-').pop()?.toLowerCase()}.svg`}
+                                      alt={fieldValues.country.label}
+                                      width={24}
+                                      height={16}
+                                      className="rounded-full object-cover"
+                                    />
+                                    <span>{fieldValues.country.city ? `${fieldValues.country.city}, ` : ''}{fieldValues.country.label}</span>
                                   </div>
                                 )}
                                 {fieldValues.street && <div>{fieldValues.street}</div>}
                                 {fieldValues.apt && <div>{fieldValues.apt}</div>}
-                                {fieldValues.city && <div>{fieldValues.city}</div>}
+                                {/* {fieldValues.city && <div>{fieldValues.city}</div>} */}
                                 {fieldValues.state && <div>{fieldValues.state}</div>}
                                 {fieldValues.zip && <div>{fieldValues.zip}</div>}
                               </div>
@@ -1156,57 +1169,19 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                       </div>
                     </div>
                   )}
-
-                    {/* <div className="mt-10">
-                      <Heading title="Coupon" subtitle="Have a discount code?" />
-                      {showCouponInput ? (
-                        <div className="mt-4">
-                          <input
-                            type="text"
-                            value={couponCode}
-                            onChange={(e) => setCouponCode(e.target.value)}
-                            placeholder="Enter your coupon code"
-                            className="w-full border p-2 rounded-lg"
-                          />
-                          <div className="flex gap-2 mt-2">
-                            <button className="bg-black text-white px-4 py-1 rounded-lg hover:bg-neutral-800 transition"
-                              onClick={async () => {
-                                if (!couponCode) return toast.error('Enter a coupon code');
-                            
-                                try {
-                                  const res = await axios.post('/api/coupon/addcoupon', { code: couponCode });
-                                  toast.success(`Coupon "${couponCode}" applied!`);
-                                  setCouponCode('');
-                                  setShowCouponInput(false);
-                                } catch (err: any) {
-                                  toast.error(err?.response?.data || 'Coupon invalid or expired');
-                                }
-                              }}
-                            >Apply</button>
-                            <button className="border px-4 py-1 rounded-lg hover:bg-black hover:text-white transition" onClick={() => setShowCouponInput(false)}>Cancel</button>
-                          </div>
-                        </div>
-                      ) : (
-                        <button
-                          className="mt-2 text-sm underline text-black"
-                          onClick={() => setShowCouponInput(true)}
-                        >
-                          Add Coupon
-                        </button>
-                      )}
-                    </div> */}
                     <div className="mt-10">
                       <Heading
                         title="Voucher"
                         subtitle=""
                       />
-
+                    {userCoupon && 
                       <p className="mt-2 text-lg text-neutral-700 gap-2">
                           Active coupon:{' '}
                           <span className="inline-block px-3 py-1 border border-dashed border-black rounded-lg bg-neutral-50">
                             {userCoupon}
                           </span>
                         </p>
+                      }
 
                   <AnimatePresence mode="wait">
                     {showCouponInput ? (
