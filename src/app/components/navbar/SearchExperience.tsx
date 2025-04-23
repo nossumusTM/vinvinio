@@ -46,7 +46,7 @@ const SearchExperience = () => {
             alt="Italy"
             width={24}
             height={16}
-            className="rounded-sm object-cover"
+            className="rounded-full object-cover"
           />
           Rome, Italy
         </span>
