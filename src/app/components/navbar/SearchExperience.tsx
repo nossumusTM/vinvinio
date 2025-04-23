@@ -83,7 +83,9 @@ const SearchExperience = () => {
           height={16}
           className="rounded-full object-cover"
         />
+        <p className='ml-1 md:ml-0'>
           Rome, Italy
+          </p>
       </span>
     );
   
@@ -96,7 +98,7 @@ const SearchExperience = () => {
       : location.value.toLowerCase();
   
     return (
-      <span className="flex items-center gap-2 mr-0 md:mr-3 whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
+      <span className="flex items-center gap-2 mr-0 md:mr-5 whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
         <Image
           src={`/flags/${countryCode}.svg`}
           alt={location.label}
@@ -132,7 +134,7 @@ const SearchExperience = () => {
     <div
       onClick={searchModal.onOpen}
       className="
-        w-fit 
+        w-full 
         md:w-auto 
         py-2 
         rounded-full 
@@ -143,7 +145,9 @@ const SearchExperience = () => {
       "
     >
       <div className="flex flex-row items-center justify-between">
-        <div className="ml-2 text-sm font-medium px-1">{locationLabel}</div>
+        {/* <div className="ml-2 text-sm font-medium px-1">{locationLabel}</div> */}
+        <div className="ml-2 text-sm font-medium px-1 max-w-[150px] truncate">{locationLabel}</div>
+
         <div className="hidden lg:block text-sm font-medium px-6 border-x-[1px] flex-1 text-center">
           {durationLabel}
         </div>

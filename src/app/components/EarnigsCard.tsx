@@ -54,7 +54,7 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
           <div className="pt-4 flex flex-col justify-between items-baseline sm:flex-row sm:justify-between sm:items-center">
             <div>
                 <p className="text-sm text-gray-500 uppercase tracking-wide">{roleLabel} Earnings</p>
-                <h2 className="text-2xl font-bold text-black mb-2">{title || 'Earnings Overview'}</h2>
+                <h2 className="text-lg md:text-2xl font-bold text-black mb-2">{title || 'Earnings Overview'}</h2>
             </div>
 
             <div className="mb-3 md:mb-0 pt-3 flex flex-wrap sm:flex-row sm:justify-baseline gap-4">
@@ -62,7 +62,7 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
                     <p className="text-sm text-white bg-gradient-to-br from-[#08e2ff] to-[#3F00FF] p-3 rounded-xl mb-2 select-none">Today&#39;s Profit</p>
                     <p className="text-lg font-semibold text-black">
                     {/* {formatCurrency(dailyData?.[dailyData.length - 1]?.amount || 0)} */}
-                    
+
                     {formatCurrency(
                         dailyData.find((d) => new Date(d.date).toDateString() === new Date().toDateString())?.amount || 0
                         )}

@@ -585,11 +585,11 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                 alt="User"
                 width={100}
                 height={100}
-                className="rounded-full object-cover shadow-xl hover:shadow-2xl"
+                className="rounded-full mt-2 md:mt-0 object-cover shadow-xl hover:shadow-2xl"
               />
             ) : (
               <div className={twMerge(
-                "w-[60px] h-[60px] rounded-full flex items-center justify-center text-white font-medium text-xl bg-black",
+                "w-[100px] h-[100px] rounded-full flex items-center justify-center text-white font-medium text-3xl bg-black",
               )}
               // style={{
               //   background: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
