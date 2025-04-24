@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import axios from 'axios';
@@ -174,19 +174,11 @@ const CheckoutPage = () => {
     setIsLoading(true);
   
     try {
-      // await axios.post('/api/reservations', {
-      //   totalPrice: listingData.price * guests + serviceFee,
-      //   startDate,
-      //   endDate,
-      //   listingId,
-      //   selectedTime: time,
-      //   guestCount: guests,
-      //   legalName,
-      //   contact,
-      //   referralId,
-      // });
+
+      const totalPrice = total;
+
       await axios.post('/api/reservations', {
-        totalPrice: listingData.price * guests + serviceFee,
+        totalPrice,
         startDate: format(new Date(startDate), 'yyyy-MM-dd'),
         endDate: format(new Date(endDate), 'yyyy-MM-dd'),
         listingId,
@@ -420,8 +412,20 @@ const CheckoutPage = () => {
 
   const formattedStart = startDate ? format(new Date(startDate), 'PP') : '';
   const formattedEnd = endDate ? format(new Date(endDate), 'PP') : '';
-
   const serviceFee = 0;
+
+  const subtotal = useMemo(() => {
+    return listingData ? listingData.price * guests : 0;
+  }, [listingData, guests]);
+  
+  const discountAmount = useMemo(() => {
+    return subtotal * (discountPercentage / 100);
+  }, [subtotal, discountPercentage]);
+  
+  const total = useMemo(() => {
+    return subtotal - discountAmount + serviceFee;
+  }, [subtotal, discountAmount, serviceFee]);
+
 
   useEffect(() => {
     if (!listingId) return;
@@ -694,9 +698,9 @@ const CheckoutPage = () => {
 
   // const total = listingData ? listingData.price * guests + serviceFee : 0;
 
-  const subtotal = listingData ? listingData.price * guests : 0;
-  const discountAmount = subtotal * (discountPercentage / 100);
-  const total = subtotal - discountAmount + serviceFee;
+  // const subtotal = listingData ? listingData.price * guests : 0;
+  // const discountAmount = subtotal * (discountPercentage / 100);
+  // const total = subtotal - discountAmount + serviceFee;
 
   return (
     <div className="flex flex-col lg:flex-row max-w-screen-xl mx-auto px-4 py-10 gap-10">

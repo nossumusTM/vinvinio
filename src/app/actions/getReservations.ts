@@ -40,6 +40,7 @@ export default async function getReservations(params: IReservationParams) {
         }),
       },
       include: {
+        user: true,
         listing: {
           include: {
             user: true,

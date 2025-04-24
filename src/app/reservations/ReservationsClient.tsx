@@ -11,6 +11,7 @@ import { SafeReservation, SafeUser } from "@/app/types"
 import Heading from "@/app/components/Heading";
 import Container from "@/app/components/Container";
 import ListingCard from "@/app/components/listings/ListingCard";
+import ReservationCard from "./ReservationCard";
 
 import ConfirmPopup from "../components/ConfirmPopup";
 
@@ -90,20 +91,12 @@ const ReservationsClient: React.FC<ReservationsClientProps> = ({
                         </div>
                     )}
 
-                    <ListingCard
-                        data={reservation.listing}
-                        reservation={reservation}
-                        actionId={reservation.id}
-                        onAction={() => {
-                        if (!reservation.user?.email || !reservation.listing?.id) {
-                            toast.error("Missing guest email or listing ID.");
-                            return;
-                        }
-
-                        onCancel(reservation.id, reservation.user.email, reservation.listing.id);
-                        }}
-                        disabled={deletingId === reservation.id}
-                        currentUser={currentUser}
+                    <ReservationCard
+                         reservation={reservation}
+                         guestName={reservation.user?.name || 'Guest'}
+                         guestImage={reservation.user?.image}
+                         guestId={reservation.user?.id}
+                         currentUser={currentUser}
                     />
                     </div>
 

@@ -327,16 +327,31 @@ const TripsClient: React.FC<TripsClientProps> = ({
 
               <div className="p-4 flex flex-col gap-2">
                 <div className="text-lg font-semibold">{reservation.listing.title}</div>
+                 {/* <div className="text-sm text-neutral-600">{reservationDate}</div> */}
 
-                <div className="text-sm text-neutral-600 mt-4 flex flex-row gap-1 align-center justify-center">
-                  <p className="text-md text-black">Guests:</p>
+                  <div className="text-sm text-neutral-600 flex flex-row gap-2 items-center">{format(new Date(reservation.startDate), 'PPP')}
+                  <div className="">{reservation.time}{' '}
+                    {(() => {
+                      const hour = parseInt(reservation.time.split(':')[0], 10);
+                      return hour >= 12 ? 'PM' : 'AM';
+                    })()}</div>
+                </div> 
+
+        <div className="text-sm text-neutral-700 font-medium">
+            {reservation.guestCount === 1 ? 'Traveller' : 'Travellers'}: {reservation.guestCount}
+        </div>
+
+                {/* <div className="text-sm text-neutral-600 mt-4 flex flex-row gap-1 align-center justify-center">
+                  <p className="text-md text-black">
+                    {reservation.guestCount === 1 ? 'Traveller:' : 'Travellers:'}
+                  </p>
                   <div className="text-md font-bold">
                     {reservation.guestCount ?? 'N/A'}
                   </div>
                 </div>
 
                 <div className="flex flex-row gap-2 text-sm text-neutral-600 font-bold shadow-md mx-10 justify-center rounded-xl p-4">
-                  {/* <div className="text-2xl"><TbCalendarTime /></div> */}
+
                   <div className="pt-0.5 flex flex-row gap-2 justify-center items-center">{format(new Date(reservation.startDate), 'PPP')}
                   <div className="">{reservation.time}{' '}
                     {(() => {
@@ -344,7 +359,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
                       return hour >= 12 ? 'PM' : 'AM';
                     })()}</div>
                   </div>
-                </div>
+                </div> */}
 
                 {/* <div className="flex flex-row gap-2 text-lm text-neutral-600 font-bold">
                   <div className="text-2xl"><TbClock /></div>
@@ -357,7 +372,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
 
 
                 <div className="flex flex-col items-center gap-2">
-                  <p className="text-l font-bold text-neutral-600 pt-6">Guided by</p>
+                  <p className="text-md font-bold text-neutral-600 pt-6">Guided by</p>
                   <Avatar src={hostImage} name={hostName} />
                   <span className="text-xl font-bold">{hostName}</span>
                   <button

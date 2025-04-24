@@ -94,10 +94,10 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
   return (
     <div>
       <Select
-        placeholder="Select Country or City"
+        placeholder="Select Destination"
         isClearable
         isSearchable
-        options={[...getPopularCities(), ...getAll()]}
+        options={[...getPopularCities(), ...getAll()].sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()))}
         value={value}
         // onChange={(value) => onChange(value as CountrySelectValue)}
         onChange={(value, actionMeta) => {

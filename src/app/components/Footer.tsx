@@ -297,9 +297,9 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
 
         {/* Right side on desktop */}
         <div className="flex flex-col justify-center">
-          <h3 className="font-semibold text-6xl md:text-9xl mb-4">Daily <br/> Routine</h3>
+          <h3 className="font-semibold text-6xl md:text-9xl mb-4 mt-2 md:mt-1">Daily <br/> Routine</h3>
             <div className="flex space-x-4 text-xl">
-              <div className='ml-2'>
+              <div className='ml-0 md:ml-2'>
                 <a href="#"><FaTelegram size={40} className="hover:text-neutral-800 text-3xl transition" /></a>
                 </div>
               <div className=''>

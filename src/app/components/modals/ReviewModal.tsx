@@ -74,7 +74,7 @@ const ReviewsModal: React.FC<ReviewsModalProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.25 }}
-                className="w-full max-w-4xl bg-white rounded-3xl shadow-lg relative max-h-[70vh] overflow-hidden flex flex-col"
+                className="w-full max-w-4xl bg-white rounded-3xl shadow-lg relative max-h-[80vh] overflow-hidden flex flex-col"
               >
                 <div className="flex justify-between items-center border-b pb-4 mb-4 p-6">
                   <div className="flex items-center gap-2">
@@ -143,9 +143,11 @@ const ReviewsModal: React.FC<ReviewsModalProps> = ({
                 <div className="flex flex-col gap-2 p-8 border-t">
                   <div className="flex justify-center w-full">
                 </div>
-                <div className="flex flex-row gap-2 justify-center items-center">
-                  <PiQuotesFill />
-                  <p className="text-sm text-center">Experience is the dance that moves you closer to the joy and charm behind every moment.</p>
+                <div className="flex flex-row gap-2 justify-center items-start">
+                  <PiQuotesFill className="text-xl md:text-base" />
+                  <p className="text-sm text-left md:text-center">
+                    Experience is the dance that moves you closer to the joy and charm behind every moment.
+                  </p>
                 </div>
               </div>
               </motion.div>
