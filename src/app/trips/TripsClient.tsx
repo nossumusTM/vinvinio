@@ -389,7 +389,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
                   </button>
                 ) : (
                   <p className="mt-2 text-sm text-neutral-500 px-10 text-center">
-                    Cancellation is no longer possible. Please review our{' '}
+                    This booking is no longer subject to cancellation. Please review our{' '}
                     <button
                       onClick={() => {
                         const footer = document.getElementById("vuoiaggio-footer");

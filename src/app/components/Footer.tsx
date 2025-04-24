@@ -11,6 +11,8 @@ import useMessenger from '@/app/hooks/useMessager';
 import Modal from './modals/Modal';
 import useLoginModal from '../hooks/useLoginModal';
 
+// bg-gradient-to-br from-blue-50 via-white to-cyan-100
+
 interface FooterProps {
   currentUser: any; // You can replace `any` with your actual `User` type if available
 }
@@ -226,10 +228,10 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-y-8 md:gap-x-4">
         {/* Support Section */}
         <div className="flex flex-col justify-center md:pl-10 md:ml-10">
-          <h3 className="font-semibold text-lg mb-4">Support</h3>
+          <h3 className="font-semibold text-3xl ml-1 mb-4">Support</h3>
           <ul className="space-y-2">
           <li>
-            <button onClick={() => setIsCancellationOpen(true)} className="hover:underline transition">
+            <button onClick={() => setIsCancellationOpen(true)} className="hover:bg-neutral-100 p-1 rounded-xl px-2 transition">
                   Help Center
                 </button>
             </li>
@@ -247,19 +249,19 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
                     image: '/images/operator.png',
                   });
                 }}
-                className="hover:underline transition"
+                className="hover:bg-neutral-100 p-1 rounded-xl px-2 transition"
               >
                 Real-Time Assist
               </button>
             </li>
 
             <li>
-            <button onClick={() => setIsCancellationOpen(true)} className="hover:underline transition">
+            <button onClick={() => setIsCancellationOpen(true)} className="hover:bg-neutral-100 p-1 rounded-xl px-2 transition">
                   Cancellation Policy
                 </button>
             </li>
             <li>
-            <button onClick={() => setIsPromoterGuideOpen(true)} className="hover:underline transition">
+            <button onClick={() => setIsPromoterGuideOpen(true)} className="hover:bg-neutral-100 p-1 rounded-xl px-2 transition">
                 The User&rsquo;s Playbook
                 </button>
             </li>
@@ -268,25 +270,25 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
 
         {/* Legal Section */}
         <div className="flex flex-col justify-center">
-          <h3 className="font-semibold text-lg mb-4">Legal</h3>
+          <h3 className="font-semibold text-3xl ml-1 mb-4">Legal</h3>
           <ul className="space-y-2">
             <li>
-              <button onClick={() => setIsPrivacyOpen(true)} className="hover:underline transition">
+              <button onClick={() => setIsPrivacyOpen(true)} className="hover:bg-neutral-100 p-1 rounded-xl px-2 transition">
                 Privacy Policy
               </button>
             </li>
             <li>
-              <button onClick={() => setIsPrivacyOpen(true)} className="hover:underline transition">
+              <button onClick={() => setIsPrivacyOpen(true)} className="hover:bg-neutral-100 p-1 rounded-xl px-2 transition">
                 Payment Terms
               </button>
             </li>
             <li>
-              <button onClick={() => setIsTermsOpen(true)} className="hover:underline transition">
+              <button onClick={() => setIsTermsOpen(true)} className="hover:bg-neutral-100 p-1 rounded-xl px-2 transition">
                 Terms of Service
               </button>
             </li>
             <li>
-              <button onClick={() => setIsTermsOpen(true)} className="hover:underline transition">
+              <button onClick={() => setIsTermsOpen(true)} className="hover:bg-neutral-100 p-1 rounded-xl px-2 transition">
                 Cookies & Data Policy
               </button>
             </li>
@@ -295,22 +297,22 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
 
         {/* Right side on desktop */}
         <div className="flex flex-col justify-center">
-          {/* <h3 className="font-semibold text-lg mb-4 underline">Social channels</h3> */}
+          <h3 className="font-semibold text-6xl md:text-9xl mb-4">Daily <br/> Routine</h3>
             <div className="flex space-x-4 text-xl">
-              <div className=''>
-                <a href="#"><FaTelegram size={40} className="text-neutral-700 hover:text-neutral-800 text-3xl transition" /></a>
+              <div className='ml-2'>
+                <a href="#"><FaTelegram size={40} className="hover:text-neutral-800 text-3xl transition" /></a>
                 </div>
               <div className=''>
-                <a href="#"><FaYoutube size={44} className="text-neutral-700 hover:text-neutral-800 text-3xl transition" /></a>
+                <a href="#"><FaYoutube size={44} className="hover:text-neutral-800 text-3xl transition" /></a>
                 </div>
               <div className=''>
-                <a href="#"><PiTiktokLogoFill size={40} className="text-neutral-700 hover:text-neutral-800 text-3xl transition" /></a>
+                <a href="#"><PiTiktokLogoFill size={40} className="hover:text-neutral-800 text-3xl transition" /></a>
                 </div>
               <div className=''>
-                <a href="#"><PiInstagramLogoFill size={40} className="text-neutral-700 hover:text-neutral-800 text-3xl transition" /></a>
+                <a href="#"><PiInstagramLogoFill size={40} className="hover:text-neutral-800 text-3xl transition" /></a>
                 </div>
               <div className=''>
-                <a href="#"><TfiPinterestAlt size={38} className="text-neutral-700 hover:text-neutral-800 text-3xl transition" /></a>
+                <a href="#"><TfiPinterestAlt size={38} className="hover:text-neutral-800 text-3xl transition" /></a>
                 </div>
             </div>
         </div>

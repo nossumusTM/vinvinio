@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import { IoMdClose } from "react-icons/io";
 import { motion, AnimatePresence } from "framer-motion";
+import { PiQuotesFill } from "react-icons/pi";
 import Avatar from "../Avatar";
 
 interface ReviewsModalProps {
@@ -103,7 +104,7 @@ const ReviewsModal: React.FC<ReviewsModalProps> = ({
                 <div className="flex-1 overflow-y-auto scroll-smooth px-6 pb-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
                   {reviews.map((review, i) => (
-                    <div key={i} className="rounded-3xl p-4 shadow-md hover:shadow-lg">
+                    <div key={i} className="rounded-3xl p-4 shadow-md hover:shadow-lg transition">
                       <div className="flex gap-1 mb-2">
                         {[1, 2, 3, 4, 5].map((star) => (
                           <span
@@ -141,6 +142,10 @@ const ReviewsModal: React.FC<ReviewsModalProps> = ({
                 </div>
                 <div className="flex flex-col gap-2 p-8 border-t">
                   <div className="flex justify-center w-full">
+                </div>
+                <div className="flex flex-row gap-2 justify-center items-center">
+                  <PiQuotesFill />
+                  <p className="text-sm text-center">Experience is the dance that moves you closer to the joy and charm behind every moment.</p>
                 </div>
               </div>
               </motion.div>
