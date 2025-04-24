@@ -50,7 +50,7 @@ const FAQ: React.FC<FAQProps> = ({ items }) => {
             }`}
           >
             <button
-              className={`flex justify-between items-center w-full px-4 py-3 text-left text-base font-medium hover:bg-gray-100 rounded-xl transition`}
+              className={`flex justify-between items-center w-full px-4 py-3 text-left text-base font-medium hover:bg-neutral-100 rounded-xl transition`}
               onClick={() => toggleIndex(index)}
             >
               {item.question}

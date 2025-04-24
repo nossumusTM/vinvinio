@@ -31,44 +31,65 @@ const ReservationCard: React.FC<ReservationCardProps> = ({ reservation, currentU
   }, [reservation]);
 
   return (
-    <div className="col-span-1 cursor-default group pl-5 pr-5 p-5 shadow-md hover:shadow-lg transition-shadow duration-300 rounded-2xl">
-      <div className="flex flex-col gap-3 w-full">
-        {reservation.listing?.imageSrc?.[0] && (
-          <Image
-            src={reservation.listing.imageSrc[0]}
-            alt="Listing Cover"
-            width={800}
-            height={500}
-            className="w-full h-60 object-cover rounded-xl"
-          />
-        )}
-
-        <div className="text-lg font-semibold mt-2">{reservation.listing.title}</div>
-        <div className="text-sm text-neutral-600">{reservationDate}</div>
-
+    <div className="relative bg-white border border-neutral-200 rounded-3xl shadow-md hover:shadow-lg transition duration-300 overflow-hidden">
+      {Array.isArray(reservation.listing?.imageSrc) && reservation.listing.imageSrc.length > 0 && (
+        <Image
+          src={reservation.listing.imageSrc[0]}
+          alt="Listing"
+          className="w-full h-48 object-cover"
+          width={500}
+          height={500}
+        />
+      )}
+  
+      <div className="p-4 flex flex-col gap-2">
+        <div className="text-lg font-semibold">{reservation.listing.title}</div>
+  
+        <div className="text-sm text-neutral-600">
+          {reservationDate}
+        </div>
+  
         <div className="text-sm text-neutral-700 font-medium">
-            {reservation.guestCount === 1 ? 'Traveller' : 'Travellers'}: {reservation.guestCount}
+          {reservation.guestCount === 1 ? 'Traveller' : 'Travellers'}: {reservation.guestCount}
         </div>
-
-        <div className="text-lg font-bold">€ {reservation.totalPrice}</div>
-
+  
+        <div className="text-lg font-bold">€ {reservation.totalPrice.toFixed(2)}</div>
+  
         <div className="flex flex-col items-center mt-4">
-        <p className="text-md font-bold text-neutral-600 mb-1.4">Booked by</p>
-          <Avatar src={guestImage} name={guestName} />
-          <span className="text-xl font-bold mt-2">{guestName}</span>
-          <button
-            onClick={() => {
-                if (currentUser?.id === guestId) return;
-                messenger.openChat({ id: guestId || '', name: guestName, image: guestImage });
-            }}
-            className="text-sm text-neutral-700 hover:underline hover:text-black transition mt-2"
-            >
-            Message {guestName}
-            </button>
-        </div>
+            <p className="text-md font-medium text-neutral-700 mb-2">Booked by</p>
+            <Avatar src={guestImage} name={guestName} />
+            <span className="text-xl font-bold mt-2">{guestName}</span>
+
+            {guestName === 'Guest' ? (
+                <div className="text-sm text-neutral-600 text-center mt-2 px-10 flex flex-col justify-center items-center">
+                    Booked using guest mode
+                    {reservation.guestContact ? (
+                    <>
+                        , contact: {' '}
+                        <span className="inline-block bg-green-100 text-green-700 font-semibold px-3 py-1 mt-2 rounded-md shadow-sm">
+                        {reservation.guestContact}
+                        </span>
+                    </>
+                    ) : (
+                    '.'
+                    )}
+                </div>
+                ) : (
+                <button
+                    onClick={() => {
+                    if (currentUser?.id === guestId) return;
+                    messenger.openChat({ id: guestId || '', name: guestName, image: guestImage });
+                    }}
+                    className="text-sm text-neutral-700 hover:underline hover:text-black transition mt-2"
+                >
+                    Message {guestName}
+                </button>
+                )}
+            </div>
       </div>
     </div>
   );
+  
 };
 
 export default ReservationCard;

@@ -1,0 +1,41 @@
+// /api/email/profile-newsletter/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import prisma from '@/app/libs/prismadb';
+import { Prisma } from '@prisma/client';
+
+export async function POST(req: NextRequest) {
+  try {
+    const { email } = await req.json();
+    if (!email) return new NextResponse('Missing email', { status: 400 });
+
+    await prisma.newsletter.create({
+      data: { email, type: 'experience' },
+    });
+
+    return NextResponse.json({ message: 'Subscribed' });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2002'
+    ) {
+      return new NextResponse('Already subscribed', { status: 409 });
+    }
+
+    return new NextResponse('Server error', { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { email } = await req.json();
+    if (!email) return new NextResponse('Missing email', { status: 400 });
+
+    await prisma.newsletter.delete({
+      where: { email },
+    });
+
+    return NextResponse.json({ message: 'Unsubscribed' });
+  } catch (error) {
+    return new NextResponse('Server error', { status: 500 });
+  }
+}

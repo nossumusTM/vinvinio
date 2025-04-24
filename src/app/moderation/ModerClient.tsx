@@ -305,14 +305,14 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
             <div key={listing.id} className="p-6 rounded-xl shadow-lg space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2 pt-2">
                 {/* {listing.imageSrc.map((src, i) => (
-                  // <img key={i} src={src} alt={`media-${i}`} className="w-full h-40 object-cover rounded-lg" />
+                  // <img key={i} src={src} alt={`media-${i}`} className="w-full h-40 object-cover rounded-xl" />
                   <Image
                     key={i}
                     src={src}
                     alt={`media-${i}`}
                     width={500}
                     height={300}
-                    className="w-full h-40 object-cover rounded-lg"
+                    className="w-full h-40 object-cover rounded-xl"
                     unoptimized // optional if using external URLs or Cloudinary
                   />
 
@@ -324,7 +324,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
                     <video
                       key={i}
                       controls
-                      className="w-full h-40 object-cover rounded-lg"
+                      className="w-full h-40 object-cover rounded-xl"
                     >
                       <source src={src} type="video/mp4" />
                       Your browser does not support the video tag.
@@ -336,7 +336,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
                       alt={`media-${i}`}
                       width={500}
                       height={300}
-                      className="w-full h-40 object-cover rounded-lg"
+                      className="w-full h-40 object-cover rounded-xl"
                       unoptimized
                     />
                   );
@@ -375,7 +375,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
               <button
                 onClick={() => handleApprove(listing.id)}
                 disabled={isLoading}
-                className="relative px-4 py-2 text-white rounded-lg overflow-hidden group"
+                className="relative px-4 py-2 text-white rounded-xl overflow-hidden group"
               >
                 <span className="relative z-10">Approve</span>
 
@@ -389,7 +389,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
                 <button
                   onClick={() => handleReject(listing.id)}
                   disabled={isLoading}
-                  className="px-4 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition"
+                  className="px-4 py-2 bg-neutral-900 text-white rounded-xl hover:bg-neutral-100 transition"
                 >
                   Reject
                 </button>
@@ -409,7 +409,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
             placeholder="Enter Promoter userId"
             value={promoterUserId}
             onChange={(e) => setPromoterUserId(e.target.value)}
-            className="border p-2 rounded-lg w-full mb-3"
+            className="border p-2 rounded-xl w-full mb-3"
           />
           <button
             onClick={() => {
@@ -420,7 +420,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
               setShowPromoterWithdrawConfirm(true);
             }}
             disabled={isLoading}
-            className="w-full px-4 py-2 bg-black text-white rounded-lg hover:bg-neutral-800 transition"
+            className="w-full px-4 py-2 bg-neutral-200 text-black rounded-xl hover:bg-neutral-100 transition"
           >
             Withdraw
           </button>
@@ -434,7 +434,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
             placeholder="Enter Host userId"
             value={hostUserId}
             onChange={(e) => setHostUserId(e.target.value)}
-            className="border p-2 rounded-lg w-full mb-3"
+            className="border p-2 rounded-xl w-full mb-3"
           />
           <button
             onClick={() => {
@@ -445,7 +445,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
               setShowHostWithdrawConfirm(true);
             }}
             disabled={isLoading}
-            className="w-full px-4 py-2 bg-black text-white rounded-lg hover:bg-neutral-800 transition"
+            className="w-full px-4 py-2 bg-neutral-200 text-black rounded-xl hover:bg-neutral-100 transition"
           >
             Withdraw
           </button>
@@ -459,7 +459,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
             placeholder="Enter Reservation ID"
             value={selectedReservationId}
             onChange={(e) => setSelectedReservationId(e.target.value)}
-            className="w-full border p-2 mb-2 rounded-lg"
+            className="w-full border p-2 mb-2 rounded-xl"
             />
             <button
               onClick={() => {
@@ -470,7 +470,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
                 setConfirmAction(() => () => onCancel(selectedReservationId));
                 setShowConfirmPopup(true);
               }}
-              className="w-full bg-black text-white py-2 rounded-lg hover:bg-neutral-800"
+              className="w-full bg-neutral-200 text-black py-2 rounded-xl hover:bg-neutral-100 transition"
             >
               Cancel Reservation
             </button>
@@ -487,11 +487,11 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
           placeholder="Enter Host userId or Email"
           value={hostLookup}
           onChange={(e) => setHostLookup(e.target.value)}
-          className="w-full p-2 border rounded-lg"
+          className="w-full p-2 border rounded-xl"
         />
         <button
           onClick={handleHostAnalytics}
-          className="w-full py-2 bg-black text-white rounded-lg hover:bg-neutral-800"
+          className="w-full py-2 bg-neutral-200 text-black rounded-xl hover:bg-neutral-100 transition"
         >
           Fetch Host Data
         </button>
@@ -514,11 +514,11 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
           placeholder="Enter Promoter userId or Email"
           value={promoterLookup}
           onChange={(e) => setPromoterLookup(e.target.value)}
-          className="w-full p-2 border rounded-lg"
+          className="w-full p-2 border rounded-xl"
         />
         <button
           onClick={handlePromoterAnalytics}
-          className="w-full py-2 bg-black text-white rounded-lg hover:bg-neutral-800"
+          className="w-full py-2 bg-neutral-200 text-black rounded-xl hover:bg-neutral-100 transition"
         >
           Fetch Promoter Data
         </button>

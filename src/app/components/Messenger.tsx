@@ -27,7 +27,7 @@ const Messenger = ({ currentUser }: MessengerProps) => {
     openList
   } = useMessenger();
 
-  if (!isOpen || !currentUser?.id) return null;
+  // if (!isOpen || !currentUser?.id) return null;
 
   return (
     <AnimatePresence>

@@ -74,19 +74,19 @@ const ReservationsClient: React.FC<ReservationsClientProps> = ({
         <Container>
             <div className="mb-8 pl-4 pt-4 md:pt-6">
                 <Heading
-                    title="Bookings"
+                    title="Booking Inbox"
                     subtitle="Who said ' YesSsSs! ' to your experience"
                 />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 mt-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-10 mt-10">
                 {loadedReservations.map((reservation: any) => (
                     <div key={reservation.id} className="relative">
                     {reservation.status === 'cancelled' ? (
-                        <div className="absolute top-8 left-8 px-2 py-1 bg-red-100 text-red-600 text-xs font-semibold uppercase rounded-md z-10">
+                        <div className="absolute top-4 left-4 px-2 py-1 bg-red-100 text-red-600 text-xs font-semibold uppercase rounded-md z-10">
                         Cancelled
                         </div>
                     ) : (
-                        <div className="absolute top-8 left-8 px-2 py-1 bg-green-100 text-green-600 text-xs font-semibold uppercase rounded-md z-10">
+                        <div className="absolute top-4 left-4 px-2 py-1 bg-green-100 text-green-600 text-xs font-semibold uppercase rounded-md z-10">
                         Confirmed
                         </div>
                     )}

@@ -76,7 +76,7 @@ const ReviewsModal: React.FC<ReviewsModalProps> = ({
                 transition={{ duration: 0.25 }}
                 className="w-full max-w-4xl bg-white rounded-3xl shadow-lg relative max-h-[80vh] overflow-hidden flex flex-col"
               >
-                <div className="flex justify-between items-center border-b pb-4 mb-4 p-6">
+                <div className="flex justify-between items-center border-b pb-4 mb-0 p-6">
                   <div className="flex items-center gap-2">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                       <defs>
@@ -92,7 +92,7 @@ const ReviewsModal: React.FC<ReviewsModalProps> = ({
                           7.46 13.97 5.82 21 12 17.27z"
                       />
                     </svg>
-                    <span className="text-xl text-neutral-700 font-bold">
+                    <span className="text-xl text-neutral-700 font-medium">
                       {averageRating.toFixed(1)} · {reviews.length} review{reviews.length !== 1 ? 's' : ''}
                     </span>
                   </div>
@@ -102,7 +102,7 @@ const ReviewsModal: React.FC<ReviewsModalProps> = ({
                 </div>
   
                 <div className="flex-1 overflow-y-auto scroll-smooth px-6 pb-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
                   {reviews.map((review, i) => (
                     <div key={i} className="rounded-3xl p-4 shadow-md hover:shadow-lg transition">
                       <div className="flex gap-1 mb-2">

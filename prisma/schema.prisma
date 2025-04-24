@@ -280,5 +280,12 @@ model EmailVerificationToken {
   userId    String   @db.ObjectId
   token     String
   expiresAt DateTime
-  user      User     @relation(fields: [userId], references: [id]) // ✅ This now has a back reference
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Newsletter {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  email     String   @unique
+  type      String
+  createdAt DateTime @default(now())
 }

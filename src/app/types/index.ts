@@ -19,6 +19,7 @@ export type SafeReservation = Omit<
   startDate: string;
   endDate: string;
   guestCount: number;
+  guestContact?: string;
   user: SafeUser;
   listing: SafeListing & {
     user: SafeUser;

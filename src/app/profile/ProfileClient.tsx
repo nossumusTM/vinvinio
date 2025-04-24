@@ -21,6 +21,8 @@ import { MdOutlineSecurity } from "react-icons/md";
 import { RiSecurePaymentLine } from "react-icons/ri";
 import ConfirmPopup from "../components/ConfirmPopup";
 import EarningsCard from "../components/EarnigsCard";
+import { Switch } from '@headlessui/react';
+import { FiInfo } from "react-icons/fi";
 import FAQ from "../components/FAQ";
 import toast from "react-hot-toast";
 export const dynamic = 'force-dynamic';
@@ -58,7 +60,10 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [isCropping, setIsCropping] = useState(false);
   const [showConfirmDeletePayout, setShowConfirmDeletePayout] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
 
   const [earnings, setEarnings] = useState<{
     daily: EarningsEntry[];
@@ -565,6 +570,64 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
     }
   }, [activeSection]);  
 
+  useEffect(() => {
+    const checkAndSubscribe = async () => {
+      try {
+        const res = await fetch(`/api/email/check-subscription?email=${currentUser.email}`);
+        const data = await res.json();
+  
+        if (data?.subscribed) {
+          setIsSubscribed(true);
+        } else {
+          // Auto-subscribe user if not yet subscribed
+          const subRes = await fetch('/api/email/profile-newsletter', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: currentUser.email, type: 'experience' }),
+          });
+  
+          if (subRes.ok) {
+            setIsSubscribed(true);
+            console.log('✅ Auto-subscribed to Voyageletter');
+          } else {
+            console.warn('⚠️ Auto-subscription failed');
+          }
+        }
+      } catch (err) {
+        console.error('❌ Failed to check or subscribe to newsletter', err);
+      }
+    };
+  
+    if (currentUser?.role === 'customer') {
+      checkAndSubscribe();
+    }
+  }, [currentUser]);  
+
+  const handleToggleSubscription = async () => {
+    setLoading(true);
+    try {
+      const endpoint = isSubscribed
+        ? '/api/email/profile-newsletter'
+        : '/api/email/profile-newsletter';
+  
+      const method = isSubscribed ? 'DELETE' : 'POST';
+  
+      const res = await fetch(endpoint, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: currentUser.email, type: 'experience' }),
+      });
+  
+      if (!res.ok) throw new Error('Failed to toggle subscription');
+  
+      setIsSubscribed(!isSubscribed);
+    } catch (error) {
+      console.error('Toggle subscription error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Container>
       <div className="pl-5">
@@ -716,7 +779,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => setActiveSection(null)}
-                      className="text-sm text-black hover:underline"
+                      className="text-sm text-black bg-neutral-100 hover:bg-neutral-200 rounded-full py-1 px-2 transition py-1 px-2 transition"
                     >
                       ←
                     </button>
@@ -1008,7 +1071,62 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                     </button>
                   </div>
                 ))}
-              </div>
+
+                <hr className="my-2"/>
+
+                <div className="flex items-center justify-between mt-6">
+                  {/* Left: Label and Icon */}
+                  <div className="flex items-center gap-2 justify-start">
+                    <div
+                      className="relative flex flex-row justify-center items-center"
+                      onMouseEnter={() => setShowTooltip(true)}
+                      onMouseLeave={() => setShowTooltip(false)}
+                    >
+                      <button
+                        className="text-neutral-700 hover:text-black transition"
+                        aria-label="Voyageletter info"
+                      >
+                        <FiInfo size={19} />
+                      </button>
+
+                      <AnimatePresence>
+                        {showTooltip && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 4 }}
+                            exit={{ opacity: 0, y: -4 }}
+                            transition={{ duration: 0.2 }}
+                            className="absolute left-0 mt-3 w-72 bg-white text-sm text-neutral-700 rounded-xl shadow-lg p-3 z-50"
+                          >
+                            You’re joined to the Vuoiaggio Newsletter.
+                            <br />
+                            Receive curated updates on unforgettable experiences — no spam, just <strong>inspiration</strong>.
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    <h3 className="text-lg font-semibold">Voyageletter</h3>
+                  </div>
+
+                  {/* Right: Switch */}
+                  <Switch
+                    checked={isSubscribed}
+                    onChange={handleToggleSubscription}
+                    className={`${
+                      isSubscribed ? 'bg-black' : 'bg-gray-300'
+                    } relative inline-flex h-6 w-11 items-center rounded-full transition duration-200 focus:outline-none`}
+                    disabled={loading}
+                  >
+                    <span
+                      className={`${
+                        isSubscribed ? 'translate-x-6' : 'translate-x-1'
+                      } inline-block h-4 w-4 transform rounded-full bg-white transition`}
+                    />
+                  </Switch>
+                </div>
+
+                </div>
 
               </div>
               {/* Right: FAQ Block */}
@@ -1028,7 +1146,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => setActiveSection(null)}
-                      className="text-sm text-black hover:underline"
+                      className="text-sm text-black bg-neutral-100 hover:bg-neutral-200 rounded-full py-1 px-2 transition"
                     >
                       ←
                     </button>
@@ -1105,7 +1223,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                             toast.error('Failed to update password. Check current password.');
                           }
                         }}
-                        className="text-sm text-white bg-[#000] hover:bg-neutral-800 p-2 rounded-lg"
+                        className="text-sm text-white bg-[#000] hover:bg-neutral-800 p-3 rounded-xl"
                       >
                         Update Password
                       </button>
@@ -1146,7 +1264,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => setActiveSection(null)}
-                    className="text-sm text-black hover:underline"
+                    className="text-sm text-black bg-neutral-100 hover:bg-neutral-200 rounded-full py-1 px-2 transition"
                   >
                     ←
                   </button>
@@ -1412,7 +1530,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                         <div className="flex gap-4 mt-6">
                           <button
                             onClick={() => setShowConfirmDeletePayout(true)}
-                            className="border px-4 py-2 rounded-lg hover:bg-black hover:text-white transition"
+                            className="border px-4 py-2 rounded-lg hover:bg-neutral-100 transition"
                           >
                             Delete Method
                           </button>

@@ -502,7 +502,14 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
       <div className="flex items-center gap-3 p-4 border-b justify-between">
         <div className="flex items-center gap-3">
             <button onClick={onBack} className="text-sm text-neutral-600 hover:text-black">&larr;</button>
-            <Avatar src={recipient.image} name={recipient.name} size={40} />
+            <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                transition={{ duration: 0.25 }}
+              >
+                <Avatar src={recipient.image} name={recipient.name} size={40} />
+              </motion.div>
             <h4 className="font-semibold text-lg">{recipient.name}</h4>
         </div>
         <button

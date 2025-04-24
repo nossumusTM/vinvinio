@@ -10,6 +10,7 @@ import { PiPinterestLogoDuotone } from "react-icons/pi";
 import useMessenger from '@/app/hooks/useMessager';
 import Modal from './modals/Modal';
 import useLoginModal from '../hooks/useLoginModal';
+import Newsletter from './Newsletter';
 
 // bg-gradient-to-br from-blue-50 via-white to-cyan-100
 
@@ -225,9 +226,9 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
 
   return (
     <footer id="vuoiaggio-footer" className="bg-[#fcfcfc] text-gray-800 px-6 py-10">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-y-8 md:gap-x-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-8 max-w-full px-0 md:px-20">
         {/* Support Section */}
-        <div className="flex flex-col justify-center md:pl-10 md:ml-10">
+        <div className="flex flex-col justify-center">
           <h3 className="font-semibold text-3xl ml-1 mb-4">Support</h3>
           <ul className="space-y-2">
           <li>
@@ -296,25 +297,33 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
         </div>
 
         {/* Right side on desktop */}
-        <div className="flex flex-col justify-center">
-          <h3 className="font-semibold text-6xl md:text-9xl mb-4 mt-2 md:mt-1">Daily <br/> Routine</h3>
-            <div className="flex space-x-4 text-xl">
-              <div className='ml-0 md:ml-2'>
-                <a href="#"><FaTelegram size={40} className="hover:text-neutral-800 text-3xl transition" /></a>
-                </div>
-              <div className=''>
-                <a href="#"><FaYoutube size={44} className="hover:text-neutral-800 text-3xl transition" /></a>
-                </div>
-              <div className=''>
-                <a href="#"><PiTiktokLogoFill size={40} className="hover:text-neutral-800 text-3xl transition" /></a>
-                </div>
-              <div className=''>
-                <a href="#"><PiInstagramLogoFill size={40} className="hover:text-neutral-800 text-3xl transition" /></a>
-                </div>
-              <div className=''>
-                <a href="#"><TfiPinterestAlt size={38} className="hover:text-neutral-800 text-3xl transition" /></a>
-                </div>
+        <div className="flex flex-col justify-center sm:col-span-2 lg:col-span-1 items-start mt-0 sm:mt-5 md:mt-1 lg:mt-0 lg:items-start">
+          <div className='flex flex-col justify-center items-start'>
+          <h3 className="font-semibold text-6xl sm:text-5xl md:text-6xl lg:text-7xl mb-4 mt-2 md:mt-0 lg:mt-0 xl:mt-0 md:mt-1 lg:mt-3 xl:mt-3">
+            Daily <br /> Routine  ོ
+          </h3>
+          <div className="flex space-x-4 text-xl">
+            <div className="ml-0 md:ml-2 lg:ml-0">
+              <a href="#"><FaTelegram size={40} className="hover:text-neutral-800 text-3xl transition" /></a>
             </div>
+            <div>
+              <a href="#"><FaYoutube size={44} className="hover:text-neutral-800 text-3xl transition" /></a>
+            </div>
+            <div>
+              <a href="#"><PiTiktokLogoFill size={40} className="hover:text-neutral-800 text-3xl transition" /></a>
+            </div>
+            <div>
+              <a href="#"><PiInstagramLogoFill size={40} className="hover:text-neutral-800 text-3xl transition" /></a>
+            </div>
+            <div>
+              <a href="#"><TfiPinterestAlt size={38} className="hover:text-neutral-800 text-3xl transition" /></a>
+            </div>
+          </div>
+          </div>
+        </div>
+
+          <div>
+            <Newsletter />
         </div>
       </div>
 

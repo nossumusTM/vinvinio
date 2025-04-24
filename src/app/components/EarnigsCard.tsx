@@ -78,7 +78,7 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
                         : `${view.charAt(0).toUpperCase() + view.slice(1)} Total`}
                     </p>
                     <p className="text-lg font-semibold text-black">
-                        {formatCurrency(total)}
+                        {formatCurrency(Number(total.toFixed(2)))}
                     </p>
                 </div>
             </div>
@@ -91,7 +91,7 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
                     className={`px-4 py-2 rounded-full text-sm transition ${
                     view === type
                         ? 'bg-black text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        : 'bg-neutral-100 text-gray-700 hover:bg-gray-200'
                     }`}
                 >
                     {type === 'all' ? 'All' : type.charAt(0).toUpperCase() + type.slice(1)}
@@ -106,15 +106,21 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
               <LineChart data={currentData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
                 <CartesianGrid strokeDasharray="6 6" />
                 <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                <YAxis tickFormatter={(val) => `€${val}`} />
+                {/* <YAxis tickFormatter={(val) => `€${val}`} /> */}
+                <YAxis tickFormatter={(val) => `€${val.toFixed(2)}`} />
                 <YAxis label={{ value: 'Income (€)', angle: -90, position: 'insideLeft' }} />
-                <Tooltip
+                {/* <Tooltip
                     formatter={(value: number) => [`€${value}`, 'Income']}
                     labelFormatter={(label: string) => `Date: ${label}`}
                     contentStyle={{ borderRadius: '10px', fontSize: '14px' }}
                     cursor={{ stroke: '#3604ff', strokeWidth: 1 }}
+                /> */}
+                <Tooltip
+                  formatter={(value: number) => [`€${value.toFixed(2)}`, 'Income']}
+                  labelFormatter={(label: string) => `Date: ${label}`}
+                  contentStyle={{ borderRadius: '10px', fontSize: '14px' }}
+                  cursor={{ stroke: '#3604ff', strokeWidth: 1 }}
                 />
-
                 <Line type="monotone" dataKey="amount" stroke="#3604ff" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>

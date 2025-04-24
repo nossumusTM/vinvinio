@@ -141,12 +141,13 @@ const PlatformCard: React.FC<PlatformCardProps> = ({
                 <YAxis />
                 <Tooltip
                     formatter={(value: number, name: string) => {
+                        const formatted = `€${Number(value).toFixed(2)}`;
                         if (name === 'bookingCount') {
                         return [value, 'Bookings'];
                         } else if (name === 'platformFee') {
-                        return [`€${value}`, 'Platform Fee'];
+                        return [formatted, 'Platform Fee'];
                         } else if (name === 'revenue') {
-                        return [`€${value}`, 'Total Revenue'];
+                        return [formatted, 'Total Revenue'];
                         }
                         return [value, name];
                     }}
@@ -156,7 +157,7 @@ const PlatformCard: React.FC<PlatformCardProps> = ({
                         fontSize: '14px',
                     }}
                     cursor={{ stroke: '#3604ff', strokeWidth: 1 }}
-                    />
+                />
                 <Line
                     type="monotone"
                     dataKey="revenue"

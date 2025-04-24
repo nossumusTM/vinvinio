@@ -281,7 +281,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
         md:grid-cols-2 
         xl:grid-cols-2
         2xl:grid-cols-4
-        gap-12
+        gap-10
         max-w-screen-2xl
         mx-auto
       ">
@@ -372,7 +372,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
 
 
                 <div className="flex flex-col items-center gap-2">
-                  <p className="text-md font-bold text-neutral-600 pt-6">Guided by</p>
+                  <p className="text-md font-medium text-neutral-700 pt-6">Guided by</p>
                   <Avatar src={hostImage} name={hostName} />
                   <span className="text-xl font-bold">{hostName}</span>
                   <button

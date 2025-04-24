@@ -21,6 +21,7 @@ import { categories } from "@/app/components/navbar/Categories";
 import ListingHead from "@/app/components/listings/ListingHead";
 import ListingInfo from "@/app/components/listings/ListingInfo";
 import ListingReservation from "@/app/components/listings/ListingReservation";
+import { motion, AnimatePresence } from 'framer-motion'
 import Avatar from "@/app/components/Avatar";
 
 import ReviewsModal from "@/app/components/modals/ReviewModal";
