@@ -14,6 +14,7 @@ import useCountries from '@/app/hooks/useCountries';
 
 import Modal from './Modal';
 import Calendar from '../inputs/Calendar';
+import SearchCalendar from '../inputs/SaerchCalendar'
 // import CountrySelect, { CountrySelectValue } from '../inputs/CountrySelect';
 import CountrySearchSelect, { CountrySelectValue } from '../inputs/CountrySearchSelect';
 
@@ -109,7 +110,7 @@ const SearchExperienceModal = () => {
   if (step === STEPS.DATE) {
     bodyContent = (
       <div className="flex flex-col gap-8">
-        <Calendar
+        <SearchCalendar
           value={dateRange}
           onChange={(value) => setDateRange(value.selection)}
         />

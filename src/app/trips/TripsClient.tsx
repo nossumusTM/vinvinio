@@ -372,22 +372,37 @@ const TripsClient: React.FC<TripsClientProps> = ({
 
                       messenger.openChat(recipient);
                     }}
-                    className="text-sm text-neutral-600 hover:underline hover:text-black transition"
+                    className="text-sm text-neutral-700 hover:underline hover:text-black transition"
                   >
-                    Contact {hostName}
+                    Message {hostName}
                   </button>
                 </div>
 
 
-                {new Date(reservation.startDate) > new Date(Date.now() + 24 * 60 * 60 * 1000) && (
-                <button
-                  onClick={() => openCancelModal(reservation.id)}
-                  disabled={deletingId === reservation.id}
-                  className="mt-4 px-4 py-2 text-sm font-medium text-white bg-black rounded-xl hover:bg-neutral-700 disabled:opacity-50"
-                >
-                  Cancel reservation
-                </button>
-              )}
+                {new Date(reservation.startDate) > new Date(Date.now() + 24 * 60 * 60 * 1000) ? (
+                  <button
+                    onClick={() => openCancelModal(reservation.id)}
+                    disabled={deletingId === reservation.id}
+                    className="mt-4 text-sm font-medium text-neutral-700 hover:underline hover:text-black transition disabled:opacity-50"
+                  >
+                    Need to cancel for some reason?
+                  </button>
+                ) : (
+                  <p className="mt-2 text-sm text-neutral-500 px-10 text-center">
+                    Cancellation is no longer possible. Please review our{' '}
+                    <button
+                      onClick={() => {
+                        const footer = document.getElementById("vuoiaggio-footer");
+                        footer?.scrollIntoView({ behavior: "smooth" });
+                      }}
+                      className="text-blue-600 hover:underline font-medium"
+                    >
+                      cancellation policy
+                    </button>
+                    .
+                  </p>
+                )}
+
               </div>
 
               {currentUser?.role === 'customer' && (

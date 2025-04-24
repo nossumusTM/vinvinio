@@ -312,9 +312,9 @@ const ListingClient: React.FC<ListingClientProps> = ({
                     <div>
 
                     {reviews.length > 0 && (
-                        <div className="mt-1 md:col-span-7 pt-10">
+                        <div className="mt-1 md:col-span-7 pt-2 md:pt-10">
                             {/* Overall Rating */}
-                            <div className="flex items-center gap-2 mb-4">
+                            <div className="flex items-center gap-2 mb-4 pl-2">
                                 {/* SVG Star with partial fill */}
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                                     <defs>
@@ -342,9 +342,9 @@ const ListingClient: React.FC<ListingClientProps> = ({
                             </div>
                             
                             {/* Individual Reviews */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                             {reviews.slice(0, 6).map((review, i) => (
-                                <div key={i} className="rounded-2xl p-6 shadow-md hover:shadow-lg">
+                                <div key={i} className="rounded-2xl p-6 shadow-md hover:shadow-lg transition">
                                 {/* Rating Stars */}
                                 <div className="flex gap-1 mb-2">
                                     {[1, 2, 3, 4, 5].map((star) => (
@@ -407,7 +407,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                                 onClick={() => setShowAllReviews(true)}
                                 className="text-sm underline text-neutral-600 hover:text-black"
                                 >
-                                Show all reviews
+                                Show all {reviews.length} reviews
                                 </button>
                             </div>
                             )}

@@ -76,6 +76,7 @@ const SearchExperience = () => {
   const locationLabel = useMemo(() => {
     const fallback = (
       <span className="flex items-center gap-2 mr-0 md:mr-5 whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
+
         <Image
           src="/flags/it.svg"
           alt="Italy"
@@ -83,6 +84,7 @@ const SearchExperience = () => {
           height={16}
           className="rounded-full object-cover"
         />
+
         <p className='ml-1 md:ml-0'>
           Rome, Italy
           </p>
@@ -146,7 +148,7 @@ const SearchExperience = () => {
     >
       <div className="flex flex-row items-center justify-between">
         {/* <div className="ml-2 text-sm font-medium px-1">{locationLabel}</div> */}
-        <div className="ml-2 text-sm font-medium px-1 max-w-[150px] truncate">{locationLabel}</div>
+        <div className="ml-2 text-sm font-medium px-1 max-w-[120px] md:max-w-[150px] truncate">{locationLabel}</div>
 
         <div className="hidden lg:block text-sm font-medium px-6 border-x-[1px] flex-1 text-center">
           {durationLabel}

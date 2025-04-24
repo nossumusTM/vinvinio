@@ -73,9 +73,9 @@ const ReviewsModal: React.FC<ReviewsModalProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.25 }}
-                className="w-full max-w-4xl bg-white rounded-3xl shadow-lg relative max-h-[70vh] overflow-y-auto p-6"
+                className="w-full max-w-4xl bg-white rounded-3xl shadow-lg relative max-h-[70vh] overflow-hidden flex flex-col"
               >
-                <div className="flex justify-between items-center border-b pb-4 mb-4">
+                <div className="flex justify-between items-center border-b pb-4 mb-4 p-6">
                   <div className="flex items-center gap-2">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                       <defs>
@@ -100,7 +100,8 @@ const ReviewsModal: React.FC<ReviewsModalProps> = ({
                   </button>
                 </div>
   
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex-1 overflow-y-auto scroll-smooth px-6 pb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
                   {reviews.map((review, i) => (
                     <div key={i} className="rounded-3xl p-4 shadow-md hover:shadow-lg">
                       <div className="flex gap-1 mb-2">
@@ -137,6 +138,11 @@ const ReviewsModal: React.FC<ReviewsModalProps> = ({
                     </div>
                   ))}
                 </div>
+                </div>
+                <div className="flex flex-col gap-2 p-8 border-t">
+                  <div className="flex justify-center w-full">
+                </div>
+              </div>
               </motion.div>
             )}
           </AnimatePresence>

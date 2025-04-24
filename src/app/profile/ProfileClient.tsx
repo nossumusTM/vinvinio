@@ -589,7 +589,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
               />
             ) : (
               <div className={twMerge(
-                "w-[100px] h-[100px] rounded-full flex items-center justify-center text-white font-medium text-3xl bg-black",
+                "w-[100px] h-[100px] rounded-full flex items-center justify-center text-white font-medium text-5xl bg-black",
               )}
               // style={{
               //   background: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
