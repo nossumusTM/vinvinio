@@ -31,7 +31,7 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
   const cancellationContent = (
     <div className="text-gray-700 text-sm space-y-5 leading-relaxed">
       <p>
-        Thank you for choosing to book your experience through <strong>Vuoiaggio</strong>, your trusted platform for unique local adventures and curated travel experiences. Our mission is to ensure every guest has a seamless and enriching journey. We understand that plans can change, and our cancellation policy is designed to be fair and transparent while respecting the time and effort of our hosts.
+        Thank you for choosing to book your experience through <strong>Vuola</strong>, your trusted platform for unique local adventures and curated travel experiences. Our mission is to ensure every guest has a seamless and enriching journey. We understand that plans can change, and our cancellation policy is designed to be fair and transparent while respecting the time and effort of our hosts.
       </p>
   
       <h3 className="text-base font-semibold mt-6">Cancellation Rules for Guests</h3>
@@ -80,15 +80,15 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
   const promotersGuideContent = (
     <div className="text-gray-700 text-sm space-y-5 leading-relaxed">
       <p>
-        Welcome to the <strong>Vuoiaggio Network Promoters Program</strong> — a unique opportunity for passionate individuals who want to grow with our global travel platform. Whether you&rsquo;re a content creator, travel enthusiast, digital marketer, or just someone who loves connecting people with amazing experiences, we invite you to become a part of our journey.
+        Welcome to the <strong>Vuola Network Promoters Program</strong> — a unique opportunity for passionate individuals who want to grow with our global travel platform. Whether you&rsquo;re a content creator, travel enthusiast, digital marketer, or just someone who loves connecting people with amazing experiences, we invite you to become a part of our journey.
       </p>
   
       <h3 className="text-base font-semibold mt-6">How to Become a Promoter</h3>
       <p>
-        If you&rsquo;re interested in joining our Promoters Program, simply send us an email at <a href="mailto:promoters@vuoiaggio.it" className="text-blue-600 underline">promoters@vuoiaggio.it</a>. Our team will review your request and provide you with access to your unique promoter dashboard, where you&rsquo;ll find your referral tools and track your earnings.
+        If you&rsquo;re interested in joining our Promoters Program, simply send us an email at <a href="mailto:promoters@Vuola.it" className="text-blue-600 underline">promoters@Vuola.it</a>. Our team will review your request and provide you with access to your unique promoter dashboard, where you&rsquo;ll find your referral tools and track your earnings.
       </p>
   
-      <h3 className="text-base font-semibold mt-6">Earning with Vuoiaggio</h3>
+      <h3 className="text-base font-semibold mt-6">Earning with Vuola</h3>
       <p>
         As a Promoter, you&rsquo;ll receive <strong>10% of the total revenue</strong> generated through bookings made using your referral ID. Your earnings are calculated monthly and based directly on the bookings confirmed through your shared links.
       </p>
@@ -108,7 +108,7 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
   
       <h3 className="text-base font-semibold mt-6">Need Assistance?</h3>
       <p>
-        Our support team is always here to help you succeed. For any questions regarding your account, referral tracking, or earnings, please reach out to us at <a href="mailto:promoters@vuoiaggio.it" className="text-blue-600 underline">promoters@vuoiaggio.it</a>.
+        Our support team is always here to help you succeed. For any questions regarding your account, referral tracking, or earnings, please reach out to us at <a href="mailto:promoters@Vuola.it" className="text-blue-600 underline">promoters@Vuola.it</a>.
       </p>
 
     </div>
@@ -117,7 +117,7 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
   const privacyPolicyContent = (
     <div className="text-gray-700 text-sm space-y-5 leading-relaxed">
       <p>
-        At <strong>Vuoiaggio Network Srls</strong>, we respect your privacy and are committed to protecting your personal data. This Privacy Policy explains how we collect, use, and safeguard your information when you interact with our platform and services.
+        At <strong>Vuola Network Srls</strong>, we respect your privacy and are committed to protecting your personal data. This Privacy Policy explains how we collect, use, and safeguard your information when you interact with our platform and services.
       </p>
   
       <h3 className="text-base font-semibold mt-6">1. Information We Collect</h3>
@@ -173,7 +173,7 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
   const termsContent = (
     <div className="text-gray-700 text-sm space-y-5 leading-relaxed">
       <p>
-        Welcome to <strong>Vuoiaggio Network Srls</strong>. By accessing or using our platform, you agree to comply with and be bound by the following Terms of Service. These terms apply to all users, including guests, promoters, and hosts.
+        Welcome to <strong>Vuola Network Srls</strong>. By accessing or using our platform, you agree to comply with and be bound by the following Terms of Service. These terms apply to all users, including guests, promoters, and hosts.
       </p>
   
       <h3 className="text-base font-semibold mt-6">1. Use of Our Services</h3>
@@ -198,12 +198,12 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
   
       <h3 className="text-base font-semibold mt-6">4. Intellectual Property</h3>
       <p>
-        All content on the platform — including logos, media, listings, and design — is owned or licensed by Vuoiaggio Network and protected by intellectual property laws. You may not copy, reproduce, or distribute our content without written consent.
+        All content on the platform — including logos, media, listings, and design — is owned or licensed by Vuola Network and protected by intellectual property laws. You may not copy, reproduce, or distribute our content without written consent.
       </p>
   
       <h3 className="text-base font-semibold mt-6">5. Limitation of Liability</h3>
       <p>
-        Vuoiaggio is not responsible for direct or indirect damages arising from the use of our services, including issues during travel or interactions between users. We act solely as a booking intermediary and do not control the conduct of hosts or guests.
+        Vuola is not responsible for direct or indirect damages arising from the use of our services, including issues during travel or interactions between users. We act solely as a booking intermediary and do not control the conduct of hosts or guests.
       </p>
   
       <h3 className="text-base font-semibold mt-6">6. Termination</h3>
@@ -226,7 +226,7 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
 
   return (
     <footer id="vuoiaggio-footer" className="bg-[#fcfcfc] text-gray-800 px-6 py-10">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-8 max-w-full px-0 md:px-20">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-8 max-w-full px-0 md:px-20">
         {/* Support Section */}
         <div className="flex flex-col justify-center">
           <h3 className="font-semibold text-3xl ml-1 mb-4">Support</h3>
@@ -296,13 +296,17 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
           </ul>
         </div>
 
+          <div>
+            <Newsletter />
+        </div>
+
         {/* Right side on desktop */}
-        <div className="flex flex-col justify-center sm:col-span-2 lg:col-span-1 items-start mt-0 sm:mt-5 md:mt-1 lg:mt-0 lg:items-start">
-          <div className='flex flex-col justify-center items-start'>
-          <h3 className="font-semibold text-6xl sm:text-5xl md:text-6xl lg:text-7xl mb-4 mt-2 md:mt-0 lg:mt-0 xl:mt-0 md:mt-1 lg:mt-3 xl:mt-3">
+        <div className="flex flex-col justify-center sm:col-span-2 lg:col-span-1 items-center mt-0 sm:mt-5 md:mt-1 lg:mt-0 lg:items-start">
+          <div className='flex flex-col justify-center items-center'>
+          {/* <h3 className="font-semibold text-6xl sm:text-5xl md:text-6xl lg:text-7xl mb-4 mt-2 md:mt-0 lg:mt-0 xl:mt-0 md:mt-1 lg:mt-3 xl:mt-3">
             Daily <br /> Routine  ོ
-          </h3>
-          <div className="flex space-x-4 text-xl">
+          </h3> */}
+          <div className="flex space-x-4 text-xl justify-center items-center">
             <div className="ml-0 md:ml-2 lg:ml-0">
               <a href="#"><FaTelegram size={40} className="hover:text-neutral-800 text-3xl transition" /></a>
             </div>
@@ -321,10 +325,6 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
           </div>
           </div>
         </div>
-
-          <div>
-            <Newsletter />
-        </div>
       </div>
 
       {/* Divider */}
@@ -334,7 +334,7 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
     <div className="flex flex-col md:flex-row justify-between items-center md:items-center text-center md:text-left gap-4 mt-8 w-full md:pl-10 md:ml-10">
     {/* Left side on desktop */}
     <div className="flex flex-col md:flex-row md:items-center md:space-x-4">
-        <p className="text-sm">&copy; 2025 Vuoiaggio Network Srls.</p>
+        <p className="text-sm">&copy; 2025 Vuola Network Srls.</p>
         <p className="text-sm">P.IVA 57483813574</p>
     </div>
     </div>

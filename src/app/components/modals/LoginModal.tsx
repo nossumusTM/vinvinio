@@ -153,7 +153,7 @@ const LoginModal = () => {
             
             <div className="
       text-neutral-800 text-center mt-4 font-light">
-                <p>New on <strong>Vuoiaggio</strong>?
+                <p>New on <strong>Vuola</strong>?
                     <span
                         onClick={onToggle}
                         className="

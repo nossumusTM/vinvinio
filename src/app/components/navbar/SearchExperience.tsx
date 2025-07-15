@@ -134,7 +134,8 @@ const SearchExperience = () => {
 
   return (
     <div
-      onClick={searchModal.onOpen}
+      // onClick={searchModal.onOpen}
+      onClick={searchModal.onClose}
       className="
         w-full 
         md:w-auto 

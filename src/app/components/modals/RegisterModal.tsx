@@ -73,7 +73,7 @@ const RegisterModal = () => {
 
         axios.post('/api/register', formData)
             .then(() => {
-                toast.success('Welcome to Vuoiaggio! Please sign in to start exploring.', {
+                toast.success('Welcome to Vuola! Please sign in to start exploring.', {
                     iconTheme: {
                         primary: 'linear-gradient(135deg, #3d08ff, #04aaff, #3604ff, #0066ff, #3d08ff)',
                         secondary: '#fff',

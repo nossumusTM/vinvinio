@@ -219,7 +219,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
             if (newWindow) {
               newWindow.document.write(`
                 <html>
-                  <head><title>Vuoiaggio Promo</title></head>
+                  <head><title>Vuola Promo</title></head>
                   <body style="margin:0;background:#fff;display:flex;align-items:center;justify-content:center;height:100vh;">
                     <img src="${mobilePreviewUrl}" style="max-width:100%;height:auto;" />
                   </body>
@@ -275,7 +275,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
           promoteModal.onClose();
         });
       }}
-      title="Vuoiaggio Passcode"
+      title="Vuola Passcode"
       actionLabel={isMobile ? "Close" : "Save Passcode"}
       disabled={false}
       body={bodyContent}

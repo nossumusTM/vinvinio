@@ -186,7 +186,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
               cursor-pointer
             "
           >
-            Vuoiaggio Passcode
+            Vuola Passcode
           </div>
         )}
 
@@ -324,7 +324,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                   <>
                     {/* Only render on mobile as MenuItems */}
                     <div className="md:hidden">
-                      <MenuItem label="Vuoiaggio Passcode" 
+                      <MenuItem label="Vuola Passcode" 
                         onClick={() => {
                           setIsOpen(false);
                           onPromote();

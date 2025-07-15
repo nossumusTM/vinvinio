@@ -340,7 +340,7 @@ const CheckoutPage = () => {
       
         await axios.post('/api/email/booking', {
           to: email,
-          subject: 'Your Vuoiaggio Booking Confirmation',
+          subject: 'Your Vuola Booking Confirmation',
           listingId,
           html: `
             <div style="font-family: 'Nunito', Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; overflow: hidden;">
@@ -351,7 +351,7 @@ const CheckoutPage = () => {
               ` : ''}
 
               <div style="padding: 24px;">
-                <img src="https://vuoiaggio.netlify.app/images/vuoiaggiologo.png" alt="Vuoiaggio Logo" style="width: 140px; margin: 24px auto 0; display: block;" />
+                <img src="https://vuoiaggio.netlify.app/images/vuoiaggiologo.png" alt="Vuola Logo" style="width: 140px; margin: 24px auto 0; display: block;" />
 
                 <p style="font-size: 16px; text-align: left; margin-bottom: 8px;">Gentile ${legalName},</p>
                 <p style="text-align: left; font-size: 14px; color: #555; margin-bottom: 20px;">
@@ -382,12 +382,6 @@ const CheckoutPage = () => {
                 <p style="margin: 0;">${city}, ${state}, ${zip} ${countryFlag} ${countryLabel}</p>
 
                 <p style="margin-top: 32px;">We look forward to hosting you, <br> <strong>${legalName}</strong>! ✨</p>
-
-                <p style="font-size: 13px; color: #888; margin-top: 40px;">Vuoiaggio Network Srls.</p>
-                <p style="font-size: 13px; color: #888;">P.IVA 57483813574</p>
-                <p style="font-size: 13px; color: #888;">Via Novacella 18, Rome, RM, Italy</p>
-                <p style="font-size: 13px; color: #888;">🇮🇹 +39 371 528 4911</p>
-                <p style="font-size: 13px; color: #888;">ciao@vuoiaggio.it</p>
               </div>
             </div>
           `,
@@ -571,6 +565,54 @@ const CheckoutPage = () => {
   //   checkUser();
   // }, []); 
  
+  // useEffect(() => {
+  //   if (!listingId || !isAuthenticated) return;
+  
+  //   const fetchSavedCard = async () => {
+  //     try {
+  //       const cardRes = await axios.get('/api/users/get-card');
+  //       const saved = cardRes.data;
+  
+  //       const CryptoJS = await import('crypto-js');
+  //       const key = process.env.CARD_SECRET_KEY;
+  //       if (!key) {
+  //         // console.warn('Missing CARD_SECRET_KEY');
+  //         return;
+  //       }
+  
+  //       const decrypt = (txt: string) =>
+  //         CryptoJS.AES.decrypt(txt, key).toString(CryptoJS.enc.Utf8);
+  //       const looksEncrypted = (str: string) =>
+  //         /^[A-Za-z0-9+/=]+$/.test(str) && str.length > 16;
+  
+  //       const rawNumber = looksEncrypted(saved.number) ? decrypt(saved.number) : saved.number;
+  //       const expiration = looksEncrypted(saved.expiration) ? decrypt(saved.expiration) : saved.expiration;
+  //       const cvv = looksEncrypted(saved.cvv) ? decrypt(saved.cvv) : saved.cvv;
+  
+  //       const formattedNumber = rawNumber
+  //         .replace(/\D/g, '')
+  //         .slice(0, 16)
+  //         .replace(/(.{4})/g, '$1 ')
+  //         .trim();
+  
+  //       setCardInfo((prev) => ({
+  //         ...prev,
+  //         method: 'card',
+  //         number: formattedNumber,
+  //         expiration,
+  //         cvv,
+  //       }));
+  
+  //       setCardType(detectCardType(formattedNumber));
+  //       setInvalidFields((prev) => prev.filter((field) => field !== 'number'));
+  //     } catch (err) {
+  //       console.error('❌ Failed to fetch saved card:', err);
+  //     }
+  //   };
+  
+  //   fetchSavedCard();
+  // }, [listingId, isAuthenticated]);
+
   useEffect(() => {
     if (!listingId || !isAuthenticated) return;
   
@@ -579,23 +621,9 @@ const CheckoutPage = () => {
         const cardRes = await axios.get('/api/users/get-card');
         const saved = cardRes.data;
   
-        const CryptoJS = await import('crypto-js');
-        const key = process.env.CARD_SECRET_KEY;
-        if (!key) {
-          // console.warn('Missing CARD_SECRET_KEY');
-          return;
-        }
+        if (!saved) return;
   
-        const decrypt = (txt: string) =>
-          CryptoJS.AES.decrypt(txt, key).toString(CryptoJS.enc.Utf8);
-        const looksEncrypted = (str: string) =>
-          /^[A-Za-z0-9+/=]+$/.test(str) && str.length > 16;
-  
-        const rawNumber = looksEncrypted(saved.number) ? decrypt(saved.number) : saved.number;
-        const expiration = looksEncrypted(saved.expiration) ? decrypt(saved.expiration) : saved.expiration;
-        const cvv = looksEncrypted(saved.cvv) ? decrypt(saved.cvv) : saved.cvv;
-  
-        const formattedNumber = rawNumber
+        const formattedNumber = saved.number
           .replace(/\D/g, '')
           .slice(0, 16)
           .replace(/(.{4})/g, '$1 ')
@@ -605,8 +633,6 @@ const CheckoutPage = () => {
           ...prev,
           method: 'card',
           number: formattedNumber,
-          expiration,
-          cvv,
         }));
   
         setCardType(detectCardType(formattedNumber));
@@ -617,7 +643,7 @@ const CheckoutPage = () => {
     };
   
     fetchSavedCard();
-  }, [listingId, isAuthenticated]);
+  }, [listingId, isAuthenticated]);  
 
   useEffect(() => {
     if (!listingId) return;

@@ -31,14 +31,14 @@ export async function POST(req: Request) {
     });
 
     const info = await transporter.sendMail({
-      from: `"Vuoiaggio Booking" <${process.env.EMAIL_USER}>`,
+      from: `"Vuola Booking" <${process.env.EMAIL_USER}>`,
       to: hostEmail,
-      subject: 'New Booking Received on Vuoiaggio',
+      subject: 'New Booking Received on Vuola',
       html: `
         <div style="font-family: 'Nunito', Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; overflow: hidden;">
           <link href="https://fonts.googleapis.com/css2?family=Nunito&display=swap" rel="stylesheet">
         <div style="font-family: 'Nunito', Arial, sans-serif; color: #333;">
-          <img src="https://vuoiaggio.netlify.app/images/vuoiaggiologo.png" alt="Vuoiaggio Logo" style="width: 140px; margin: 24px auto 0; display: block;" />
+          <img src="https://vuoiaggio.netlify.app/images/vuoiaggiologo.png" alt="Vuola Logo" style="width: 140px; margin: 24px auto 0; display: block;" />
 
           <div style="padding: 24px;">
             <p style="font-size: 16px; text-align: left; margin-bottom: 8px;">Dear ${hostName || 'Host'},</p>
@@ -64,13 +64,7 @@ export async function POST(req: Request) {
                 </a>
             </p>
 
-            <p style="margin-top: 32px;">Thanks for hosting with <strong>Vuoiaggio</strong>! ✨</p>
-
-            <p style="font-size: 13px; color: #888; margin-top: 40px;">Vuoiaggio Network Srls.</p>
-            <p style="font-size: 13px; color: #888;">P.IVA 57483813574</p>
-            <p style="font-size: 13px; color: #888;">Via Novacella 18, Rome, RM, Italy</p>
-            <p style="font-size: 13px; color: #888;">🇮🇹 +39 371 528 4911</p>
-            <p style="font-size: 13px; color: #888;">ciao@vuoiaggio.it</p>
+            <p style="margin-top: 32px;">Thanks for hosting with <strong>Vuola</strong>! ✨</p>
           </div>
         </div>
         </div>

@@ -42,7 +42,7 @@ export async function POST(
       });
 
       await transporter.sendMail({
-        from: `"Vuoiaggio Moderation" <${process.env.EMAIL_USER}>`,
+        from: `"Vuola Moderation" <${process.env.EMAIL_USER}>`,
         to: listing.user.email,
         subject: "🎉 Your Experience Listing Has Been Approved!",
         html: `
@@ -53,10 +53,10 @@ export async function POST(
               <h2 style="text-align: center;">Your Experience is Now Live! 🚀</h2>
               <p style="font-size: 16px;">Hi ${listing.user.name || "there"},</p>
               <p style="font-size: 14px; margin-bottom: 16px;">
-                Your listing <strong>${listing.title}</strong> has been approved and is now live on Vuoiaggio.
+                Your listing <strong>${listing.title}</strong> has been approved and is now live on Vuola.
               </p>
               <p style="font-size: 14px;">Guests can now discover and book your experience!</p>
-              <p style="margin-top: 32px;">Thank you for being part of the Vuoiaggio community! ✨</p>
+              <p style="margin-top: 32px;">Thank you for being part of the Vuola community! ✨</p>
 
               <p style="margin: 6px 0;"><strong>View your listing:</strong> 
                 <a href="https://vuoiaggio.it/listings/${listing.id}" 
@@ -67,10 +67,6 @@ export async function POST(
               </p>
 
               <hr style="margin-top: 40px;" />
-              <p style="font-size: 13px; color: #888;">Vuoiaggio Network Srls.</p>
-              <p style="font-size: 13px; color: #888;">Via Novacella 18, Rome, RM, Italy</p>
-              <p style="font-size: 13px; color: #888;">🇮🇹 +39 371 528 4911</p>
-              <p style="font-size: 13px; color: #888;">ciao@vuoiaggio.it</p>
             </div>
           </div>
         `,

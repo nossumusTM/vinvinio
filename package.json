@@ -60,6 +60,7 @@
     "react-sortablejs": "^6.1.4",
     "react-spinners": "^0.13.8",
     "recharts": "^2.15.3",
+    "sharp": "^0.34.3",
     "slick-carousel": "^1.8.1",
     "sortablejs": "^1.15.6",
     "stripe": "^17.7.0",

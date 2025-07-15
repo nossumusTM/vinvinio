@@ -93,6 +93,7 @@ export async function POST(request: Request) {
       data: {
         userId: fullListing.user.id,
         amount: totalPrice * 0.9,
+        totalBooks: 1,
         reservationId: reservation.id,
         role: Role.host,
       }
@@ -111,6 +112,7 @@ export async function POST(request: Request) {
           data: {
             userId: promoterUser.id,
             amount: promoterCut,
+            totalBooks: 1,
             reservationId: reservation.id,
             role: Role.promoter,
           }

@@ -38,6 +38,7 @@ interface ProfileClientProps {
 interface EarningsEntry {
   date: string;
   amount: number;
+  books?: number;
 }
 
 const getRandomColor = () => {
@@ -128,8 +129,6 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   const [cardType, setCardType] = useState('');
   const [cardInfo, setCardInfo] = useState<{
     number: string;
-    expiration: string;
-    cvv: string;
     name: string;
     address: string;
     apt: string;
@@ -140,8 +139,6 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
     country?: CountrySelectValue;
   }>({
     number: '',
-    expiration: '',
-    cvv: '',
     name: '',
     address: '',
     apt: '',
@@ -223,6 +220,11 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
       question: 'How do I save my payment card?',
       answer:
         'Click "Add Card" to enter your billing details. Your card number is encrypted before being stored in our database, ensuring maximum security. If you prefer not to save it, you can enter it at checkout — it won’t be stored on our platform.',
+    },
+    {
+      question: 'Do you collect CVV and expiration date?',
+      answer:
+        'No, for security reasons, we only collect and store your card number. CVV and expiration date are not collected or stored. This ensures your sensitive payment details stay safe while still allowing for faster checkout.',
     },
     {
       question: 'What withdrawal methods are supported?',
@@ -588,7 +590,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   
           if (subRes.ok) {
             setIsSubscribed(true);
-            console.log('✅ Auto-subscribed to Voyageletter');
+            console.log('✅ Auto-subscribed to Newsletter');
           } else {
             console.warn('⚠️ Auto-subscription failed');
           }
@@ -779,7 +781,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => setActiveSection(null)}
-                      className="text-sm text-black bg-neutral-100 hover:bg-neutral-200 rounded-full py-1 px-2 transition py-1 px-2 transition"
+                      className="text-sm text-black bg-transparent hover:bg-neutral-100 rounded-full py-1 px-2 transition py-1 px-2 transition"
                     >
                       ←
                     </button>
@@ -1084,7 +1086,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                     >
                       <button
                         className="text-neutral-700 hover:text-black transition"
-                        aria-label="Voyageletter info"
+                        aria-label="Newsletter info"
                       >
                         <FiInfo size={19} />
                       </button>
@@ -1098,7 +1100,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                             transition={{ duration: 0.2 }}
                             className="absolute left-0 mt-3 w-72 bg-white text-sm text-neutral-700 rounded-xl shadow-lg p-3 z-50"
                           >
-                            You’re joined to the Vuoiaggio Newsletter.
+                            You’re joined to the Vuola Newsletter.
                             <br />
                             Receive curated updates on unforgettable experiences — no spam, just <strong>inspiration</strong>.
                           </motion.div>
@@ -1106,7 +1108,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                       </AnimatePresence>
                     </div>
 
-                    <h3 className="text-lg font-semibold">Voyageletter</h3>
+                    <h3 className="text-lg font-semibold">Newsletter</h3>
                   </div>
 
                   {/* Right: Switch */}
@@ -1146,7 +1148,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => setActiveSection(null)}
-                      className="text-sm text-black bg-neutral-100 hover:bg-neutral-200 rounded-full py-1 px-2 transition"
+                      className="text-sm text-black bg-transparent hover:bg-neutral-100 rounded-full py-1 px-2 transition"
                     >
                       ←
                     </button>
@@ -1264,7 +1266,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => setActiveSection(null)}
-                    className="text-sm text-black bg-neutral-100 hover:bg-neutral-200 rounded-full py-1 px-2 transition"
+                    className="text-sm text-black bg-transparent hover:bg-neutral-100 rounded-full py-1 px-2 transition"
                   >
                     ←
                   </button>
@@ -1368,16 +1370,6 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                             **** **** **** {savedCard.number.slice(-4)}
                           </div>
 
-                          <div className="flex justify-between text-sm tracking-wider">
-                            <div>
-                              <p className="text-gray-400">Exp</p>
-                              <p className="font-semibold">**/*{savedCard.expiration?.slice(-1)}</p>
-                            </div>
-                            <div>
-                              <p className="text-gray-400">CVV</p>
-                              <p className="font-semibold">{savedCard.cvv?.[0]}**</p>
-                            </div>
-                          </div>
                         </div>
                       </div>
                     </div>
@@ -1406,13 +1398,24 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                         transition={{ duration: 0.25 }}
                         className="mt-4"
                       >
+                       <div className="relative w-full px-1">
                         <input
+                          id="coupon"
                           type="text"
                           value={couponCode}
                           onChange={(e) => setCouponCode(e.target.value)}
-                          placeholder="Enter your coupon code"
-                          className="w-full shadow-md p-2 rounded-lg"
+                          placeholder=" "
+                          className="peer w-full shadow-md border border-neutral-300 rounded-lg px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
                         />
+                        <label
+                          htmlFor="coupon"
+                          className="absolute left-4 top-3 text-base text-neutral-500 transition-all
+                            duration-200 ease-in-out peer-placeholder-shown:top-4 peer-placeholder-shown:text-base
+                            peer-placeholder-shown:text-neutral-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-black"
+                        >
+                          Enter your coupon code
+                        </label>
+                      </div>
                         <div className="flex gap-2 mt-5">
                           <button
                             className="bg-black text-white px-4 py-1 rounded-lg hover:bg-neutral-800 transition"
@@ -1781,7 +1784,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                   </div>
 
                   {/* Expiration & CVV */}
-                  <div className="flex gap-4 mb-4">
+                  {/* <div className="flex gap-4 mb-4">
                     <div className="relative w-1/2 px-1">
                       <input
                         type="text"
@@ -1828,7 +1831,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                         CVV
                       </label>
                     </div>
-                  </div>
+                  </div> */}
 
                   {/* Billing Address */}
                   <div className="space-y-4 mb-4">
@@ -1903,8 +1906,8 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
 
                         setSavedCard({
                           number: decrypt(cardRes.data.number),
-                          expiration: decrypt(cardRes.data.expiration),
-                          cvv: decrypt(cardRes.data.cvv),
+                          // expiration: decrypt(cardRes.data.expiration),
+                          // cvv: decrypt(cardRes.data.cvv),
                           name: decrypt(cardRes.data.name),
                         });
 

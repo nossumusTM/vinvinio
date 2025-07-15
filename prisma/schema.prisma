@@ -139,8 +139,6 @@ model Reservation {
 model Card {
   id         String  @id @default(auto()) @map("_id") @db.ObjectId
   number     String
-  expiration String
-  cvv        String
   name       String
   address    String
   apt        String?
@@ -250,6 +248,7 @@ model Earning {
   userId    String   @db.ObjectId // ✅ Must match User.id type
   user      User     @relation(fields: [userId], references: [id]) // ✅ Relation
   amount    Float
+  totalBooks Int?
   role      Role     @default(customer)
   createdAt DateTime @default(now())
 

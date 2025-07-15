@@ -90,34 +90,29 @@ export async function POST(req: Request) {
       });
 
       await transporter.sendMail({
-        from: `"Vuoiaggio Finance" <${process.env.EMAIL_USER}>`,
+        from: `"Vuola Finance" <${process.env.EMAIL_USER}>`,
         to: user.email,
         subject: '💸 Your referral earnings have been withdrawn',
         html: `
           <div style="font-family: 'Nunito', Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; overflow: hidden;">
             <link href="https://fonts.googleapis.com/css2?family=Nunito&display=swap" rel="stylesheet">
             <div style="padding: 24px;">
-              <img src="https://vuoiaggio.netlify.app/images/vuoiaggiologo.png" alt="Vuoiaggio Logo" style="width: 140px; margin: 0 auto 20px; display: block;" />
+              <img src="https://vuoiaggio.netlify.app/images/vuoiaggiologo.png" alt="Vuola Logo" style="width: 140px; margin: 0 auto 20px; display: block;" />
 
               <h2 style="text-align: center; color: #000;">Withdrawal Complete</h2>
               <p style="font-size: 16px;">Hi ${user.name || 'there'},</p>
 
               <p style="font-size: 14px; margin-bottom: 16px;">
-                🎉 We’ve successfully processed your referral earnings withdrawal on <strong>Vuoiaggio</strong>.
+                🎉 We’ve successfully processed your referral earnings withdrawal on <strong>Vuola</strong>.
               </p>
 
               <p style="font-size: 14px; margin-bottom: 12px;">Your totalBooks, qrScans, and totalRevenue counters have been reset.</p>
 
               <p style="font-size: 14px;">Thank you for promoting experiences with us! 🚀</p>
 
-              <p style="margin-top: 32px;">— Vuoiaggio Team</p>
+              <p style="margin-top: 32px;">— Vuola Team</p>
 
               <hr style="margin-top: 40px;" />
-              <p style="font-size: 13px; color: #888;">Vuoiaggio Network Srls.</p>
-              <p style="font-size: 13px; color: #888;">P.IVA 57483813574</p>
-              <p style="font-size: 13px; color: #888;">Via Novacella 18, Rome, RM, Italy</p>
-              <p style="font-size: 13px; color: #888;">🇮🇹 +39 371 528 4911</p>
-              <p style="font-size: 13px; color: #888;">ciao@vuoiaggio.it</p>
             </div>
           </div>
         `,

@@ -8,6 +8,7 @@ import { formatCurrency } from '@/app/utils/format';
 interface EarningsEntry {
   date: string; // ISO date or formatted date
   amount: number;
+  books?: number;
 }
 
 interface EarningsCardProps {
@@ -109,19 +110,30 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
                 {/* <YAxis tickFormatter={(val) => `€${val}`} /> */}
                 <YAxis tickFormatter={(val) => `€${val.toFixed(2)}`} />
                 <YAxis label={{ value: 'Income (€)', angle: -90, position: 'insideLeft' }} />
+                <YAxis yAxisId="left" tickFormatter={(val) => `€${val.toFixed(2)}`} />
+                <YAxis yAxisId="right" orientation="right" tickFormatter={(val) => `${val} books`} />
                 {/* <Tooltip
-                    formatter={(value: number) => [`€${value}`, 'Income']}
-                    labelFormatter={(label: string) => `Date: ${label}`}
-                    contentStyle={{ borderRadius: '10px', fontSize: '14px' }}
-                    cursor={{ stroke: '#3604ff', strokeWidth: 1 }}
+                  formatter={(value: number) => [`€${value.toFixed(2)}`, 'Income']}
+                  labelFormatter={(label: string) => `Date: ${label}`}
+                  contentStyle={{ borderRadius: '10px', fontSize: '14px' }}
+                  cursor={{ stroke: '#3604ff', strokeWidth: 1 }}
                 /> */}
                 <Tooltip
-                  formatter={(value: number) => [`€${value.toFixed(2)}`, 'Income']}
+                  formatter={(value: number, name: string, props: any) => {
+                    if (name === 'amount') {
+                      return [`€${value.toFixed(2)}`, 'Income'];
+                    }
+                    if (name === 'books') {
+                      return [`${value} ${value === 1 ? 'Booking' : 'Bookings'}`, 'Books'];
+                    }                    
+                    return [value, name];
+                  }}
                   labelFormatter={(label: string) => `Date: ${label}`}
                   contentStyle={{ borderRadius: '10px', fontSize: '14px' }}
                   cursor={{ stroke: '#3604ff', strokeWidth: 1 }}
                 />
                 <Line type="monotone" dataKey="amount" stroke="#3604ff" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="books" stroke="#00C49F" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>

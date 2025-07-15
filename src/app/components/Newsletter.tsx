@@ -49,7 +49,7 @@ const Newsletter = () => {
     <div className="w-full max-w-xl p-6 rounded-2xl bg-neutral-100 shadow-md relative">
         <MdMarkEmailUnread size={22} className="absolute top-4 right-4" />
 
-      <h3 className="text-2xl font-bold mb-2">Join Voyageletter</h3>
+      <h3 className="text-2xl font-bold mb-2">Catch the Breeze</h3>
       <span className="text-sm text-neutral-600 mb-4">
         Receive curated updates on unforgettable experiences — no spam, just <p className='text-5xl text-black font-semibold'>inspiration.</p>
       </span>
