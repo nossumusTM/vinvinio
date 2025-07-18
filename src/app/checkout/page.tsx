@@ -1222,7 +1222,7 @@ const CheckoutPage = () => {
 
               {/* Text block on the right, stacked vertically */}
               <div className="flex flex-col">
-                <p className="text-neutral-600 text-sm text-left">Hosted by</p>
+                <p className="text-neutral-600 text-sm text-left">Guided by</p>
                 <p className="text-neutral-700 text-lg font-bold text-left">
                   {listingData.user?.name || 'Anonymous'}
                 </p>

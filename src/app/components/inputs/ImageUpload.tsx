@@ -190,8 +190,8 @@ import { TbPhotoPlus } from 'react-icons/tb';
 import Sortable from 'sortablejs';
 import toast from 'react-hot-toast';
 
-const uploadPreset = 'lvnuxui';
-const cloudName = 'dp5oki1jq';
+const uploadPreset = 'vuolapreset';
+const cloudName = 'dlomv0hbe';
 
 interface ImageUploadProps {
   onChange: (value: string[]) => void;

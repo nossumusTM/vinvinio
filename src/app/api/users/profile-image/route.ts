@@ -17,12 +17,22 @@ export async function PUT(request: Request) {
   }
 
   // ✅ Upload base64 to Cloudinary and get back URL
-  if (image.startsWith('data:image/')) {
-    try {
-      image = await uploadImageToCloudinary(image);
-    } catch (err) {
-      return new NextResponse("Image upload failed", { status: 500 });
-    }
+  // if (image.startsWith('data:image/')) {
+  //   try {
+  //     image = await uploadImageToCloudinary(image);
+  //   } catch (err) {
+  //     return new NextResponse("Image upload failed", { status: 500 });
+  //   }
+  // }
+  // Ensure base64 string has correct prefix before uploading to Cloudinary
+  if (!image.startsWith('data:image/')) {
+    image = `data:image/jpeg;base64,${image}`;
+  }
+
+  try {
+    image = await uploadImageToCloudinary(image);
+  } catch (err) {
+    return new NextResponse("Image upload failed", { status: 500 });
   }
 
   // ✅ Save image URL to database

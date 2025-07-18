@@ -1,7 +1,7 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
-import { useMemo } from 'react';
+import { useSearchParams, usePathname } from 'next/navigation';
+import { useMemo, useEffect, useState } from 'react';
 import { BiSearch } from 'react-icons/bi';
 import { differenceInDays } from 'date-fns';
 import Image from 'next/image';
@@ -12,13 +12,17 @@ import useSearchExperienceModal from '@/app/hooks/useSearchExperienceModal';
 
 const SearchExperience = () => {
   const searchModal = useSearchExperienceModal();
-  const params = useSearchParams();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  // const params = useSearchParams();
   const { getByValue } = useCountries();
 
-  const locationValue = params?.get('locationValue');
-  const startDate = params?.get('startDate');
-  const endDate = params?.get('endDate');
-  const guestCount = params?.get('guestCount');
+  const locationValue = searchParams?.get('locationValue');
+  const startDate = searchParams?.get('startDate');
+  const endDate = searchParams?.get('endDate');
+  // const guestCount = params?.get('guestCount');
+
+  const [guestCount, setGuestCount] = useState<string | null>(null);
 
   // const locationLabel = useMemo(() => {
   //   const location = locationValue ? getByValue(locationValue) : null;
@@ -73,16 +77,20 @@ const SearchExperience = () => {
   //   }    
   // }, [location]);
 
+  useEffect(() => {
+    setGuestCount(searchParams?.get('guests') ?? null);
+  }, [searchParams, pathname]);
+
   const locationLabel = useMemo(() => {
     const fallback = (
-      <span className="flex items-center gap-2 mr-0 md:mr-5 whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
+      <span className="flex items-center justify-center gap-2 mr-0 md:mr-5 whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
 
         <Image
           src="/flags/it.svg"
           alt="Italy"
-          width={24}
-          height={16}
-          className="rounded-full object-cover"
+          width={16}
+          height={8}
+          className="rounded-full object-cover rotate-45"
         />
 
         <p className='ml-1 md:ml-0'>
