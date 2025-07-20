@@ -19,7 +19,7 @@ const ListingPage = async () => {
             <ClientOnly>
                 <div className="flex flex-col justify-center items-center">
                     <EmptyStateFavorites
-                    title="Nothing Saved Yet :)"
+                    title="Wishlist currently empty"
                     subtitle="Navigate and keep inspiring experiences"
                     />
                     <a

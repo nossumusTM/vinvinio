@@ -36,22 +36,22 @@ const Logo = () => {
     <div onClick={() => router.push('/')} className="cursor-pointer">
       {/* Desktop Logo (shown on md and up) */}
       <Image
-        src="/images/vuolalogo1.png"
+        src="/images/vuoiaggiologo.png"
         alt="Vuola Logo Desktop"
-        width={150}
-        height={150}
+        width={40}
+        height={40}
         priority
         className="hidden md:block"
       />
 
       {/* Mobile Logo (shown below md breakpoint) */}
       <Image
-        src="/images/vuola-logo-mobile1.png"
+        src="/images/vuoiaggiologo.png"
         alt="Vuola Logo Mobile"
-        width={90}
-        height={90}
+        width={40}
+        height={40}
         priority
-        className="block md:hidden mr-2"
+        className="block md:hidden mr-1"
       />
     </div>
   );

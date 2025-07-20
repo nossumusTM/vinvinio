@@ -29,7 +29,7 @@ const TripsPage = async () => {
             <ClientOnly>
                 <div className="flex flex-col justify-center items-center">
                 <EmptyStateFavorites
-                    title="No Experiences Booked"
+                    title="No appointments scheduled"
                     subtitle="Start exploring to create unforgettable memories"
                     />
                     <a
