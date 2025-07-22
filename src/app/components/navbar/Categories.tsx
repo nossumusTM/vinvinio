@@ -11,6 +11,7 @@ import { LuShoppingBag } from "react-icons/lu";
 import { MdOutlineTour } from "react-icons/md";
 import { FaPhotoFilm } from "react-icons/fa6";
 import { HiOutlineShoppingBag } from "react-icons/hi";
+
 import { SiArtixlinux } from "react-icons/si";
 import {
     GiBarn,
@@ -30,7 +31,7 @@ import { MdOutlineVilla } from 'react-icons/md';
 import CategoryBox from "../CategoryBox";
 import Container from '../Container';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { LuChevronUp } from 'react-icons/lu';
 
 export const categories = [
@@ -142,6 +143,19 @@ const Categories = () => {
     const pathname = usePathname();
     const isMainPage = pathname === '/';
     const [visible, setVisible] = useState(true);
+    const [prevScrollPos, setPrevScrollPos] = useState(0);
+
+    useEffect(() => {
+      const handleScroll = () => {
+        const currentScroll = window.scrollY;
+
+        setVisible(prevScrollPos > currentScroll || currentScroll < 5);
+        setPrevScrollPos(currentScroll);
+      };
+
+      window.addEventListener('scroll', handleScroll);
+      return () => window.removeEventListener('scroll', handleScroll);
+    }, [prevScrollPos]);
 
     if (!isMainPage) {
         return null;

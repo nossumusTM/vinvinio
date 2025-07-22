@@ -13,6 +13,8 @@ import { FaRegFaceSmileBeam } from "react-icons/fa6";
 import { FaPiedPiperHat } from "react-icons/fa";
 import { GiPointyHat } from "react-icons/gi";
 import { GiRobinHoodHat } from "react-icons/gi";
+import { RiUserHeartFill } from "react-icons/ri";
+import { GiExtraTime } from "react-icons/gi";
 import LocationDescription from '../LocationDescription';
 
 import { useEffect, useState } from "react";
@@ -108,7 +110,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                     >
                     <div className="flex items-center gap-2 pt-2">
                     <Avatar src={user?.image} name={user?.name} size={55}/>
-                    <div className="flex flex-row justify-start gap-2 font-normal">Guided by 
+                    <div className="flex text-sm flex-row justify-start gap-2 font-normal">Guided by 
                         <div className="font-semibold border-b border-neutral-500">
                         {user?.name}
                         </div>
@@ -163,13 +165,13 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                 <div className="p-5 flex flex-col gap-4 text-left pt-5">
                 {/* Guest Count */}
                 <div className="flex flex-row gap-3 items-start">
-                    <GiRobinHoodHat className="text-neutral-600 mt-1 w-8 h-8 md:w-[40px] md:h-[40px]" />
+                    <RiUserHeartFill className="text-neutral-600 mt-1 w-8 h-8 md:w-[30px] md:h-[30px]" />
                     <div>
-                    <p className="text-xl font-medium text-black">
+                    <p className="text-lg font-medium text-black">
                         Up to {guestCount} guest{guestCount > 1 ? 's' : ''}
                     </p>
                     <p className="text-sm text-neutral-600">
-                        {hostName} can welcome a group of up to {guestCount} people.
+                        {hostName} can welcome a group of up to {guestCount} {guestCount === 1 ? 'traveller' : 'travellers'}.
                     </p>
                     </div>
                 </div>
@@ -179,11 +181,11 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                     <div className="flex flex-row gap-3 items-start">
                     <BsTranslate size={30} className="text-neutral-600 mt-1" />
                     <div>
-                        <p className="text-xl font-medium text-black">
+                        <p className="text-lg font-medium text-black">
                         {languages.join(', ')}
                         </p>
                         <p className="text-sm text-neutral-600">
-                        {hostName} speaks these languages to make your experience comfortable.
+                        {hostName} offers these languages to make your experience comfortable.
                         </p>
                     </div>
                     </div>
@@ -192,9 +194,9 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                 {/* Experience Duration */}
                 {experienceHour && (
                     <div className="flex flex-row gap-3 items-start">
-                    <GrCycle size={30} className="text-neutral-600 mt-1" />
+                    <GiExtraTime size={30} className="text-neutral-600 mt-1" />
                     <div>
-                        <p className="text-xl font-medium text-black">
+                        <p className="text-lg font-medium text-black">
                         {experienceHour} hour{experienceHour > 1 ? 's' : ''}
                         </p>
                         <p className="text-sm text-neutral-600">

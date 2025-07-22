@@ -29,7 +29,7 @@ import Footer from './components/Footer';
 import SessionProviderWrapper from './providers/SessionProviderWrapper';
 
 export const metadata = {
-  title: 'Vuola | Wanna Go? Let\'s Go!',
+  title: 'Vuola - Wanna Go? Let\'s Go!',
   description: 'Wanna Go? Let\'s Go!',
   icons: {
     icon: '/favicon.ico', // ✅ tells Next.js where to find it

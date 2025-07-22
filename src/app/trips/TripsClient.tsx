@@ -269,7 +269,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
     <Container>
       <div className="pl-4 pt-4 md:pt-6">
       <Heading
-        title="Booked Voyages"
+        title="Appointments"
         subtitle="Tracing your steps — behind and ahead"
       />
       </div>
@@ -387,9 +387,9 @@ const TripsClient: React.FC<TripsClientProps> = ({
 
                       messenger.openChat(recipient);
                     }}
-                    className="text-sm text-neutral-700 hover:underline hover:text-black transition"
+                    className="text-sm text-neutral-700 underline hover:text-black transition"
                   >
-                    Message {hostName}
+                    Say Ciao to {hostName}
                   </button>
                 </div>
 

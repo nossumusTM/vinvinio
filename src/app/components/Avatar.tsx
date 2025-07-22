@@ -25,7 +25,7 @@ const Avatar: React.FC<AvatarProps> = ({ src, name = 'U', size = 40 }) => {
       alt={name || 'Avatar'}
       width={size}
       height={size}
-      className="rounded-full object-cover"
+      className="rounded-full object-cover border-b"
     />
   ) : (
     <div

@@ -98,17 +98,17 @@ const NavBar: React.FC<NavBarProps> = ({ currentUser }) => {
   const [prevScrollPos, setPrevScrollPos] = useState(0);
   const [visible, setVisible] = useState(true);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScroll = window.scrollY;
+  // useEffect(() => {
+  //   const handleScroll = () => {
+  //     const currentScroll = window.scrollY;
 
-      setVisible(prevScrollPos > currentScroll || currentScroll < 5);
-      setPrevScrollPos(currentScroll);
-    };
+  //     setVisible(prevScrollPos > currentScroll || currentScroll < 5);
+  //     setPrevScrollPos(currentScroll);
+  //   };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [prevScrollPos]);
+  //   window.addEventListener('scroll', handleScroll);
+  //   return () => window.removeEventListener('scroll', handleScroll);
+  // }, [prevScrollPos]);
 
   return (
     <div

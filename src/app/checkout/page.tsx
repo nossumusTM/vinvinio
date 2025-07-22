@@ -359,7 +359,7 @@ const CheckoutPage = () => {
                 </p>
 
                 <div style="background: #f3f4f6; padding: 16px 20px; border-radius: 12px; margin-bottom: 24px;">
-                  <p style="margin: 6px 0;"><strong>Experience:</strong> ${listingData?.title}</p>
+                  <p style="margin: 6px 0;"><strong>Activity:</strong> ${listingData?.title}</p>
                   <p style="margin: 6px 0;"><strong>Date:</strong> ${formattedDateTime}</p>
                   <p style="margin: 6px 0;"><strong>Guests:</strong> ${guests}</p>
                   <p style="margin: 6px 0;"><strong>Total:</strong> €${total}</p>

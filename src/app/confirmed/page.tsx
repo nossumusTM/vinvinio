@@ -186,7 +186,7 @@ const BookingConfirmed = () => {
 
         {listing && (
           <>
-            {averageRating && reviewCount && (
+            {averageRating && reviewCount && parseInt(reviewCount) > 0 && (
                 <div className="flex items-center gap-2 mt-2">
                     {/* SVG Star with gradient fill */}
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
