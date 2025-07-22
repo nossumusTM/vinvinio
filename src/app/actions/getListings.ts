@@ -97,6 +97,7 @@ export default async function getListings(params: IListingsParams) {
       //   createdAt: "desc",
       // },
       include: {
+        user: true,
         reviews: true, // include related reviews
       },
       skip: params.skip ?? 0,
@@ -116,6 +117,12 @@ export default async function getListings(params: IListingsParams) {
         ...listing,
         createdAt: listing.createdAt.toISOString(),
         avgRating,
+        user: {
+          ...listing.user,
+          createdAt: listing.user.createdAt.toISOString(),
+          updatedAt: listing.user.updatedAt.toISOString(),
+          emailVerified: listing.user.emailVerified?.toISOString() || null,
+        },
       };
     });
 

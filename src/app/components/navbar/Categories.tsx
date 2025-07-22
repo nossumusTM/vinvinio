@@ -11,7 +11,7 @@ import { LuShoppingBag } from "react-icons/lu";
 import { MdOutlineTour } from "react-icons/md";
 import { FaPhotoFilm } from "react-icons/fa6";
 import { HiOutlineShoppingBag } from "react-icons/hi";
-
+import { MdOutlineMonochromePhotos } from "react-icons/md";
 import { SiArtixlinux } from "react-icons/si";
 import {
     GiBarn,
@@ -42,7 +42,7 @@ export const categories = [
     },
     {
         label: 'Photo Muse',
-        icon: FaPhotoFilm,
+        icon: MdOutlineMonochromePhotos,
         description: 'Capture the timeless beauty of one of the most iconic landmarks'
     },
     {
@@ -149,7 +149,7 @@ const Categories = () => {
       const handleScroll = () => {
         const currentScroll = window.scrollY;
 
-        setVisible(prevScrollPos > currentScroll || currentScroll < 5);
+        setVisible(prevScrollPos > currentScroll || currentScroll < 100);
         setPrevScrollPos(currentScroll);
       };
 

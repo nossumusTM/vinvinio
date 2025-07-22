@@ -223,7 +223,7 @@ const BookingConfirmed = () => {
 
             {categoryLabel && (
                   <p className="text-sm text-neutral-500 mt-1">
-                    Experience: <span className="font-normal text-black">{categoryLabel}</span>
+                    Activity: <span className="font-normal text-black">{categoryLabel}</span>
                   </p>
                   )}
 

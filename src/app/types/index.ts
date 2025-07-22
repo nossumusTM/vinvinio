@@ -8,7 +8,7 @@ export type SafeListing = Omit<Listing, "createdAt"> & {
   languages: string[]; // Assuming this is non-null in your DB
   locationType: string[]; // Assuming this is non-null in your DB
   locationDescription: string | null;
-  user?: SafeUser;
+  user: SafeUser;
 };
 
 export type SafeReservation = Omit<

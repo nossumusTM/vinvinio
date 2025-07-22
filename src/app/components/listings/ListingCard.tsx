@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useEffect, useState, useRef } from "react";
+import Avatar from "../Avatar";
 import { format } from 'date-fns';
 
 import {
@@ -14,8 +15,18 @@ import {
 import HeartButton from "../HeartButton";
 import Button from "../Button";
 
+// interface ListingCardProps {
+//   data: SafeListing;
+//   reservation?: SafeReservation;
+//   onAction?: (id: string) => void;
+//   disabled?: boolean;
+//   actionLabel?: string;
+//   actionId?: string;
+//   currentUser?: SafeUser | null;
+// };
+
 interface ListingCardProps {
-  data: SafeListing;
+  data: SafeListing & { user: SafeUser }; // 👈 Add `user` to data
   reservation?: SafeReservation;
   onAction?: (id: string) => void;
   disabled?: boolean;
@@ -233,11 +244,22 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
         <div className="font-semibold text-lg">{data.title}</div>
 
-        <div className="font-light text-neutral-500">
-          {reservationDate || data.category}
+        <div className="font-normal text-neutral-500">
+          {reservationDate || "— " + data.category}
         </div>
 
-        <div className="flex flex-row items-center gap-1">
+        {data.user && (
+          <div className="flex items-center gap-2 pt-2">
+            <Avatar src={data.user.image} name={data.user.name} size={40} />
+            <div className="flex text-sm flex-row justify-start gap-2 font-normal">
+              <div className="font-semibold border-b border-neutral-500">
+                {data.user.name}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="flex flex-row items-center gap-1 ml-3">
           <div className="font-semibold">€ {price}</div>
           {!reservation && <div className="font-light">/ person</div>}
         </div>
