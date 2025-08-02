@@ -334,8 +334,8 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
     <div className="flex flex-col md:flex-row justify-between items-center md:items-center text-center md:text-left gap-4 mt-8 w-full md:pl-10 md:ml-10">
     {/* Left side on desktop */}
     <div className="flex flex-col md:flex-row md:items-center md:space-x-4">
-        <p className="text-sm">&copy; 2025 Vuola Network Srls.</p>
-        <p className="text-sm">P.IVA 57483813574</p>
+        <p className="text-sm">&copy; 2025 Vuola Travel Network.</p>
+        <p className="text-sm">P.IVA 16694941003</p>
     </div>
     </div>
 

@@ -94,7 +94,7 @@ const SearchExperience = () => {
         />
 
         <p className='ml-1 md:ml-0'>
-          Rome, Italy
+          Rome, Lazio, Italy
           </p>
       </span>
     );
@@ -157,7 +157,7 @@ const SearchExperience = () => {
     >
       <div className="flex flex-row items-center justify-between">
         {/* <div className="ml-2 text-sm font-medium px-1">{locationLabel}</div> */}
-        <div className="ml-2 text-sm font-medium px-1 max-w-[120px] md:max-w-[150px] truncate">{locationLabel}</div>
+        <div className="ml-2 text-sm font-medium px-1 max-w-[150px] md:max-w-[200px] truncate">{locationLabel}</div>
 
         <div className="hidden lg:block text-sm font-medium px-6 border-x-[1px] flex-1 text-center">
           {durationLabel}

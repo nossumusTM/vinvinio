@@ -162,7 +162,7 @@ const ListingHead: React.FC<ListingHeadProps> = ({
           </div>
       )}
 
-      <p className='font-normal underline mt-1'>
+      <p className='font-normal mt-1 bg-neutral-100 rounded-full px-2 py-1'>
       <span>
           {location
             ? 'city' in location

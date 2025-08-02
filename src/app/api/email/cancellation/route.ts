@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     });
 
     await transporter.sendMail({
-      from: `"Vuola Network Srls." <${process.env.EMAIL_USER}>`,
+      from: `"Vuola Travel Network." <${process.env.EMAIL_USER}>`,
       to,
       subject,
       text: bodyText, // plain text fallback

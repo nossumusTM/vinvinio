@@ -183,7 +183,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
         e.stopPropagation();
         setIsHovered(false);
       }}      
-      className="col-span-1 cursor-pointer group pl-5 pr-5 p-5 shadow-md hover:shadow-lg transition-shadow duration-300 rounded-2xl"
+      className="col-span-1 cursor-pointer group pl-10 pr-10 p-10 shadow-md hover:shadow-lg transition-shadow duration-300 rounded-2xl"
     >
       <div className="flex flex-col gap-2 w-full">
       <div

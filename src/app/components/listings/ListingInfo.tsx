@@ -6,6 +6,8 @@ import Heading from "../Heading";
 
 import { TbUserCheck, TbClockPlay, TbLanguage, TbPointerPin } from "react-icons/tb";
 import { PiHandPointing } from "react-icons/pi";
+import { GiImpactPoint } from "react-icons/gi";
+import { SiPointy } from "react-icons/si";
 import { FaPeopleGroup } from "react-icons/fa6";
 import { BsTranslate } from "react-icons/bs";
 import { GrCycle } from "react-icons/gr";
@@ -244,7 +246,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
             )}
             <hr className="mb-5"/>
 
-            <div className="ml-4">
+            <div className="ml-0">
                 <Heading title="About experience" />
                 <div className="mr-2 px-4 py-5 text-md md:p-5 text-neutral-600 text-justify whitespace-pre-line">
                 {description}
@@ -253,15 +255,16 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
             
             <hr className="mb-2"/>
 
-            <div className="flex flex-row gap-0 items-center">
-
-            <div className="pt-2 ml-5">
-                <PiHandPointing size={24}/>
-            </div>
+            <div className="flex flex-row gap-2 items-center justify-center rounded-full px-2 py-1 text-black-500">
+                <div className="pt-2 relative">
+                    <span className="absolute inline-flex h-4 w-4 rounded-full bg-neutral-300 opacity-75 animate-ping"></span>
+                    <span className="relative mb-1 inline-flex rounded-full h-4 w-4 bg-neutral-100 shadow-md"></span>
+                </div>
+                <h2 className="text-lg font-normal text-neutral-700">Meeting point </h2>
 
                 {meetingPoint && (
-                <p className="text-lg text-neutral-600 mt-2 ml-1 text-center">
-                    Meeting Point: <strong>{meetingPoint}</strong>
+                <p className="text-lg text-neutral-800 text-center underline">
+                    <strong>{meetingPoint}</strong>
                 </p>
                 )}
             </div>

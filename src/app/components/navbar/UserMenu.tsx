@@ -208,7 +208,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
     transition
   "
 >
-  <AiOutlineMenu />
+  <AiOutlineMenu strokeWidth={4}/>
 
   {/* Avatar visible only on md+ screens */}
   <div className="hidden md:block shadow-xl rounded-full">

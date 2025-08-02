@@ -145,17 +145,37 @@ const Categories = () => {
     const [visible, setVisible] = useState(true);
     const [prevScrollPos, setPrevScrollPos] = useState(0);
 
+    // useEffect(() => {
+    //   const handleScroll = () => {
+    //     const currentScroll = window.scrollY;
+
+    //     setVisible(prevScrollPos > currentScroll || currentScroll < 100);
+    //     setPrevScrollPos(currentScroll);
+    //   };
+
+    //   window.addEventListener('scroll', handleScroll);
+    //   return () => window.removeEventListener('scroll', handleScroll);
+    // }, [prevScrollPos]);
+
     useEffect(() => {
+      let ticking = false;
+
       const handleScroll = () => {
         const currentScroll = window.scrollY;
 
-        setVisible(prevScrollPos > currentScroll || currentScroll < 100);
-        setPrevScrollPos(currentScroll);
+        if (!ticking) {
+          window.requestAnimationFrame(() => {
+            setVisible((prev) => currentScroll < 100 || currentScroll < prevScrollPos);
+            setPrevScrollPos(currentScroll);
+            ticking = false;
+          });
+          ticking = true;
+        }
       };
 
-      window.addEventListener('scroll', handleScroll);
+      window.addEventListener('scroll', handleScroll, { passive: true });
       return () => window.removeEventListener('scroll', handleScroll);
-    }, [prevScrollPos]);
+    }, []);
 
     if (!isMainPage) {
         return null;
