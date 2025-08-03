@@ -135,7 +135,7 @@ const ListingHead: React.FC<ListingHeadProps> = ({
       <div className='flex flex-row gap-2 items-center'>
 
       {reviews.length > 0 && (
-       <div className="mt-1 md:col-span-7">
+       <div className="md:col-span-7">
           {/* Overall Rating */}
           <div className="flex items-center gap-2">
               {/* SVG Star with partial fill */}
@@ -162,7 +162,7 @@ const ListingHead: React.FC<ListingHeadProps> = ({
           </div>
       )}
 
-      <p className='font-normal mt-1 bg-neutral-100 rounded-full px-2 py-1'>
+      <p className='font-semibold text-xs mt-1 bg-neutral-100 rounded-full px-2 py-1'>
       <span>
           {location
             ? 'city' in location
@@ -207,6 +207,7 @@ const ListingHead: React.FC<ListingHeadProps> = ({
           {/* Main icon */}
           <TbShare2
             size={24}
+            strokeWidth={0}
             className="text-neutral-500/70"
           />
         </div>

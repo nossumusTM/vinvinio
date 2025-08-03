@@ -94,7 +94,7 @@ const SearchExperience = () => {
         />
 
         <p className='ml-1 md:ml-0'>
-          Rome, Lazio, Italy
+          Rome, Lazio
           </p>
       </span>
     );

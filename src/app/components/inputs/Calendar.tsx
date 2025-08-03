@@ -151,7 +151,7 @@ const Calendar: React.FC<CalendarProps> = ({
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-1">
       <DatePicker
         date={value.startDate}
         onChange={handleSelect}
@@ -200,7 +200,7 @@ const Calendar: React.FC<CalendarProps> = ({
           })}
         </select> */}
 
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-5 gap-2">
   {availableTimes.map((time) => {
     const isBooked = bookedTimesForDate.includes(time);
     const isToday = selectedDateKey === format(new Date(), 'yyyy-MM-dd');

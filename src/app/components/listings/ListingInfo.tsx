@@ -247,7 +247,9 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
             <hr className="mb-5"/>
 
             <div className="ml-0">
+                <div className="ml-4">
                 <Heading title="About experience" />
+                </div>
                 <div className="mr-2 px-4 py-5 text-md md:p-5 text-neutral-600 text-justify whitespace-pre-line">
                 {description}
                 </div>
@@ -255,19 +257,25 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
             
             <hr className="mb-2"/>
 
-            <div className="flex flex-row gap-2 items-center justify-center rounded-full px-2 py-1 text-black-500">
-                <div className="pt-2 relative">
+        <div className="flex flex-col gap-1">
+            <div className="ml-4">
+                <Heading title="Experience starts" />
+                </div>
+
+            <div className="ml-4 flex flex-row gap-3 items-center rounded-full px-2 text-black-500">
+                
+                <div className="mt-2 relative">
                     <span className="absolute inline-flex h-4 w-4 rounded-full bg-neutral-300 opacity-75 animate-ping"></span>
                     <span className="relative mb-1 inline-flex rounded-full h-4 w-4 bg-neutral-100 shadow-md"></span>
                 </div>
-                <h2 className="text-lg font-normal text-neutral-700">Meeting point </h2>
 
                 {meetingPoint && (
-                <p className="text-lg text-neutral-800 text-center underline">
-                    <strong>{meetingPoint}</strong>
+                <p className="text-sm rounded-full bg-neutral-100 inline p-3 text-neutral-800 ">
+                    {meetingPoint}
                 </p>
                 )}
             </div>
+        </div>
 
             {/* <Map key={coordinates?.join(',') || 'default'} center={coordinates} /> */}
             <div className="p-2 md:p-0 md:px-4">

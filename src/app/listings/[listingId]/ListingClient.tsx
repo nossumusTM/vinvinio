@@ -9,6 +9,7 @@ import { differenceInDays, eachDayOfInterval } from 'date-fns';
 import useMessenger from "@/app/hooks/useMessager";
 import Button from "@/app/components/Button";
 export const dynamic = 'force-dynamic';
+import Heading from "@/app/components/Heading";
 
 import { format } from 'date-fns';
 
@@ -312,8 +313,14 @@ const ListingClient: React.FC<ListingClientProps> = ({
                     </div>
                     <div>
 
+                    <hr />
+
+                    <div className="ml-2 mt-10">
+                        <Heading title="Stories from the Guestbook" />
+                        </div>
+
                     {reviews.length > 0 && (
-                        <div className="mt-1 md:col-span-7 pt-2 md:pt-10">
+                        <div className="mt-1 md:col-span-7">
                             {/* Overall Rating */}
                             <div className="flex items-center gap-2 mb-4 pl-2">
                                 {/* SVG Star with partial fill */}
@@ -338,8 +345,8 @@ const ListingClient: React.FC<ListingClientProps> = ({
                                 </span>
                             </div>
 
-                            <div className="pt-2 pb-8">
-                                <hr />
+                            <div className="pt-2 pb-2">
+                                {/* <hr /> */}
                             </div>
                             
                             {/* Individual Reviews */}

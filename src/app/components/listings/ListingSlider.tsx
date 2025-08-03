@@ -5,7 +5,7 @@ import ListingCard from "@/app/components/listings/ListingCard";
 
 const sliderSettings = {
   // dots: true,
-  infinite: true,
+  infinite: false,
   speed: 500,
   autoplay: true,
   autoplaySpeed: 3000,
@@ -30,7 +30,7 @@ const sliderSettings = {
 
 const ListingSlider = ({ listings, currentUser }: { listings: any[], currentUser: any }) => {
   return (
-    <div className="w-full md:w-screen md:px-20 h-[600px] overflow-hidden">
+    <div className="w-full md:w-screen md:px-20 overflow-hidden">
       <Slider {...sliderSettings}>
         {listings.map((listing) => (
           <div key={listing.id} className="p-4">
