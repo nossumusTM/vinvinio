@@ -232,7 +232,7 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
           <h3 className="font-semibold text-3xl ml-1 mb-4">Support</h3>
           <ul className="space-y-2">
           <li>
-            <button onClick={() => setIsCancellationOpen(true)} className="hover:bg-neutral-100 p-1 rounded-xl px-2 transition">
+            <button onClick={() => setIsCancellationOpen(true)} className="hover:bg-[#f0f8ff] p-1 rounded-xl px-2 transition">
                   Help Center
                 </button>
             </li>
@@ -250,19 +250,19 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
                     image: '/images/operator.png',
                   });
                 }}
-                className="hover:bg-neutral-100 p-1 rounded-xl px-2 transition"
+                className="hover:bg-[#f0f8ff] p-1 rounded-xl px-2 transition"
               >
                 Real-Time Assist
               </button>
             </li>
 
             <li>
-            <button onClick={() => setIsCancellationOpen(true)} className="hover:bg-neutral-100 p-1 rounded-xl px-2 transition">
+            <button onClick={() => setIsCancellationOpen(true)} className="hover:bg-[#f0f8ff] p-1 rounded-xl px-2 transition">
                   Cancellation Policy
                 </button>
             </li>
             <li>
-            <button onClick={() => setIsPromoterGuideOpen(true)} className="hover:bg-neutral-100 p-1 rounded-xl px-2 transition">
+            <button onClick={() => setIsPromoterGuideOpen(true)} className="hover:bg-[#f0f8ff] p-1 rounded-xl px-2 transition">
                 The User&rsquo;s Playbook
                 </button>
             </li>
@@ -274,22 +274,22 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
           <h3 className="font-semibold text-3xl ml-1 mb-4">Legal</h3>
           <ul className="space-y-2">
             <li>
-              <button onClick={() => setIsPrivacyOpen(true)} className="hover:bg-neutral-100 p-1 rounded-xl px-2 transition">
+              <button onClick={() => setIsPrivacyOpen(true)} className="hover:bg-[#f0f8ff] p-1 rounded-xl px-2 transition">
                 Privacy Policy
               </button>
             </li>
             <li>
-              <button onClick={() => setIsPrivacyOpen(true)} className="hover:bg-neutral-100 p-1 rounded-xl px-2 transition">
+              <button onClick={() => setIsPrivacyOpen(true)} className="hover:bg-[#f0f8ff] p-1 rounded-xl px-2 transition">
                 Payment Terms
               </button>
             </li>
             <li>
-              <button onClick={() => setIsTermsOpen(true)} className="hover:bg-neutral-100 p-1 rounded-xl px-2 transition">
+              <button onClick={() => setIsTermsOpen(true)} className="hover:bg-[#f0f8ff] p-1 rounded-xl px-2 transition">
                 Terms of Service
               </button>
             </li>
             <li>
-              <button onClick={() => setIsTermsOpen(true)} className="hover:bg-neutral-100 p-1 rounded-xl px-2 transition">
+              <button onClick={() => setIsTermsOpen(true)} className="hover:bg-[#f0f8ff] p-1 rounded-xl px-2 transition">
                 Cookies & Data Policy
               </button>
             </li>

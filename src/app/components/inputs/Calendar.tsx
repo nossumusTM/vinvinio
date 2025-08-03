@@ -224,9 +224,9 @@ const Calendar: React.FC<CalendarProps> = ({
         }}
         disabled={isDisabled}
         className={`
-          text-sm py-2 rounded-xl shadow-md bg-neutral-100 transition text-center
-          ${selectedTime === time ? 'ring-2 ring-aliceblue font-semibold' : ''}
-          ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-neutral-200'}
+          text-xs py-2 rounded-xl shadow-md bg-neutral-100 transition text-center
+          ${selectedTime === time ? 'ring-2 ring-aliceblue bg-aliceblue' : ''}
+          ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-aliceblue'}
         `}
       >
         {formattedTime}

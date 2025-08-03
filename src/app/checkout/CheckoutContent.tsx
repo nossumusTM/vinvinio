@@ -549,7 +549,7 @@ const handleSubmit = async () => {
   // const total = subtotal - discountAmount + serviceFee;
 
   return (
-    <div className="flex flex-col lg:flex-row max-w-screen-xl mx-auto px-4 py-10 gap-10">
+    <div className="flex flex-col lg:flex-row max-w-screen-xl mx-auto px-4 py-4 gap-10">
 
       {/* LEFT SECTION */}
       <div className="w-full lg:w-2/3 bg-white rounded-2xl shadow-md p-6 space-y-6">
@@ -574,7 +574,7 @@ const handleSubmit = async () => {
             <div className="flex gap-4">
               <button
                 onClick={() => setCheckoutMode('guest')}
-                className={`text-xs font-medium ${checkoutMode === 'guest' ? 'text-black bg-[#f0f8ff] p-3 rounded-full' : 'text-neutral-500'}`}
+                className={`text-xs font-medium ${checkoutMode === 'guest' ? 'text-black shadow-md p-3 rounded-full' : 'text-neutral-500'}`}
               >
                 Continue as Guest
               </button>
@@ -584,7 +584,7 @@ const handleSubmit = async () => {
                   loginModal.onOpen();
                   // setCheckoutMode('auth');
                 }}
-                className={`text-sm font-medium ${checkoutMode === 'auth' ? 'text-black underline' : 'text-neutral-500 border-b border-neutral-500'}`}
+                className={`text-xs font-medium ${checkoutMode === 'auth' ? 'text-black underline' : 'text-neutral-500'}`}
               >
                 Sign In / Sign Up
               </button>

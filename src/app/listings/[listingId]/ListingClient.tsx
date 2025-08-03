@@ -316,7 +316,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                     <hr />
 
                     <div className="ml-2 mt-10">
-                        <Heading title="Stories from the Guestbook" />
+                        <h1 className="text-2xl font-semibold">Stories from the Guestbook</h1>
                         </div>
 
                     {reviews.length > 0 && (
