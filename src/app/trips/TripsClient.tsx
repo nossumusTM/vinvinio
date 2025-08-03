@@ -591,7 +591,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
                   <div>
                     <textarea
                       placeholder="Please specify your reason"
-                      className="w-full border border-neutral-300 rounded-lg p-3 text-sm mt-2 focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full border border-neutral-300 rounded-lg p-3 text-sm mt-2 focus:outline-none focus:ring-2 focus:ring-aliceblue"
                       rows={4}
                       value={customReason}
                       onChange={(e) => setCustomReason(e.target.value)}

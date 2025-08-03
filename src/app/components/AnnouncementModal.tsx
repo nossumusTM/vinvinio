@@ -66,13 +66,16 @@ const AnnouncementModal = () => {
     };
   }, [isOpen]);  
 
-  if (!isOpen || !imageLoaded) return null;
+if (!imageLoaded) return null;
+
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] p-6">
+    <div className={`fixed inset-0 flex items-center justify-center z-[60] p-6 transition-opacity duration-500 ${isOpen ? 'bg-black bg-opacity-60' : 'bg-opacity-0'}`}>
       <div
         ref={modalRef}
-        className="bg-white rounded-3xl p-8 sm:p-12 max-w-md w-full relative"
+        className={`bg-white rounded-3xl p-8 sm:p-12 max-w-md w-full relative transform transition-all duration-500 ease-out
+          ${isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}
+        `}
       >
 
       <div className="p-5 rounded-3xl">

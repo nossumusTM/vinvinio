@@ -112,7 +112,10 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
           <div className="font-light text-neutral-600">/ person</div>
         </div>
         <div className="flex flex-col gap-1">
-          <div className="text-sm font-medium mb-2 text-center">Guests</div>
+          <div className="text-sm font-medium mb-2 text-center">
+            {guestCount === 1 ? '1 Guest' : `${guestCount} Guests`}
+          </div>
+
           <Counter
             title=""
             subtitle=""

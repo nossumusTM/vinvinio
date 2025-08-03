@@ -59,7 +59,7 @@ export default async function RootLayout({
         <ClientOnly>
           <ToasterProvider />
           <NavBar currentUser={currentUser} />
-          <AnnouncementModal />
+          {/* <AnnouncementModal /> */}
           <LoginModal />
           <RegisterModal />
           <ForgetPasswordModal />

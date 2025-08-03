@@ -836,7 +836,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                                   onChange={(e) =>
                                     setFieldValues((prev) => ({ ...prev, street: e.target.value }))
                                   }
-                                  className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
+                                  className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-aliceblue"
                                 />
                                 <label
                                   htmlFor="street"
@@ -862,7 +862,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                                   onChange={(e) =>
                                     setFieldValues((prev) => ({ ...prev, apt: e.target.value }))
                                   }
-                                  className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
+                                  className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-aliceblue"
                                 />
                                 <label
                                   htmlFor="apt"
@@ -888,7 +888,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                                   onChange={(e) =>
                                     setFieldValues((prev) => ({ ...prev, city: e.target.value }))
                                   }
-                                  className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
+                                  className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-aliceblue"
                                 />
                                 <label
                                   htmlFor="city"
@@ -914,7 +914,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                                   onChange={(e) =>
                                     setFieldValues((prev) => ({ ...prev, state: e.target.value }))
                                   }
-                                  className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
+                                  className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-aliceblue"
                                 />
                                 <label
                                   htmlFor="state"
@@ -940,7 +940,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                                   onChange={(e) =>
                                     setFieldValues((prev) => ({ ...prev, zip: e.target.value }))
                                   }
-                                  className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
+                                  className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-aliceblue"
                                 />
                                 <label
                                   htmlFor="zip"
@@ -1405,7 +1405,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                           value={couponCode}
                           onChange={(e) => setCouponCode(e.target.value)}
                           placeholder=" "
-                          className="peer w-full shadow-md border border-neutral-300 rounded-lg px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
+                          className="peer w-full shadow-md border border-neutral-300 rounded-lg px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-aliceblue"
                         />
                         <label
                           htmlFor="coupon"
@@ -1575,7 +1575,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
 
                               setPayoutInfo({ ...payoutInfo, number: val });
                             }}
-                            className="peer w-full border border-neutral-300 rounded-lg px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black pr-14"
+                            className="peer w-full border border-neutral-300 rounded-lg px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-aliceblue pr-14"
                           />
 
                           <label
@@ -1758,7 +1758,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                         setCardInfo({ ...cardInfo, number: formatted });
                         setCardType(detectCardType(formatted));
                       }}
-                      className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black pr-14"
+                      className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-aliceblue pr-14"
                     />
                     <label
                       htmlFor="cardNumber"
@@ -1797,7 +1797,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                           if (val.length >= 3) val = `${val.slice(0, 2)}/${val.slice(2)}`;
                           setCardInfo({ ...cardInfo, expiration: val });
                         }}
-                        className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
+                        className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-aliceblue"
                       />
                       <label
                         htmlFor="cardExpiration"
@@ -1820,7 +1820,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                           const val = e.target.value.replace(/\D/g, '').slice(0, 3);
                           setCardInfo({ ...cardInfo, cvv: val });
                         }}
-                        className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
+                        className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-aliceblue"
                       />
                       <label
                         htmlFor="cardCVV"
@@ -1852,7 +1852,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                           placeholder=" "
                           value={cardInfo[name as keyof typeof cardInfo] as string}
                           onChange={handleCardChange}
-                          className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
+                          className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-aliceblue"
                         />
                         <label
                           htmlFor={`billing-${name}`}

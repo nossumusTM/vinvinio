@@ -151,7 +151,7 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
           placeholder="Search conversations..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 p-2 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-black"
+          className="w-full pl-10 p-2 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-aliceblue"
         />
       </div>
       <AnimatePresence mode="popLayout">
