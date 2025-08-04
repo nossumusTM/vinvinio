@@ -28,6 +28,12 @@ enum ReservationStatus {
   cancelled
 }
 
+enum NewsletterType {
+  experience
+  product
+  updates
+}
+
 model User {
   id                String             @id @default(auto()) @map("_id") @db.ObjectId
   name              String?
@@ -283,8 +289,10 @@ model EmailVerificationToken {
 }
 
 model Newsletter {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  email     String   @unique
-  type      String
-  createdAt DateTime @default(now())
+  id        String         @id @default(auto()) @map("_id") @db.ObjectId
+  email     String
+  type      NewsletterType
+  createdAt DateTime       @default(now())
+
+  @@unique([email, type])
 }

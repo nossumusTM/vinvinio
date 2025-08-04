@@ -142,7 +142,7 @@ const ListingFilter = () => {
                     router.push(`/?${params.toString()}`);
                   }}                  
                   className={twMerge(
-                    "px-4 py-3 text-sm text-neutral-700 hover:bg-[#f0f8ff] transition cursor-pointer",
+                    "px-4 py-3 text-sm text-neutral-700 hover:bg-neutral-100 transition cursor-pointer",
                     sort === option.value && "font-semibold bg-neutral-100",
                     index === filterOptions.length - 1 && "rounded-b-xl"
                   )}

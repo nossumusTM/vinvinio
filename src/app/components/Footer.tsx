@@ -11,6 +11,7 @@ import useMessenger from '@/app/hooks/useMessager';
 import Modal from './modals/Modal';
 import useLoginModal from '../hooks/useLoginModal';
 import Newsletter from './Newsletter';
+import Image from 'next/image';
 
 // bg-gradient-to-br from-blue-50 via-white to-cyan-100
 
@@ -232,7 +233,7 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
           <h3 className="font-semibold text-3xl ml-1 mb-4">Support</h3>
           <ul className="space-y-2">
           <li>
-            <button onClick={() => setIsCancellationOpen(true)} className="hover:bg-[#f0f8ff] p-1 rounded-xl px-2 transition">
+            <button onClick={() => setIsCancellationOpen(true)} className="hover:bg-neutral-100 p-1 rounded-xl px-2 transition">
                   Help Center
                 </button>
             </li>
@@ -250,19 +251,19 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
                     image: '/images/operator.png',
                   });
                 }}
-                className="hover:bg-[#f0f8ff] p-1 rounded-xl px-2 transition"
+                className="hover:bg-neutral-100 p-1 rounded-xl px-2 transition"
               >
                 Real-Time Assist
               </button>
             </li>
 
             <li>
-            <button onClick={() => setIsCancellationOpen(true)} className="hover:bg-[#f0f8ff] p-1 rounded-xl px-2 transition">
+            <button onClick={() => setIsCancellationOpen(true)} className="hover:bg-neutral-100 p-1 rounded-xl px-2 transition">
                   Cancellation Policy
                 </button>
             </li>
             <li>
-            <button onClick={() => setIsPromoterGuideOpen(true)} className="hover:bg-[#f0f8ff] p-1 rounded-xl px-2 transition">
+            <button onClick={() => setIsPromoterGuideOpen(true)} className="hover:bg-neutral-100 p-1 rounded-xl px-2 transition">
                 The User&rsquo;s Playbook
                 </button>
             </li>
@@ -274,22 +275,22 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
           <h3 className="font-semibold text-3xl ml-1 mb-4">Legal</h3>
           <ul className="space-y-2">
             <li>
-              <button onClick={() => setIsPrivacyOpen(true)} className="hover:bg-[#f0f8ff] p-1 rounded-xl px-2 transition">
+              <button onClick={() => setIsPrivacyOpen(true)} className="hover:bg-neutral-100 p-1 rounded-xl px-2 transition">
                 Privacy Policy
               </button>
             </li>
             <li>
-              <button onClick={() => setIsPrivacyOpen(true)} className="hover:bg-[#f0f8ff] p-1 rounded-xl px-2 transition">
+              <button onClick={() => setIsPrivacyOpen(true)} className="hover:bg-neutral-100 p-1 rounded-xl px-2 transition">
                 Payment Terms
               </button>
             </li>
             <li>
-              <button onClick={() => setIsTermsOpen(true)} className="hover:bg-[#f0f8ff] p-1 rounded-xl px-2 transition">
+              <button onClick={() => setIsTermsOpen(true)} className="hover:bg-neutral-100 p-1 rounded-xl px-2 transition">
                 Terms of Service
               </button>
             </li>
             <li>
-              <button onClick={() => setIsTermsOpen(true)} className="hover:bg-[#f0f8ff] p-1 rounded-xl px-2 transition">
+              <button onClick={() => setIsTermsOpen(true)} className="hover:bg-neutral-100 p-1 rounded-xl px-2 transition">
                 Cookies & Data Policy
               </button>
             </li>
@@ -331,13 +332,26 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
       <div className="border-b border-gray-300 my-8"></div>
 
       {/* Bottom Bar */}
-    <div className="flex flex-col md:flex-row justify-between items-center md:items-center text-center md:text-left gap-4 mt-8 w-full md:pl-10 md:ml-10">
-    {/* Left side on desktop */}
-    <div className="flex flex-col md:flex-row md:items-center md:space-x-4">
-        <p className="text-sm">&copy; 2025 Vuola Travel Network.</p>
-        <p className="text-sm">P.IVA 16694941003</p>
-    </div>
-    </div>
+      <div className="flex flex-col md:flex-row justify-between items-center w-full mt-8 px-0 md:px-20">
+        {/* Left side: Text content */}
+        <div className="flex flex-col items-center md:items-start text-center md:text-left gap-1">
+          <p className="text-md font-semibold">&copy; 2025 Vuola Travel Network.</p>
+          <p className="text-sm">P.IVA 16694941003</p>
+        </div>
+
+        {/* Right side: Image */}
+        <div className="mt-4 md:mt-0">
+          <Image
+            src="/images/stripe-badge-transparent1.png"
+            alt="Stripe Badge"
+            width={404}
+            height={132}
+            priority
+            className="w-auto h-24 md:h-[132px]" // adjust size if needed
+            onContextMenu={(e) => e.preventDefault()}
+          />
+        </div>
+      </div>
 
       {/* Cancellation Policy Modal */}
       <Modal

@@ -41,9 +41,9 @@ export const categories = [
         description: 'Aventine Hill Tour in Vintage Fiat 500 Convoy',
     },
     {
-        label: 'Photo Muse',
+        label: 'Photo Muse',  
         icon: MdOutlineMonochromePhotos,
-        description: 'Capture the timeless beauty of one of the most iconic landmarks'
+        description: 'Capture the timeless beauty of the most iconic landmarks'
     },
     {
         label: 'Viva Vespa!',

@@ -61,7 +61,9 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [isCropping, setIsCropping] = useState(false);
   const [showConfirmDeletePayout, setShowConfirmDeletePayout] = useState(false);
-  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
+  const [loadingSubscription, setLoadingSubscription] = useState(true);
+
   const [verifying, setVerifying] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -572,59 +574,110 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
     }
   }, [activeSection]);  
 
+  // useEffect(() => {
+  //   const checkAndSubscribe = async () => {
+  //     try {
+  //       const res = await fetch(`/api/email/check-subscription?email=${currentUser.email}`);
+  //       const data = await res.json();
+  
+  //       if (data?.subscribed) {
+  //         setIsSubscribed(true);
+  //       } else {
+  //         // Auto-subscribe user if not yet subscribed
+  //         const subRes = await fetch('/api/email/profile-newsletter', {
+  //           method: 'POST',
+  //           headers: { 'Content-Type': 'application/json' },
+  //           body: JSON.stringify({ email: currentUser.email, type: 'experience' }),
+  //         });
+  
+  //         if (subRes.ok) {
+  //           setIsSubscribed(true);
+  //           console.log('✅ Auto-subscribed to Newsletter');
+  //         } else {
+  //           console.warn('⚠️ Auto-subscription failed');
+  //         }
+  //       }
+  //     } catch (err) {
+  //       console.error('❌ Failed to check or subscribe to newsletter', err);
+  //     }
+  //   };
+  
+  //   if (currentUser?.role === 'customer') {
+  //     checkAndSubscribe();
+  //   }
+  // }, [currentUser]);  
+
+  // const handleToggleSubscription = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const endpoint = isSubscribed
+  //       ? '/api/email/profile-newsletter'
+  //       : '/api/email/profile-newsletter';
+  
+  //     const method = isSubscribed ? 'DELETE' : 'POST';
+  
+  //     const res = await fetch(endpoint, {
+  //       method,
+  //       headers: { 'Content-Type': 'application/json' },
+  //       body: JSON.stringify({ email: currentUser.email, type: 'experience' }),
+  //     });
+  
+  //     if (!res.ok) throw new Error('Failed to toggle subscription');
+  
+  //     setIsSubscribed(!isSubscribed);
+  //   } catch (error) {
+  //     console.error('Toggle subscription error:', error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   useEffect(() => {
-    const checkAndSubscribe = async () => {
+    const checkSubscription = async () => {
       try {
-        const res = await fetch(`/api/email/check-subscription?email=${currentUser.email}`);
+        const res = await fetch(`/api/email/check-subscription?email=${currentUser.email}&type=experience`);
         const data = await res.json();
-  
-        if (data?.subscribed) {
-          setIsSubscribed(true);
-        } else {
-          // Auto-subscribe user if not yet subscribed
-          const subRes = await fetch('/api/email/profile-newsletter', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: currentUser.email, type: 'experience' }),
-          });
-  
-          if (subRes.ok) {
-            setIsSubscribed(true);
-            console.log('✅ Auto-subscribed to Newsletter');
-          } else {
-            console.warn('⚠️ Auto-subscription failed');
-          }
-        }
+        setIsSubscribed(data.subscribed);
       } catch (err) {
-        console.error('❌ Failed to check or subscribe to newsletter', err);
+        console.error('Failed to fetch subscription status:', err);
+      } finally {
+        setLoadingSubscription(false);
       }
     };
-  
-    if (currentUser?.role === 'customer') {
-      checkAndSubscribe();
-    }
-  }, [currentUser]);  
+
+    if (currentUser?.email) checkSubscription();
+  }, [currentUser?.email]);
+
 
   const handleToggleSubscription = async () => {
     setLoading(true);
     try {
-      const endpoint = isSubscribed
-        ? '/api/email/profile-newsletter'
-        : '/api/email/profile-newsletter';
-  
       const method = isSubscribed ? 'DELETE' : 'POST';
-  
-      const res = await fetch(endpoint, {
+      const res = await fetch('/api/email/profile-newsletter', {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: currentUser.email, type: 'experience' }),
       });
-  
-      if (!res.ok) throw new Error('Failed to toggle subscription');
-  
+
+      if (res.status === 409) {
+        console.info('Already subscribed');
+        toast('Already subscribed 💌');
+        setIsSubscribed(true); // <-- ensure UI reflects DB truth
+        return;
+      }
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || 'Failed to toggle subscription');
+      }
+
       setIsSubscribed(!isSubscribed);
+      toast.success(
+        isSubscribed ? 'Unsubscribed from newsletter.' : 'Subscribed to newsletter.'
+      );
     } catch (error) {
       console.error('Toggle subscription error:', error);
+      toast.error('Something went wrong while toggling subscription.');
     } finally {
       setLoading(false);
     }
@@ -639,7 +692,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
       {/* Avatar & name */}
       <div className="pl-5 pr-5 pb-6 rounded-xl border-b-[1px]">
         {/* Divider */}
-        <div className="flex items-center gap-4 mt-4">
+        <div className="flex items-center gap-4 mt-0 md:mt-4">
           <div
             className="relative group cursor-pointer"
             onClick={() => fileInputRef.current?.click()}
@@ -650,7 +703,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                 alt="User"
                 width={100}
                 height={100}
-                className="rounded-full mt-2 md:mt-0 object-cover shadow-xl hover:shadow-2xl"
+                className="rounded-full mt-2 md:mt-0 object-cover shadow-xl hover:shadow-2xl transition"
               />
             ) : (
               <div className={twMerge(
@@ -676,8 +729,8 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                 <p className="text-2xl font-semibold">{currentUser?.legalName || currentUser?.name || "Unnamed"}</p>
                 <p className="text-md font-semibold">{currentUser?.email || ""}</p>
               </div> */}
-              <div className="pt-1 text-normal">
-                <p className="text-2xl font-semibold">
+              <div className="pt-5 md:pt-1 text-normal">
+                <p className="md:text-2xl font-semibold">
                   {currentUser?.legalName || currentUser?.name || "Unnamed"}
                 </p>
 
@@ -725,7 +778,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                   )}
                 </div> */}
                 <div className="flex flex-col md:flex-row md:items-center md:gap-3">
-                  <p className="text-md font-semibold">{currentUser?.email || ""}</p>
+                  <p className="text-xs md:text-md font-semibold">{currentUser?.email || ""}</p>
 
                   <div className="mt-2 md:mt-0">
                     {currentUser?.emailVerified ? (
@@ -836,7 +889,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                                   onChange={(e) =>
                                     setFieldValues((prev) => ({ ...prev, street: e.target.value }))
                                   }
-                                  className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-aliceblue"
+                                  className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
                                 />
                                 <label
                                   htmlFor="street"
@@ -862,7 +915,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                                   onChange={(e) =>
                                     setFieldValues((prev) => ({ ...prev, apt: e.target.value }))
                                   }
-                                  className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-aliceblue"
+                                  className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
                                 />
                                 <label
                                   htmlFor="apt"
@@ -888,7 +941,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                                   onChange={(e) =>
                                     setFieldValues((prev) => ({ ...prev, city: e.target.value }))
                                   }
-                                  className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-aliceblue"
+                                  className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
                                 />
                                 <label
                                   htmlFor="city"
@@ -914,7 +967,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                                   onChange={(e) =>
                                     setFieldValues((prev) => ({ ...prev, state: e.target.value }))
                                   }
-                                  className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-aliceblue"
+                                  className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
                                 />
                                 <label
                                   htmlFor="state"
@@ -940,7 +993,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                                   onChange={(e) =>
                                     setFieldValues((prev) => ({ ...prev, zip: e.target.value }))
                                   }
-                                  className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-aliceblue"
+                                  className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
                                 />
                                 <label
                                   htmlFor="zip"
@@ -1102,7 +1155,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                           >
                             You’re joined to the Vuola Newsletter.
                             <br />
-                            Receive curated updates on unforgettable experiences — no spam, just <strong>inspiration</strong>.
+                            Receive curated updates on unforgettable experiences - no spam, just <strong>inspiration</strong>.
                           </motion.div>
                         )}
                       </AnimatePresence>
@@ -1116,7 +1169,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                     checked={isSubscribed}
                     onChange={handleToggleSubscription}
                     className={`${
-                      isSubscribed ? 'bg-black' : 'bg-gray-300'
+                      isSubscribed ? 'bg-gray-600' : 'bg-gray-300'
                     } relative inline-flex h-6 w-11 items-center rounded-full transition duration-200 focus:outline-none`}
                     disabled={loading}
                   >
@@ -1405,7 +1458,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                           value={couponCode}
                           onChange={(e) => setCouponCode(e.target.value)}
                           placeholder=" "
-                          className="peer w-full shadow-md border border-neutral-300 rounded-lg px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-aliceblue"
+                          className="peer w-full shadow-md border border-neutral-300 rounded-lg px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
                         />
                         <label
                           htmlFor="coupon"
@@ -1575,7 +1628,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
 
                               setPayoutInfo({ ...payoutInfo, number: val });
                             }}
-                            className="peer w-full border border-neutral-300 rounded-lg px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-aliceblue pr-14"
+                            className="peer w-full border border-neutral-300 rounded-lg px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black pr-14"
                           />
 
                           <label
@@ -1758,7 +1811,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                         setCardInfo({ ...cardInfo, number: formatted });
                         setCardType(detectCardType(formatted));
                       }}
-                      className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-aliceblue pr-14"
+                      className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black pr-14"
                     />
                     <label
                       htmlFor="cardNumber"
@@ -1797,7 +1850,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                           if (val.length >= 3) val = `${val.slice(0, 2)}/${val.slice(2)}`;
                           setCardInfo({ ...cardInfo, expiration: val });
                         }}
-                        className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-aliceblue"
+                        className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
                       />
                       <label
                         htmlFor="cardExpiration"
@@ -1820,7 +1873,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                           const val = e.target.value.replace(/\D/g, '').slice(0, 3);
                           setCardInfo({ ...cardInfo, cvv: val });
                         }}
-                        className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-aliceblue"
+                        className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
                       />
                       <label
                         htmlFor="cardCVV"
@@ -1852,7 +1905,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                           placeholder=" "
                           value={cardInfo[name as keyof typeof cardInfo] as string}
                           onChange={handleCardChange}
-                          className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-aliceblue"
+                          className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
                         />
                         <label
                           htmlFor={`billing-${name}`}

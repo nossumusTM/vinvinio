@@ -51,7 +51,7 @@ const Search = () => {
             return `${diff} Days`;
         }
 
-        return 'Pick a Date'
+        return 'Date'
     }, [startDate, endDate]);
 
     const guestLabel = useMemo(() => {

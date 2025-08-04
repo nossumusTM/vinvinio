@@ -105,7 +105,7 @@ export async function POST(request: Request) {
       html: `
         <div style="font-family: 'Nunito', Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; overflow: hidden;">
           <div style="padding: 24px;">
-            <img src="https://vuoiaggio.netlify.app/images/vuoiaggiologo.png" alt="Vuola Logo" style="width: 140px; margin: 0 auto 16px; display: block;" />
+            <img src="https://vuola.eu/images/vuoiaggiologo.png" alt="Vuola Logo" style="width: 140px; margin: 0 auto 16px; display: block;" />
             <p style="font-size: 16px; margin-bottom: 8px;">Hi ${listing.user.name || 'host'},</p>
             <p style="font-size: 14px; color: #555; margin-bottom: 16px;">
               Your experience titled <strong>${listing.title}</strong> has been submitted successfully and is currently under review by our moderation team.

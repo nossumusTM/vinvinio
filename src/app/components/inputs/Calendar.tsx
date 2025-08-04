@@ -201,39 +201,39 @@ const Calendar: React.FC<CalendarProps> = ({
         </select> */}
 
         <div className="grid grid-cols-5 gap-2">
-  {availableTimes.map((time) => {
-    const isBooked = bookedTimesForDate.includes(time);
-    const isToday = selectedDateKey === format(new Date(), 'yyyy-MM-dd');
-    const now = new Date();
-    const [hour, minute] = time.split(':').map(Number);
-    const timeDate = new Date();
-    timeDate.setHours(hour, minute, 0, 0);
-    const isPast = isToday && now > timeDate;
-    const isDisabled = isBooked || isPast;
+        {availableTimes.map((time) => {
+          const isBooked = bookedTimesForDate.includes(time);
+          const isToday = selectedDateKey === format(new Date(), 'yyyy-MM-dd');
+          const now = new Date();
+          const [hour, minute] = time.split(':').map(Number);
+          const timeDate = new Date();
+          timeDate.setHours(hour, minute, 0, 0);
+          const isPast = isToday && now > timeDate;
+          const isDisabled = isBooked || isPast;
 
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
-    const formattedTime = `${formattedHour}:${minute.toString().padStart(2, '0')} ${ampm}`;
+          const ampm = hour >= 12 ? 'PM' : 'AM';
+          const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
+          const formattedTime = `${formattedHour}:${minute.toString().padStart(2, '0')} ${ampm}`;
 
-    return (
-      <button
-        key={time}
-        onClick={() => {
-          userHasPickedTime.current = true;
-          onTimeChange?.(time);
-        }}
-        disabled={isDisabled}
-        className={`
-          text-xs py-2 rounded-xl shadow-md bg-neutral-100 transition text-center
-          ${selectedTime === time ? 'ring-2 ring-aliceblue bg-aliceblue' : ''}
-          ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-aliceblue'}
-        `}
-      >
-        {formattedTime}
-      </button>
-    );
-  })}
-</div>
+          return (
+            <button
+              key={time}
+              onClick={() => {
+                userHasPickedTime.current = true;
+                onTimeChange?.(time);
+              }}
+              disabled={isDisabled}
+              className={`
+                text-xs py-2 rounded-xl shadow-md bg-neutral-100 transition text-center
+                ${selectedTime === time ? 'ring-1 ring-black' : ''}
+                ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-aliceblue'}
+              `}
+            >
+              {formattedTime}
+            </button>
+          );
+        })}
+      </div>
 
       </div>
     )}

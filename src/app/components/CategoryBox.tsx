@@ -58,14 +58,14 @@ const CategoryBox: React.FC<CategoryBoxProps> = ({
                 border-b-2
                 border-b-2
                 border-b-neutral-100
-                hover:bg-[#f0f8ff]
+                hover:bg-neutral-100
                 hover:text-neutral-800
                 mb-4
                 rounded-xl
                 transition
                 cursor-pointer
                 text-center
-                ${selected ? 'bg-[#f0f8ff]' : 'border-transparent'}
+                ${selected ? 'bg-neutral-100' : 'border-transparent'}
                 ${selected ? 'text-neutral-900' : 'text-neutral-700'}
             `}
             >

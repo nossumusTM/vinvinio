@@ -34,7 +34,12 @@ const Newsletter = () => {
       } else if (!res.ok) {
         throw new Error('Subscription failed');
       } else {
-        toast.success('Welcome aboard! Magic is on the way ✨');
+            toast.success('Welcome aboard! Magic is on the way ✨', {
+              iconTheme: {
+                   primary: '#f0f8ff',
+                   secondary: '#fff',
+              }
+                });
         setEmail('');
       }
     } catch (err) {
@@ -51,7 +56,7 @@ const Newsletter = () => {
 
       <h3 className="text-2xl font-bold mb-2">Catch the Breeze</h3>
       <span className="text-sm text-neutral-600 mb-4">
-        Receive curated updates on unforgettable experiences — no spam, just <p className='text-5xl text-black font-semibold'>inspiration.</p>
+        Receive curated updates on unforgettable experiences - no spam, just <p className='text-5xl text-black font-semibold'>inspiration.</p>
       </span>
 
       {/* <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-4">
@@ -85,12 +90,12 @@ const Newsletter = () => {
           placeholder="Drop email address"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full px-4 py-2 pr-28 rounded-xl border border-gray-300 focus:ring-2 transition text-sm"
+          className="w-full px-4 py-2 pr-28 rounded-xl border border-gray-300 transition text-sm focus:outline-none focus:ring-1 focus:ring-black"
         />
         <button
           onClick={handleSubscribe}
           disabled={loading}
-          className="absolute top-0 right-0 h-full px-4 bg-black text-white rounded-r-xl hover:bg-neutral-800 transition text-sm"
+          className="absolute top-0 right-0 h-full px-4 hover:bg-neutral-200 text-black bg-neutral-100 rounded-r-xl border border-gray-300 transition text-sm"
         >
           {loading ? '...' : 'Subscribe'}
         </button>

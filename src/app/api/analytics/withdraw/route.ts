@@ -97,7 +97,7 @@ export async function POST(req: Request) {
           <div style="font-family: 'Nunito', Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; overflow: hidden;">
             <link href="https://fonts.googleapis.com/css2?family=Nunito&display=swap" rel="stylesheet">
             <div style="padding: 24px;">
-              <img src="https://vuoiaggio.netlify.app/images/vuoiaggiologo.png" alt="Vuola Logo" style="width: 140px; margin: 0 auto 20px; display: block;" />
+              <img src="https://vuola.eu/images/vuoiaggiologo.png" alt="Vuola Logo" style="width: 140px; margin: 0 auto 20px; display: block;" />
 
               <h2 style="text-align: center; color: #000;">Withdrawal Complete</h2>
               <p style="font-size: 16px;">Hi ${user.name || 'there'},</p>

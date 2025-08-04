@@ -78,7 +78,7 @@ const ReservationsClient: React.FC<ReservationsClientProps> = ({
                     subtitle="Who said ' YesSsSs! ' to your experience"
                 />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-10 mt-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-10 mt-6 p-2">
                 {loadedReservations.map((reservation: any) => (
                     <div key={reservation.id} className="relative">
                     {reservation.status === 'cancelled' ? (

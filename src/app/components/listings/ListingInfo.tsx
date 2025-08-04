@@ -37,7 +37,8 @@ interface ListingInfoProps {
     description: string;
     guestCount: number;
     category: {
-        icon: IconType,
+        // icon: IconType,
+        imageSrc: string | null | undefined;
         label: string;
         description: string;
     } | undefined
@@ -239,7 +240,8 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
 
             {category && (
                 <ListingCategory
-                    icon={category.icon}
+                    // icon={category.icon}
+                    imageSrc={user?.image}
                     label={category?.label}
                     description={category?.description}
                 />
@@ -270,7 +272,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                 </div>
 
                 {meetingPoint && (
-                <p className="text-sm rounded-full bg-neutral-100 inline p-3 text-neutral-800 ">
+                <p className="text-sm font-semibold rounded-full bg-neutral-100 inline p-3 text-neutral-800 ">
                     {meetingPoint}
                 </p>
                 )}

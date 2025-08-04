@@ -315,14 +315,14 @@ const ListingClient: React.FC<ListingClientProps> = ({
 
                     <hr />
 
-                    <div className="ml-2 mt-10">
-                        <h1 className="text-2xl font-semibold">Stories from the Guestbook</h1>
+                    <div className="pl-6 mt-10">
+                        <h1 className="md:text-2xl font-semibold">Stories from the Guestbook</h1>
                         </div>
 
                     {reviews.length > 0 && (
                         <div className="mt-1 md:col-span-7">
                             {/* Overall Rating */}
-                            <div className="flex items-center gap-2 mb-4 pl-2">
+                            <div className="flex items-center gap-2 mb-4 pl-6">
                                 {/* SVG Star with partial fill */}
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                                     <defs>
@@ -350,9 +350,9 @@ const ListingClient: React.FC<ListingClientProps> = ({
                             </div>
                             
                             {/* Individual Reviews */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 p-4">
                             {reviews.slice(0, 6).map((review, i) => (
-                                <div key={i} className="rounded-2xl p-6 shadow-md hover:shadow-lg transition">
+                                <div key={i} className="rounded-2xl p-8 shadow-md hover:shadow-lg transition">
                                 {/* Rating Stars */}
                                 <div className="flex gap-1 mb-2">
                                     {[1, 2, 3, 4, 5].map((star) => (

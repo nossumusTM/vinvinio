@@ -108,7 +108,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
         <div className="absolute bottom-12 md:bottom-[18%] left-[40.5%] -translate-x-1/2 bg-white p-2 rounded-xl shadow-lg w-32 h-32 flex items-center justify-center">
           <div className="relative w-full h-full flex items-center justify-center">
             <QRCodeCanvas
-              value={`https://vuoiaggio.netlify.app/reference/${referenceId}`}
+              value={`https://vuola.eu/reference/${referenceId}`}
               size={120}
               bgColor="#ffffff"
               fgColor="#000000"
@@ -137,7 +137,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
           {!copied ? (
             <button
               onClick={() => {
-                const url = `https://vuoiaggio.netlify.app/reference/${referenceId}`;
+                const url = `https://vuola.eu/reference/${referenceId}`;
                 navigator.clipboard.writeText(url);
                 setCopied(true);
                 setTimeout(() => setCopied(false), 2000); // reset after 2s
@@ -183,7 +183,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ currentUser }) => {
             <div className="absolute bottom-[20%] left-[40%] -translate-x-1/2 bg-white p-3 rounded-xl shadow-lg w-48 h-48 flex items-center justify-center">
               <div className="relative w-full h-full flex items-center justify-center p-3">
                 <QRCodeCanvas
-                  value={`https://vuoiaggio.netlify.app/reference/${referenceId}`}
+                  value={`https://vuola.eu/reference/${referenceId}`}
                   size={180}
                   bgColor="#ffffff"
                   fgColor="#000000"

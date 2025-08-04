@@ -17,13 +17,13 @@ const FavoritesClient: React.FC<FavoritesClientProps> = ({
         <Container>
             <div className="pl-4 pt-4 md:pt-6">
             <Heading
-                title="To-Do"
-                subtitle="Moments You've Bookmarked"
+                title="Bookmarks"
+                subtitle="Experiences You've Saved"
             />
             </div>
             <div
                 className="
-          mt-10
+          mt-6
           grid-cols-1 
           grid 
           md:grid-cols-2 
@@ -33,6 +33,7 @@ const FavoritesClient: React.FC<FavoritesClientProps> = ({
           max-w-screen-2xl
           gap-12
           mx-auto
+          p-2
           "
             >
                 {listings.map((listing: any) => (

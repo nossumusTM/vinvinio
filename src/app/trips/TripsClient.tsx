@@ -9,6 +9,10 @@ import { format } from 'date-fns';
 import { SafeReservation, SafeUser } from "@/app/types";
 import { TbCalendarTime, TbUserScan, TbClock, TbUserSquareRounded, TbMessageDots } from "react-icons/tb";
 import useMessenger from "@/app/hooks/useMessager";
+import { CiPaperplane } from "react-icons/ci";
+import { TbMessage2Code } from "react-icons/tb";
+import { BiSolidPaperPlane } from "react-icons/bi";
+import { BiPaperPlane } from "react-icons/bi";
 
 import Heading from "@/app/components/Heading";
 import Container from "@/app/components/Container";
@@ -274,7 +278,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
       />
       </div>
       <div className="
-        mt-10
+        mt-6
         grid 
         grid-cols-1 
         sm:grid-cols-1 
@@ -284,6 +288,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
         gap-10
         max-w-screen-2xl
         mx-auto
+        p-2
       ">
         {loadedReservations.map((reservation) => {
           const host = reservation.listing?.user ?? {};
@@ -374,7 +379,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
                 <div className="flex flex-col items-center gap-2">
                   <p className="text-md font-medium text-neutral-700 pt-6">Guided by</p>
                   <Avatar src={hostImage} name={hostName} />
-                  <span className="text-xl font-bold">{hostName}</span>
+                  <span className="text-md font-semibold">{hostName}</span>
                   <button
                     onClick={() => {
                       if (currentUser?.id === host?.id) return;
@@ -387,9 +392,12 @@ const TripsClient: React.FC<TripsClientProps> = ({
 
                       messenger.openChat(recipient);
                     }}
-                    className="text-sm text-neutral-700 underline hover:text-black transition"
+                    className="text-xs text-neutral-700 hover:bg-neutral-200 bg-neutral-100 p-3 font-semibold rounded-lg transition"
                   >
-                    Say Ciao to {hostName}
+                    <div className="flex flex-row gap-1 items-center">
+                      <BiPaperPlane size={12} />
+                      <p> {hostName}</p>
+                    </div>
                   </button>
                 </div>
 
@@ -591,7 +599,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
                   <div>
                     <textarea
                       placeholder="Please specify your reason"
-                      className="w-full border border-neutral-300 rounded-lg p-3 text-sm mt-2 focus:outline-none focus:ring-2 focus:ring-aliceblue"
+                      className="w-full border border-neutral-300 rounded-lg p-3 text-sm mt-2 focus:outline-none focus:ring-2 focus:ring-black"
                       rows={4}
                       value={customReason}
                       onChange={(e) => setCustomReason(e.target.value)}

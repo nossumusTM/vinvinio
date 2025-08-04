@@ -186,7 +186,7 @@
 //         subject: `You've received a new message from ${senderName}`,
 //         html: `
 //           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 24px; color: #333;">
-//             <img src="https://vuoiaggio.netlify.app/images/vuoiaggiologo.png" alt="Vuola Logo" style="height: 40px; margin-bottom: 24px;" />
+//             <img src="https://vuola.eu/images/vuoiaggiologo.png" alt="Vuola Logo" style="height: 40px; margin-bottom: 24px;" />
 //             <h2 style="color: #3604ff;">New message from ${senderName}</h2>
 
 //             <p>Hi <strong>${recipient.name || 'there'}</strong>,</p>
@@ -316,7 +316,7 @@ export async function POST(req: Request) {
         subject: `You've received a new message from ${senderName}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 24px; color: #333;">
-            <img src="https://vuoiaggio.netlify.app/images/vuoiaggiologo.png" alt="Vuola Logo" style="height: 40px; margin-bottom: 24px;" />
+            <img src="https://vuola.eu/images/vuoiaggiologo.png" alt="Vuola Logo" style="height: 40px; margin-bottom: 24px;" />
             <h2 style="color: #3604ff;">New message from ${senderName}</h2>
             <p>Hi <strong>${recipient.name || 'there'}</strong>,</p>
             <p>You’ve just received a new message on Vuola:</p>

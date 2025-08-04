@@ -137,7 +137,7 @@ const SearchExperience = () => {
       return `${diff} ${diff === 1 ? 'Day' : 'Days'}`;
     }
   
-    return 'Pick a Date';
+    return 'Date';
   }, [startDate, endDate]);
 
   return (

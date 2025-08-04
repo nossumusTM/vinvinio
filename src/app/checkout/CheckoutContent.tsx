@@ -556,12 +556,12 @@ const handleSubmit = async () => {
       <div className='flex flex-row gap-4'>
         <button
             onClick={() => router.push(`/listings/${listingId}`)}
-            className="text-sm text-black hover:underline mb-2"
+            className="ext-sm text-black bg-transparent hover:bg-neutral-100 rounded-full py-1 px-2 transition py-1 px-2 transition mb-2"
           >
             ←
           </button>
 
-          <Heading title="Confirm and Pay" />
+          <Heading title="Booking Confirmation" />
           {/* {referralId && (
               <div className="text-xs text-neutral-500 mt-2">
                 <span className="font-semibold">Referral ID:</span> {referralId}
@@ -600,7 +600,7 @@ const handleSubmit = async () => {
             placeholder="Full name (Name and Surname)"
             value={legalName}
             onChange={(e) => setLegalName(e.target.value)}
-            className="w-full transition border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-aliceblue p-2 rounded-lg"
+            className="w-full transition border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-black p-2 rounded-lg"
           />
         </div>
 
@@ -614,7 +614,7 @@ const handleSubmit = async () => {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full border transition border-neutral-300 focus:outline-none focus:ring-2 focus:ring-aliceblue p-2 rounded-lg"
+                className="w-full border transition border-neutral-300 focus:outline-none focus:ring-2 focus:ring-black p-2 rounded-lg"
               />
             </div>
           </>
@@ -629,7 +629,7 @@ const handleSubmit = async () => {
             placeholder="WhatsApp: +39-321-555-05-05"
             value={contact}
             onChange={(e) => setContact(e.target.value)}
-            className="w-full transition border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-aliceblue p-2 rounded-lg"
+            className="w-full transition border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-black p-2 rounded-lg"
           />
         </div>
 
@@ -650,7 +650,7 @@ const handleSubmit = async () => {
               placeholder=" "
               value={addressFields.street}
               onChange={(e) => setAddressFields({ ...addressFields, street: e.target.value })}
-              className="peer w-full border rounded-md px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-aliceblue"
+              className="peer w-full border rounded-md px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
             />
             <label
               htmlFor="street"
@@ -672,7 +672,7 @@ const handleSubmit = async () => {
               placeholder=" "
               value={addressFields.apt}
               onChange={(e) => setAddressFields({ ...addressFields, apt: e.target.value })}
-              className="peer w-full border border-neutral-300 rounded-md px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-aliceblue"
+              className="peer w-full border border-neutral-300 rounded-md px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
             />
             <label
               htmlFor="apt"
@@ -696,7 +696,7 @@ const handleSubmit = async () => {
                 placeholder=" "
                 value={addressFields.city}
                 onChange={(e) => setAddressFields({ ...addressFields, city: e.target.value })}
-                className="peer w-full border border-neutral-300 rounded-md px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-aliceblue"
+                className="peer w-full border border-neutral-300 rounded-md px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
               />
               <label
                 htmlFor="city"
@@ -718,7 +718,7 @@ const handleSubmit = async () => {
                 placeholder=" "
                 value={addressFields.state}
                 onChange={(e) => setAddressFields({ ...addressFields, state: e.target.value })}
-                className="peer w-full border border-neutral-300 rounded-md px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-aliceblue"
+                className="peer w-full border border-neutral-300 rounded-md px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
               />
               <label
                 htmlFor="state"
@@ -741,7 +741,7 @@ const handleSubmit = async () => {
               placeholder=" "
               value={addressFields.zip}
               onChange={(e) => setAddressFields({ ...addressFields, zip: e.target.value })}
-              className="peer w-full border border-neutral-300 rounded-md px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-aliceblue"
+              className="peer w-full border border-neutral-300 rounded-md px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
             />
             <label
               htmlFor="zip"
@@ -761,7 +761,7 @@ const handleSubmit = async () => {
           />
         </div>
 
-        <div className="mt-4 peer w-full border border-neutral-300 rounded-md p-6 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-aliceblue">
+        <div className="mt-4 peer w-full border border-neutral-300 rounded-md p-6 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black">
            
 
             {/* <CardElement options={{ hidePostalCode: true }} /> */}
@@ -880,7 +880,7 @@ const handleSubmit = async () => {
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value)}
                     placeholder="Enter voucher code"
-                    className="w-full focus:outline-none focus:ring-2 focus:ring-aliceblue transition shadow-md p-4 rounded-xl pr-24"
+                    className="w-full focus:outline-none focus:ring-2 focus:ring-black transition shadow-md p-4 rounded-xl pr-24"
                   />
                   <button
                     onClick={async () => {

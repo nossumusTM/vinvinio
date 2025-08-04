@@ -18,7 +18,7 @@ export const sendVerificationEmail = async (to: string, link: string) => {
     html: `
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; text-align: center; padding: 40px 24px;">
         <img 
-          src="https://vuoiaggio.netlify.app/images/vuoiaggiologo.png" 
+          src="https://vuola.eu/images/vuoiaggiologo.png" 
           alt="Vuola Logo" 
           style="width: 140px; margin-bottom: 32px;" 
         />

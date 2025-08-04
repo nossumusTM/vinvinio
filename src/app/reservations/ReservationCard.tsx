@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { format } from 'date-fns';
 import Avatar from "../components/Avatar";
 import { SafeReservation, SafeUser } from "@/app/types";
+import { BiPaperPlane } from "react-icons/bi";
 import useMessenger from "@/app/hooks/useMessager";
 
 interface ReservationCardProps {
@@ -58,7 +59,7 @@ const ReservationCard: React.FC<ReservationCardProps> = ({ reservation, currentU
         <div className="flex flex-col items-center mt-4">
             <p className="text-md font-medium text-neutral-700 mb-2">Booked by</p>
             <Avatar src={guestImage} name={guestName} />
-            <span className="text-xl font-bold mt-2">{guestName}</span>
+            <span className="text-md font-semibold mt-2">{guestName}</span>
 
             {guestName === 'Guest' ? (
                 <div className="text-sm text-neutral-600 text-center mt-2 px-10 flex flex-col justify-center items-center">
@@ -75,15 +76,20 @@ const ReservationCard: React.FC<ReservationCardProps> = ({ reservation, currentU
                     )}
                 </div>
                 ) : (
-                <button
-                    onClick={() => {
-                    if (currentUser?.id === guestId) return;
-                    messenger.openChat({ id: guestId || '', name: guestName, image: guestImage });
-                    }}
-                    className="text-sm text-neutral-700 hover:underline hover:text-black transition mt-2"
-                >
-                    Message {guestName}
-                </button>
+                <div className="p-4">
+                  <button
+                      onClick={() => {
+                      if (currentUser?.id === guestId) return;
+                      messenger.openChat({ id: guestId || '', name: guestName, image: guestImage });
+                      }}
+                      className="text-xs text-neutral-700 hover:bg-neutral-200 bg-neutral-100 p-3 font-semibold rounded-lg transition"
+                  >
+                    <div className="flex flex-row gap-1 items-center">
+                      <BiPaperPlane size={12} />
+                      <p> {guestName}</p>
+                    </div>
+                  </button>
+                </div>
                 )}
             </div>
       </div>
