@@ -335,7 +335,7 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
       <div className="flex flex-col md:flex-row justify-between items-center w-full mt-8 px-0 md:px-20">
         {/* Left side: Text content */}
         <div className="flex flex-col items-center md:items-start text-center md:text-left gap-1">
-          <p className="text-md font-semibold">&copy; 2025 Vuola Travel Network.</p>
+          <p className="text-md font-normal">&copy; 2025 Vuola Travel Network.</p>
           <p className="text-sm">P.IVA 16694941003</p>
         </div>
 

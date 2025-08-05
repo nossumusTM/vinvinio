@@ -22,19 +22,25 @@
 // /api/email/check-subscription/route.ts
 import { NextResponse } from 'next/server';
 import prisma from '@/app/libs/prismadb';
+import { NewsletterType } from '@prisma/client';
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const email = searchParams.get('email');
-    const type = searchParams.get('type') || 'experience';
+    const type = (searchParams.get('type') || 'experience') as NewsletterType;
 
     if (!email) {
       return new NextResponse('Missing email', { status: 400 });
     }
 
     const existing = await prisma.newsletter.findUnique({
-      where: { email_type: { email, type } }, // ✅ Requires compound unique index
+      where: {
+        email_type: {
+          email,
+          type,
+        },
+      },
     });
 
     return NextResponse.json({ subscribed: !!existing });
