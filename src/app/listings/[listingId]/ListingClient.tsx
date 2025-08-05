@@ -94,12 +94,32 @@ const ListingClient: React.FC<ListingClientProps> = ({
         }));
       }, [reservations]);          
 
+    // const category = useMemo(() => {
+    //     const cat = listing.category;
+    //     const categoryArray = Array.isArray(cat) ? cat : typeof cat === 'string' ? [cat] : [];
+      
+    //     return categories.find((item) => categoryArray.includes(item.label));
+    //   }, [listing.category]);   
+    
     const category = useMemo(() => {
         const cat = listing.category;
-        const categoryArray = Array.isArray(cat) ? cat : typeof cat === 'string' ? [cat] : [];
-      
-        return categories.find((item) => categoryArray.includes(item.label));
-      }, [listing.category]);          
+        const categoryArray = Array.isArray(cat)
+            ? cat
+            : typeof cat === 'string'
+            ? [cat]
+            : [];
+
+        const found = categories.find((item) =>
+            categoryArray.includes(item.label)
+        );
+
+        return {
+            label: found?.label ?? categoryArray[0] ?? 'General',
+            description: found?.description ?? 'No category description provided.',
+            imageSrc: listing.user?.image ?? null // ✅ Use listing.user
+        };
+        }, [listing.category, listing.user]);
+
 
     const [isLoading, setIsLoading] = useState(false);
     const [totalPrice, setTotalPrice] = useState(listing.price);
