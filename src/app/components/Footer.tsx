@@ -6,6 +6,7 @@ import { FiYoutube } from "react-icons/fi";
 import { PiTiktokLogoFill } from "react-icons/pi";
 import { PiInstagramLogoFill } from "react-icons/pi";
 import { TfiPinterestAlt } from "react-icons/tfi";
+import { ImFacebook2 } from "react-icons/im";
 import { PiPinterestLogoDuotone } from "react-icons/pi";
 import useMessenger from '@/app/hooks/useMessager';
 import Modal from './modals/Modal';
@@ -307,21 +308,24 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
           {/* <h3 className="font-semibold text-6xl sm:text-5xl md:text-6xl lg:text-7xl mb-4 mt-2 md:mt-0 lg:mt-0 xl:mt-0 md:mt-1 lg:mt-3 xl:mt-3">
             Daily <br /> Routine  ོ
           </h3> */}
-          <div className="flex space-x-4 text-xl justify-center items-center">
-            <div className="ml-0 md:ml-2 lg:ml-0">
-              <a href="#"><FaTelegram size={40} className="hover:text-neutral-800 text-3xl transition" /></a>
+          <div className="flex text-xl justify-center items-center pt-2">
+            <div className="ml-0 md:ml-2 lg:ml-0 hover:bg-neutral-100 rounded-full text-3xl px-2 py-2 transition">
+              <a href="#"><ImFacebook2 size={26} className="hover:text-neutral-800 transition" /></a>
             </div>
-            <div>
-              <a href="#"><FaYoutube size={44} className="hover:text-neutral-800 text-3xl transition" /></a>
+            <div className="ml-0 md:ml-2 lg:ml-0 hover:bg-neutral-100 rounded-full text-3xl px-2 py-2 transition">
+              <a href="#"><FaTelegram size={30} className="hover:text-neutral-800 transition" /></a>
             </div>
-            <div>
-              <a href="#"><PiTiktokLogoFill size={40} className="hover:text-neutral-800 text-3xl transition" /></a>
+            <div className="ml-0 md:ml-2 lg:ml-0 hover:bg-neutral-100 rounded-full text-3xl px-2 py-2 transition">
+              <a href="#"><FaYoutube size={34} className="hover:text-neutral-800 text-3xl transition" /></a>
             </div>
-            <div>
-              <a href="#"><PiInstagramLogoFill size={40} className="hover:text-neutral-800 text-3xl transition" /></a>
+            <div className="ml-0 md:ml-2 lg:ml-0 hover:bg-neutral-100 rounded-full text-3xl px-2 py-2 transition">
+              <a href="#"><PiTiktokLogoFill size={30} className="hover:text-neutral-800 text-3xl transition" /></a>
             </div>
-            <div>
-              <a href="#"><TfiPinterestAlt size={38} className="hover:text-neutral-800 text-3xl transition" /></a>
+            <div className="ml-0 md:ml-2 lg:ml-0 hover:bg-neutral-100 rounded-full text-3xl px-2 py-2 transition">
+              <a href="#"><PiInstagramLogoFill size={30} className="hover:text-neutral-800 text-3xl transition" /></a>
+            </div>
+            <div className="ml-0 md:ml-2 lg:ml-0 hover:bg-neutral-100 rounded-full text-3xl px-2 py-2 transition">
+              <a href="#"><TfiPinterestAlt size={28} className="hover:text-neutral-800 text-3xl transition" /></a>
             </div>
           </div>
           </div>
@@ -342,12 +346,12 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
         {/* Right side: Image */}
         <div className="mt-4 md:mt-0">
           <Image
-            src="/images/stripe-badge-transparent1.png"
+            src="/images/stripe-badge.png"
             alt="Stripe Badge"
-            width={404}
-            height={132}
+            width={202}
+            height={66}
             priority
-            className="w-auto h-24 md:h-[132px]" // adjust size if needed
+            className="w-auto h-11 md:h-[55px]" // adjust size if needed
             onContextMenu={(e) => e.preventDefault()}
           />
         </div>

@@ -32,6 +32,10 @@ const Map = dynamic(() => import('../Map'), {
     ssr: false
 });
 
+const MapListing = dynamic(() => import('../MapListing'), {
+    ssr: false
+});
+
 interface ListingInfoProps {
     user: SafeUser,
     description: string;
@@ -111,17 +115,15 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                         gap-2
                     "
                     >
-                    <div className="flex items-center gap-2 pt-2">
-                    <Avatar src={user?.image} name={user?.name} size={55}/>
-                    <div className="flex text-sm flex-row justify-start gap-2 font-normal">Guided by 
-                        <div className="font-semibold border-b border-neutral-500">
+                    <div className="bg-neutral-100 p-8 rounded-xl flex items-center gap-3 justify-between items-center">
+                    <Avatar src={user?.image} name={user?.name} size={65}/>
+                    <div className="mt-2 flex text-sm flex-col justify-start font-normal items-center">
+                        <div className="font-semibold border-neutral-500 border-b">
                         {user?.name}
                         </div>
-                    </div>
-                    </div>
 
                     {averageRating !== null && (
-                        <div className="flex items-center gap-2 mb-4 pt-4">
+                        <div className="flex items-center gap-2 justify-center">
                             {/* SVG Star with partial fill */}
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                             <defs>
@@ -144,11 +146,19 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                             </span>
                         </div>
                         )}
+                    </div>
+                    </div>
+
                         
                         {hostDescription && (
-                        <p className="px-5 py-5 text-sm text-neutral-600 mt-2 text-justify whitespace-pre-line">
+                            <div>
+                             <div className="ml-4 mt-5">
+                                <Heading title="Overview"/>
+                            </div>
+                        <p className="px-5 py-5 text-sm text-neutral-600 mt-0 text-justify whitespace-pre-line">
                             {hostDescription}
                         </p>
+                        </div>
                         )}
                     </div>
                 {/* <div className="
@@ -168,7 +178,9 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                 <div className="p-5 flex flex-col gap-4 text-left pt-5">
                 {/* Guest Count */}
                 <div className="flex flex-row gap-3 items-start">
-                    <RiUserHeartFill className="text-neutral-600 mt-1 w-8 h-8 md:w-[30px] md:h-[30px]" />
+                    <div className="bg-neutral-100 p-2 rounded-full">
+                        <RiUserHeartFill size={20} className="text-neutral-600 mt-1" />
+                    </div>
                     <div>
                     <p className="text-lg font-medium text-black">
                         Up to {guestCount} guest{guestCount > 1 ? 's' : ''}
@@ -182,7 +194,9 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                 {/* Languages */}
                 {Array.isArray(languages) && languages.length > 0 && (
                     <div className="flex flex-row gap-3 items-start">
-                    <BsTranslate size={30} className="text-neutral-600 mt-1" />
+                    <div className="bg-neutral-100 p-2 rounded-full">
+                        <BsTranslate size={20} className="text-neutral-600 mt-1" />
+                    </div>
                     <div>
                         <p className="text-lg font-medium text-black">
                         {languages.join(', ')}
@@ -197,7 +211,9 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                 {/* Experience Duration */}
                 {experienceHour && (
                     <div className="flex flex-row gap-3 items-start">
-                    <GiExtraTime size={30} className="text-neutral-600 mt-1" />
+                    <div className="bg-neutral-100 p-2 rounded-full">
+                        <GiExtraTime size={20} className="text-neutral-600 mt-1" />
+                    </div>
                     <div>
                         <p className="text-lg font-medium text-black">
                         {experienceHour} hour{experienceHour > 1 ? 's' : ''}
@@ -250,7 +266,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
 
             <div className="ml-0">
                 <div className="ml-4">
-                <Heading title="About experience" />
+                    <Heading title="About experience" />
                 </div>
                 <div className="mr-2 px-4 py-5 text-md md:p-5 text-neutral-600 text-justify whitespace-pre-line">
                 {description}
@@ -281,7 +297,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
 
             {/* <Map key={coordinates?.join(',') || 'default'} center={coordinates} /> */}
             <div className="p-2 md:p-0 md:px-4">
-            <Map searchQuery={meetingPoint}/>
+            <MapListing searchQuery={meetingPoint}/>
             </div>
 
         </div>

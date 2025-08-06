@@ -31,7 +31,7 @@ import { MdOutlineVilla } from 'react-icons/md';
 import CategoryBox from "../CategoryBox";
 import Container from '../Container';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { LuChevronUp } from 'react-icons/lu';
 
 export const categories = [
@@ -143,7 +143,7 @@ const Categories = () => {
     const pathname = usePathname();
     const isMainPage = pathname === '/';
     const [visible, setVisible] = useState(true);
-    const [prevScrollPos, setPrevScrollPos] = useState(0);
+    const prevScrollPos = useRef(0);
 
     // useEffect(() => {
     //   const handleScroll = () => {
@@ -157,6 +157,11 @@ const Categories = () => {
     //   return () => window.removeEventListener('scroll', handleScroll);
     // }, [prevScrollPos]);
 
+    // Hide on any page other than homepage
+    if (!isMainPage) {
+      return null;
+    }
+
     useEffect(() => {
       let ticking = false;
 
@@ -165,8 +170,18 @@ const Categories = () => {
 
         if (!ticking) {
           window.requestAnimationFrame(() => {
-            setVisible((prev) => currentScroll < 100 || currentScroll < prevScrollPos);
-            setPrevScrollPos(currentScroll);
+            // Always show near top
+            if (currentScroll < 100) {
+              setVisible(true);
+            } else if (currentScroll < prevScrollPos.current) {
+              // Scrolling up → show
+              setVisible(true);
+            } else {
+              // Scrolling down → hide
+              setVisible(false);
+            }
+
+            prevScrollPos.current = currentScroll;
             ticking = false;
           });
           ticking = true;
@@ -176,10 +191,6 @@ const Categories = () => {
       window.addEventListener('scroll', handleScroll, { passive: true });
       return () => window.removeEventListener('scroll', handleScroll);
     }, []);
-
-    if (!isMainPage) {
-        return null;
-    }
 
     // return (
     //     <div className="w-full overflow-x-auto">
