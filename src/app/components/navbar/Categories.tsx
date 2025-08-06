@@ -145,23 +145,6 @@ const Categories = () => {
     const [visible, setVisible] = useState(true);
     const prevScrollPos = useRef(0);
 
-    // useEffect(() => {
-    //   const handleScroll = () => {
-    //     const currentScroll = window.scrollY;
-
-    //     setVisible(prevScrollPos > currentScroll || currentScroll < 100);
-    //     setPrevScrollPos(currentScroll);
-    //   };
-
-    //   window.addEventListener('scroll', handleScroll);
-    //   return () => window.removeEventListener('scroll', handleScroll);
-    // }, [prevScrollPos]);
-
-    // Hide on any page other than homepage
-    if (!isMainPage) {
-      return null;
-    }
-
     useEffect(() => {
       let ticking = false;
 
@@ -192,37 +175,10 @@ const Categories = () => {
       return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    // return (
-    //     <div className="w-full overflow-x-auto">
-    //       <Container>
-    //       <div
-    //         className="
-    //             pt-4
-    //             flex 
-    //             flex-row 
-    //             items-center 
-    //             gap-2
-    //             overflow-x-auto
-    //             scroll-smooth
-    //             scrollbar-thin
-    //             snap-x 
-    //             snap-mandatory
-    //             w-full
-    //             sm:w-auto
-    //         "
-    //         >
-    //           {categories.map((item) => (
-    //             <CategoryBox
-    //               key={item.label}
-    //               label={item.label}
-    //               icon={item.icon}
-    //               selected={category === item.label}
-    //             />
-    //           ))}
-    //         </div>
-    //       </Container>
-    //     </div>
-    //   );
+    // Hide on any page other than homepage
+    if (!isMainPage) {
+      return null;
+    }
     
     return (
       <div className="w-full relative">
