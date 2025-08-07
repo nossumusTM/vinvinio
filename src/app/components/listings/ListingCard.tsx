@@ -78,7 +78,8 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
   const coverMedia = useMemo(() => {
     const roll = Math.random();
-    if (roll < 0.05 && videos.length > 0) {
+    if (videos.length > 0) {
+    // if (roll < 0.05 && videos.length > 0) {
       const randomVideo = videos[Math.floor(Math.random() * videos.length)];
       return { type: 'video', src: randomVideo };
     }
@@ -88,6 +89,8 @@ const ListingCard: React.FC<ListingCardProps> = ({
     }
     return { type: 'image', src: '/placeholder.jpg' }; // Fallback
   }, [images, videos]);  
+
+  console.log('coverMedia', coverMedia);
 
   useEffect(() => {
     if (!isHovered || images.length <= 1) return;
@@ -199,7 +202,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
               alt={`Listing ${i}`}
             />
           ))} */}
-          {coverMedia.type === 'video' ? (
+          {/* {coverMedia.type === 'video' ? (
               <video
                 src={coverMedia.src}
                 className="absolute top-0 left-0 w-full h-full object-cover rounded-xl"
@@ -222,7 +225,35 @@ const ListingCard: React.FC<ListingCardProps> = ({
                   priority
                 />
               ))
+            )} */}
+            {coverMedia.type === 'video' && (
+              <video
+                key={coverMedia.src}
+                src={coverMedia.src}
+                className="absolute top-0 left-0 w-full h-full object-cover rounded-xl"
+                autoPlay
+                loop
+                muted
+                playsInline
+                style={{ zIndex: 1 }}
+              />
             )}
+
+            {coverMedia.type === 'image' &&
+              images.map((img: string, i: number) => (
+                <Image
+                  key={i}
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  className={`object-cover h-full w-full absolute top-0 left-0 rounded-xl transition-opacity duration-700 ease-in-out ${
+                    i === activeImageIndex ? 'opacity-100' : 'opacity-0'
+                  }`}
+                  src={img}
+                  alt={`Listing ${i}`}
+                  priority
+                />
+            ))}
+
 
           <div className="absolute top-3 right-3">
             <HeartButton listingId={data.id} currentUser={currentUser} />

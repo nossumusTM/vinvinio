@@ -553,7 +553,7 @@ const handleSubmit = async () => {
 
       {/* LEFT SECTION */}
       <div className="w-full lg:w-2/3 bg-white rounded-2xl shadow-md p-6 space-y-6">
-      <div className='flex flex-row gap-4'>
+      <div className='flex flex-row gap-2'>
         <button
             onClick={() => router.push(`/listings/${listingId}`)}
             className="ext-sm text-black bg-transparent hover:bg-neutral-100 rounded-full py-1 px-2 transition py-1 px-2 transition mb-2"
@@ -561,7 +561,10 @@ const handleSubmit = async () => {
             ←
           </button>
 
-          <Heading title="Booking Confirmation" />
+          {/* <Heading title="Booking Confirmation" /> */}
+            <div className="md:text-2xl text-xl font-bold">
+              <h1>Booking Confirmation</h1>
+            </div>
           {/* {referralId && (
               <div className="text-xs text-neutral-500 mt-2">
                 <span className="font-semibold">Referral ID:</span> {referralId}

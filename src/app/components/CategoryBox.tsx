@@ -55,8 +55,7 @@ const CategoryBox: React.FC<CategoryBoxProps> = ({
                 min-w-[90px]
                 px-4
                 py-3
-                border
-                shadow-sm
+                border-b
                 border-neutral-100
                 hover:bg-neutral-100
                 hover:text-neutral-800

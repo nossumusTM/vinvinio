@@ -4,17 +4,7 @@ import dynamic from "next/dynamic";
 import { IconType } from "react-icons";
 import Heading from "../Heading";
 
-import { TbUserCheck, TbClockPlay, TbLanguage, TbPointerPin } from "react-icons/tb";
-import { PiHandPointing } from "react-icons/pi";
-import { GiImpactPoint } from "react-icons/gi";
-import { SiPointy } from "react-icons/si";
-import { FaPeopleGroup } from "react-icons/fa6";
 import { BsTranslate } from "react-icons/bs";
-import { GrCycle } from "react-icons/gr";
-import { FaRegFaceSmileBeam } from "react-icons/fa6";
-import { FaPiedPiperHat } from "react-icons/fa";
-import { GiPointyHat } from "react-icons/gi";
-import { GiRobinHoodHat } from "react-icons/gi";
 import { RiUserHeartFill } from "react-icons/ri";
 import { GiExtraTime } from "react-icons/gi";
 import LocationDescription from '../LocationDescription';
@@ -177,8 +167,8 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                 </div>
                 <div className="p-5 flex flex-col gap-4 text-left pt-5">
                 {/* Guest Count */}
-                <div className="flex flex-row gap-3 items-start">
-                    <div className="bg-neutral-100 p-2 rounded-full">
+                <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-neutral-100 rounded-full flex items-center justify-center">
                         <RiUserHeartFill size={20} className="text-neutral-600 mt-1" />
                     </div>
                     <div>
@@ -193,8 +183,8 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
 
                 {/* Languages */}
                 {Array.isArray(languages) && languages.length > 0 && (
-                    <div className="flex flex-row gap-3 items-start">
-                    <div className="bg-neutral-100 p-2 rounded-full">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-neutral-100 rounded-full flex items-center justify-center">
                         <BsTranslate size={20} className="text-neutral-600 mt-1" />
                     </div>
                     <div>
@@ -210,8 +200,8 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
 
                 {/* Experience Duration */}
                 {experienceHour && (
-                    <div className="flex flex-row gap-3 items-start">
-                    <div className="bg-neutral-100 p-2 rounded-full">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-neutral-100 rounded-full flex items-center justify-center">
                         <GiExtraTime size={20} className="text-neutral-600 mt-1" />
                     </div>
                     <div>
@@ -237,7 +227,6 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
 
                 {Array.isArray(locationType) && locationType.length > 0 && (
                 <div className="flex items-center flex-wrap gap-2 text-sm text-neutral-700 mb-2">
-                    <strong className="mr-1">Type:</strong>
                     {locationType.map((type, i) => (
                     <span key={i} className="bg-neutral-100 px-2 py-1 rounded-full capitalize">
                         {type.replace(/_/g, ' ')}

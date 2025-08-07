@@ -701,8 +701,8 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
               <Image
                 src={profileImage}
                 alt="User"
-                width={100}
-                height={100}
+                width={80}
+                height={80}
                 className="rounded-full mt-2 md:mt-0 object-cover shadow-xl hover:shadow-2xl transition"
               />
             ) : (

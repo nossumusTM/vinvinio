@@ -41,7 +41,7 @@ export const categories = [
         description: 'Aventine Hill Tour in Vintage Fiat 500 Convoy',
     },
     {
-        label: 'Photo Muse',  
+        label: 'Production',  
         icon: MdOutlineMonochromePhotos,
         description: 'Capture the timeless beauty of the most iconic landmarks'
     },
@@ -146,33 +146,38 @@ const Categories = () => {
     const prevScrollPos = useRef(0);
 
     useEffect(() => {
-      let ticking = false;
+      let timeout: NodeJS.Timeout | null = null;
+      let lastScrollY = window.scrollY;
+      let hasScrolledDown = false;
 
       const handleScroll = () => {
-        const currentScroll = window.scrollY;
+        const currentScrollY = window.scrollY;
+        const scrollDelta = currentScrollY - lastScrollY;
 
-        if (!ticking) {
-          window.requestAnimationFrame(() => {
-            // Always show near top
-            if (currentScroll < 100) {
-              setVisible(true);
-            } else if (currentScroll < prevScrollPos.current) {
-              // Scrolling up → show
-              setVisible(true);
-            } else {
-              // Scrolling down → hide
-              setVisible(false);
-            }
-
-            prevScrollPos.current = currentScroll;
-            ticking = false;
-          });
-          ticking = true;
+        if (scrollDelta > 10) {
+          // User is scrolling down
+          hasScrolledDown = true;
+          if (timeout) clearTimeout(timeout);
+          timeout = setTimeout(() => {
+            setVisible(false);
+          }, 100); // short delay to make it smooth
         }
+
+        // Show only if user reaches top (near navbar)
+        if (currentScrollY <= 50 && hasScrolledDown) {
+          if (timeout) clearTimeout(timeout);
+          setVisible(true);
+          hasScrolledDown = false; // prevent re-showing until user scrolls down again
+        }
+
+        lastScrollY = currentScrollY;
       };
 
       window.addEventListener('scroll', handleScroll, { passive: true });
-      return () => window.removeEventListener('scroll', handleScroll);
+      return () => {
+        if (timeout) clearTimeout(timeout);
+        window.removeEventListener('scroll', handleScroll);
+      };
     }, []);
 
     // Hide on any page other than homepage

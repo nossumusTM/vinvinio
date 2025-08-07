@@ -83,7 +83,7 @@ const SearchExperience = () => {
 
   const locationLabel = useMemo(() => {
     const fallback = (
-      <span className="flex items-center justify-center gap-2 mr-0 md:mr-5 whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
+      <span className="pt-1 flex items-center justify-center gap-2 mr-0 md:mr-5 whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
 
         <Image
           src="/flags/it.svg"
@@ -145,9 +145,11 @@ const SearchExperience = () => {
       // onClick={searchModal.onOpen}
       onClick={searchModal.onClose}
       className="
-        w-full 
+        sm:w-full
+        w-auto
         md:w-auto 
         py-2 
+        md:px-1
         rounded-full 
         shadow-md 
         hover:shadow-lg 
@@ -162,11 +164,11 @@ const SearchExperience = () => {
         <div className="hidden lg:block text-sm font-medium px-6 border-x-[1px] flex-1 text-center">
           {durationLabel}
         </div>
-        <div className="text-sm pl-6 pr-2 text-gray-600 flex flex-row items-center gap-3">
+        <div className="text-sm pl-6 md:px-4 text-gray-600 flex flex-row items-center gap-3 ">
           <div className="hidden lg:block font-medium text-black">{guestLabel}</div>
-          <div className="p-2 bg-black rounded-full text-white">
+          {/* <div className="p-2 bg-black rounded-full text-white">
             <BiSearch size={18} />
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

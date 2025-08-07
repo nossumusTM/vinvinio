@@ -214,6 +214,33 @@ const ListingHead: React.FC<ListingHeadProps> = ({
 
         </div>
 
+        {imageSrc.length === 1 && videoSrc ? (
+          <div className="relative w-full h-[80vh] rounded-xl overflow-hidden">
+            {/* Blurred background video */}
+            <video
+              src={videoSrc}
+              className="rounded-xl absolute top-0 left-0 w-full h-full object-cover filter blur-xl scale-110"
+              autoPlay
+              muted
+              loop
+              playsInline
+            />  
+            <div className="absolute inset-0 bg-white/30 z-10" />
+
+            {/* Foreground video */}
+            <div className="p-10 relative z-20 flex justify-center items-center h-full">
+              <video
+                src={videoSrc}
+                className="rounded-xl h-full w-auto max-w-full object-contain"
+                autoPlay
+                muted
+                loop
+                playsInline
+              />
+            </div>
+          </div>
+        ) : (
+        // 🖼️ Standard media grid
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 w-full rounded-xl overflow-hidden h-[60vh]">
           {/* Left: Video or first image */}
           <div className="relative w-full h-full">
@@ -265,6 +292,8 @@ const ListingHead: React.FC<ListingHeadProps> = ({
             ))}
           </div>
         </div>
+      )}
+
       </div>
 
       <Lightbox
