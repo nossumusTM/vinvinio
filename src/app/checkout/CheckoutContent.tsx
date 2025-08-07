@@ -789,17 +789,45 @@ const handleSubmit = async () => {
           <div className="bg-white rounded-2xl shadow-md p-6 space-y-7">
       {listingData && (
           <>
-            {randomImage && (
-              <Image
-                key={randomImage} // 🧠 helps force re-render
-                src={randomImage}
-                alt={listingData.title}
-                width={400}
-                height={300}
-                className="rounded-xl w-full h-60 object-cover"
-                onError={() => setRandomImage('/images/fallback.jpg')} // 👈 fallback
-                priority // 🚀 hint Next.js to preload
-              />
+            {listingData?.imageSrc?.length === 1 ? (
+              listingData.imageSrc[0].endsWith('.mp4') ? (
+                <video
+                  src={listingData.imageSrc[0]}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className={
+                    'rounded-xl w-full object-cover ' +
+                    (listingData.imageSrc[0].includes('portrait') || listingData.imageSrc[0].includes('9x16')
+                      ? 'h-[500px]'
+                      : 'h-60')
+                  }
+                />
+              ) : (
+                <Image
+                  src={listingData.imageSrc[0]}
+                  alt={listingData.title}
+                  width={400}
+                  height={300}
+                  className="rounded-xl w-full h-60 object-cover"
+                  onError={() => setRandomImage('/images/fallback.jpg')}
+                  priority
+                />
+              )
+            ) : (
+              randomImage && (
+                <Image
+                  key={randomImage}
+                  src={randomImage}
+                  alt={listingData.title}
+                  width={400}
+                  height={300}
+                  className="rounded-xl w-full h-60 object-cover"
+                  onError={() => setRandomImage('/images/fallback.jpg')}
+                  priority
+                />
+              )
             )}
 
             <div className='flex flex-col gap-2'>
