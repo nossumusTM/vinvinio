@@ -3,10 +3,12 @@
 import Image from 'next/image';
 import { useState, useMemo, useEffect } from 'react';
 import useCountries from '@/app/hooks/useCountries';
+import { PiShareFat } from "react-icons/pi";
 import { SafeUser } from '@/app/types';
 import Heading from '../Heading';
 import HeartButton from '../HeartButton';
 import Lightbox from 'yet-another-react-lightbox';
+import { AnimatePresence, motion } from 'framer-motion';
 import 'yet-another-react-lightbox/styles.css';
 import { TbShare2 } from 'react-icons/tb';
 import ConfirmPopup from '../ConfirmPopup';
@@ -177,39 +179,29 @@ const ListingHead: React.FC<ListingHeadProps> = ({
       <div className="w-full rounded-xl relative mt-4">
         <div className="absolute top-5 right-5 z-10 flex gap-4 items-center">
 
+        <div className='absolute top-0 left-2'>
         <HeartButton listingId={id} currentUser={currentUser} />
+        </div>
 
-        <div
+        <div className='absolute top-1 right-10'>
+
+        <button
           onClick={() => {
             navigator.clipboard.writeText(window.location.href);
             setShowSharePopup(true);
             setTimeout(() => setShowSharePopup(false), 2500);
           }}
+          aria-label="Share"
           className="
-            relative
-            hover:opacity-80
+            p-2 rounded-full
+            border border-white/30 hover:border-white
+            bg-white/10 backdrop-blur-sm
+            text-white
             transition
-            cursor-pointer
           "
         >
-          {/* White outline */}
-          <TbShare2
-            size={28}
-            strokeWidth={1.7}
-            className="
-              text-white
-              absolute
-              -top-[3px]
-              -right-[2px]
-              z-10
-            "
-          />
-          {/* Main icon */}
-          <TbShare2
-            size={24}
-            strokeWidth={0}
-            className="text-neutral-500/70"
-          />
+          <PiShareFat size={18} />
+        </button>
         </div>
 
         </div>
@@ -296,18 +288,127 @@ const ListingHead: React.FC<ListingHeadProps> = ({
 
       </div>
 
+      <AnimatePresence>
+        {lightboxOpen && (
+          <motion.div
+            key="lb-blur"
+            initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+            animate={{ opacity: 1, backdropFilter: 'blur(10px)' }}
+            exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0,0,0,0.35)',
+              WebkitBackdropFilter: 'blur(10px)',
+              zIndex: 60, // below the lightbox root (we’ll raise the root next)
+              pointerEvents: 'none', // clicks go to the lightbox backdrop
+            }}
+          />
+        )}
+      </AnimatePresence>
+
       <Lightbox
         open={lightboxOpen}
         close={() => setLightboxOpen(false)}
         index={lightboxIndex}
+        controller={{ closeOnBackdropClick: true }}   // ✅ THIS LINE
         slides={lightboxSlides}
+        toolbar={{ buttons: [] }}
+        animation={{ fade: 300, swipe: 450 }}
         styles={{
           container: {
-            backgroundColor: 'rgba(0,0,0,0.2)',
-            backdropFilter: 'blur(10px)',
+            backgroundColor: 'transparent', // let our overlay handle tint/blur
           },
         }}
+        render={{
+          iconPrev: () => (
+            <svg width="18" height="18" viewBox="0 0 24 24" className="pointer-events-none">
+              <path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" strokeWidth="2"
+                    strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          ),
+          iconNext: () => (
+            <svg width="18" height="18" viewBox="0 0 24 24" className="pointer-events-none">
+              <path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2"
+                    strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          ),
+          // iconClose: () => (
+          //   <svg width="18" height="18" viewBox="0 0 24 24" className="pointer-events-none">
+          //     <path d="M18 6L6 18M6 6l12 12" fill="none" stroke="currentColor" strokeWidth="2"
+          //           strokeLinecap="round" strokeLinejoin="round" />
+          //   </svg>
+          // ),
+        }}
       />
+
+      <style jsx global>{`
+        .yarl__root { z-index: 70 !important; } /* above our overlay (60) */
+      `}</style>
+
+      <style jsx global>{`
+        /* Glass-pill buttons (Prev / Next / Close) */
+        .yarl__iconButton,
+        .yarl__root button[aria-label="Previous"],
+        .yarl__root button[aria-label="Next"],
+        .yarl__root button[aria-label="Close"] {
+          border: 1px solid rgba(255, 255, 255, 0.32) !important;
+          background: rgba(255, 255, 255, 0.12) !important;
+          backdrop-filter: blur(6px);
+          border-radius: 9999px !important;
+          padding: 8px !important;
+          box-shadow: none !important;
+          transition: border-color .2s ease, background-color .2s ease;
+        }
+
+        /* Remove border/background from icon wrapper entirely */
+        .yarl__icon,
+        .yarl__toolbarIcon,
+        .yarl__iconButton svg,
+        .yarl__root button[aria-label="Previous"] svg,
+        .yarl__root button[aria-label="Next"] svg,
+        .yarl__root button[aria-label="Close"] svg {
+          border: none !important;
+          background: transparent !important;
+          box-shadow: none !important;
+          width: 18px !important;
+          height: 18px !important;
+          stroke: currentColor !important;
+          color: #fff !important;
+        }
+
+        /* Hover stays clean — no movement, just brighter glass */
+        .yarl__iconButton:hover,
+        .yarl__root button[aria-label="Previous"]:hover,
+        .yarl__root button[aria-label="Next"]:hover,
+        .yarl__root button[aria-label="Close"]:hover {
+          border-color: #ffffff !important;
+          background: rgba(255, 255, 255, 0.22) !important;
+        }
+
+        /* Perfect arrow spacing */
+        .yarl__root button[aria-label="Previous"] {
+          left: 28px !important;
+        }
+        .yarl__root button[aria-label="Next"] {
+          right: 28px !important;
+        }
+
+        /* Close button nice positioning */
+        .yarl__root button[aria-label="Close"] {
+          top: 20px !important;
+          right: 20px !important;
+        }
+
+        /* No outline flash */
+        .yarl__iconButton:focus-visible,
+        .yarl__root button[aria-label="Previous"]:focus-visible,
+        .yarl__root button[aria-label="Next"]:focus-visible,
+        .yarl__root button[aria-label="Close"]:focus-visible {
+          outline: none !important;
+        }
+      `}</style>
 
       {showSharePopup && (
         <ConfirmPopup

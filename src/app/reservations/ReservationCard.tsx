@@ -51,7 +51,7 @@ const ReservationCard: React.FC<ReservationCardProps> = ({ reservation, currentU
         </div>
   
         <div className="text-sm text-neutral-700 font-medium">
-          {reservation.guestCount === 1 ? 'Traveller' : 'Travellers'}: {reservation.guestCount}
+          {reservation.guestCount === 1 ? 'Guest' : 'Guests'}: {reservation.guestCount}
         </div>
   
         <div className="text-lg font-bold">€ {reservation.totalPrice.toFixed(2)}</div>

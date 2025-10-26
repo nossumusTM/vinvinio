@@ -1,7 +1,12 @@
 'use client';
 
 import axios from "axios";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+
+import qs from 'query-string';
+import { useSearchParams, usePathname } from 'next/navigation';
+import { formatISO } from 'date-fns';
+
 import { toast } from "react-hot-toast";
 import { Range } from "react-date-range";
 import { useRouter } from "next/navigation";
@@ -48,6 +53,13 @@ const ListingClient: React.FC<ListingClientProps> = ({
 }) => {
     const loginModal = useLoginModal();
     const router = useRouter();
+    const params = useSearchParams();
+    const pathname = usePathname();
+
+    const [dateDirty, setDateDirty] = useState(false);
+    const [guestsDirty, setGuestsDirty] = useState(false);
+
+    const didInitFromParams = useRef(false);
 
     const {
         hostDescription = '',
@@ -152,6 +164,24 @@ const ListingClient: React.FC<ListingClientProps> = ({
         //     selectedTime,
         //     guestCount,
         // })
+
+        // ✅ sync query so guest count & dates are carried forward (no scroll jump)
+        const currentQuery = params ? qs.parse(params.toString()) : {};
+        const updatedQuery: any = {
+        ...currentQuery,
+        listingId: listing?.id,
+        startDate: dateRange.startDate ? formatISO(dateRange.startDate as Date) : undefined,
+        endDate:   dateRange.endDate   ? formatISO(dateRange.endDate   as Date) : undefined,
+        time: selectedTime,
+        guestCount,                 // primary key
+        guests: String(guestCount), // legacy fallback
+        };
+
+        router.replace(
+        qs.stringifyUrl({ url: pathname || '/', query: updatedQuery }, { skipNull: true, skipEmptyString: true }),
+        { scroll: false }
+        );
+        
         axios.post('/api/reservations', {
             totalPrice,
             startDate: format(dateRange.startDate!, 'yyyy-MM-dd'),
@@ -186,6 +216,16 @@ const ListingClient: React.FC<ListingClientProps> = ({
         selectedTime,
         guestCount
     ]);
+
+    const handleDateChange = (value: Range) => {
+        setDateRange(value);
+        setDateDirty(true); // ✅ mark that user changed date
+        };
+
+        const handleGuestChange = (value: number) => {
+        setGuestCount(value);
+        setGuestsDirty(true); // ✅ mark that user changed guests
+    };
 
     useEffect(() => {
         if (dateRange.startDate && listing.price) {
@@ -242,6 +282,47 @@ const ListingClient: React.FC<ListingClientProps> = ({
         if (reviews.length > 0) fetchUserImages();
     }, [reviews]);
 
+    useEffect(() => {
+        if (!dateDirty && !guestsDirty) return; // ✅ do nothing until user interacts
+
+        const currentQuery = params ? qs.parse(params.toString()) : {};
+        const updatedQuery: any = { ...currentQuery };
+
+        if (dateDirty) {
+            updatedQuery.startDate = dateRange.startDate ? formatISO(dateRange.startDate as Date) : undefined;
+            updatedQuery.endDate   = dateRange.endDate   ? formatISO(dateRange.endDate   as Date) : undefined;
+        }
+        if (guestsDirty) {
+            updatedQuery.guestCount = guestCount;
+            updatedQuery.guests = String(guestCount); 
+        }
+
+        router.replace(
+            qs.stringifyUrl({ url: pathname || '/', query: updatedQuery }, { skipNull: true, skipEmptyString: true }),
+            { scroll: false } // ✅ prevent jump to top
+        );
+        }, [
+        dateDirty, guestsDirty,
+        dateRange.startDate, dateRange.endDate,
+        guestCount, params, pathname, router
+    ]);
+
+    // ListingClient.tsx — add after your useState hooks
+    useEffect(() => {
+        const s = params?.get('startDate');
+        const e = params?.get('endDate');
+        const g = params?.get('guestCount') ?? params?.get('guests');
+
+        if (s) setDateRange(prev => ({ ...prev, startDate: new Date(s) }));
+        if (e) setDateRange(prev => ({ ...prev, endDate: new Date(e) }));
+        if (g) {
+            const n = parseInt(g, 10);
+            if (!Number.isNaN(n) && n > 0) setGuestCount(n);
+        }
+        // do NOT set dateDirty/guestsDirty here
+    }, [params]);
+
+
     const averageRating = useMemo(() => {
         if (reviews.length === 0) return 0;
         const total = reviews.reduce((sum, review) => sum + review.rating, 0);
@@ -288,7 +369,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                         }}
                         className="text-md text-white bg-black hover:bg-neutral-800 p-4 rounded-xl font-normal mt-1"
                         >
-                        Start chat with @{listing.user?.name?.split(' ')[0] ?? 'Host'}
+                        Text @{listing.user?.name?.split(' ')[0] ?? 'Host'}
                     </button>
 
                     <div className="grid grid-cols-1 md:grid-cols-7 md:gap-10 mt-6 relative">
@@ -313,7 +394,8 @@ const ListingClient: React.FC<ListingClientProps> = ({
                                 listingId={listing.id}
                                 price={listing.price}
                                 totalPrice={totalPrice}
-                                onChangeDate={(value) => setDateRange(value)}
+                                // onChangeDate={(value) => setDateRange(value)}
+                                onChangeDate={handleDateChange}
                                 dateRange={dateRange}
                                 onSubmit={onCreateReservation}
                                 disabled={isLoading}
@@ -323,7 +405,8 @@ const ListingClient: React.FC<ListingClientProps> = ({
                                 onTimeChange={setSelectedTime}
                                 maxGuests={listing.guestCount}
                                 guestCount={guestCount}
-                                onGuestCountChange={setGuestCount} 
+                                // onGuestCountChange={setGuestCount}
+                                onGuestCountChange={handleGuestChange} 
                                 averageRating={averageRating}
                                 reviewCount={reviews.length}
                                 categoryLabel={category?.label}

@@ -176,7 +176,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                         Up to {guestCount} guest{guestCount > 1 ? 's' : ''}
                     </p>
                     <p className="text-sm text-neutral-600">
-                        {hostName} can welcome a group of up to {guestCount} {guestCount === 1 ? 'traveller' : 'travellers'}.
+                        {hostName} can welcome a group of up to {guestCount} {guestCount === 1 ? 'guest' : 'guests'}.
                     </p>
                     </div>
                 </div>

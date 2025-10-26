@@ -330,21 +330,42 @@ const TripsClient: React.FC<TripsClientProps> = ({
                 </div>
               )}
 
-              <div className="p-4 flex flex-col gap-2">
+              <div className="p-4 flex flex-col gap-2 items-center text-black">
+
+              <div className="flex flex-wrap items-center gap-3 text-[15px] text-neutral-800 shadow-md border border-white rounded-full px-2 py-1 mb-4 mt-4">
+
+              {/* Guest Count */}
+              <div className="flex items-center gap-1 text-xs font-semibold">
+                <span className="font-semibold">{reservation.guestCount}</span>
+                {reservation.guestCount === 1 ? "Guest" : "Guests"}
+              </div>
+
+              {/* Dot Separator */}
+              <span className="text-neutral-400 select-none text-xs">•</span>
+
+              {/* Date */}
+              <div className="text-neutral-600 text-xs font-semibold">
+                {format(new Date(reservation.startDate), "PPP")}
+              </div>
+
+              {/* Dot Separator */}
+              <span className="text-neutral-400 select-none text-xs">•</span>
+
+              {/* Time */}
+              <div className="text-neutral-600 text-xs font-semibold">
+                {(() => {
+                  const [h, m] = reservation.time.split(":").map(Number);
+                  const hour12 = (h % 12) || 12;
+                  const ampm = h >= 12 ? "PM" : "AM";
+                  return `${hour12}:${String(m).padStart(2, "0")} ${ampm}`;
+                })()}
+              </div>
+
+            </div>
+
                 <div className="text-lg font-semibold">{reservation.listing.title}</div>
+
                  {/* <div className="text-sm text-neutral-600">{reservationDate}</div> */}
-
-                  <div className="text-sm text-neutral-600 flex flex-row gap-2 items-center">{format(new Date(reservation.startDate), 'PPP')}
-                  <div className="">{reservation.time}{' '}
-                    {(() => {
-                      const hour = parseInt(reservation.time.split(':')[0], 10);
-                      return hour >= 12 ? 'PM' : 'AM';
-                    })()}</div>
-                </div> 
-
-        <div className="text-sm text-neutral-700 font-medium">
-            {reservation.guestCount === 1 ? 'Traveller' : 'Travellers'}: {reservation.guestCount}
-        </div>
 
                 {/* <div className="text-sm text-neutral-600 mt-4 flex flex-row gap-1 align-center justify-center">
                   <p className="text-md text-black">
@@ -375,9 +396,10 @@ const TripsClient: React.FC<TripsClientProps> = ({
                 })()}</div>
                 </div> */}
 
+                <hr className="mt-6 mb-6 w-screen relative left-1/2 right-1/2 -translate-x-1/2 border-t border-neutral-200" />
 
                 <div className="flex flex-col items-center gap-2">
-                  <p className="text-md font-medium text-neutral-700 pt-6">Guided by</p>
+                  {/* <p className="text-md font-medium text-neutral-700 pt-6">Guided by</p> */}
                   <Avatar src={hostImage} name={hostName} />
                   <span className="text-md font-semibold">{hostName}</span>
                   <button
@@ -395,8 +417,8 @@ const TripsClient: React.FC<TripsClientProps> = ({
                     className="text-xs text-neutral-700 hover:bg-neutral-200 bg-neutral-100 p-3 font-semibold rounded-lg transition"
                   >
                     <div className="flex flex-row gap-1 items-center">
-                      <BiPaperPlane size={12} />
-                      <p> {hostName}</p>
+                      {/* <BiPaperPlane size={12} /> */}
+                      <p> Send a Message</p>
                     </div>
                   </button>
                 </div>
@@ -428,7 +450,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
 
               </div>
 
-              {currentUser?.role === 'customer' && (
+              {currentUser?.role === 'customer' || currentUser?.role === 'promoter' && (
                 <div className="mt-4 border-t pt-6 flex flex-col items-center justify-center text-center">
                   {submittedReviews[reservation.id] ? (
                     <>
@@ -445,7 +467,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
                           </span>
                         ))}
                       </div>
-                      <p className="text-sm text-neutral-700 italic px-2 mb-6">
+                      <p className="text-sm text-neutral-700 italic px-6 mb-6">
                         “{submittedReviews[reservation.id].comment}”
                       </p>
                     </>

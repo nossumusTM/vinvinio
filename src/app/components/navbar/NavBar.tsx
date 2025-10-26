@@ -21,28 +21,85 @@ const NavBar: React.FC<NavBarProps> = ({ currentUser }) => {
   const [visible, setVisible] = useState(true);
 
   const pathname = usePathname();
+  // add next to isListingPage
   const isListingPage = pathname?.startsWith('/listings/');
+  const isCheckoutPage = pathname?.startsWith('/checkout');
+  const keepVisible = isListingPage || isCheckoutPage;
 
-  useEffect(() => {
-  if (!isListingPage) return;
+//   useEffect(() => {
 
-  const handleScroll = () => {
-    const currentScroll = window.scrollY;
-    setVisible(prevScrollPos > currentScroll || currentScroll < 5);
-    setPrevScrollPos(currentScroll);
+//     if (isListingPage) {
+//       setVisible(true);
+//       return;
+//     }
+
+//   if (!isListingPage) return;
+
+//   const handleScroll = () => {
+//     const currentScroll = window.scrollY;
+//     setVisible(prevScrollPos > currentScroll || currentScroll < 5);
+//     setPrevScrollPos(currentScroll);
+//   };
+
+//   window.addEventListener('scroll', handleScroll);
+//   return () => window.removeEventListener('scroll', handleScroll);
+// }, [isListingPage, prevScrollPos]);
+
+// replace your useEffect with this, using keepVisible
+useEffect(() => {
+  // Keep navbar always visible on listing & checkout pages
+  if (keepVisible) {
+    setVisible(true);
+    return;
+  }
+
+  let lastY = 0;
+  let visibleNow = true;
+  let ticking = false;
+  const THRESHOLD = 8; // ignore tiny scrolls
+
+  const onScroll = () => {
+    const y = window.scrollY;
+    if (ticking) return;
+    ticking = true;
+
+    requestAnimationFrame(() => {
+      const delta = y - lastY;
+
+      let nextVisible = visibleNow;
+      if (y < 5) nextVisible = true;           // near top: show
+      else if (Math.abs(delta) > THRESHOLD) {
+        nextVisible = delta < 0;               // up: show, down: hide
+      }
+
+      if (nextVisible !== visibleNow) {
+        visibleNow = nextVisible;
+        setVisible(nextVisible);
+      }
+
+      lastY = y;
+      ticking = false;
+    });
   };
 
-  window.addEventListener('scroll', handleScroll);
-  return () => window.removeEventListener('scroll', handleScroll);
-}, [isListingPage, prevScrollPos]);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [keepVisible]);
 
   return (
+    // <div
+    //   className={`fixed w-full bg-white z-50 shadow-sm transition-transform duration-300 ${
+    //     visible ? 'translate-y-0' : '-translate-y-[120%]'
+    //   }`}
+    // >
     <div
-      className={`fixed w-full bg-white z-50 shadow-sm transition-transform duration-300 ${
-        visible ? 'translate-y-0' : '-translate-y-[120%]'
-      }`}
+      className={`fixed w-full z-50 shadow-sm transition-transform duration-300
+        bg-white/50 backdrop-blur-md supports-[backdrop-filter]:bg-white/40
+        ${visible ? 'translate-y-0' : '-translate-y-[120%]'}
+      `}
     >
-      <div className="p-4 pt-6 md:py-6 border-b-[1px]">
+      {/* <div className="p-4 pt-6 md:py-6 border-b-[1px]"> */}
+      <div className="p-4 pt-6 md:py-6">
         <Container>
           <div className="flex items-center justify-between w-full relative gap-4">
             {/* Centered logo on desktop, left on mobile */}

@@ -32,7 +32,8 @@ const SearchExperienceModal = () => {
   const modal = useSearchExperienceModal();
   const { getByValue } = useCountries();
 
-  const [step, setStep] = useState(STEPS.LOCATION);
+  // const [step, setStep] = useState(STEPS.LOCATION);
+  const [step, setStep] = useState(STEPS.DATE);
 //   const [location, setLocation] = useState<CountrySelectValue>();
   const { location, setLocation } = useExperienceSearchState();
   const [guestCount, setGuestCount] = useState(1);
@@ -80,17 +81,24 @@ const SearchExperienceModal = () => {
     setLocation(location as any);
   
     modal.onClose();
-    setStep(STEPS.LOCATION);
+    // setStep(STEPS.LOCATION);
+    setStep(STEPS.DATE);
     router.push(qs.stringifyUrl({ url: '/', query: updatedQuery }, { skipNull: true }));
   }, [step, modal, location, guestCount, dateRange, router, params, onNext, setLocation]);
 
-  const actionLabel = useMemo(() => {
-    if (step === STEPS.GUESTS) return 'Search';
-    if (step === STEPS.LOCATION && !location) return 'Select a country';
-    return 'Next';
-  }, [step, location]);
+  // const actionLabel = useMemo(() => {
+  //   if (step === STEPS.GUESTS) return 'Search';
+  //   if (step === STEPS.LOCATION && !location) return 'Select a country';
+  //   return 'Next';
+  // }, [step, location]);
 
-  const secondaryActionLabel = useMemo(() => step === STEPS.LOCATION ? undefined : 'Back', [step]);
+  const actionLabel = useMemo(() => (
+    step === STEPS.GUESTS ? 'Search' : 'Next'
+  ), [step]);
+
+  // const secondaryActionLabel = useMemo(() => step === STEPS.LOCATION ? undefined : 'Back', [step]);
+
+  const secondaryActionLabel = useMemo(() => step === STEPS.DATE ? undefined : 'Back', [step]);
 
   let bodyContent = (
     <div className="flex flex-col gap-8 max-h-[50vh] overflow-y-auto sm:max-h-none">
@@ -122,7 +130,7 @@ const SearchExperienceModal = () => {
     bodyContent = (
       <div className="flex flex-col gap-8">
         <Counter
-          title="Travellers"
+          title="Guests"
           subtitle="How many people are going?"
           value={guestCount}
           onChange={(value) => setGuestCount(value)}
@@ -138,8 +146,9 @@ const SearchExperienceModal = () => {
       onSubmit={onSubmit}
       actionLabel={actionLabel}
       secondaryActionLabel={secondaryActionLabel}
-      secondaryAction={step === STEPS.LOCATION ? undefined : onBack}
-      title="Start your experience"
+      // secondaryAction={step === STEPS.LOCATION ? undefined : onBack}
+      secondaryAction={step === STEPS.DATE ? undefined : onBack}
+      title="Choose Dates & Guests"
       body={bodyContent}
       className=''
     />

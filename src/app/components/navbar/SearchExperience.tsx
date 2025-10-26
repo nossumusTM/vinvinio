@@ -4,6 +4,7 @@ import { useSearchParams, usePathname } from 'next/navigation';
 import { useMemo, useEffect, useState } from 'react';
 import { BiSearch } from 'react-icons/bi';
 import { differenceInDays } from 'date-fns';
+import { format } from 'date-fns';
 import Image from 'next/image';
 import useExperienceSearchState from '@/app/hooks/useExperienceSearchState';
 
@@ -77,8 +78,21 @@ const SearchExperience = () => {
   //   }    
   // }, [location]);
 
+  // useEffect(() => {
+  //   setGuestCount(searchParams?.get('guests') ?? null);
+  // }, [searchParams, pathname]);
+
+  // useEffect(() => {
+  //   const gc =
+  //     searchParams?.get('guestCount') ??
+  //     searchParams?.get('guests');
+
+  //   setGuestCount(gc && gc.trim() !== '' ? gc : null);
+  // }, [searchParams, pathname]);
+
   useEffect(() => {
-    setGuestCount(searchParams?.get('guests') ?? null);
+    const g = searchParams?.get('guestCount') ?? searchParams?.get('guests');
+    setGuestCount(g ?? null);
   }, [searchParams, pathname]);
 
   const locationLabel = useMemo(() => {
@@ -90,11 +104,11 @@ const SearchExperience = () => {
           alt="Italy"
           width={16}
           height={8}
-          className="rounded-full object-cover rotate-45"
+          className="rounded object-cover"
         />
 
         <p className='ml-1 md:ml-0'>
-          Rome, Lazio
+          Italy
           </p>
       </span>
     );
@@ -123,54 +137,111 @@ const SearchExperience = () => {
 
   const guestLabel = useMemo(() => {
     const count = Number(guestCount);
-    if (!count || isNaN(count)) return 'Travellers';
-    return `${count} ${count === 1 ? 'Traveller' : 'Travellers'}`;
+    if (!count || isNaN(count)) return 'Add Guests';
+    return `${count} ${count === 1 ? 'Guest' : 'Guests'}`;
   }, [guestCount]);
   
+  // const durationLabel = useMemo(() => {
+  //   if (startDate && endDate) {
+  //     const start = new Date(startDate as string);
+  //     const end = new Date(endDate as string);
+  //     let diff = differenceInDays(end, start);
+  //     if (diff === 0) diff = 1;
+  
+  //     return `${diff} ${diff === 1 ? 'Day' : 'Days'}`;
+  //   }
+  
+  //   return 'Date';
+  // }, [startDate, endDate]);
+
   const durationLabel = useMemo(() => {
     if (startDate && endDate) {
       const start = new Date(startDate as string);
       const end = new Date(endDate as string);
-      let diff = differenceInDays(end, start);
-      if (diff === 0) diff = 1;
-  
-      return `${diff} ${diff === 1 ? 'Day' : 'Days'}`;
+      const sameDay = start.toDateString() === end.toDateString();
+      const fmt = "d MMM ''yy";
+
+      return sameDay
+        ? format(start, fmt)                              // e.g., 31 Oct '25
+        : `${format(start, "d MMM")} – ${format(end, fmt)}`; // e.g., 31 Oct – 02 Nov '25
     }
-  
-    return 'Date';
+    if (startDate) {
+      return format(new Date(startDate as string), "d MMM ''yy");
+    }
+    return 'Select Date';
   }, [startDate, endDate]);
 
   return (
     <div
-      // onClick={searchModal.onOpen}
-      onClick={searchModal.onClose}
+      onClick={searchModal.onOpen}
+      // onClick={searchModal.onClose}
+      // className="
+      //   sm:w-full
+      //   w-auto
+      //   md:w-auto 
+      //   py-2 
+      //   md:px-1
+      //   rounded-full 
+      //   shadow-md 
+      //   hover:shadow-lg 
+      //   transition 
+      //   cursor-pointer
+      //   select-none
+      // "
       className="
-        sm:w-full
-        w-auto
-        md:w-auto 
-        py-2 
-        md:px-1
-        rounded-full 
-        shadow-md 
-        hover:shadow-lg 
-        transition 
-        cursor-pointer
+        sm:w-full w-auto md:w-auto
+        px-2 lg:px-1 md:py-2 lg:py-2
+        rounded-full
+        bg-white/90 backdrop-blur
+        shadow-md hover:shadow-lg
+        transition
+        cursor-pointer select-none
       "
     >
-      <div className="flex flex-row items-center justify-between">
-        {/* <div className="ml-2 text-sm font-medium px-1">{locationLabel}</div> */}
-        <div className="ml-2 text-sm font-medium px-1 max-w-[150px] md:max-w-[200px] truncate">{locationLabel}</div>
+      <div className="flex items-center justify-between w-full">
 
-        <div className="hidden lg:block text-sm font-medium px-6 border-x-[1px] flex-1 text-center">
-          {durationLabel}
+      {/* MOBILE: Date | Guests (side by side, compact) */}
+      <div className="flex lg:hidden flex-1 h-11">
+        <div className="flex-1 h-full px-3 border-r border-neutral-200 flex items-center">
+          <div className="flex flex-col items-start leading-tight w-full">
+            <span className="text-[6px] uppercase tracking-wide text-neutral-500">When?</span>
+            <span className="text-xs font-medium truncate">{durationLabel}</span>
+          </div>
         </div>
-        <div className="text-sm pl-6 md:px-4 text-gray-600 flex flex-row items-center gap-3 ">
-          <div className="hidden lg:block font-medium text-black">{guestLabel}</div>
-          {/* <div className="p-2 bg-black rounded-full text-white">
-            <BiSearch size={18} />
-          </div> */}
+        <div className="flex-1 h-full px-3 flex items-center">
+          <div className="flex flex-col items-start leading-tight w-full">
+            <span className="text-[6px] uppercase tracking-wide text-neutral-500">Who?</span>
+            <span className="text-xs font-medium text-gray-700 truncate">{guestLabel}</span>
+          </div>
         </div>
       </div>
+
+      {/* DESKTOP: Location */}
+      <div className="hidden lg:flex ml-2 px-1 max-w-[200px]">
+        <div className="flex flex-col items-start leading-tight w-full truncate">
+          <span className="text-[8px] uppercase tracking-wide text-neutral-500">Where?</span>
+          <div className="text-sm font-medium truncate">{locationLabel}</div>
+        </div>
+      </div>
+
+
+      {/* DESKTOP: Date */}
+      <div className="hidden lg:flex px-6 border-x flex-1 items-center">
+        <div className="flex flex-col items-start leading-tight w-full">
+          <span className="text-[8px] uppercase tracking-wide text-neutral-500">When?</span>
+          <span className="text-sm font-medium truncate">{durationLabel}</span>
+        </div>
+      </div>
+
+      {/* DESKTOP: Guests */}
+      <div className="hidden lg:flex pl-6 md:px-4 items-center">
+        <div className="flex flex-col items-start leading-tight">
+          <span className="text-[8px] uppercase tracking-wide text-neutral-500">Who?</span>
+          <span className="text-sm font-medium text-black">{guestLabel}</span>
+        </div>
+      </div>
+    </div>
+
     </div>
   );
 };

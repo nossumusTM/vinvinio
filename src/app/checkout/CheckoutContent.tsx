@@ -340,7 +340,17 @@ const handleSubmit = async () => {
     };
 
   const listingId = searchParams?.get('listingId');
-  const guests = parseInt(searchParams?.get('guests') || '1');
+  const rawGuestParam =
+  searchParams?.get('guestCount') ??
+  searchParams?.get('guests') ??
+  searchParams?.get('people') ??
+  searchParams?.get('travellers') ??
+  '';
+
+  const guests = useMemo(() => {
+    const n = parseInt((rawGuestParam || '').trim(), 10);
+    return Number.isFinite(n) && n > 0 ? n : 1;
+  }, [rawGuestParam]);
   const startDate = searchParams?.get('startDate');
   const endDate = searchParams?.get('endDate');
   const time = searchParams?.get('time');

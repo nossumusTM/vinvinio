@@ -6,6 +6,11 @@ import { useCallback, useMemo, useEffect, useState, useRef } from "react";
 import Avatar from "../Avatar";
 import { format } from 'date-fns';
 
+import { motion, AnimatePresence } from 'framer-motion';
+
+import qs from 'query-string';
+import { useSearchParams } from 'next/navigation';
+
 import {
   SafeListing,
   SafeReservation,
@@ -53,7 +58,18 @@ const ListingCard: React.FC<ListingCardProps> = ({
     createdAt: string;
   }[]>([]);
 
+  const params = useSearchParams();
+
+  const listingHref = useMemo(() => {
+  const current = params ? qs.parse(params.toString()) : {};
+  return qs.stringifyUrl(
+    { url: `/listings/${data.id}`, query: current },
+    { skipNull: true, skipEmptyString: true }
+  );
+}, [params, data.id]);
+
   const [isHovered, setIsHovered] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   // const images: string[] = useMemo(
   //   () => (Array.isArray(data.imageSrc) ? data.imageSrc.filter(src => !/\.(mp4|webm|ogg)$/i.test(src)) : []),
@@ -92,19 +108,38 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
   console.log('coverMedia', coverMedia);
 
-  useEffect(() => {
-    if (!isHovered || images.length <= 1) return;
+  const goPrev = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (images.length > 0) {
+      setActiveImageIndex((i) => (i - 1 + images.length) % images.length);
+    }
+  }, [images.length]);
+
+  const goNext = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (images.length > 0) {
+      setActiveImageIndex((i) => (i + 1) % images.length);
+    }
+  }, [images.length]);
+
+  // useEffect(() => {
+  //   if (!isHovered || images.length <= 1) return;
   
-    intervalRef.current = setInterval(() => {
-      setActiveImageIndex((prevIndex) => (prevIndex + 1) % images.length);
-    }, 1500);
+  //   intervalRef.current = setInterval(() => {
+  //     setActiveImageIndex((prevIndex) => (prevIndex + 1) % images.length);
+  //   }, 1500);
   
-    return () => {
-      clearInterval(intervalRef.current!);
-      intervalRef.current = null;
-      setActiveImageIndex(0);
-    };
-  }, [isHovered, images.length]);   
+  //   return () => {
+  //     clearInterval(intervalRef.current!);
+  //     intervalRef.current = null;
+  //     setActiveImageIndex(0);
+  //   };
+  // }, [isHovered, images.length]);   
+
+//   useEffect(() => {
+//   // disable auto-advance on hover
+//   if (!isHovered) setActiveImageIndex(0);
+// }, [isHovered]);
 
   const hasFetched = useRef(false);
 
@@ -170,14 +205,29 @@ const ListingCard: React.FC<ListingCardProps> = ({
     setActiveImageIndex(Math.floor(Math.random() * images.length));
   }, [images.length]);  
 
+  useEffect(() => {
+    const mq = window.matchMedia?.('(pointer: coarse)');
+    const update = () => setIsMobile((mq && mq.matches) || window.innerWidth < 1024);
+
+    update();
+    mq?.addEventListener?.('change', update);
+    window.addEventListener('resize', update);
+
+    return () => {
+      mq?.removeEventListener?.('change', update);
+      window.removeEventListener('resize', update);
+    };
+  }, []);
+
   return (
     <div
-      onClick={() => router.push(`/listings/${data.id}`)}
+      // onClick={() => router.push(`/listings/${data.id}`)}
+      onClick={() => router.push(listingHref)}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onTouchStart={() => {
         setIsHovered(true);
-        setActiveImageIndex((prevIndex) => (prevIndex + 1) % images.length);
+        // setActiveImageIndex((prevIndex) => (prevIndex + 1) % images.length);
       }}
       onTouchEnd={() => {
         setIsHovered(false);
@@ -258,10 +308,44 @@ const ListingCard: React.FC<ListingCardProps> = ({
           <div className="absolute top-3 right-3">
             <HeartButton listingId={data.id} currentUser={currentUser} />
           </div>
+
+          {/* ⬇️ Navigation arrows - visible only on hover */}
+          <AnimatePresence>
+          {(isMobile || isHovered) && coverMedia.type === 'image' && images.length > 1 && (
+            <motion.div
+              key="arrow-controls"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 4 }}
+              transition={{ duration: 0.25, ease: "easeInOut" }}
+              className="absolute bottom-3 inset-x-0 z-30 flex items-center justify-center gap-3 pointer-events-auto"
+            >
+              <button
+                onClick={(e) => goPrev(e)}
+                className="p-2 border border-white/30 hover:border-white rounded-full bg-white/0 backdrop-blur-sm transition"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M15 18l-6-6 6-6" stroke="white" strokeWidth="2"
+                        strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+
+              <button
+                onClick={(e) => goNext(e)}
+                className="p-2 border border-white/30 hover:border-white rounded-full bg-white/0 backdrop-blur-sm transition"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M9 6l6 6-6 6" stroke="white" strokeWidth="2"
+                        strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
         </div>
 
         {reviews.length > 0 && (
-          <div className="pt-5 pb-1 flex items-center gap-2 text-sm text-neutral-600">
+          <div className="pt-2 flex items-center gap-2 text-sm text-neutral-600">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="black">
               <path d="M12 17.27L18.18 21 16.54 13.97 22 9.24 
                       14.81 8.63 12 2 9.19 8.63 2 9.24 
@@ -273,13 +357,19 @@ const ListingCard: React.FC<ListingCardProps> = ({
           </div>
         )}
 
-        <div className="font-semibold text-lg">{data.title}</div>
-
-        <div className="font-normal text-neutral-500">
-          {reservationDate || "— " + data.category}
+         <div className="flex items-center gap-2 pt-1 text-neutral-500 text-sm">
+          {reservationDate ? (
+            <span>{reservationDate}</span>
+          ) : (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full border border-neutral-300 bg-white text-neutral-700 text-xs font-medium tracking-wide">
+              {data.category}
+            </span>
+          )}
         </div>
 
-        {data.user && (
+        <div className="font-semibold text-lg px-1">{data.title}</div>
+
+        {/* {data.user && (
           <div className="flex items-center gap-2 pt-2">
             <Avatar src={data.user.image} name={data.user.name} size={40} />
             <div className="flex text-sm flex-row justify-start gap-2 font-normal">
@@ -288,11 +378,13 @@ const ListingCard: React.FC<ListingCardProps> = ({
               </div>
             </div>
           </div>
-        )}
+        )} */}
 
-        <div className="flex flex-row items-center gap-1 ml-3">
-          <div className="font-semibold">€ {price}</div>
-          {!reservation && <div className="font-light">/ person</div>}
+        <hr />
+
+        <div className="flex flex-row items-center gap-1 ml-3 mt-1">
+          <div className="font-semibold">€{price}</div>
+          {!reservation && <div className="font-normal text-xs">/ PER PERSON</div>}
         </div>
 
         {onAction && actionLabel && (
