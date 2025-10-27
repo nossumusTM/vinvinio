@@ -124,7 +124,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
       });
       toast.success('Cancellation request submitted.', {
         iconTheme: {
-          primary: 'linear-gradient(135deg, #3d08ff, #04aaff, #3604ff, #0066ff, #3d08ff)',
+          primary: '#2200ffff',
           secondary: '#fff',
         }
       });
@@ -197,7 +197,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
   
       toast.success('Review submitted!', {
         iconTheme: {
-            primary: 'linear-gradient(135deg, #3d08ff, #04aaff, #3604ff, #0066ff, #3d08ff)',
+            primary: '#2200ffff',
             secondary: '#fff',
         },
       });
@@ -363,7 +363,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
 
             </div>
 
-                <div className="text-lg font-semibold">{reservation.listing.title}</div>
+                <div className="p-4 text-lg font-semibold">{reservation.listing.title}</div>
 
                  {/* <div className="text-sm text-neutral-600">{reservationDate}</div> */}
 
@@ -460,7 +460,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
                           <span
                             key={star}
                             className={`text-2xl ${
-                              star <= submittedReviews[reservation.id].rating ? 'text-black' : 'text-gray-300'
+                              star <= submittedReviews[reservation.id].rating ? 'text-[#2200ffff]' : 'text-gray-300'
                             }`}
                           >
                             ★
@@ -507,7 +507,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
                             }
                             className={`cursor-pointer text-2xl transition-colors ${
                               star <= (reviewInputs[reservation.id]?.hoverRating || reviewInputs[reservation.id]?.rating)
-                                ? 'text-black'
+                                ? 'text-[#2200ffff]'
                                 : 'text-gray-300'
                             }`}
                           >

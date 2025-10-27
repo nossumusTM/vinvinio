@@ -148,7 +148,7 @@ const SearchExperienceModal = () => {
       secondaryActionLabel={secondaryActionLabel}
       // secondaryAction={step === STEPS.LOCATION ? undefined : onBack}
       secondaryAction={step === STEPS.DATE ? undefined : onBack}
-      title="Choose Dates & Guests"
+      title="Choose Date & Guests"
       body={bodyContent}
       className=''
     />

@@ -128,7 +128,7 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
                   width={24}
                   height={16}
                   style={{ height: 'auto', width: '24px' }}
-                  className="rounded-full object-contain"
+                  className="rounded-md object-contain"
                 />
                 <div>
                   {option.city ? `${option.city}, ${option.label}` : option.label}

@@ -434,7 +434,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
       // setPopupMessage('Withdraw method saved!');
       toast.success('Withdrawal method saved!', {
         iconTheme: {
-            primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
+            primary: '#2200ffff',
             secondary: '#fff',
         }
       });
@@ -454,7 +454,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
       // setPopupMessage('Withdraw method deleted!');
       toast.success('Withdrawal method deleted!', {
         iconTheme: {
-            primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
+            primary: '#2200ffff',
             secondary: '#fff',
         }
       });
@@ -673,7 +673,13 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
 
       setIsSubscribed(!isSubscribed);
       toast.success(
-        isSubscribed ? 'Unsubscribed from newsletter.' : 'Subscribed to newsletter.'
+        isSubscribed ? 'Unsubscribed from newsletter.' : 'Subscribed to newsletter.', 
+        {
+          iconTheme: {
+            primary: '#2200ffff',
+            secondary: '#fff',
+          },
+        }
       );
     } catch (error) {
       console.error('Toggle subscription error:', error);
@@ -795,7 +801,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                             await axios.post("/api/users/request-email-verification");
                             toast.success('Verification email sent!', {
                               iconTheme: {
-                                primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
+                                primary: '#2200ffff',
                                 secondary: '#fff',
                               }
                             });
@@ -1169,7 +1175,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                     checked={isSubscribed}
                     onChange={handleToggleSubscription}
                     className={`${
-                      isSubscribed ? 'bg-gray-600' : 'bg-gray-300'
+                      isSubscribed ? 'bg-blue-600' : 'bg-gray-300'
                     } relative inline-flex h-6 w-11 items-center rounded-full transition duration-200 focus:outline-none`}
                     disabled={loading}
                   >
@@ -1269,7 +1275,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                             });
                             toast.success('Password updated successfully!', {
                               iconTheme: {
-                                primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
+                                primary: '#2200ffff',
                                 secondary: '#fff',
                               }
                             });
@@ -1476,7 +1482,12 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                               if (!couponCode) return toast.error('Enter a coupon code');
                               try {
                                 const res = await axios.post('/api/coupon/addcoupon', { code: couponCode });
-                                toast.success(`Coupon "${couponCode}" applied!`);
+                                toast.success(`Coupon "${couponCode}" applied!`, {
+                                  iconTheme: {
+                                    primary: '#2200ffff',
+                                    secondary: '#fff',
+                                  }
+                                });
                                 setCouponCode('');
                                 setShowCouponInput(false);
                                 setUserCoupon(couponCode);
@@ -1967,7 +1978,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                         // setPopupMessage('Card saved successfully!');
                         toast.success('Card saved successfully!', {
                           iconTheme: {
-                              primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
+                              primary: '#2200ffff',
                               secondary: '#fff',
                           }
                         });

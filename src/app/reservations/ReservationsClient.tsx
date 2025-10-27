@@ -147,7 +147,7 @@ const ReservationsClient: React.FC<ReservationsClientProps> = ({
 
                         toast.success("Reservation cancelled!", {
                         iconTheme: {
-                            primary: "#00b8ff",
+                            primary: "#2200ffff",
                             secondary: "#fff",
                         },
                         });

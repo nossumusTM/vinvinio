@@ -337,7 +337,7 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
         .then(() => {
           toast.success('Listing submitted for review', {
             iconTheme: {
-              primary: 'linear-gradient(135deg, #3604ff, #04aaff, #3604ff, #0066ff, #ffffff)',
+              primary: '#2200ffff',
               secondary: '#fff',
             },
           });          

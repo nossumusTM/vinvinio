@@ -98,7 +98,12 @@ const RentModal = () => {
 
         axios.post('/api/listings', data)
             .then(() => {
-                toast.success('Listing created!');
+                toast.success('Listing created!', {
+                    iconTheme: {
+                        primary: '#2200ffff',
+                        secondary: '#fff',
+                    },
+                });
                 router.refresh();
                 reset();
                 setStep(STEPS.CATEGORY)

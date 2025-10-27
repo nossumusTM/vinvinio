@@ -193,7 +193,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
             .then(() => {
                 toast.success('Listing reserved!', {
                     iconTheme: {
-                        primary: 'linear-gradient(135deg, #3d08ff, #047dff, #3604ff, #0066ff, #3d08ff)',
+                        primary: '#2200ffff',
                         secondary: '#fff',
                     }
                 });
@@ -367,7 +367,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                             messenger.openChat(recipient);
                             }
                         }}
-                        className="text-md text-white bg-black hover:bg-neutral-800 p-4 rounded-xl font-normal mt-1"
+                        className="text-md text-white bg-black hover:bg-neutral-800 p-4 rounded-xl transition font-normal mt-1"
                         >
                         Text @{listing.user?.name?.split(' ')[0] ?? 'Host'}
                     </button>

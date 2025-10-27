@@ -932,7 +932,7 @@ const handleSubmit = async () => {
                         const res = await axios.post('/api/coupon/addcoupon', { code: couponCode });
                         toast.success(`Coupon "${couponCode}" applied!`, {
                           iconTheme: {
-                            primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
+                            primary: '#2200ffff',
                             secondary: '#fff',
                           },
                         });

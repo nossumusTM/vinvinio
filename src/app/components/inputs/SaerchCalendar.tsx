@@ -327,40 +327,83 @@
 
 // export default Calendar;
 
+// 'use client';
+
+// import {
+//     DateRange,
+//     Range,
+//     RangeKeyDict
+// } from 'react-date-range';
+
+// import 'react-date-range/dist/styles.css';
+// import 'react-date-range/dist/theme/default.css';
+
+// interface DatePickerProps {
+//     value: Range,
+//     onChange: (value: RangeKeyDict) => void;
+//     disabledDates?: Date[];
+// }
+
+// const DatePicker: React.FC<DatePickerProps> = ({
+//     value,
+//     onChange,
+//     disabledDates
+// }) => {
+//     return (
+//         <DateRange
+//             rangeColors={['#262626']}
+//             ranges={[value]}
+//             date={new Date()}
+//             onChange={onChange}
+//             direction="vertical"
+//             showDateDisplay={false}
+//             minDate={new Date()}
+//             disabledDates={disabledDates}
+//         />
+//     );
+// }
+
+// export default DatePicker;
+
 'use client';
 
-import {
-    DateRange,
-    Range,
-    RangeKeyDict
-} from 'react-date-range';
+import { Calendar } from 'react-date-range';
+import { Range, RangeKeyDict } from 'react-date-range';
 
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 
-interface DatePickerProps {
-    value: Range,
-    onChange: (value: RangeKeyDict) => void;
-    disabledDates?: Date[];
+interface SingleDatePickerProps {
+  value: Range;                          // will use value.startDate
+  onChange: (value: RangeKeyDict) => void; // we return { selection: { startDate=endDate=date } }
+  disabledDates?: Date[];
+  minDate?: Date;
 }
 
-const DatePicker: React.FC<DatePickerProps> = ({
-    value,
-    onChange,
-    disabledDates
+const SingleDatePicker: React.FC<SingleDatePickerProps> = ({
+  value,
+  onChange,
+  disabledDates,
+  minDate = new Date(),
 }) => {
-    return (
-        <DateRange
-            rangeColors={['#262626']}
-            ranges={[value]}
-            date={new Date()}
-            onChange={onChange}
-            direction="vertical"
-            showDateDisplay={false}
-            minDate={new Date()}
-            disabledDates={disabledDates}
-        />
-    );
-}
+  return (
+    <Calendar
+      date={value.startDate ?? new Date()}
+      onChange={(date) =>
+        onChange({
+          selection: {
+            startDate: date as Date,
+            endDate: date as Date,       // enforce single-day
+            key: 'selection',
+          },
+        })
+      }
+      showDateDisplay={false}
+      color="#262626"
+      minDate={minDate}
+      disabledDates={disabledDates}
+    />
+  );
+};
 
-export default DatePicker;
+export default SingleDatePicker;

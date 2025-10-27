@@ -75,7 +75,7 @@ const RegisterModal = () => {
             .then(() => {
                 toast.success('Welcome to Vuola! Please sign in to start exploring.', {
                     iconTheme: {
-                        primary: 'linear-gradient(135deg, #3d08ff, #04aaff, #3604ff, #0066ff, #3d08ff)',
+                        primary: '#2200ffff',
                         secondary: '#fff',
                     },
                   });
@@ -88,11 +88,15 @@ const RegisterModal = () => {
                     const message = error.response.data;
               
                     if (message === "Email already in use" || message === "Email is already registered.") {
-                      setPopupMessage("This email is already registered.");
+                      // setPopupMessage("This email is already registered.");
+                      toast.error('This email is already registered.');
+
                     } else if (message === "Name is already taken.") {
-                      setPopupMessage("This name is already taken. Please choose another.");
+                      // setPopupMessage("This name is already taken. Please choose another.");
+                      toast.error('This name is already taken. Please choose another.');
                     } else {
-                      setPopupMessage("Something went wrong. Please try again.");
+                      // setPopupMessage("Something went wrong. Please try again.");
+                      toast.error('Something went wrong. Please try again.');
                     }
               
                   } else if (error.response?.data) {

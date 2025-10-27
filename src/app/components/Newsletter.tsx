@@ -28,7 +28,7 @@ const Newsletter = () => {
       });
   
       if (res.status === 409) {
-        toast('You’re already subscribed! 💌', {
+        toast('You’re already subscribed!', {
           icon: '💌',
         });
       } else if (!res.ok) {
@@ -36,7 +36,7 @@ const Newsletter = () => {
       } else {
             toast.success('Welcome aboard! Magic is on the way ✨', {
               iconTheme: {
-                   primary: '#f0f8ff',
+                   primary: '#2200ffff',
                    secondary: '#fff',
               }
                 });

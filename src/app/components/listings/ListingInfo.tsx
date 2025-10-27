@@ -105,10 +105,11 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                         gap-2
                     "
                     >
-                    <div className="bg-neutral-100 p-8 rounded-xl flex items-center gap-3 justify-between items-center">
+                    {/* <div className="w-full rounded-2xl p-8 rounded-xl flex items-center gap-3 justify-between items-center"> */}
+                    <div className="w-full rounded-2xl p-8 rounded-xl flex items-center gap-3 justify-center items-center">
                     <Avatar src={user?.image} name={user?.name} size={65}/>
                     <div className="mt-2 flex text-sm flex-col justify-start font-normal items-center">
-                        <div className="font-semibold border-neutral-500 border-b">
+                        <div className="px-2 py-1 rounded-full font-semibold bg-neutral-100 select-none">
                         {user?.name}
                         </div>
 
@@ -168,9 +169,10 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                 <div className="p-5 flex flex-col gap-4 text-left pt-5">
                 {/* Guest Count */}
                 <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-neutral-100 rounded-full flex items-center justify-center">
+                      <div className="w-12 h-12 shrink-0 aspect-square bg-neutral-100 rounded-full flex items-center justify-center">
                         <RiUserHeartFill size={20} className="text-neutral-600 mt-1" />
                     </div>
+
                     <div>
                     <p className="text-lg font-medium text-black">
                         Up to {guestCount} guest{guestCount > 1 ? 's' : ''}
@@ -184,7 +186,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                 {/* Languages */}
                 {Array.isArray(languages) && languages.length > 0 && (
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-neutral-100 rounded-full flex items-center justify-center">
+                      <div className="w-12 h-12 shrink-0 aspect-square bg-neutral-100 rounded-full flex items-center justify-center">
                         <BsTranslate size={20} className="text-neutral-600 mt-1" />
                     </div>
                     <div>
@@ -201,7 +203,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                 {/* Experience Duration */}
                 {experienceHour && (
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-neutral-100 rounded-full flex items-center justify-center">
+                      <div className="w-12 h-12 shrink-0 aspect-square bg-neutral-100 rounded-full flex items-center justify-center">
                         <GiExtraTime size={20} className="text-neutral-600 mt-1" />
                     </div>
                     <div>

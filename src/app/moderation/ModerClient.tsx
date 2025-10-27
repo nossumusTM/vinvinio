@@ -90,7 +90,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
       await axios.post(`/api/listings/${listingId}/approve`);
       toast.success('Listing approved', {
         iconTheme: {
-            primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
+            primary: '#2200ffff',
             secondary: '#fff',
         }
       });
@@ -109,7 +109,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
       await axios.post(`/api/listings/${listingId}/reject`);
       toast.success('Listing rejected', {
         iconTheme: {
-            primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
+            primary: '#2200ffff',
             secondary: '#fff',
         }
       });
@@ -128,7 +128,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
       const res = await axios.post('/api/analytics/withdraw', { userId });
       toast.success(res.data.message, {
         iconTheme: {
-          primary: 'linear-gradient(135deg, #3d08ff, #04aaff, #3604ff, #0066ff, #3d08ff)',
+          primary: '#2200ffff',
           secondary: '#fff',
         },
       });
@@ -145,7 +145,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
       const res = await axios.post('/api/analytics/host/withdraw', { userId });
       toast.success(res.data.message, {
         iconTheme: {
-          primary: 'linear-gradient(135deg, #3d08ff, #04aaff, #3604ff, #0066ff, #3d08ff)',
+          primary: '#2200ffff',
           secondary: '#fff',
         },
       });      
@@ -237,7 +237,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
       // await axios.delete(`/api/reservations/${id}`);
       await axios.patch(`/api/reservations/${id}/cancel`);
       toast.success('Reservation cancelled', {
-        iconTheme: { primary: 'linear-gradient(135deg, #3d08ff, #04aaff, #3604ff, #0066ff, #3d08ff)', secondary: '#fff' },
+        iconTheme: { primary: '#2200ffff', secondary: '#fff' },
       });
 
       await axios.post('/api/analytics/remove-reservation', {

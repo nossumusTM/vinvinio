@@ -60,7 +60,7 @@ const ForgetPasswordModal: React.FC<ForgetPasswordModalProps> = ({
         if (response.data.success) {
           toast.success('Reset link sent! Check your email.', {
             iconTheme: {
-              primary: 'linear-gradient(135deg, #3d08ff, #04aaff, #3604ff, #0066ff, #3d08ff)',
+              primary: '#2200ffff',
               secondary: '#fff',
             },
           });
@@ -89,7 +89,7 @@ const ForgetPasswordModal: React.FC<ForgetPasswordModalProps> = ({
         if (res.data.success) {
           toast.success('Password updated!', {
             iconTheme: {
-              primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #3604ff, #0066ff, #ffffff)',
+              primary: '#2200ffff',
               secondary: '#fff',
             },
           });    
