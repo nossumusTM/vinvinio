@@ -812,7 +812,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                           }
                         }}
                         disabled={verifying}
-                        className={`text-sm font-medium border px-3 py-1.5 rounded-xl transition 
+                        className={`text-xs font-medium border px-3 py-1.5 rounded-xl transition 
                           ${verifying ? 'bg-neutral-200 text-neutral-500 pointer-events-none' : 'text-blue-600 hover:bg-neutral-100'}
                         `}
                       >

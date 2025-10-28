@@ -116,6 +116,11 @@ model Listing {
   user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   reservations        Reservation[]
   reviews             Review[]
+
+  slug             String?    // ← temporarily nullable & not unique
+  primaryCategory  String?    // ← optional
+
+  @@map("Listing")
 }
 
 model Reservation {
