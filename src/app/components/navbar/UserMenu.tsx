@@ -216,7 +216,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
       <Avatar src={currentUser.image} size={30}/>
     ) : (
       <div
-        className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm bg-black"
+        className="w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-sm bg-black"
         // style={{
         //   background: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #0066ff, #ffffff)',
         // }}
@@ -240,7 +240,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
       animate={{ scale: 1 }}
       exit={{ scale: 0 }}
       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-      className="absolute -top-1 -right-1 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center bg-black"
+      className="absolute -top-1 -right-1 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center bg-[#2200ffff]"
       // style={{
       //   background: 'linear-gradient(135deg, #3604ff, #04aaff, #3604ff',
       // }}

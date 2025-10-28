@@ -17,7 +17,7 @@ const CategoryView: React.FC<CategoryViewProps> = ({
 }) => {
     return (
         <div className="flex flex-col gap-6 p-5">
-            <div className="bg-neutral-100 rounded-xl px-10 py-5 flex flex-row items-center gap-4">
+            <div className="shadow-md rounded-xl px-10 py-5 flex flex-row items-center gap-4">
                 {imageSrc ? (
                     <div className="h-auto w-[50px] rounded-full overflow-hidden bg-neutral-200">
                         <img

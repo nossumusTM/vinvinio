@@ -14,7 +14,7 @@ const Loader = () => {
     "
         >
             <BarLoader
-                color="#0066ff"
+                color="#2200ffff"
             />
         </div>
     );

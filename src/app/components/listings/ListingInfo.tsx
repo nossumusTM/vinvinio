@@ -225,7 +225,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
             
             {(Array.isArray(locationType) && locationType.length > 0 || locationDescription) && (
             <div className="p-5 md:col-span-7 rounded-2xl">
-                <h2 className="text-lg font-semibold mb-2">Experience theme</h2>
+                <h2 className="text-lg font-semibold mb-2">Moodboard</h2>
 
                 {Array.isArray(locationType) && locationType.length > 0 && (
                 <div className="flex items-center flex-wrap gap-2 text-sm text-neutral-700 mb-2">
@@ -268,7 +268,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
 
         <div className="flex flex-col gap-1">
             <div className="ml-4">
-                <Heading title="Experience starts" />
+                <Heading title="Activity starts" />
                 </div>
 
             <div className="ml-4 flex flex-row gap-3 items-center rounded-full px-2 text-black-500">

@@ -566,7 +566,7 @@ const handleSubmit = async () => {
       <div className='flex flex-row gap-2'>
         <button
             onClick={() => router.push(`/listings/${listingId}`)}
-            className="ext-sm text-black bg-transparent hover:bg-neutral-100 rounded-full py-1 px-2 transition py-1 px-2 transition mb-2"
+            className="text-sm text-black bg-transparent hover:bg-neutral-100 rounded-full py-1 px-2 transition py-1 px-2 transition mb-2"
           >
             ←
           </button>
@@ -843,7 +843,7 @@ const handleSubmit = async () => {
             <div className='flex flex-col gap-2'>
             {reviews.length > 0 && (
               <div className="flex items-center gap-2 text-sm text-neutral-600 mt-1">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="black">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="#2200ffff">
                   <path d="M12 17.27L18.18 21 16.54 13.97 22 9.24 
                           14.81 8.63 12 2 9.19 8.63 2 9.24 
                           7.46 13.97 5.82 21 12 17.27z" />
@@ -955,7 +955,7 @@ const handleSubmit = async () => {
 
             <hr />
 
-            {subtotal > 0 && (
+            {subtotal > 0 && discountAmount > 0 &&(
               <div className="flex justify-between">
                 <span>Discount</span>
                 <span className={discountAmount > 0 ? 'text-green-700 font-semibold' : ''}>
@@ -964,7 +964,7 @@ const handleSubmit = async () => {
               </div>
             )}
             <div className="flex justify-between font-bold text-lg">
-              <span>Total in EUR</span>
+              <span>Total Amount</span>
               <span>€{total}</span>
             </div>
           </>

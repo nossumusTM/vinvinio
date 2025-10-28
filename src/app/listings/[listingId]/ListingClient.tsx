@@ -461,7 +461,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                                     {[1, 2, 3, 4, 5].map((star) => (
                                     <span
                                         key={star}
-                                        className={`text-lg ${star <= review.rating ? 'text-black' : 'text-gray-300'}`}
+                                        className={`text-lg ${star <= review.rating ? 'text-[#2200ffff]' : 'text-gray-300'}`}
                                     >
                                         ★
                                     </span>

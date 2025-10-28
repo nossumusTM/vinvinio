@@ -39,7 +39,7 @@ interface MenuItemProps {
         <span>{label}</span>
         {badgeCount && badgeCount > 0 && (
           <span 
-          className="text-white w-4 h-4 text-[10px] rounded-full flex justify-center items-center bg-black"
+          className="text-white w-4 h-4 text-[10px] rounded-full flex justify-center items-center bg-[#2200ffff]"
           // style={{
           //   background: 'linear-gradient(135deg, #3604ff, #04aaff, #3604ff',
           // }}

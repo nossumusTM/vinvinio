@@ -190,7 +190,7 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
                         >
                           <defs>
                             <linearGradient id="verifiedGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                              <stop offset="0%" stopColor="#08e2ff" />
+                              <stop offset="0%" stopColor="#2200ffff" />
                               <stop offset="50%" stopColor="#3d08ff" />
                               <stop offset="100%" stopColor="#3604ff" />
                             </linearGradient>
