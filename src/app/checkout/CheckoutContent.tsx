@@ -404,7 +404,7 @@ const handleSubmit = async () => {
       return hrefForListing(listingData);
     }
     if (listingId) {
-      return `/listings/${listingId}`;
+      return hrefForListing({ id: listingId });
     }
     return '/';
   }, [listingData, listingId]);
