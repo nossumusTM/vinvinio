@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/app/libs/prismadb";
 import getCurrentUser from "@/app/actions/getCurrentUser";
+import { hrefForListing } from "@/app/libs/links";
+import { ensureListingSlug } from "@/app/libs/ensureListingSlug";
 export const dynamic = 'force-dynamic';
 import { Prisma } from '@prisma/client';
 import { Role } from '@prisma/client';
@@ -70,18 +72,20 @@ export async function POST(request: Request) {
 
     if (!fullListing || !fullListing.user) {
       return new NextResponse("Listing or host not found", { status: 404 });
-    }    
+    }
+
+    const listingWithSlug = await ensureListingSlug(fullListing);
 
     // ✅ Update HostAnalytics (not User anymore)
-    if (fullListing?.user?.id) {
+    if (listingWithSlug?.user?.id) {
       await prisma.hostAnalytics.upsert({
-        where: { userId: fullListing.user.id },
+        where: { userId: listingWithSlug.user.id },
         update: {
           totalBooks: { increment: 1 },
           totalRevenue: { increment: totalPrice || 0 },
         },
         create: {
-          userId: fullListing.user.id,
+          userId: listingWithSlug.user.id,
           totalBooks: 1,
           totalRevenue: totalPrice || 0,
         },
@@ -91,7 +95,7 @@ export async function POST(request: Request) {
     // ✅ Track host earnings
     await prisma.earning.create({
       data: {
-        userId: fullListing.user.id,
+        userId: listingWithSlug.user.id,
         amount: totalPrice * 0.9,
         totalBooks: 1,
         reservationId: reservation.id,
@@ -157,23 +161,26 @@ export async function POST(request: Request) {
     const displayGuestName = currentUser?.name ?? legalName ?? 'Guest';
     const guestContact = currentUser?.contact ?? contact ?? '';
 
-    if (fullListing?.user?.email) {
+    const listingPath = hrefForListing(listingWithSlug as any);
+
+    if (listingWithSlug?.user?.email) {
       await fetch(`${process.env.NEXTAUTH_URL}/api/email/notify-host`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          hostEmail: fullListing.user.email,
-          hostName: fullListing.user.name,
-          hostContact: fullListing.user.contact || '',
+          hostEmail: listingWithSlug.user.email,
+          hostName: listingWithSlug.user.name,
+          hostContact: listingWithSlug.user.contact || '',
           guestName: displayGuestName,       // <- properly resolved
           contact: guestContact,             // <- properly resolved
           total: totalPrice,
           guests: resolvedGuestCount,
           formattedDateTime,
-          listingTitle: fullListing.title,
-          listingId: fullListing.id,
+          listingTitle: listingWithSlug.title,
+          listingId: listingWithSlug.id,
+          listingPath,
         }),
-      });      
+      });
     }
 
 

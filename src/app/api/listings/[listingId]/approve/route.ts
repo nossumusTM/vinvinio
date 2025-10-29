@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import prisma from "@/app/libs/prismadb";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import nodemailer from "nodemailer";
+import { hrefForListing } from "@/app/libs/links";
+import { ensureListingSlug } from "@/app/libs/ensureListingSlug";
 
 interface IParams {
   listingId?: string;
@@ -31,8 +33,15 @@ export async function POST(
       include: { user: true },
     });
 
+    const listingWithSlug = await ensureListingSlug(listing);
+
+    const listingPath = hrefForListing(listingWithSlug);
+    const baseUrl =
+      process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/+$/, "") || "https://vuoiaggio.it";
+    const listingUrl = `${baseUrl}${listingPath.startsWith('/') ? listingPath : `/${listingPath}`}`;
+
     // ✅ Send email to listing creator
-    if (listing.user?.email) {
+    if (listingWithSlug.user?.email) {
       const transporter = nodemailer.createTransport({
         service: "gmail",
         auth: {
@@ -43,7 +52,7 @@ export async function POST(
 
       await transporter.sendMail({
         from: `"Vuola Moderation" <${process.env.EMAIL_USER}>`,
-        to: listing.user.email,
+        to: listingWithSlug.user.email,
         subject: "🎉 Your Experience Listing Has Been Approved!",
         html: `
           <div style="font-family: 'Nunito', Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; overflow: hidden;">
@@ -51,18 +60,18 @@ export async function POST(
             <div style="padding: 24px;">
               <img src="https://vuola.eu/images/vuoiaggiologo.png" alt="Vuoiaggio Logo" style="width: 140px; margin: 0 auto 20px; display: block;" />
               <h2 style="text-align: center;">Your Experience is Now Live! 🚀</h2>
-              <p style="font-size: 16px;">Hi ${listing.user.name || "there"},</p>
+              <p style="font-size: 16px;">Hi ${listingWithSlug.user.name || "there"},</p>
               <p style="font-size: 14px; margin-bottom: 16px;">
-                Your listing <strong>${listing.title}</strong> has been approved and is now live on Vuola.
+                Your listing <strong>${listingWithSlug.title}</strong> has been approved and is now live on Vuola.
               </p>
               <p style="font-size: 14px;">Guests can now discover and book your experience!</p>
               <p style="margin-top: 32px;">Thank you for being part of the Vuola community! ✨</p>
 
-              <p style="margin: 6px 0;"><strong>View your listing:</strong> 
-                <a href="https://vuoiaggio.it/listings/${listing.id}" 
+              <p style="margin: 6px 0;"><strong>View your listing:</strong>
+                <a href="${listingUrl}"
                   style="color: #3604ff; text-decoration: none; font-weight: 600;
                          border-bottom: 2px solid #3604ff; padding-bottom: 2px; display: inline-block;">
-                  ${listing.title}
+                  ${listingWithSlug.title}
                 </a>
               </p>
 
@@ -73,7 +82,7 @@ export async function POST(
       });
     }
 
-    return NextResponse.json(listing);
+    return NextResponse.json(listingWithSlug);
   } catch (error) {
     console.error("[APPROVE_LISTING_ERROR]", error);
     return new NextResponse("Internal Server Error", { status: 500 });

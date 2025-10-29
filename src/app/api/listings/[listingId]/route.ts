@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import prisma from "@/app/libs/prismadb";
+import { ensureListingSlug } from "@/app/libs/ensureListingSlug";
 
 interface IParams {
   listingId?: string;
@@ -29,7 +30,9 @@ export async function GET(
       return new NextResponse("Listing not found", { status: 404 });
     }
 
-    return NextResponse.json(listing);
+    const listingWithSlug = await ensureListingSlug(listing);
+
+    return NextResponse.json(listingWithSlug);
   } catch (error) {
     console.error("[LISTING_GET_ERROR]", error);
     return new NextResponse("Internal Server Error", { status: 500 });

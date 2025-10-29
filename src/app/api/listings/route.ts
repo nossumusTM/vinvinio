@@ -4,6 +4,7 @@ import getCurrentUser from "@/app/actions/getCurrentUser";
 import getListings from "@/app/actions/getListings";
 import { IListingsParams } from "@/app/actions/getListings";
 import nodemailer from "nodemailer";
+import { makeUniqueSlug } from "@/app/libs/slugify";
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
@@ -51,72 +52,102 @@ export async function POST(request: Request) {
         ? [category]
         : [];
 
-    const listing = await prisma.listing.create({
-        data: {
-           title,
-           description,
-           hostDescription: hostDescription || null,
-           imageSrc,
-           category: categoryArray,
-           guestCount,
-           roomCount: 0,
-           bathroomCount: 0,
-           experienceHour:
-             experienceHour && typeof experienceHour === 'object'
-               ? parseFloat(experienceHour.value)
-               : experienceHour
-                 ? parseFloat(experienceHour)
-                 : null,
-           meetingPoint: meetingPoint || null,
-           languages: Array.isArray(languages)
-             ? { set: languages.map((lang: any) => lang.value || lang) }
-             : undefined,
-          locationValue: location.value,
-          price: parseInt(price, 10),
-          locationType: Array.isArray(locationType)
-            ? { set: locationType.map((type: any) => type.value || type) }
-            : undefined,
-          locationDescription,
-          status: 'pending',
-          user: {
-             connect: {
-              id: currentUser.id,
-             },
-           },
-         },
-         include: {
-          user: true, // ✅ this must be outside `data`
-        },
-      });        
+    const normalizedCategory = categoryArray
+      .map((value: any) =>
+        typeof value === 'string'
+          ? value
+          : value?.value ?? value?.label ?? ''
+      )
+      .filter((value: string) => typeof value === 'string' && value.trim().length > 0);
 
-    // ✅ Send email notification to the listing creator
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+    const primaryCategory = normalizedCategory[0] ?? null;
+
+    const slug = await makeUniqueSlug(title, async (candidate) => {
+      const count = await prisma.listing.count({
+        where: { slug: candidate } as any,
+      });
+      return count > 0;
+    });
+
+    const listing = await prisma.listing.create({
+      data: {
+        title,
+        description,
+        hostDescription: hostDescription || null,
+        imageSrc,
+        category: normalizedCategory,
+        primaryCategory,
+        slug,
+        guestCount,
+        roomCount: 0,
+        bathroomCount: 0,
+        experienceHour:
+          experienceHour && typeof experienceHour === 'object'
+            ? parseFloat(experienceHour.value)
+            : experienceHour
+              ? parseFloat(experienceHour)
+              : null,
+        meetingPoint: meetingPoint || null,
+        languages: Array.isArray(languages)
+          ? { set: languages.map((lang: any) => lang.value || lang) }
+          : undefined,
+        locationValue: location.value,
+        price: parseInt(price, 10),
+        locationType: Array.isArray(locationType)
+          ? { set: locationType.map((type: any) => type.value || type) }
+          : undefined,
+        locationDescription,
+        status: 'pending',
+        user: {
+          connect: {
+            id: currentUser.id,
+          },
+        },
+      },
+      include: {
+        user: true, // ✅ this must be outside `data`
       },
     });
 
-    await transporter.sendMail({
-      from: `"Vuola" <${process.env.EMAIL_USER}>`,
-      to: listing.user.email || 'admin@vuoiaggio.it',
-      subject: 'Your Experience Listing is Under Review',
-      html: `
-        <div style="font-family: 'Nunito', Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; overflow: hidden;">
-          <div style="padding: 24px;">
-            <img src="https://vuola.eu/images/vuoiaggiologo.png" alt="Vuola Logo" style="width: 140px; margin: 0 auto 16px; display: block;" />
-            <p style="font-size: 16px; margin-bottom: 8px;">Hi ${listing.user.name || 'host'},</p>
-            <p style="font-size: 14px; color: #555; margin-bottom: 16px;">
-              Your experience titled <strong>${listing.title}</strong> has been submitted successfully and is currently under review by our moderation team.
-            </p>
-            <p style="font-size: 14px; color: #555;">We will notify you once it's approved and publicly listed.</p>
-            <p style="margin-top: 32px;">Thank you for using <strong>Vuola</strong>! ✨</p>
-            <p style="font-size: 12px; color: #aaa; margin-top: 24px;">Vuola Network Srls</p>
-          </div>
-        </div>
-      `,
-    });
+    const emailUser = process.env.EMAIL_USER;
+    const emailPass = process.env.EMAIL_PASS;
+
+    if (emailUser && emailPass) {
+      try {
+        // ✅ Send email notification to the listing creator
+        const transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: emailUser,
+            pass: emailPass,
+          },
+        });
+
+        await transporter.sendMail({
+          from: `"Vuola" <${emailUser}>`,
+          to: listing.user.email || 'admin@vuoiaggio.it',
+          subject: 'Your Experience Listing is Under Review',
+          html: `
+            <div style="font-family: 'Nunito', Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; overflow: hidden;">
+              <div style="padding: 24px;">
+                <img src="https://vuola.eu/images/vuoiaggiologo.png" alt="Vuola Logo" style="width: 140px; margin: 0 auto 16px; display: block;" />
+                <p style="font-size: 16px; margin-bottom: 8px;">Hi ${listing.user.name || 'host'},</p>
+                <p style="font-size: 14px; color: #555; margin-bottom: 16px;">
+                  Your experience titled <strong>${listing.title}</strong> has been submitted successfully and is currently under review by our moderation team.
+                </p>
+                <p style="font-size: 14px; color: #555;">We will notify you once it's approved and publicly listed.</p>
+                <p style="margin-top: 32px;">Thank you for using <strong>Vuola</strong>! ✨</p>
+                <p style="font-size: 12px; color: #aaa; margin-top: 24px;">Vuola Network Srls</p>
+              </div>
+            </div>
+          `,
+        });
+      } catch (emailError) {
+        console.error('Failed to send listing creation email', emailError);
+      }
+    } else {
+      console.warn('Email credentials are not configured; skipping listing notification email.');
+    }
 
     return NextResponse.json(listing);
   } catch (error) {

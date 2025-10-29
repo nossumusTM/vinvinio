@@ -1,4 +1,5 @@
 import prisma from "@/app/libs/prismadb";
+import { ensureListingSlug } from "@/app/libs/ensureListingSlug";
 export const dynamic = 'force-dynamic';
 
 interface IParams {
@@ -52,19 +53,25 @@ export default async function getReservations(params: IReservationParams) {
       },
     });
 
-    return reservations.map((reservation: any) => ({
-      ...reservation,
-      startDate: reservation.startDate.toISOString(),
-      endDate: reservation.endDate.toISOString(),
-      listing: {
-        ...reservation.listing,
-        createdAt: reservation.listing.createdAt.toISOString(),
-        user: {
-          ...reservation.listing.user,
-          createdAt: reservation.listing.user.createdAt.toISOString(),
-        },
-      },
-    }));
+    return Promise.all(
+      reservations.map(async (reservation: any) => {
+        const listingWithSlug = await ensureListingSlug(reservation.listing);
+
+        return {
+          ...reservation,
+          startDate: reservation.startDate.toISOString(),
+          endDate: reservation.endDate.toISOString(),
+          listing: {
+            ...listingWithSlug,
+            createdAt: listingWithSlug.createdAt.toISOString(),
+            user: {
+              ...listingWithSlug.user,
+              createdAt: listingWithSlug.user.createdAt.toISOString(),
+            },
+          },
+        };
+      })
+    );
   } catch (error) {
     console.error('❌ Error in getReservations:', error);
     return [];

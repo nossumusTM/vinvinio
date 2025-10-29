@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 import qs from 'query-string';
 import { useSearchParams } from 'next/navigation';
+import { hrefForListing } from "@/app/libs/links";
 
 import {
   SafeListing,
@@ -61,12 +62,19 @@ const ListingCard: React.FC<ListingCardProps> = ({
   const params = useSearchParams();
 
   const listingHref = useMemo(() => {
-  const current = params ? qs.parse(params.toString()) : {};
-  return qs.stringifyUrl(
-    { url: `/listings/${data.id}`, query: current },
-    { skipNull: true, skipEmptyString: true }
-  );
-}, [params, data.id]);
+    const current = params ? qs.parse(params.toString()) : {};
+    const baseUrl = hrefForListing(data);
+    return qs.stringifyUrl(
+      { url: baseUrl, query: current },
+      { skipNull: true, skipEmptyString: true }
+    );
+  }, [
+    params,
+    data.id,
+    data.slug,
+    data.primaryCategory,
+    JSON.stringify(data.category ?? [])
+  ]);
 
   const [isHovered, setIsHovered] = useState(false);
   const [isMobile, setIsMobile] = useState(false);

@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic';
 import prisma from "@/app/libs/prismadb";
+import { ensureListingSlug } from "@/app/libs/ensureListingSlug";
 
 interface IParams {
   listingId?: string;
@@ -22,14 +23,16 @@ export default async function getListingById(params: IParams) {
       return null;
     }
 
+    const listingWithSlug = await ensureListingSlug(listing);
+
     return {
-      ...listing,
-      createdAt: listing.createdAt.toString(),
+      ...listingWithSlug,
+      createdAt: listingWithSlug.createdAt.toString(),
       user: {
-        ...listing.user,
-        createdAt: listing.user.createdAt.toString(),
-        updatedAt: listing.user.updatedAt.toString(),
-        emailVerified: listing.user.emailVerified?.toString() || null,
+        ...listingWithSlug.user,
+        createdAt: listingWithSlug.user.createdAt.toString(),
+        updatedAt: listingWithSlug.user.updatedAt.toString(),
+        emailVerified: listingWithSlug.user.emailVerified?.toString() || null,
       },
     };
   } catch (error: any) {

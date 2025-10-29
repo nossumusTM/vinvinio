@@ -1,4 +1,5 @@
 import prisma from "@/app/libs/prismadb";
+import { ensureListingSlug } from "@/app/libs/ensureListingSlug";
 export const dynamic = 'force-dynamic';
 
 export interface IListingsParams {
@@ -104,12 +105,11 @@ export default async function getListings(params: IListingsParams) {
       take: params.take ?? 12,
     });
 
-    // const safeListings = listings.map((listing: any) => ({
-    //   ...listing,
-    //   createdAt: listing.createdAt.toISOString(),
-    // }));
+    const listingsWithSlug = await Promise.all(
+      listings.map((listing) => ensureListingSlug(listing))
+    );
 
-    const safeListings = listings.map((listing) => {
+    const safeListings = listingsWithSlug.map((listing) => {
       const totalRating = listing.reviews.reduce((sum, r) => sum + (r.rating || 0), 0);
       const avgRating = listing.reviews.length > 0 ? totalRating / listing.reviews.length : 0;
 

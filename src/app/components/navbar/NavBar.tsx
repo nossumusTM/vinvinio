@@ -22,7 +22,7 @@ const NavBar: React.FC<NavBarProps> = ({ currentUser }) => {
 
   const pathname = usePathname();
   // add next to isListingPage
-  const isListingPage = pathname?.startsWith('/listings/');
+  const isListingPage = pathname?.startsWith('/listings/') || pathname?.startsWith('/tours/');
   const isCheckoutPage = pathname?.startsWith('/checkout');
   const keepVisible = isListingPage || isCheckoutPage;
 
