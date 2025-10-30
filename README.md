@@ -13,3 +13,13 @@ Without adding a remote, updates made in this environment cannot appear on GitHu
 
 You can confirm whether a remote is configured by running `git remote -v`. If the command prints no
 entries, add the appropriate GitHub URL as shown above before attempting to push.
+
+At the time of writing the container still reports an empty remote list:
+
+```bash
+$ git remote -v
+# (no output)
+```
+
+So no commits from this environment have been pushed upstream yet. Configure the remote first, then
+run `git push -u origin work` (or the appropriate branch name) to publish the pending commits.
