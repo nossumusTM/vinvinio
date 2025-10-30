@@ -208,8 +208,9 @@ import { PiSortDescending } from "react-icons/pi";
 import { motion, AnimatePresence } from 'framer-motion';
 import { twMerge } from 'tailwind-merge';
 import { RxCross2 } from 'react-icons/rx';
+import { PiSquaresFour } from "react-icons/pi";
 
-export type GridSize = 2 | 4 | 6;
+export type GridSize = 1 | 2 | 4 | 6; // 👈 include 1
 
 declare global {
   interface WindowEventMap {
@@ -261,21 +262,17 @@ const ListingFilter: React.FC<ListingFilterProps> = ({ gridSize, onGridChange })
         setIsOpen(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Scroll-based visibility
   useEffect(() => {
     let lastScroll = window.scrollY;
-
     const handleScroll = () => {
       const currentScroll = window.scrollY;
       setVisible(currentScroll < lastScroll || currentScroll < 100);
       lastScroll = currentScroll;
     };
-
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -283,10 +280,8 @@ const ListingFilter: React.FC<ListingFilterProps> = ({ gridSize, onGridChange })
   const handleClearCategory = () => {
     const params = new URLSearchParams(searchParams?.toString() || '');
     params.delete('category');
-
     const query = params.toString();
     router.push(query ? `/?${query}` : '/');
-
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('categories:open'));
     }
@@ -303,7 +298,9 @@ const ListingFilter: React.FC<ListingFilterProps> = ({ gridSize, onGridChange })
             className="flex items-center gap-2 bg-white py-2 px-4 rounded-full shadow-md hover:shadow-lg transition cursor-pointer font-medium text-neutral-700 text-sm select-none"
           >
             <PiSortDescending />
-            {filterOptions.find(o => o.value === sort)?.label || 'Sort By'}
+            <span className="whitespace-nowrap">
+              {filterOptions.find(o => o.value === sort)?.label || 'Make By'}
+            </span>
           </div>
 
           <AnimatePresence>
@@ -323,16 +320,11 @@ const ListingFilter: React.FC<ListingFilterProps> = ({ gridSize, onGridChange })
                     onClick={() => {
                       const isSameOption = sort === option.value;
                       const newSort = isSameOption ? '' : option.value;
-
                       setSort(newSort);
                       setIsOpen(false);
-
                       const params = new URLSearchParams(searchParams?.toString() || '');
-                      if (isSameOption) {
-                        params.delete('sort');
-                      } else {
-                        params.set('sort', option.value);
-                      }
+                      if (isSameOption) params.delete('sort');
+                      else params.set('sort', option.value);
                       router.push(`/?${params.toString()}`);
                     }}
                     className={twMerge(
@@ -349,21 +341,44 @@ const ListingFilter: React.FC<ListingFilterProps> = ({ gridSize, onGridChange })
           </AnimatePresence>
         </div>
 
-        {/* GRID TOGGLE */}
-        <div className="flex items-center gap-2 bg-white py-1.5 px-2 rounded-full shadow-md">
+        {/* GRID TOGGLE — MOBILE (Grid 1 / Grid 2) */}
+        {/* <div className="flex md:hidden items-center gap-2 bg-white py-1.5 px-2 rounded-full shadow-md">
+          {[1, 2].map(size => (
+            <button
+              key={size}
+              type="button"
+              onClick={() => onGridChange(size as GridSize)}
+              className={twMerge(
+                "text-xs px-2 py-1 rounded-full transition flex items-center gap-1",
+                gridSize === size
+                  ? "bg-black text-white"
+                  : "bg-transparent text-neutral-700 hover:bg-neutral-100"
+              )}
+              aria-label={`Grid ${size}`}
+            >
+              <PiSquaresFour className="text-[14px]" />
+              <span>{size}</span>
+            </button>
+          ))}
+        </div> */}
+
+        {/* GRID TOGGLE — DESKTOP/TABLET (Grid 2 / Grid 4 / Grid 6) */}
+        <div className="hidden md:flex items-center gap-2 bg-white py-1.5 px-2 rounded-full shadow-md">
           {[2, 4, 6].map(size => (
             <button
               key={size}
               type="button"
               onClick={() => onGridChange(size as GridSize)}
               className={twMerge(
-                "text-xs px-2 py-1 rounded-full transition",
+                "text-xs px-2 py-1 rounded-full transition flex items-center gap-1",
                 gridSize === size
                   ? "bg-black text-white"
                   : "bg-transparent text-neutral-700 hover:bg-neutral-100"
               )}
+              aria-label={`${size}`}
             >
-              {size}×
+              <PiSquaresFour className="text-[14px]" />
+              <span>{size}</span>
             </button>
           ))}
         </div>
@@ -377,7 +392,7 @@ const ListingFilter: React.FC<ListingFilterProps> = ({ gridSize, onGridChange })
           >
             <RxCross2 className="text-neutral-500" />
             <div className="flex flex-col leading-tight">
-              <span className="text-[10px] uppercase tracking-wide text-black font-semibold">
+              <span className="text-[5px] uppercase tracking-wide text-black font-semibold">
                 Selected Category
               </span>
               <span className="max-w-[180px] truncate text-xs font-medium text-neutral-700">

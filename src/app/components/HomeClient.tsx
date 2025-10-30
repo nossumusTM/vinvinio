@@ -31,6 +31,35 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
   const [gridSize, setGridSize] = useState<GridSize>(4);
   const searchParams = useSearchParams();
 
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia?.('(max-width: 767px)');
+    const update = () => {
+      const mobile = mq ? mq.matches : window.innerWidth < 768;
+      setIsMobile(mobile);
+
+      // ⬅️ NEW: On mobile, default grid = 1 (unless already grid 2 selected)
+      if (mobile && gridSize !== 2) {
+        setGridSize(1);
+      }
+
+      // ⬅️ On desktop, return to normal default (only if user didn't pick something)
+      if (!mobile && gridSize === 1) {
+        setGridSize(4);
+      }
+    };
+
+    update();
+    mq?.addEventListener?.('change', update);
+    window.addEventListener('resize', update);
+
+    return () => {
+      mq?.removeEventListener?.('change', update);
+      window.removeEventListener('resize', update);
+    };
+  }, [gridSize]);
+
   const rawQuery = useMemo(() => {
     if (!searchParams) {
       return {} as Record<string, string>;
@@ -119,23 +148,38 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
     }
   };
 
+  // compact = desktop 6× OR mobile grid 2
+  const compact = useMemo(() => gridSize === 6 || (isMobile && gridSize === 2), [gridSize, isMobile]);
+
+  const gapClass = useMemo(() => (compact ? "gap-6" : "gap-12"), [compact]);
+
   const handleGridChange = useCallback((size: GridSize) => {
     setGridSize(size);
   }, []);
 
+  // const gapClass = useMemo(() => (gridSize === 6 ? "gap-6" : "gap-12"), [gridSize]);
+
+  // 👇 add Grid 1 and tweak columns for mobile/desktop
   const gridColumnsClass = useMemo(() => {
     switch (gridSize) {
+      case 1:
+        // mobile 1 col; scale reasonably on larger screens
+        return "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4";
       case 2:
-        return "md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2";
+        // mobile 2 cols, keep 2 cols up to xl for consistency
+        return "grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2";
       case 6:
-        return "md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6";
+        // denser layout; mobile ignored because UI won’t offer 6 there
+        return "grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6";
       case 4:
       default:
-        return "md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4";
+        return "grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4";
     }
   }, [gridSize]);
 
-  const gridBaseClasses = "pt-28 md:pt-32 grid grid-cols-1 sm:grid-cols-1 gap-12 max-w-screen-2xl mx-auto relative z-10";
+  // drop sm:grid-cols-1 so mobile can show multiple columns
+  const gridBaseClasses =
+    "pt-28 md:pt-32 grid max-w-screen-2xl mx-auto relative z-10";
 
   if (!listings && !isFiltering) {
     return (
@@ -146,9 +190,9 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
               <ListingFilter gridSize={gridSize} onGridChange={handleGridChange} />
             </div>
 
-            <div className={`${gridBaseClasses} ${gridColumnsClass}`}>
-              {Array.from({ length: INITIAL_SKELETON_COUNT }).map((_, index) => (
-                <ListingCardSkeleton key={`initial-skeleton-${index}`} />
+            <div className={`${gridBaseClasses} ${gapClass} ${gridColumnsClass}`}>
+              {Array.from({ length: INITIAL_SKELETON_COUNT }).map((_, i) => (
+                <ListingCardSkeleton key={`initial-skeleton-${i}`} compact={compact} />
               ))}
             </div>
           </div>
@@ -167,20 +211,25 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
             <ListingFilter gridSize={gridSize} onGridChange={handleGridChange} />
           </div>
 
-          <div className={`${gridBaseClasses} ${gridColumnsClass}`}>
+          <div className={`${gridBaseClasses} ${gapClass} ${gridColumnsClass}`}>
             {listings ? (
               <>
                 {listings.map((listing: any) => (
-                  <ListingCard key={listing.id} data={listing} currentUser={currentUser} />
+                  <ListingCard
+                    key={listing.id}
+                    data={listing}
+                    currentUser={currentUser}
+                    compact={compact}  // 👈 pass compact
+                  />
                 ))}
                 {loadingMore &&
-                  Array.from({ length: LOAD_MORE_SKELETON_COUNT }).map((_, index) => (
-                    <ListingCardSkeleton key={`load-skeleton-${index}`} />
+                  Array.from({ length: LOAD_MORE_SKELETON_COUNT }).map((_, i) => (
+                    <ListingCardSkeleton key={`load-skeleton-${i}`} compact={compact} />
                   ))}
               </>
             ) : (
-              Array.from({ length: INITIAL_SKELETON_COUNT }).map((_, index) => (
-                <ListingCardSkeleton key={`filter-skeleton-${index}`} />
+              Array.from({ length: INITIAL_SKELETON_COUNT }).map((_, i) => (
+                <ListingCardSkeleton key={`filter-skeleton-${i}`} compact={compact} />
               ))
             )}
           </div>
