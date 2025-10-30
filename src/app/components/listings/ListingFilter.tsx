@@ -7,82 +7,25 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { twMerge } from 'tailwind-merge';
 import { RxCross2 } from 'react-icons/rx';
 
-export type GridSize = 2 | 4 | 6;
-
-interface ListingFilterProps {
-  gridSize: GridSize;
-  onGridChange: (size: GridSize) => void;
-}
-
-const GridIcon = ({ columns }: { columns: GridSize }) => {
-  if (columns === 2) {
-    return (
-      <div className="flex items-center gap-[3px]">
-        {[0, 1].map((index) => (
-          <span
-            key={index}
-            className="h-[14px] w-3 rounded-[3px] bg-neutral-500"
-          />
-        ))}
-      </div>
-    );
-  }
-
-  const config = columns === 4 ? { cols: 2, rows: 2 } : { cols: 3, rows: 2 };
-  const totalCells = config.cols * config.rows;
-
-  return (
-    <div
-      className={twMerge(
-        'grid gap-[2px]',
-        config.cols === 2 ? 'grid-cols-2' : 'grid-cols-3'
-      )}
-    >
-      {Array.from({ length: totalCells }).map((_, index) => (
-        <span
-          key={index}
-          className="h-[9px] w-[9px] rounded-[2px] bg-neutral-500"
-        />
-      ))}
-    </div>
-  );
-};
-
 declare global {
   interface WindowEventMap {
     'categories:open': CustomEvent<void>;
   }
 }
 
-const ListingFilter = ({ gridSize, onGridChange }: ListingFilterProps) => {
+const ListingFilter = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [sort, setSort] = useState('');
   const [visible, setVisible] = useState(true);
-  const [isSortOpen, setIsSortOpen] = useState(false);
-  const [isGridOpen, setIsGridOpen] = useState(false);
-  const sortButtonRef = useRef<HTMLDivElement>(null);
-  const sortDropdownRef = useRef<HTMLDivElement>(null);
-  const gridButtonRef = useRef<HTMLDivElement>(null);
-  const gridDropdownRef = useRef<HTMLDivElement>(null);
-  const [sortDropdownCoords, setSortDropdownCoords] = useState({
-    left: 0,
-    top: 0,
-    width: 0,
-  });
-  const [gridDropdownCoords, setGridDropdownCoords] = useState({
-    left: 0,
-    top: 0,
-    width: 0,
-  });
+  const [isOpen, setIsOpen] = useState(false);
+  const buttonRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const category = searchParams?.get('category') || '';
 
-  const gridOptions: { value: GridSize; label: string }[] = [
-    { value: 2, label: '2 per row' },
-    { value: 4, label: '4 per row' },
-    { value: 6, label: '6 per row' },
-  ];
+  const [, setDropdownCoords] = useState({ left: 0, top: 0 });
+  const shiftLeft = (sort === 'random' || sort === 'rating' || sort === '') ? 25 : -6;
 
   const filterOptions = [
     { value: 'rating', label: 'Review' },
@@ -97,25 +40,29 @@ const ListingFilter = ({ gridSize, onGridChange }: ListingFilterProps) => {
     }
   }, [searchParams]);
 
+  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selected = e.target.value;
+    setSort(selected);
+
+    if (!searchParams) return;
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('sort', selected);
+
+    router.push(`/?${params.toString()}`);
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
-        sortDropdownRef.current &&
-        !sortDropdownRef.current.contains(event.target as Node) &&
-        !sortButtonRef.current?.contains(event.target as Node)
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        !buttonRef.current?.contains(event.target as Node)
       ) {
-        setIsSortOpen(false);
-      }
-
-      if (
-        gridDropdownRef.current &&
-        !gridDropdownRef.current.contains(event.target as Node) &&
-        !gridButtonRef.current?.contains(event.target as Node)
-      ) {
-        setIsGridOpen(false);
+        setIsOpen(false);
       }
     };
-
+  
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
@@ -158,85 +105,19 @@ const ListingFilter = ({ gridSize, onGridChange }: ListingFilterProps) => {
       <div className="flex items-center gap-3">
         <div className="relative inline-block">
           <div
-            ref={gridButtonRef}
+            ref={buttonRef}
             onClick={() => {
-              if (gridButtonRef.current) {
-                const rect = gridButtonRef.current.getBoundingClientRect();
-                setGridDropdownCoords({
-                  left: rect.left + window.scrollX,
+              if (buttonRef.current) {
+                const rect = buttonRef.current.getBoundingClientRect();
+                setDropdownCoords({
+                  left: rect.left + rect.width / 2,
                   top: rect.bottom + window.scrollY + 8,
-                  width: rect.width,
                 });
               }
 
-              setIsGridOpen((prev) => !prev);
-              setIsSortOpen(false);
+              setIsOpen(prev => !prev);
             }}
-            className="flex items-center gap-2 bg-white py-2 px-4 rounded-full shadow-md hover:shadow-lg cursor-pointer font-medium text-neutral-700 text-sm"
-          >
-            <GridIcon columns={gridSize} />
-            Make Grid
-          </div>
-
-          <AnimatePresence>
-            {isGridOpen && (
-              <motion.div
-                ref={gridDropdownRef}
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.15 }}
-                className="fixed z-[9999] bg-white border border-neutral-200 rounded-xl shadow-lg"
-                style={{
-                  left: gridDropdownCoords.left,
-                  top: gridDropdownCoords.top,
-                  minWidth: Math.max(gridDropdownCoords.width, 160),
-                }}
-              >
-                {gridOptions.map((option, index) => {
-                  const isActive = gridSize === option.value;
-
-                  return (
-                    <div
-                      key={option.value}
-                      onClick={() => {
-                        onGridChange(option.value);
-                        setIsGridOpen(false);
-                      }}
-                      className={twMerge(
-                        'px-4 py-3 text-sm text-neutral-700 hover:bg-neutral-100 transition cursor-pointer flex items-center gap-3',
-                        isActive && 'font-semibold bg-neutral-100',
-                        index === gridOptions.length - 1 && 'rounded-b-xl',
-                        index === 0 && 'rounded-t-xl'
-                      )}
-                    >
-                      <GridIcon columns={option.value} />
-                      {option.label}
-                    </div>
-                  );
-                })}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        <div className="relative inline-block">
-          <div
-            ref={sortButtonRef}
-            onClick={() => {
-              if (sortButtonRef.current) {
-                const rect = sortButtonRef.current.getBoundingClientRect();
-                setSortDropdownCoords({
-                  left: rect.left + window.scrollX,
-                  top: rect.bottom + window.scrollY + 8,
-                  width: rect.width,
-                });
-              }
-
-              setIsSortOpen((prev) => !prev);
-              setIsGridOpen(false);
-            }}
-            className="flex items-center gap-2 bg-white py-2 px-4 rounded-full shadow-md hover:shadow-lg cursor-pointer font-medium text-neutral-700 text-sm"
+            className="flex items-center gap-2 bg-white py-2 px-4 rounded-full shadow-md hover:shadow-lg transition cursor-pointer font-medium text-neutral-700 text-sm"
           >
           {/* {sort ? filterOptions.find(o => o.value === sort)?.label : <div className="flex flex-row justify-center items-center gap-2 w-50"> <PiSortDescending /> Sort By </div>} */}
           <div className="flex flex-row justify-center items-center gap-2 w-70 select-none">
@@ -247,21 +128,20 @@ const ListingFilter = ({ gridSize, onGridChange }: ListingFilterProps) => {
         </div>
 
         <AnimatePresence>
-          {isSortOpen && (
+          {isOpen && (
               <motion.div
-                ref={sortDropdownRef}
+                ref={dropdownRef}
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.15 }}
-                className="fixed z-[9999] bg-white border border-neutral-200 rounded-xl shadow-lg w-max"
+                className="fixed z-[9999] bg-white border border-neutral-200 rounded-xl shadow-lg w-max min-w-[160px]"
                 style={{
-                  left: sortDropdownCoords.left,
-                  top: sortDropdownCoords.top,
-                  minWidth: Math.max(sortDropdownCoords.width, 160),
+                  left: 0 - shiftLeft,
+                  top: 50,
                 }}
-              >
-
+              >            
+                     
               {filterOptions.map((option, index) => (
                 <div
                   key={option.value}
@@ -270,8 +150,8 @@ const ListingFilter = ({ gridSize, onGridChange }: ListingFilterProps) => {
                     const newSort = isSameOption ? '' : option.value;
                   
                     setSort(newSort);
-                    setIsSortOpen(false);
-
+                    setIsOpen(false);
+                  
                     const params = new URLSearchParams(searchParams?.toString() || '');
                     if (isSameOption) {
                       params.delete('sort');
@@ -300,14 +180,14 @@ const ListingFilter = ({ gridSize, onGridChange }: ListingFilterProps) => {
           <button
             type="button"
             onClick={handleClearCategory}
-            className="flex items-center gap-2 bg-white py-2 px-4 rounded-full shadow-md hover:shadow-lg cursor-pointer text-left"
+            className="flex items-center gap-2 bg-white py-1.5 px-4 rounded-full shadow-md hover:shadow-lg transition cursor-pointer text-left"
           >
             <RxCross2 className="text-neutral-500" />
             <div className="flex flex-col leading-tight">
-              <span className="text-[10px] uppercase tracking-wide text-neutral-400 font-semibold">
+              <span className="text-[5px] uppercase tracking-wide text-black font-semibold">
                 Selected Category
               </span>
-              <span className="max-w-[180px] truncate text-sm font-medium text-neutral-700">
+              <span className="max-w-[180px] truncate text-xs font-medium text-neutral-700">
                 {category}
               </span>
             </div>
