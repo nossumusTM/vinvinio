@@ -12,6 +12,7 @@ import LoginModal from '@/app/components/modals/LoginModal';
 import RegisterModal from '@/app/components/modals/RegisterModal';
 import SearchModal from '@/app/components/modals/SearchModal';
 import SearchExperienceModal from './components/modals/SearchExperienceModal';
+import LocaleModal from './components/modals/LocaleModal';
 import RentModal from '@/app/components/modals/RentModal';
 import PromoteModal from './components/modals/PromoteModal';
 import ForgetPasswordModal from './components/modals/ForgetPasswordModal';
@@ -64,6 +65,7 @@ export default async function RootLayout({
           <RegisterModal />
           <ForgetPasswordModal />
           <SearchExperienceModal />
+          <LocaleModal />
           {/* <SearchModal /> */}
           <RentModal />
           <ExperienceModal currentUser={currentUser}/>

@@ -8,6 +8,7 @@ import Container from "../Container";
 import Logo from "./Logo";
 import Search from "./Search";
 import SearchExperience from "./SearchExperience";
+import LocaleButton from "./LocaleButton";
 import UserMenu from "./UserMenu";
 import { usePathname } from 'next/navigation';
 
@@ -21,9 +22,9 @@ const NavBar: React.FC<NavBarProps> = ({ currentUser }) => {
   const [visible, setVisible] = useState(true);
 
   const pathname = usePathname();
-  // add next to isListingPage
   const isListingPage = pathname?.startsWith('/listings/') || pathname?.startsWith('/tours/');
   const isCheckoutPage = pathname?.startsWith('/checkout');
+  const isHomePage = pathname === '/';
   const keepVisible = isListingPage || isCheckoutPage;
 
 //   useEffect(() => {
@@ -47,8 +48,7 @@ const NavBar: React.FC<NavBarProps> = ({ currentUser }) => {
 
 // replace your useEffect with this, using keepVisible
 useEffect(() => {
-  // Keep navbar always visible on listing & checkout pages
-  if (keepVisible) {
+  if (keepVisible || isHomePage) {
     setVisible(true);
     return;
   }
@@ -56,7 +56,7 @@ useEffect(() => {
   let lastY = 0;
   let visibleNow = true;
   let ticking = false;
-  const THRESHOLD = 8; // ignore tiny scrolls
+  const THRESHOLD = 8;
 
   const onScroll = () => {
     const y = window.scrollY;
@@ -67,9 +67,9 @@ useEffect(() => {
       const delta = y - lastY;
 
       let nextVisible = visibleNow;
-      if (y < 5) nextVisible = true;           // near top: show
+      if (y < 5) nextVisible = true;
       else if (Math.abs(delta) > THRESHOLD) {
-        nextVisible = delta < 0;               // up: show, down: hide
+        nextVisible = delta < 0;
       }
 
       if (nextVisible !== visibleNow) {
@@ -82,9 +82,9 @@ useEffect(() => {
     });
   };
 
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, [keepVisible]);
+  window.addEventListener('scroll', onScroll, { passive: true });
+  return () => window.removeEventListener('scroll', onScroll);
+}, [keepVisible, isHomePage]);
 
   return (
     // <div
@@ -113,7 +113,8 @@ useEffect(() => {
             </div>
 
             {/* User Menu always on right */}
-            <div className="flex-shrink-0 flex justify-end z-10">
+            <div className="flex-shrink-0 flex items-center gap-3 justify-end z-10">
+              <LocaleButton />
               <UserMenu currentUser={currentUser} />
             </div>
           </div>
