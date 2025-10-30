@@ -33,6 +33,7 @@ export const dynamic = 'force-dynamic';
 import prisma from "@/app/libs/prismadb";
 import getCurrentUser from "./getCurrentUser";
 import { SafeListing } from "../types"; // Assuming this is defined elsewhere
+import { ensureListingSlug } from "@/app/libs/ensureListingSlug";
 
 export default async function getFavoriteListings(): Promise<SafeListing[]> {
   try {
@@ -50,7 +51,11 @@ export default async function getFavoriteListings(): Promise<SafeListing[]> {
       },
     });
 
-    const safeFavorites = favorites.map((favorite: any) => ({
+    const favoritesWithSlugs = await Promise.all(
+      favorites.map((favorite) => ensureListingSlug(favorite))
+    );
+
+    const safeFavorites = favoritesWithSlugs.map((favorite: any) => ({
       ...favorite,
       createdAt: favorite.createdAt.toISOString(),
       // ✅ DO NOT convert nulls to undefined

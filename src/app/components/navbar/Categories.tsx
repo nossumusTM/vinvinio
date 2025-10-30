@@ -31,8 +31,14 @@ import { MdOutlineVilla } from 'react-icons/md';
 import CategoryBox from "../CategoryBox";
 import Container from '../Container';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { LuChevronUp } from 'react-icons/lu';
+
+declare global {
+  interface WindowEventMap {
+    'categories:open': CustomEvent<void>;
+  }
+}
 
 export const categories = [
     {
@@ -143,7 +149,24 @@ const Categories = () => {
     const pathname = usePathname();
     const isMainPage = pathname === '/';
     const [visible, setVisible] = useState(true);
-    const prevScrollPos = useRef(0);
+
+    useEffect(() => {
+      if (category) {
+        setVisible(false);
+      } else {
+        setVisible(true);
+      }
+    }, [category]);
+
+    useEffect(() => {
+      const handleOpen = () => setVisible(true);
+
+      window.addEventListener('categories:open', handleOpen);
+
+      return () => {
+        window.removeEventListener('categories:open', handleOpen);
+      };
+    }, []);
 
     useEffect(() => {
       let timeout: NodeJS.Timeout | null = null;

@@ -10,6 +10,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 import qs from 'query-string';
 import { useSearchParams } from 'next/navigation';
+import { hrefForListing } from "@/app/libs/links";
+import useCountries from "@/app/hooks/useCountries";
+import { CountrySelectValue } from "../inputs/CountrySelect";
 
 import {
   SafeListing,
@@ -50,6 +53,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
   currentUser,
 }) => {
   const router = useRouter();
+  const { getByValue } = useCountries();
   const [reviews, setReviews] = useState<{
     rating: number;
     comment: string;
@@ -61,12 +65,19 @@ const ListingCard: React.FC<ListingCardProps> = ({
   const params = useSearchParams();
 
   const listingHref = useMemo(() => {
-  const current = params ? qs.parse(params.toString()) : {};
-  return qs.stringifyUrl(
-    { url: `/listings/${data.id}`, query: current },
-    { skipNull: true, skipEmptyString: true }
-  );
-}, [params, data.id]);
+    const current = params ? qs.parse(params.toString()) : {};
+    const baseUrl = hrefForListing(data);
+    return qs.stringifyUrl(
+      { url: baseUrl, query: current },
+      { skipNull: true, skipEmptyString: true }
+    );
+  }, [
+    params,
+    data.id,
+    data.slug,
+    data.primaryCategory,
+    JSON.stringify(data.category ?? [])
+  ]);
 
   const [isHovered, setIsHovered] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -155,6 +166,66 @@ const ListingCard: React.FC<ListingCardProps> = ({
   const price = useMemo(() => {
     return reservation ? reservation.totalPrice : data.price;
   }, [reservation, data.price]);
+
+  const primaryCategory = useMemo(() => {
+    if (Array.isArray(data.category)) {
+      return data.category[0];
+    }
+
+    return data.category;
+  }, [data.category]);
+
+  const location = useMemo(() => {
+    if (!data.locationValue) {
+      return undefined;
+    }
+
+    const directMatch = getByValue(data.locationValue) as CountrySelectValue | undefined;
+    if (directMatch) {
+      return directMatch;
+    }
+
+    const segments = data.locationValue.split('-');
+    if (segments.length < 2) {
+      return undefined;
+    }
+
+    const countryCode = segments.pop();
+    if (!countryCode) {
+      return undefined;
+    }
+
+    const fallbackCountry = getByValue(countryCode.toUpperCase()) as CountrySelectValue | undefined;
+    if (!fallbackCountry) {
+      return undefined;
+    }
+
+    const citySlug = segments.join('-');
+    const formattedCity = citySlug
+      ? citySlug
+          .split('-')
+          .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+          .join(' ')
+      : fallbackCountry.city;
+
+    return {
+      ...fallbackCountry,
+      city: formattedCity || fallbackCountry.city,
+    } as CountrySelectValue;
+  }, [data.locationValue, getByValue]);
+
+  const locationCode = useMemo(() => {
+    const rawCode = location?.value ?? data.locationValue;
+    if (!rawCode) {
+      return undefined;
+    }
+
+    const parts = rawCode.split('-');
+    const lastSegment = parts[parts.length - 1];
+    return lastSegment ? lastSegment.toLowerCase() : undefined;
+  }, [location?.value, data.locationValue]);
+
+  const locationFlagSrc = locationCode ? `/flags/${locationCode}.svg` : undefined;
 
   // const reservationDate = useMemo(() => {
   //   if (!reservation) return null;
@@ -357,13 +428,35 @@ const ListingCard: React.FC<ListingCardProps> = ({
           </div>
         )}
 
-         <div className="flex items-center gap-2 pt-1 text-neutral-500 text-sm">
+        <div className="flex items-center gap-2 pt-1 text-neutral-500 text-sm flex-wrap">
           {reservationDate ? (
             <span>{reservationDate}</span>
           ) : (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full border border-neutral-300 bg-white text-neutral-700 text-xs font-medium tracking-wide">
-              {data.category}
-            </span>
+            <>
+              {primaryCategory && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full border border-neutral-300 bg-white text-neutral-700 text-xs font-medium tracking-wide">
+                  {primaryCategory}
+                </span>
+              )}
+              <span className="flex items-center gap-2 text-xs sm:text-sm text-neutral-600">
+                {locationFlagSrc && (
+                  <Image
+                    src={locationFlagSrc}
+                    alt={location?.label ?? 'Country flag'}
+                    width={20}
+                    height={14}
+                    className="h-3.5 w-5 rounded-xl object-cover"
+                  />
+                )}
+                <span>
+                  {location
+                    ? 'city' in location
+                      ? `${location.city}, ${location.label}`
+                      : location.label
+                    : 'Unknown location'}
+                </span>
+              </span>
+            </>
           )}
         </div>
 

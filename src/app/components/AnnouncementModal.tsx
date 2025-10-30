@@ -15,7 +15,7 @@ const AnnouncementModal = () => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
-  const isListingPage = pathname?.startsWith('/listings/');
+  const isListingPage = pathname?.startsWith('/listings/') || pathname?.startsWith('/tours/');
 
   const handleCopy = () => {
     navigator.clipboard.writeText('ESTATERM');

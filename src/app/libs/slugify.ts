@@ -13,12 +13,22 @@ export async function makeUniqueSlug(
   exists: (slug: string) => Promise<boolean>
 ) {
   const base = toASCII(baseTitle) || 'listing';
-  if (!(await exists(base))) return base;
+  const fallback = () => {
+    const rnd = Math.random().toString(36).slice(2, 7);
+    return `${base}-${rnd}`;
+  };
 
-  for (let i = 2; i <= 200; i++) {
-    const candidate = `${base}-${i}`;
-    if (!(await exists(candidate))) return candidate;
+  try {
+    if (!(await exists(base))) return base;
+
+    for (let i = 2; i <= 200; i++) {
+      const candidate = `${base}-${i}`;
+      if (!(await exists(candidate))) return candidate;
+    }
+  } catch (error) {
+    console.error('makeUniqueSlug: failed to verify slug uniqueness', error);
+    return fallback();
   }
-  const rnd = Math.random().toString(36).slice(2, 7);
-  return `${base}-${rnd}`;
+
+  return fallback();
 }

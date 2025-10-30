@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
+import prisma from '@/app/libs/prismadb';
+import { ensureListingSlug } from '@/app/libs/ensureListingSlug';
+import { hrefForListing } from '@/app/libs/links';
 
 export async function POST(req: Request) {
   try {
@@ -13,14 +16,13 @@ export async function POST(req: Request) {
       guests,
       formattedDateTime,
       listingTitle,
-      listingId
+      listingId,
+      listingPath
     } = await req.json();
 
     if (!hostEmail || !guestName || !formattedDateTime || !listingTitle) {
       return new NextResponse('Missing required fields', { status: 400 });
     }
-
-    const displayGuestName = legalName || guestName;
 
     const transporter = nodemailer.createTransport({
       service: 'gmail',
@@ -29,6 +31,26 @@ export async function POST(req: Request) {
         pass: process.env.EMAIL_PASS,
       },
     });
+
+    const baseUrl =
+      process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/+$/, "") || "https://vuoiaggio.it";
+
+    let resolvedPath: string | null =
+      typeof listingPath === 'string' && listingPath.length > 0 ? listingPath : null;
+
+    if (!resolvedPath && listingId) {
+      const listing = await prisma.listing.findUnique({ where: { id: listingId } });
+      if (listing) {
+        const ensured = await ensureListingSlug(listing as any);
+        resolvedPath = hrefForListing(ensured);
+      }
+    }
+
+    if (!resolvedPath && listingId) {
+      resolvedPath = `/tours/general/${encodeURIComponent(listingId)}`;
+    }
+
+    const listingUrl = `${baseUrl}${resolvedPath && resolvedPath.startsWith('/') ? resolvedPath : `/${resolvedPath ?? ''}`}`;
 
     const info = await transporter.sendMail({
       from: `"Vuola Booking" <${process.env.EMAIL_USER}>`,
@@ -56,12 +78,13 @@ export async function POST(req: Request) {
 
             <p>Login to your dashboard to see the full details and contact the guest if needed.</p>
 
-            <p style="margin: 6px 0;"><strong>Listing ID:</strong> 
-                <a href="https://vuoiaggio.it/listings/${listingId}"
+            <p style="margin: 6px 0;"><strong>Listing:</strong>
+                <a href="${listingUrl}"
                     style="color: #3604ff; text-decoration: none; font-weight: 600;
                             border-bottom: 2px solid #3604ff; padding-bottom: 2px; display: inline-block;">
-                    ${listingId}
+                    ${listingTitle}
                 </a>
+                ${listingId ? `<span style="display: inline-block; margin-left: 8px; color: #6b7280; font-size: 12px;">ID: ${listingId}</span>` : ''}
             </p>
 
             <p style="margin-top: 32px;">Thanks for hosting with <strong>Vuola</strong>! ✨</p>

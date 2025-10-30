@@ -32,41 +32,59 @@ export async function POST(
     });
 
     // ✅ Send email notification
-    if (listing.user?.email) {
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-      });
+    const emailUser = process.env.EMAIL_USER;
+    const emailPass = process.env.EMAIL_PASS;
+    const recipientEmail = listing.user?.email;
 
-      await transporter.sendMail({
-        from: `"Vuola Moderation" <${process.env.EMAIL_USER}>`,
-        to: listing.user.email,
-        subject: '❌ Your Experience Listing Has Been Rejected',
-        html: `
-          <div style="font-family: 'Nunito', Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; overflow: hidden;">
-            <link href="https://fonts.googleapis.com/css2?family=Nunito&display=swap" rel="stylesheet">
-            <div style="padding: 24px;">
-              <img src="https://vuola.eu/images/vuoiaggiologo.png" alt="Vuola Logo" style="width: 140px; margin: 0 auto 20px; display: block;" />
+    if (emailUser && emailPass && recipientEmail) {
+      try {
+        const transporter = nodemailer.createTransport({
+          service: "gmail",
+          auth: {
+            user: emailUser,
+            pass: emailPass,
+          },
+        });
 
-              <h2 style="text-align: center; color: #c00;">Listing Rejected</h2>
-              <p style="font-size: 16px;">Hi ${listing.user.name || 'there'},</p>
+        await transporter.sendMail({
+          from: `"Vuola Moderation" <${emailUser}>`,
+          to: recipientEmail,
+          subject: "❌ Your Experience Listing Has Been Rejected",
+          html: `
+            <div style="font-family: 'Nunito', Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; overflow: hidden;">
+              <link href="https://fonts.googleapis.com/css2?family=Nunito&display=swap" rel="stylesheet">
+              <div style="padding: 24px;">
+                <img src="https://vuola.eu/images/vuoiaggiologo.png" alt="Vuola Logo" style="width: 140px; margin: 0 auto 20px; display: block;" />
 
-              <p style="font-size: 14px; margin-bottom: 16px;">
-                Unfortunately, your listing titled <strong>${listing.title}</strong> did not meet our platform guidelines and has been <strong style="color: #c00;">rejected</strong>.
-              </p>
+                <h2 style="text-align: center; color: #c00;">Listing Rejected</h2>
+                <p style="font-size: 16px;">Hi ${listing.user.name || "there"},</p>
 
-              <p style="font-size: 14px;">You may revise the listing and resubmit it for review.</p>
+                <p style="font-size: 14px; margin-bottom: 16px;">
+                  Unfortunately, your listing titled <strong>${listing.title}</strong> did not meet our platform guidelines and has been <strong style="color: #c00;">rejected</strong>.
+                </p>
 
-              <p style="margin-top: 32px;">If you have questions, feel free to contact <a href="mailto:ciao@vuoiaggio.it" style="color: #3604ff;">ciao@vuoiaggio.it</a></p>
+                <p style="font-size: 14px;">You may revise the listing and resubmit it for review.</p>
 
-              <hr style="margin-top: 40px;" />
+                <p style="margin-top: 32px;">If you have questions, feel free to contact <a href="mailto:ciao@vuoiaggio.it" style="color: #3604ff;">ciao@vuoiaggio.it</a></p>
+
+                <hr style="margin-top: 40px;" />
+              </div>
             </div>
-          </div>
-        `,
-      });
+          `,
+        });
+      } catch (emailError) {
+        console.error("Failed to send listing rejection email", emailError);
+      }
+    } else {
+      if (!emailUser || !emailPass) {
+        console.warn(
+          "Email credentials are not configured; skipping rejection notification email."
+        );
+      } else if (!recipientEmail) {
+        console.warn(
+          "Listing rejection notification email skipped: no recipient email available."
+        );
+      }
     }
 
     return NextResponse.json(listing);
