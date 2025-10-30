@@ -192,7 +192,7 @@ const SearchExperience = () => {
         sm:w-full w-auto md:w-auto
         px-2 lg:px-1 md:py-2 lg:py-2
         rounded-full
-        bg-white/90 backdrop-blur
+        backdrop-blur
         shadow-md hover:shadow-lg
         transition
         cursor-pointer select-none

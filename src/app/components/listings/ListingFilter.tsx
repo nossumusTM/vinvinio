@@ -184,10 +184,10 @@ const ListingFilter = () => {
           >
             <RxCross2 className="text-neutral-500" />
             <div className="flex flex-col leading-tight">
-              <span className="text-[10px] uppercase tracking-wide text-neutral-400 font-semibold">
+              <span className="text-[5px] uppercase tracking-wide text-black font-semibold">
                 Selected Category
               </span>
-              <span className="max-w-[180px] truncate text-sm font-medium text-neutral-700">
+              <span className="max-w-[180px] truncate text-xs font-medium text-neutral-700">
                 {category}
               </span>
             </div>
