@@ -2,11 +2,16 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
-import { FiFilter } from 'react-icons/fi';
-import { FaSort } from 'react-icons/fa';
 import { PiSortDescending } from "react-icons/pi";
 import { motion, AnimatePresence } from 'framer-motion';
 import { twMerge } from 'tailwind-merge';
+import { RxCross2 } from 'react-icons/rx';
+
+declare global {
+  interface WindowEventMap {
+    'categories:open': CustomEvent<void>;
+  }
+}
 
 const ListingFilter = () => {
   const router = useRouter();
@@ -17,7 +22,9 @@ const ListingFilter = () => {
   const buttonRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const [dropdownCoords, setDropdownCoords] = useState({ left: 0, top: 0 });
+  const category = searchParams?.get('category') || '';
+
+  const [, setDropdownCoords] = useState({ left: 0, top: 0 });
   const shiftLeft = (sort === 'random' || sort === 'rating' || sort === '') ? 25 : -6;
 
   const filterOptions = [
@@ -76,29 +83,42 @@ const ListingFilter = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const handleClearCategory = () => {
+    const params = new URLSearchParams(searchParams?.toString() || '');
+    params.delete('category');
+
+    const query = params.toString();
+
+    router.push(query ? `/?${query}` : '/');
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('categories:open'));
+    }
+  };
+
   return (
     <div
       className={`transition-opacity duration-300 ${
         visible ? 'opacity-100' : 'opacity-0'
       }`}
     >
-      <div className="relative inline-block">
-        <div
-          ref={buttonRef}
-          onClick={() => {
-            if (buttonRef.current) {
-              const rect = buttonRef.current.getBoundingClientRect();
-              setDropdownCoords({
-                left: rect.left + rect.width / 2,
-                top: rect.bottom + window.scrollY + 8,
-              });
-            }
-          
-            setIsOpen(prev => !prev);
-          }}
-          
-          className="flex items-center gap-2 bg-white py-2 px-4 rounded-full shadow-md hover:shadow-lg cursor-pointer font-medium text-neutral-700 text-sm"
-        >
+      <div className="flex items-center gap-3">
+        <div className="relative inline-block">
+          <div
+            ref={buttonRef}
+            onClick={() => {
+              if (buttonRef.current) {
+                const rect = buttonRef.current.getBoundingClientRect();
+                setDropdownCoords({
+                  left: rect.left + rect.width / 2,
+                  top: rect.bottom + window.scrollY + 8,
+                });
+              }
+
+              setIsOpen(prev => !prev);
+            }}
+            className="flex items-center gap-2 bg-white py-2 px-4 rounded-full shadow-md hover:shadow-lg cursor-pointer font-medium text-neutral-700 text-sm"
+          >
           {/* {sort ? filterOptions.find(o => o.value === sort)?.label : <div className="flex flex-row justify-center items-center gap-2 w-50"> <PiSortDescending /> Sort By </div>} */}
           <div className="flex flex-row justify-center items-center gap-2 w-70 select-none">
             <PiSortDescending />
@@ -106,7 +126,7 @@ const ListingFilter = () => {
           </div>
 
         </div>
-  
+
         <AnimatePresence>
           {isOpen && (
               <motion.div
@@ -154,6 +174,18 @@ const ListingFilter = () => {
             </motion.div>
           )}
         </AnimatePresence>
+        </div>
+
+        {category && (
+          <button
+            type="button"
+            onClick={handleClearCategory}
+            className="flex items-center gap-2 bg-white py-2 px-4 rounded-full shadow-md hover:shadow-lg cursor-pointer font-medium text-neutral-700 text-sm"
+          >
+            <RxCross2 />
+            <span className="max-w-[180px] truncate">{category}</span>
+          </button>
+        )}
       </div>
     </div>
   );
