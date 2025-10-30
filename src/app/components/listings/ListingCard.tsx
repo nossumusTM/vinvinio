@@ -1058,7 +1058,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
             <span>{reservationDate}</span>
           ) : (
             <>
-              <div className="flex flex-row items-baseline gap-2 pt-1 text-neutral-500 text-xs md:text-sm flex-nowrap overflow-hidden">
+              <div className="flex flex-row items-center mb-1.5 gap-2 pt-1 text-neutral-500 text-xs md:text-sm flex-nowrap overflow-hidden">
                 {primaryCategory && (
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full border border-neutral-300 bg-white text-neutral-700 text-[11px] md:text-xs font-medium tracking-wide whitespace-nowrap">
                     {primaryCategory}
@@ -1099,7 +1099,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
         <hr />
 
-        <div className={`flex flex-row items-center gap-1 ${compact ? 'ml-2 mt-1' : 'ml-3 mt-1'}`}>
+        <div className={`flex flex-row items-center gap-1 ${compact ? 'ml-2 mt-1' : 'ml-1 mt-1'}`}>
           <div className={`font-semibold ${compact ? 'text-sm md:text-base' : 'text-base md:text-lg'}`}>€{price}</div>
           {!reservation && <div className="font-normal text-[10px] md:text-xs">/ PER PERSON</div>}
         </div>

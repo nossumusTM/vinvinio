@@ -312,7 +312,7 @@ const ListingFilter: React.FC<ListingFilterProps> = ({ gridSize, onGridChange })
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.15 }}
                 className="fixed z-[9999] bg-white border border-neutral-200 rounded-xl shadow-lg w-max min-w-[200px]"
-                style={{ left: 0 - shiftLeft, top: 50 }}
+                style={{ left: -20 - shiftLeft, top: 50 }}
               >
                 {filterOptions.map((option, index) => (
                   <div
