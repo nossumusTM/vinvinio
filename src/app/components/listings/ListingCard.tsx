@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useEffect, useState, useRef } from "react";
+import type { TouchEvent } from "react";
 import Avatar from "../Avatar";
 import { format } from 'date-fns';
 
@@ -82,6 +83,11 @@ const ListingCard: React.FC<ListingCardProps> = ({
   const [isHovered, setIsHovered] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const touchStartXRef = useRef<number | null>(null);
+  const touchStartYRef = useRef<number | null>(null);
+  const isSwipingRef = useRef(false);
+  const hasSwipedRef = useRef(false);
+  const swipeResetTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   // const images: string[] = useMemo(
   //   () => (Array.isArray(data.imageSrc) ? data.imageSrc.filter(src => !/\.(mp4|webm|ogg)$/i.test(src)) : []),
   //   [data.imageSrc]
@@ -119,19 +125,103 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
   console.log('coverMedia', coverMedia);
 
-  const goPrev = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
+  const goPrev = useCallback(() => {
     if (images.length > 0) {
       setActiveImageIndex((i) => (i - 1 + images.length) % images.length);
     }
   }, [images.length]);
 
-  const goNext = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
+  const goNext = useCallback(() => {
     if (images.length > 0) {
       setActiveImageIndex((i) => (i + 1) % images.length);
     }
   }, [images.length]);
+
+  const clearSwipeReset = useCallback(() => {
+    if (swipeResetTimeoutRef.current) {
+      clearTimeout(swipeResetTimeoutRef.current);
+      swipeResetTimeoutRef.current = null;
+    }
+  }, []);
+
+  const handleTouchStart = useCallback(
+    (event: TouchEvent<HTMLDivElement>) => {
+      setIsHovered(true);
+      clearSwipeReset();
+      const touch = event.touches[0];
+      touchStartXRef.current = touch.clientX;
+      touchStartYRef.current = touch.clientY;
+      isSwipingRef.current = false;
+      hasSwipedRef.current = false;
+    },
+    [clearSwipeReset]
+  );
+
+  const handleTouchMove = useCallback(
+    (event: TouchEvent<HTMLDivElement>) => {
+      if (touchStartXRef.current === null || touchStartYRef.current === null) {
+        return;
+      }
+
+      const touch = event.touches[0];
+      const deltaX = touch.clientX - touchStartXRef.current;
+      const deltaY = touch.clientY - touchStartYRef.current;
+
+      if (Math.abs(deltaX) < 20 || Math.abs(deltaX) < Math.abs(deltaY)) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (images.length <= 1) {
+        return;
+      }
+
+      isSwipingRef.current = true;
+
+      if (hasSwipedRef.current) {
+        return;
+      }
+
+      if (deltaX > 0) {
+        goPrev();
+      } else if (deltaX < 0) {
+        goNext();
+      }
+
+      hasSwipedRef.current = true;
+    },
+    [goNext, goPrev, images.length]
+  );
+
+  const handleTouchEnd = useCallback(() => {
+    setIsHovered(false);
+    touchStartXRef.current = null;
+    touchStartYRef.current = null;
+    hasSwipedRef.current = false;
+    clearSwipeReset();
+    swipeResetTimeoutRef.current = setTimeout(() => {
+      isSwipingRef.current = false;
+      swipeResetTimeoutRef.current = null;
+    }, 250);
+  }, [clearSwipeReset]);
+
+  const handleTouchCancel = useCallback(() => {
+    setIsHovered(false);
+    touchStartXRef.current = null;
+    touchStartYRef.current = null;
+    isSwipingRef.current = false;
+    hasSwipedRef.current = false;
+    clearSwipeReset();
+  }, [clearSwipeReset]);
+
+  const handleCardClick = useCallback(() => {
+    if (isSwipingRef.current) {
+      return;
+    }
+    router.push(listingHref);
+  }, [listingHref, router]);
 
   // useEffect(() => {
   //   if (!isHovered || images.length <= 1) return;
@@ -290,23 +380,24 @@ const ListingCard: React.FC<ListingCardProps> = ({
     };
   }, []);
 
+  useEffect(() => {
+    return () => {
+      clearSwipeReset();
+    };
+  }, [clearSwipeReset]);
+
   return (
     <div
-      // onClick={() => router.push(`/listings/${data.id}`)}
-      onClick={() => router.push(listingHref)}
+      onClick={handleCardClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onTouchStart={() => {
-        setIsHovered(true);
-        // setActiveImageIndex((prevIndex) => (prevIndex + 1) % images.length);
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={(event) => {
+        event.stopPropagation();
+        handleTouchCancel();
       }}
-      onTouchEnd={() => {
-        setIsHovered(false);
-      }}
-      onTouchCancel={(e) => {
-        e.stopPropagation();
-        setIsHovered(false);
-      }}      
       className="col-span-1 cursor-pointer group pl-10 pr-10 p-10 shadow-md hover:shadow-lg transition-shadow duration-300 rounded-2xl"
     >
       <div className="flex flex-col gap-2 w-full">
@@ -392,7 +483,10 @@ const ListingCard: React.FC<ListingCardProps> = ({
               className="absolute bottom-3 inset-x-0 z-30 flex items-center justify-center gap-3 pointer-events-auto"
             >
               <button
-                onClick={(e) => goPrev(e)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goPrev();
+                }}
                 className="p-2 border border-white/30 hover:border-white rounded-full bg-white/0 backdrop-blur-sm transition"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -402,7 +496,10 @@ const ListingCard: React.FC<ListingCardProps> = ({
               </button>
 
               <button
-                onClick={(e) => goNext(e)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goNext();
+                }}
                 className="p-2 border border-white/30 hover:border-white rounded-full bg-white/0 backdrop-blur-sm transition"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
