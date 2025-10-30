@@ -180,10 +180,17 @@ const ListingFilter = () => {
           <button
             type="button"
             onClick={handleClearCategory}
-            className="flex items-center gap-2 bg-white py-2 px-4 rounded-full shadow-md hover:shadow-lg cursor-pointer font-medium text-neutral-700 text-sm"
+            className="flex items-center gap-2 bg-white py-2 px-4 rounded-full shadow-md hover:shadow-lg cursor-pointer text-left"
           >
-            <RxCross2 />
-            <span className="max-w-[180px] truncate">{category}</span>
+            <RxCross2 className="text-neutral-500" />
+            <div className="flex flex-col leading-tight">
+              <span className="text-[10px] uppercase tracking-wide text-neutral-400 font-semibold">
+                Selected Category
+              </span>
+              <span className="max-w-[180px] truncate text-sm font-medium text-neutral-700">
+                {category}
+              </span>
+            </div>
           </button>
         )}
       </div>
