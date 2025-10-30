@@ -438,7 +438,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                   {primaryCategory}
                 </span>
               )}
-              <span className="flex items-center border border-neutral-300 px-2.5 py-0.5 rounded-full gap-2 text-xs text-neutral-600">
+              <span className="flex items-center border border-neutral-300 px-2.5 py-0.5 rounded-full gap-2 text-xs text-neutral-700">
                 {locationFlagSrc && (
                   <Image
                     src={locationFlagSrc}
