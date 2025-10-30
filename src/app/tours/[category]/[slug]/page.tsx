@@ -9,9 +9,18 @@ import { ensureListingSlug } from "@/app/libs/ensureListingSlug";
 
 export const dynamic = "force-dynamic";
 
-type PageProps = { params: { category: string; slug: string } };
+type PageProps = {
+  params: { category: string; slug: string };
+  searchParams?: { lid?: string | string[] };
+};
 
-export async function generateMetadata({ params }: PageProps) {
+function extractListingId(searchParams?: { lid?: string | string[] }) {
+  const raw = searchParams?.lid;
+  if (!raw) return undefined;
+  return Array.isArray(raw) ? raw[0] : raw;
+}
+
+export async function generateMetadata({ params, searchParams }: PageProps) {
   const baseUrl =
     process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/+$/, "") || "http://localhost:3000";
 
@@ -22,6 +31,9 @@ export async function generateMetadata({ params }: PageProps) {
     })) ??
     (await prisma.listing.findUnique({
       where: { id: params.slug },
+    })) ??
+    (await prisma.listing.findUnique({
+      where: { id: extractListingId(searchParams) },
     }));
 
   if (!listing) return { title: "Experience not found" };
@@ -53,8 +65,9 @@ export async function generateMetadata({ params }: PageProps) {
   };
 }
 
-export default async function ListingBySlugPage({ params }: PageProps) {
+export default async function ListingBySlugPage({ params, searchParams }: PageProps) {
   const { category, slug } = params;
+  const fallbackId = extractListingId(searchParams);
 
   const listing =
     (await prisma.listing.findFirst({
@@ -64,7 +77,13 @@ export default async function ListingBySlugPage({ params }: PageProps) {
     (await prisma.listing.findUnique({
       where: { id: slug },
       include: { user: true },
-    }));
+    })) ??
+    (fallbackId
+      ? await prisma.listing.findUnique({
+          where: { id: fallbackId },
+          include: { user: true },
+        })
+      : null);
 
   if (!listing) return notFound();
 

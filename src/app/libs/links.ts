@@ -60,6 +60,8 @@ export function canonicalSegmentsForListing(listing: ListingLike) {
       ? listing.slug.trim()
       : undefined;
 
+  let requiresIdQuery = false;
+
   if (looksLikeObjectId(slugCandidate, listing.id)) {
     slugCandidate = undefined;
   }
@@ -68,20 +70,30 @@ export function canonicalSegmentsForListing(listing: ListingLike) {
     const fallbackFromTitle = slugSegment(listing.title);
     if (fallbackFromTitle.length > 0) {
       slugCandidate = fallbackFromTitle;
+      requiresIdQuery = typeof listing.id === "string" && listing.id.trim().length > 0;
     }
   }
 
   if (slugCandidate == null && typeof listing.id === "string" && listing.id.trim().length > 0) {
     slugCandidate = listing.id.trim();
+    requiresIdQuery = false;
   }
 
-  return { categorySegment, slug: slugCandidate };
+  return { categorySegment, slug: slugCandidate, requiresIdQuery };
 }
 
 export function hrefForListing(listing: ListingLike) {
-  const { categorySegment, slug } = canonicalSegmentsForListing(listing);
+  const { categorySegment, slug, requiresIdQuery } = canonicalSegmentsForListing(listing);
 
   const resolvedSlug = slug && slug.length > 0 ? slug : "listing";
+  const pathname = `/tours/${categorySegment}/${encodeURIComponent(resolvedSlug)}`;
 
-  return `/tours/${categorySegment}/${encodeURIComponent(resolvedSlug)}`;
+  if (!requiresIdQuery || !listing.id) {
+    return pathname;
+  }
+
+  const params = new URLSearchParams({ lid: listing.id });
+  const query = params.toString();
+
+  return query.length > 0 ? `${pathname}?${query}` : pathname;
 }
