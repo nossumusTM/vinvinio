@@ -13,6 +13,8 @@ import { useSearchParams } from 'next/navigation';
 import { hrefForListing } from "@/app/libs/links";
 import useCountries from "@/app/hooks/useCountries";
 
+import { CountrySelectValue } from '../inputs/CountrySelect';
+
 import {
   SafeListing,
   SafeReservation,
@@ -35,6 +37,7 @@ import Button from "../Button";
 interface ListingCardProps {
   data: SafeListing & { user: SafeUser }; // 👈 Add `user` to data
   reservation?: SafeReservation;
+  locationValue: string;
   onAction?: (id: string) => void;
   disabled?: boolean;
   actionLabel?: string;
@@ -45,6 +48,7 @@ interface ListingCardProps {
 const ListingCard: React.FC<ListingCardProps> = ({
   data,
   reservation,
+  locationValue,
   onAction,
   disabled,
   actionLabel,
@@ -53,6 +57,8 @@ const ListingCard: React.FC<ListingCardProps> = ({
 }) => {
   const router = useRouter();
   const { getByValue, getPopularCities } = useCountries();
+  const location = getByValue(locationValue) as CountrySelectValue | undefined;
+  
   const [reviews, setReviews] = useState<{
     rating: number;
     comment: string;
@@ -206,14 +212,15 @@ const ListingCard: React.FC<ListingCardProps> = ({
     }
 
     return null;
+    
   }, [data.locationDescription, locationData]);
 
   const locationLabel = useMemo(() => {
     const parts: string[] = [];
 
-    if (locationCity) {
-      parts.push(locationCity);
-    }
+    // if (locationCity) {
+    //   parts.push(locationCity);
+    // }
 
     if (locationData?.label) {
       parts.push(locationData.label);
