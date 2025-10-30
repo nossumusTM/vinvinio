@@ -1,11 +1,11 @@
 // pages/page.tsx (Home with Load More)
 'use client';
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Container from "@/app/components/Container";
 import ListingCard from "@/app/components/listings/ListingCard";
 import EmptyState from "@/app/components/EmptyState";
-import ListingFilter from "@/app/components/listings/ListingFilter";
+import ListingFilter, { GridSize } from "@/app/components/listings/ListingFilter";
 import ClientOnly from "@/app/components/ClientOnly";
 import { useSearchParams } from 'next/navigation';
 import axios from "axios";
@@ -28,6 +28,7 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
   const [hasMore, setHasMore] = useState(initialListings.length === 12);
   const [loadingMore, setLoadingMore] = useState(false);
   const [isFiltering, setIsFiltering] = useState(false);
+  const [gridSize, setGridSize] = useState<GridSize>(4);
   const searchParams = useSearchParams();
 
   const rawQuery = useMemo(() => {
@@ -118,16 +119,34 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
     }
   };
 
+  const handleGridChange = useCallback((size: GridSize) => {
+    setGridSize(size);
+  }, []);
+
+  const gridColumnsClass = useMemo(() => {
+    switch (gridSize) {
+      case 2:
+        return "md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2";
+      case 6:
+        return "md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6";
+      case 4:
+      default:
+        return "md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4";
+    }
+  }, [gridSize]);
+
+  const gridBaseClasses = "pt-28 md:pt-32 grid grid-cols-1 sm:grid-cols-1 gap-12 max-w-screen-2xl mx-auto relative z-10";
+
   if (!listings && !isFiltering) {
     return (
       <ClientOnly>
         <Container>
           <div className="relative z-30">
             <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-[9999]">
-              <ListingFilter />
+              <ListingFilter gridSize={gridSize} onGridChange={handleGridChange} />
             </div>
 
-            <div className="pt-28 md:pt-32 grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-4 gap-12 max-w-screen-2xl mx-auto relative z-10">
+            <div className={`${gridBaseClasses} ${gridColumnsClass}`}>
               {Array.from({ length: INITIAL_SKELETON_COUNT }).map((_, index) => (
                 <ListingCardSkeleton key={`initial-skeleton-${index}`} />
               ))}
@@ -145,10 +164,10 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
       <Container>
         <div className="relative z-30">
           <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-[9999]">
-            <ListingFilter />
+            <ListingFilter gridSize={gridSize} onGridChange={handleGridChange} />
           </div>
 
-          <div className="pt-28 md:pt-32 grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-4 gap-12 max-w-screen-2xl mx-auto relative z-10">
+          <div className={`${gridBaseClasses} ${gridColumnsClass}`}>
             {listings ? (
               <>
                 {listings.map((listing: any) => (
