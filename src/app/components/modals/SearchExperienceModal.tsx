@@ -131,16 +131,14 @@ const SearchExperienceModal = () => {
           title="Where will your next story unfold?"
           subtitle="Choose a destination to unlock curated experiences."
         />
-        <div className="grid gap-4 md:grid-cols-[1.2fr_1fr] items-start">
-          <div className="flex flex-col gap-4">
-            <CountrySearchSelect
-              value={location}
-              onChange={(value) => setLocation(value as CountrySelectValue)}
-            />
-            <p className="text-xs text-neutral-500">
-              Browse iconic cities or search for hidden gems across the globe.
-            </p>
-          </div>
+        <div className="flex flex-col gap-4">
+          <CountrySearchSelect
+            value={location}
+            onChange={(value) => setLocation(value as CountrySelectValue)}
+          />
+          <p className="text-xs text-neutral-500">
+            Browse iconic cities or search for hidden gems across the globe.
+          </p>
           <div className="hidden md:block rounded-2xl overflow-hidden border border-white/60 shadow-lg">
             <SearchMap city={location?.city} country={location?.label} center={location?.latlng} />
           </div>
@@ -163,7 +161,7 @@ const SearchExperienceModal = () => {
               title="Select your travel window"
               subtitle="Choose the dates that best match your plans."
             />
-            <div className="mt-4 rounded-2xl border border-black/5 bg-white/80">
+            <div className="mt-4 rounded-2xl border border-black/5">
               <SearchCalendar
                 value={dateRange}
                 onChange={(value) => setDateRange(value.selection)}
@@ -189,7 +187,7 @@ const SearchExperienceModal = () => {
               title="Who is joining the journey?"
               subtitle="Let us tailor the experience to your group size."
             />
-            <div className="mt-6 rounded-2xl border border-black/5 bg-white/90 p-4">
+            <div className="mt-6 rounded-2xl border border-black/5 p-4">
               <Counter
                 title="Guests"
                 subtitle="How many people are going?"

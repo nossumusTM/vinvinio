@@ -81,7 +81,7 @@ const LocaleModal = () => {
   };
 
   const bodyContent = (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <div className="flex justify-center gap-4">
         <button
           type="button"
@@ -119,7 +119,7 @@ const LocaleModal = () => {
               </h3>
             </div>
           </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="grid max-h-[320px] grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2">
             {localeOptions.map(renderOption)}
           </div>
         </div>
@@ -135,7 +135,7 @@ const LocaleModal = () => {
       actionLabel="Done"
       title="Personalise your experience"
       body={bodyContent}
-      className="bg-transparent"
+      className=""
     />
   );
 };
