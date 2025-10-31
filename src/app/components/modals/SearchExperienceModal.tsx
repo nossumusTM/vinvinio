@@ -19,6 +19,7 @@ import SearchCalendar from '../inputs/SaerchCalendar'
 import CountrySearchSelect, { CountrySelectValue } from '../inputs/CountrySearchSelect';
 
 import Counter from '../inputs/Counter';
+import useTranslations from '@/app/hooks/useTranslations';
 
 enum STEPS {
   LOCATION = 0,
@@ -30,6 +31,7 @@ const SearchExperienceModal = () => {
   const router = useRouter();
   const params = useSearchParams();
   const modal = useSearchExperienceModal();
+  const t = useTranslations();
 
   const [step, setStep] = useState(STEPS.LOCATION);
   const { location, setLocation } = useExperienceSearchState();
@@ -99,13 +101,16 @@ const SearchExperienceModal = () => {
   // }, [step, location]);
 
   const actionLabel = useMemo(() => {
-    if (step === STEPS.GUESTS) return 'Search';
-    if (step === STEPS.LOCATION && !location) return 'Select a country';
-    if (step === STEPS.DATE && (!dateRange?.startDate || !dateRange?.endDate)) return 'Select dates';
-    return 'Next';
-  }, [step, location, dateRange]);
+    if (step === STEPS.GUESTS) return t('search');
+    if (step === STEPS.LOCATION && !location) return t('selectCountry');
+    if (step === STEPS.DATE && (!dateRange?.startDate || !dateRange?.endDate)) return t('selectDates');
+    return t('next');
+  }, [step, location, dateRange, t]);
 
-  const secondaryActionLabel = useMemo(() => (step === STEPS.LOCATION ? undefined : 'Back'), [step]);
+  const secondaryActionLabel = useMemo(
+    () => (step === STEPS.LOCATION ? undefined : t('back')),
+    [step, t]
+  );
 
   const StepBadge = ({ stepIndex, label, icon: Icon }: { stepIndex: STEPS; label: string; icon: IconType; }) => (
     <div
@@ -145,9 +150,9 @@ const SearchExperienceModal = () => {
         </div>
       </div>
       <div className="flex flex-col md:flex-row gap-3">
-        <StepBadge stepIndex={STEPS.LOCATION} label="Destination" icon={LuMapPin} />
-        <StepBadge stepIndex={STEPS.DATE} label="Dates" icon={LuCalendarDays} />
-        <StepBadge stepIndex={STEPS.GUESTS} label="Guests" icon={LuUsers} />
+        <StepBadge stepIndex={STEPS.LOCATION} label={t('where')} icon={LuMapPin} />
+        <StepBadge stepIndex={STEPS.DATE} label={t('when')} icon={LuCalendarDays} />
+        <StepBadge stepIndex={STEPS.GUESTS} label={t('who')} icon={LuUsers} />
       </div>
     </div>
   );
@@ -170,9 +175,9 @@ const SearchExperienceModal = () => {
           </div>
         </div>
         <div className="flex flex-col md:flex-row gap-3">
-          <StepBadge stepIndex={STEPS.LOCATION} label="Destination" icon={LuMapPin} />
-          <StepBadge stepIndex={STEPS.DATE} label="Dates" icon={LuCalendarDays} />
-          <StepBadge stepIndex={STEPS.GUESTS} label="Guests" icon={LuUsers} />
+          <StepBadge stepIndex={STEPS.LOCATION} label={t('where')} icon={LuMapPin} />
+          <StepBadge stepIndex={STEPS.DATE} label={t('when')} icon={LuCalendarDays} />
+          <StepBadge stepIndex={STEPS.GUESTS} label={t('who')} icon={LuUsers} />
         </div>
       </div>
     );
@@ -189,8 +194,8 @@ const SearchExperienceModal = () => {
             />
             <div className="mt-6 rounded-2xl border border-black/5 p-4">
               <Counter
-                title="Guests"
-                subtitle="How many people are going?"
+                title={t('guestPlural')}
+                subtitle={t('addGuests')}
                 value={guestCount}
                 onChange={(value) => setGuestCount(value)}
               />
@@ -198,9 +203,9 @@ const SearchExperienceModal = () => {
           </div>
         </div>
         <div className="flex flex-col md:flex-row gap-3">
-          <StepBadge stepIndex={STEPS.LOCATION} label="Destination" icon={LuMapPin} />
-          <StepBadge stepIndex={STEPS.DATE} label="Dates" icon={LuCalendarDays} />
-          <StepBadge stepIndex={STEPS.GUESTS} label="Guests" icon={LuUsers} />
+          <StepBadge stepIndex={STEPS.LOCATION} label={t('where')} icon={LuMapPin} />
+          <StepBadge stepIndex={STEPS.DATE} label={t('when')} icon={LuCalendarDays} />
+          <StepBadge stepIndex={STEPS.GUESTS} label={t('who')} icon={LuUsers} />
         </div>
       </div>
     );

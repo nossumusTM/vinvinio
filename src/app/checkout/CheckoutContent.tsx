@@ -18,6 +18,7 @@ import { useSession } from 'next-auth/react';
 import Button from '@/app/components/Button';
 import Heading from '@/app/components/Heading';
 import Avatar from '../components/Avatar';
+import useCurrencyFormatter from '@/app/hooks/useCurrencyFormatter';
 import dynamic from 'next/dynamic';
 
 import useLoginModal from '@/app/hooks/useLoginModal';
@@ -65,6 +66,7 @@ const CheckoutContent: React.FC<Props> = ({ clientSecret, setAmount }) => {
 
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { formatConverted } = useCurrencyFormatter();
 
   const stripe = useStripe(); // ✅ Valid here
   const elements = useElements();
@@ -796,9 +798,9 @@ const handleSubmit = async () => {
                     
         </div>
 
-          <Button 
-            label={isLoading ? 'Processing...' : `Confirm and Pay €${total}`}
-            onClick={handleSubmit} 
+          <Button
+            label={isLoading ? 'Processing...' : `Confirm and Pay ${formatConverted(total)}`}
+            onClick={handleSubmit}
             disabled={isLoading}
             />
         {/* )} */}
@@ -903,13 +905,13 @@ const handleSubmit = async () => {
                 {/* <p className="text-neutral-700 font-bold">Guests: {guests}</p> */}
               </div>
               <div className="flex justify-between">
-                <span>€{listingData.price} x {guests} {guests === 1 ? 'guest' : 'guests'}</span>
-                <span>€{listingData.price * guests}</span>
+                <span>{formatConverted(listingData.price)} x {guests} {guests === 1 ? 'guest' : 'guests'}</span>
+                <span>{formatConverted(listingData.price * guests)}</span>
               </div>
 
               <div className="flex justify-between">
                 <span>Service fee</span>
-                <span>€{serviceFee}</span>
+                <span>{formatConverted(serviceFee)}</span>
               </div>
             </div>
             <hr />
@@ -970,13 +972,13 @@ const handleSubmit = async () => {
               <div className="flex justify-between">
                 <span>Discount</span>
                 <span className={discountAmount > 0 ? 'text-green-700 font-semibold' : ''}>
-                  -€{discountAmount.toFixed(2)}
+                  -{formatConverted(discountAmount)}
                 </span>
               </div>
             )}
             <div className="flex justify-between font-bold text-lg">
               <span>Total Amount</span>
-              <span>€{total}</span>
+              <span>{formatConverted(total)}</span>
             </div>
           </>
         )}

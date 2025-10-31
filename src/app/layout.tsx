@@ -17,6 +17,7 @@ import RentModal from '@/app/components/modals/RentModal';
 import PromoteModal from './components/modals/PromoteModal';
 import ForgetPasswordModal from './components/modals/ForgetPasswordModal';
 import Messenger from './components/Messenger';
+import LocaleHydrator from './components/LocaleHydrator';
 
 import ToasterProvider from '@/app/providers/ToasterProvider';
 import AnnouncementModal from './components/AnnouncementModal';
@@ -58,6 +59,7 @@ export default async function RootLayout({
         />
 
         <ClientOnly>
+          <LocaleHydrator />
           <ToasterProvider />
           <NavBar currentUser={currentUser} />
           {/* <AnnouncementModal /> */}

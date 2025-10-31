@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from 'recharts';
-import { formatCurrency } from '@/app/utils/format';
+import useCurrencyFormatter from '@/app/hooks/useCurrencyFormatter';
 
 interface DataEntry {
   date: string;
@@ -34,6 +34,7 @@ const PlatformCard: React.FC<PlatformCardProps> = ({
   totalRevenue
 }) => {
   const [view, setView] = useState<'daily' | 'monthly' | 'yearly' | 'all'>('daily');
+  const { formatConverted, currency } = useCurrencyFormatter();
 
   const dataMap = {
     daily,
@@ -87,10 +88,9 @@ const PlatformCard: React.FC<PlatformCardProps> = ({
       <div className="flex flex-col items-center">
         <p className="text-sm text-white bg-gradient-to-br from-[#08e2ff] to-[#3F00FF] font-semibold p-3 rounded-xl mb-2 select-none">D.P.V</p>
         <p className="text-lg font-semibold text-black">
-          {/* €{daily?.[daily.length - 1]?.platformFee?.toFixed(2) || '0.00'} */}
-          €{(
-            daily.find(d => new Date(d.date).toDateString() === new Date().toDateString())?.platformFee?.toFixed(2) || '0.00'
-            )}
+          {formatConverted(
+            daily.find((d) => new Date(d.date).toDateString() === new Date().toDateString())?.platformFee || 0
+          )}
         </p>
       </div>
 
@@ -105,9 +105,9 @@ const PlatformCard: React.FC<PlatformCardProps> = ({
             : 'A.T.V'}
         </p>
         <p className="text-lg font-semibold text-black">
-            €{view === 'all'
-        ? totalRevenue.toFixed(2)               // ✅ true all-time revenue
-        : currentData.reduce((acc, cur) => acc + cur.revenue, 0).toFixed(2)}
+            {formatConverted(view === 'all'
+        ? totalRevenue
+        : currentData.reduce((acc, cur) => acc + cur.revenue, 0))}
         </p>
       </div>
     </div>
@@ -138,18 +138,24 @@ const PlatformCard: React.FC<PlatformCardProps> = ({
               >
                 <CartesianGrid strokeDasharray="6 6" />
                 <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                <YAxis />
+                <YAxis
+                  tickFormatter={(val) => formatConverted(val)}
+                  label={{ value: `Revenue (${currency})`, angle: -90, position: 'insideLeft' }}
+                />
                 <Tooltip
                     formatter={(value: number, name: string) => {
-                        const formatted = `€${Number(value).toFixed(2)}`;
                         if (name === 'bookingCount') {
                         return [value, 'Bookings'];
-                        } else if (name === 'platformFee') {
+                        }
+
+                        const formatted = formatConverted(Number(value));
+                        if (name === 'platformFee') {
                         return [formatted, 'Platform Fee'];
-                        } else if (name === 'revenue') {
+                        }
+                        if (name === 'revenue') {
                         return [formatted, 'Total Revenue'];
                         }
-                        return [value, name];
+                        return [formatted, name];
                     }}
                     labelFormatter={(label: string) => `Date: ${label}`}
                     contentStyle={{

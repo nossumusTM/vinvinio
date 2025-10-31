@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import PlatformCard from '../components/PlatformCard';
 import ConfirmPopup from '../components/ConfirmPopup';
 import { AxiosError } from 'axios';
+import useCurrencyFormatter from '@/app/hooks/useCurrencyFormatter';
 
 interface Listing {
   id: string;
@@ -65,6 +66,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
   const [promoterLookup, setPromoterLookup] = useState('');
   const [hostAnalytics, setHostAnalytics] = useState<any>(null);
   const [promoterAnalytics, setPromoterAnalytics] = useState<any>(null);
+  const { formatConverted } = useCurrencyFormatter();
 
   const [hostUserId, setHostUserId] = useState('');
   const [promoterUserId, setPromoterUserId] = useState('');
@@ -498,7 +500,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
         {hostAnalytics && (
           <div className="text-sm text-neutral-700 space-y-1">
             <p><strong>Total Bookings:</strong> {hostAnalytics.totalBooks}</p>
-            <p><strong>Total Revenue:</strong> €{hostAnalytics.totalRevenue * 0.9}</p>
+            <p><strong>Total Revenue:</strong> {formatConverted(hostAnalytics.totalRevenue * 0.9)}</p>
             <p><strong>Payout Method:</strong> {hostAnalytics.payoutMethod.toUpperCase()}</p>
             <p><strong>Payout Number:</strong> {hostAnalytics.payoutNumber}</p>
             <p><strong>User ID:</strong> {hostAnalytics.userId}</p>
@@ -526,7 +528,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
           <div className="text-sm text-neutral-700 space-y-1">
             <p><strong>Total Books:</strong> {promoterAnalytics.totalBooks}</p>
             <p><strong>QR Code Scans:</strong> {promoterAnalytics.qrScans}</p>
-            <p><strong>Total Revenue:</strong> €{promoterAnalytics.totalRevenue * 0.1}</p>
+            <p><strong>Total Revenue:</strong> {formatConverted(promoterAnalytics.totalRevenue * 0.1)}</p>
             <p><strong>Payout Method:</strong> {promoterAnalytics.payoutMethod.toUpperCase()}</p>
             <p><strong>Payout Number:</strong> {promoterAnalytics.payoutNumber}</p>
             <p><strong>User ID:</strong> {promoterAnalytics.userId}</p>

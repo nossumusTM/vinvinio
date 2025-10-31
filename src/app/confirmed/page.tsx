@@ -8,6 +8,7 @@ import Avatar from '@/app/components/Avatar';
 import useMessenger from '@/app/hooks/useMessager';
 import useLoginModal from '@/app/hooks/useLoginModal';
 import getCurrentUser from '../actions/getCurrentUser';
+import useCurrencyFormatter from '@/app/hooks/useCurrencyFormatter';
 
 const BookingConfirmed = () => {
   const searchParams = useSearchParams();
@@ -35,6 +36,7 @@ const BookingConfirmed = () => {
 
   const messenger = useMessenger();
   const loginModal = useLoginModal();
+  const { formatConverted } = useCurrencyFormatter();
 
 
   useEffect(() => {
@@ -311,11 +313,11 @@ const BookingConfirmed = () => {
             </p>
 
             <p>
-                <strong>Total Paid:</strong> €
+                <strong>Total Paid:</strong>{' '}
                 {(() => {
                 const price = parseFloat(searchParams?.get('price') || '0');
                 const guests = parseInt(searchParams?.get('guests') || '1', 10);
-                return (price * guests).toFixed(2);
+                return formatConverted(price * guests);
                 })()}
             </p>
         </div>

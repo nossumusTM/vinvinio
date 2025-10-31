@@ -18,6 +18,7 @@ import Heading from "@/app/components/Heading";
 import Container from "@/app/components/Container";
 import Avatar from "@/app/components/Avatar";
 import ConfirmPopup from "../components/ConfirmPopup";
+import useCurrencyFormatter from '@/app/hooks/useCurrencyFormatter';
 import Modal from "../components/modals/Modal";
 
 import { AxiosError } from 'axios';
@@ -34,6 +35,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
   currentUser,
 }) => {
   const router = useRouter();
+  const { formatConverted } = useCurrencyFormatter();
   const [deletingId, setDeletingId] = useState('');
   const [hostImages, setHostImages] = useState<Record<string, string>>({});
   const [popupMessage, setPopupMessage] = useState<string | null>(null);
@@ -109,7 +111,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
     🧾 Reservation Details:
     - Reservation ID: ${selectedReservationId}
     - Guest Count: ${reservation?.guestCount}
-    - Price: €${reservation?.totalPrice}
+    - Price: ${formatConverted(reservation?.totalPrice ?? 0)}
     - Date of Reservation: ${formattedDate}
 
     ❗ Reason for Cancellation:

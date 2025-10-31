@@ -7,6 +7,7 @@ import Avatar from "../components/Avatar";
 import { SafeReservation, SafeUser } from "@/app/types";
 import { BiPaperPlane } from "react-icons/bi";
 import useMessenger from "@/app/hooks/useMessager";
+import useCurrencyFormatter from '@/app/hooks/useCurrencyFormatter';
 
 interface ReservationCardProps {
     reservation: SafeReservation;
@@ -18,6 +19,7 @@ interface ReservationCardProps {
 
 const ReservationCard: React.FC<ReservationCardProps> = ({ reservation, currentUser, guestName, guestImage, guestId }) => {
   const messenger = useMessenger();
+  const { formatConverted } = useCurrencyFormatter();
 
   const reservationDate = useMemo(() => {
     const start = new Date(reservation.startDate);
@@ -54,7 +56,7 @@ const ReservationCard: React.FC<ReservationCardProps> = ({ reservation, currentU
           {reservation.guestCount === 1 ? 'Guest' : 'Guests'}: {reservation.guestCount}
         </div>
   
-        <div className="text-lg font-bold">€ {reservation.totalPrice.toFixed(2)}</div>
+        <div className="text-lg font-bold">{formatConverted(reservation.totalPrice)}</div>
   
         <div className="flex flex-col items-center mt-4">
             <p className="text-md font-medium text-neutral-700 mb-2">Booked by</p>

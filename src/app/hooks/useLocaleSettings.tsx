@@ -1,20 +1,82 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+import {
+  DEFAULT_CURRENCY,
+  DEFAULT_LANGUAGE,
+  LANGUAGE_OPTIONS,
+  getCurrencyOption,
+  getLanguageOption,
+  type LanguageCode,
+} from '@/app/constants/locale';
 
 interface LocaleSettingsState {
   language: string;
+  languageCode: LanguageCode;
+  languageRegion: string;
+  locale: string;
   currency: string;
-  setLanguage: (language: string, currency: string) => void;
-  setCurrency: (language: string, currency: string) => void;
+  currencyRegion: string;
+  setLanguage: (code: LanguageCode) => void;
+  setCurrency: (code: string) => void;
 }
 
-const DEFAULT_LANGUAGE = 'English';
-const DEFAULT_CURRENCY = 'USD';
+const useLocaleSettings = create<LocaleSettingsState>()(
+  persist(
+    (set) => ({
+      language: DEFAULT_LANGUAGE.language,
+      languageCode: DEFAULT_LANGUAGE.code,
+      languageRegion: DEFAULT_LANGUAGE.region,
+      locale: DEFAULT_LANGUAGE.locale,
+      currency: DEFAULT_CURRENCY.currency,
+      currencyRegion: DEFAULT_CURRENCY.region,
+      setLanguage: (code) => {
+        const option = getLanguageOption(code);
+        set({
+          language: option.language,
+          languageCode: option.code,
+          languageRegion: option.region,
+          locale: option.locale,
+        });
+      },
+      setCurrency: (code) => {
+        const option = getCurrencyOption(code);
+        set({
+          currency: option.currency,
+          currencyRegion: option.region,
+        });
+      },
+    }),
+    {
+      name: 'locale-settings',
+      merge: (persistedState, currentState) => {
+        if (!persistedState) {
+          return currentState;
+        }
 
-const useLocaleSettings = create<LocaleSettingsState>((set) => ({
-  language: DEFAULT_LANGUAGE,
-  currency: DEFAULT_CURRENCY,
-  setLanguage: (language, currency) => set({ language, currency }),
-  setCurrency: (language, currency) => set({ language, currency }),
-}));
+        const incoming = persistedState as Partial<LocaleSettingsState>;
+        const nextState = { ...currentState, ...incoming };
+
+        const languageOption = incoming.languageCode
+          ? getLanguageOption(incoming.languageCode)
+          : LANGUAGE_OPTIONS.find((option) => option.language === incoming.language) ?? DEFAULT_LANGUAGE;
+
+        nextState.language = languageOption.language;
+        nextState.languageCode = languageOption.code;
+        nextState.languageRegion = languageOption.region;
+        nextState.locale = languageOption.locale;
+
+        const currencyOption = incoming.currency
+          ? getCurrencyOption(incoming.currency)
+          : DEFAULT_CURRENCY;
+
+        nextState.currency = currencyOption.currency;
+        nextState.currencyRegion = currencyOption.region;
+
+        return nextState;
+      },
+    }
+  )
+);
 
 export default useLocaleSettings;

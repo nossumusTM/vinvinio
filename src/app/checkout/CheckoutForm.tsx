@@ -23,7 +23,7 @@ export default function CheckoutForm() {
 
     try {
       const { data } = await axios.post('/api/create-payment-intent', {
-        amount: 5000, // in cents (€50)
+        amount: 5000, // in cents (base $50)
       });
 
       const result = await stripe.confirmCardPayment(data.clientSecret, {

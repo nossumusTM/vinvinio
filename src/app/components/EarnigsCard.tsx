@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Card, CardContent } from '../components/navbar/Card';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { formatCurrency } from '@/app/utils/format';
+import useCurrencyFormatter from '@/app/hooks/useCurrencyFormatter';
 
 interface EarningsEntry {
   date: string; // ISO date or formatted date
@@ -30,6 +30,7 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
 }) => {
 
   const [view, setView] = useState<'daily' | 'monthly' | 'yearly' | 'all'>('daily');
+  const { formatConverted, currency } = useCurrencyFormatter();
 
   const dataMap = {
     daily: dailyData,
@@ -64,7 +65,7 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
                     <p className="text-lg font-semibold text-black">
                     {/* {formatCurrency(dailyData?.[dailyData.length - 1]?.amount || 0)} */}
 
-                    {formatCurrency(
+                    {formatConverted(
                         dailyData.find((d) => new Date(d.date).toDateString() === new Date().toDateString())?.amount || 0
                         )}
                     </p>
@@ -79,7 +80,7 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
                         : `${view.charAt(0).toUpperCase() + view.slice(1)} Total`}
                     </p>
                     <p className="text-lg font-semibold text-black">
-                        {formatCurrency(Number(total.toFixed(2)))}
+                        {formatConverted(Number(total.toFixed(2)))}
                     </p>
                 </div>
             </div>
@@ -107,25 +108,18 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
               <LineChart data={currentData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
                 <CartesianGrid strokeDasharray="6 6" />
                 <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                {/* <YAxis tickFormatter={(val) => `€${val}`} /> */}
-                <YAxis tickFormatter={(val) => `€${val.toFixed(2)}`} />
-                <YAxis label={{ value: 'Income (€)', angle: -90, position: 'insideLeft' }} />
-                <YAxis yAxisId="left" tickFormatter={(val) => `€${val.toFixed(2)}`} />
+                <YAxis tickFormatter={(val) => formatConverted(val)} />
+                <YAxis label={{ value: `Income (${currency})`, angle: -90, position: 'insideLeft' }} />
+                <YAxis yAxisId="left" tickFormatter={(val) => formatConverted(val)} />
                 <YAxis yAxisId="right" orientation="right" tickFormatter={(val) => `${val} books`} />
-                {/* <Tooltip
-                  formatter={(value: number) => [`€${value.toFixed(2)}`, 'Income']}
-                  labelFormatter={(label: string) => `Date: ${label}`}
-                  contentStyle={{ borderRadius: '10px', fontSize: '14px' }}
-                  cursor={{ stroke: '#3604ff', strokeWidth: 1 }}
-                /> */}
                 <Tooltip
                   formatter={(value: number, name: string, props: any) => {
                     if (name === 'amount') {
-                      return [`€${value.toFixed(2)}`, 'Income'];
+                      return [formatConverted(value), 'Income'];
                     }
                     if (name === 'books') {
                       return [`${value} ${value === 1 ? 'Booking' : 'Bookings'}`, 'Books'];
-                    }                    
+                    }
                     return [value, name];
                   }}
                   labelFormatter={(label: string) => `Date: ${label}`}

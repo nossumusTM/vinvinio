@@ -610,6 +610,7 @@ import { useSearchParams } from 'next/navigation';
 import { hrefForListing } from "@/app/libs/links";
 import useCountries from "@/app/hooks/useCountries";
 import { CountrySelectValue } from "../inputs/CountrySelect";
+import useCurrencyFormatter from '@/app/hooks/useCurrencyFormatter';
 
 import {
   SafeListing,
@@ -643,6 +644,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
 }) => {
   const router = useRouter();
   const { getByValue } = useCountries();
+  const { formatConverted } = useCurrencyFormatter();
   const [reviews, setReviews] = useState<{
     rating: number;
     comment: string;
@@ -825,6 +827,8 @@ const ListingCard: React.FC<ListingCardProps> = ({
   const price = useMemo(() => {
     return reservation ? reservation.totalPrice : data.price;
   }, [reservation, data.price]);
+
+  const formattedPrice = useMemo(() => formatConverted(price), [formatConverted, price]);
 
   const primaryCategory = useMemo(() => {
     if (Array.isArray(data.category)) {
@@ -1100,7 +1104,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
         <hr />
 
         <div className={`flex flex-row items-center gap-1 ${compact ? 'ml-2 mt-1' : 'ml-1 mt-1'}`}>
-          <div className={`font-semibold ${compact ? 'text-sm md:text-base' : 'text-base md:text-lg'}`}>€{price}</div>
+          <div className={`font-semibold ${compact ? 'text-sm md:text-base' : 'text-base md:text-lg'}`}>{formattedPrice}</div>
           {!reservation && <div className="font-normal text-[10px] md:text-xs">/ PER PERSON</div>}
         </div>
 

@@ -8,12 +8,18 @@ import Image from 'next/image';
 import useExperienceSearchState from '@/app/hooks/useExperienceSearchState';
 import useCountries from '@/app/hooks/useCountries';
 import useSearchExperienceModal from '@/app/hooks/useSearchExperienceModal';
+import useTranslations from '@/app/hooks/useTranslations';
+import useLocaleSettings from '@/app/hooks/useLocaleSettings';
+import { DATE_FNS_LOCALES } from '@/app/constants/locale';
 
 const SearchExperience = () => {
   const searchModal = useSearchExperienceModal();
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const { getByValue, getPopularCities } = useCountries();
+  const t = useTranslations();
+  const { languageCode } = useLocaleSettings();
+  const dateLocale = DATE_FNS_LOCALES[languageCode] ?? DATE_FNS_LOCALES.en;
 
   const locationValue = searchParams?.get('locationValue');
   const startDate = searchParams?.get('startDate');
@@ -103,9 +109,9 @@ const SearchExperience = () => {
 
   const guestLabel = useMemo(() => {
     const count = Number(guestCount);
-    if (!count || Number.isNaN(count)) return 'Add Guests';
-    return `${count} ${count === 1 ? 'Guest' : 'Guests'}`;
-  }, [guestCount]);
+    if (!count || Number.isNaN(count)) return t('addGuests');
+    return `${count} ${count === 1 ? t('guestSingular') : t('guestPlural')}`;
+  }, [guestCount, t]);
 
   const durationLabel = useMemo(() => {
     if (startDate && endDate) {
@@ -115,43 +121,46 @@ const SearchExperience = () => {
       const fmt = "d MMM ''yy";
 
       return sameDay
-        ? format(start, fmt)
-        : `${format(start, 'd MMM')} – ${format(end, fmt)}`;
+        ? format(start, fmt, { locale: dateLocale })
+        : `${format(start, 'd MMM', { locale: dateLocale })} – ${format(end, fmt, { locale: dateLocale })}`;
     }
     if (startDate) {
-      return format(new Date(startDate as string), "d MMM ''yy");
+      return format(new Date(startDate as string), "d MMM ''yy", { locale: dateLocale });
     }
-    return 'Select Date';
-  }, [startDate, endDate]);
+    return t('selectDate');
+  }, [startDate, endDate, dateLocale, t]);
+
+  const planLabel = useMemo(() => t('planWithIntention').toUpperCase(), [t]);
 
   return (
-    <div
-      onClick={searchModal.onOpen}
-      className="
-        sm:w-full w-auto md:w-auto
-        px-2 lg:px-1 md:py-2 lg:py-2
-        rounded-full
-        backdrop-blur
-        shadow-md hover:shadow-lg
-        transition
-        cursor-pointer select-none
-      "
-    >
-      <div className="flex flex-col gap-1">
-        <span className="px-2 text-[8px] uppercase tracking-[0.3em] text-neutral-500">
-          Plan with intention
-        </span>
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-2 px-2">
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+        <span className="text-[8px] uppercase tracking-[0.3em] text-neutral-500">{planLabel}</span>
+      </div>
+      <div
+        onClick={searchModal.onOpen}
+        className="
+          sm:w-full w-auto md:w-auto
+          px-2 lg:px-1 md:py-2 lg:py-2
+          rounded-full
+          backdrop-blur
+          shadow-md hover:shadow-lg
+          transition
+          cursor-pointer select-none
+        "
+      >
         <div className="flex items-center justify-between w-full">
           <div className="flex lg:hidden flex-1 h-11">
             <div className="flex-1 h-full px-3 border-r border-neutral-200 flex items-center">
               <div className="flex flex-col items-start leading-tight w-full">
-                <span className="text-[6px] uppercase tracking-wide text-neutral-500">When?</span>
+                <span className="text-[6px] uppercase tracking-wide text-neutral-500">{t('when')}</span>
                 <span className="text-xs font-medium truncate">{durationLabel}</span>
               </div>
             </div>
             <div className="flex-1 h-full px-3 flex items-center">
               <div className="flex flex-col items-start leading-tight w-full">
-                <span className="text-[6px] uppercase tracking-wide text-neutral-500">Who?</span>
+                <span className="text-[6px] uppercase tracking-wide text-neutral-500">{t('who')}</span>
                 <span className="text-xs font-medium text-gray-700 truncate">{guestLabel}</span>
               </div>
             </div>
@@ -159,21 +168,21 @@ const SearchExperience = () => {
 
           <div className="hidden lg:flex ml-2 px-1 max-w-[200px]">
             <div className="flex flex-col items-start leading-tight w-full truncate">
-              <span className="text-[8px] uppercase tracking-wide text-neutral-500">Where?</span>
+              <span className="text-[8px] uppercase tracking-wide text-neutral-500">{t('where')}</span>
               <div className="text-sm font-medium truncate">{locationLabel}</div>
             </div>
           </div>
 
           <div className="hidden lg:flex px-6 border-x flex-1 items-center">
             <div className="flex flex-col items-start leading-tight w-full">
-              <span className="text-[8px] uppercase tracking-wide text-neutral-500">When?</span>
+              <span className="text-[8px] uppercase tracking-wide text-neutral-500">{t('when')}</span>
               <span className="text-sm font-medium truncate">{durationLabel}</span>
             </div>
           </div>
 
           <div className="hidden lg:flex pl-6 md:px-4 items-center">
             <div className="flex flex-col items-start leading-tight">
-              <span className="text-[8px] uppercase tracking-wide text-neutral-500">Who?</span>
+              <span className="text-[8px] uppercase tracking-wide text-neutral-500">{t('who')}</span>
               <span className="text-sm font-medium text-black">{guestLabel}</span>
             </div>
           </div>

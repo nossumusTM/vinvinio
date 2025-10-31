@@ -7,6 +7,7 @@ import Calendar from '../inputs/Calendar';
 import Counter from '../inputs/Counter';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import useCurrencyFormatter from '@/app/hooks/useCurrencyFormatter';
 
 interface ReservationSlot {
   date: string;
@@ -53,6 +54,7 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
   const router = useRouter();
 
   const [isLoading, setIsLoading] = useState(false);
+  const { formatConverted } = useCurrencyFormatter();
 
   const handleReserve = () => {
     if (!listingId || !selectedTime || !dateRange.startDate) {
@@ -108,7 +110,7 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
     <div className="bg-white rounded-2xl shadow-md hover:shadow-lg overflow-hidden">
       <div className="flex flex-row items-center justify-between p-4">
         <div className="flex flex-row items-baseline gap-2">
-          <div className="text-3xl font-semibold">€ {price}</div>
+          <div className="text-3xl font-semibold">{formatConverted(price)}</div>
           <div className="font-light text-neutral-600">/ person</div>
         </div>
         <div className="flex flex-col gap-1">
@@ -155,7 +157,7 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
       <div className="p-4 flex flex-row items-center justify-center font-semibold text-lg">
         <div className="flex flex-row items-baseline gap-2">
           <div>Checkout:</div>
-          <div>€ {totalPrice}</div>
+          <div>{formatConverted(totalPrice)}</div>
         </div>
       </div>
     </div>

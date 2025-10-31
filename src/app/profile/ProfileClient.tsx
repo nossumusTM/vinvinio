@@ -2,7 +2,6 @@
 
 import { useRef, useState, useEffect } from "react";
 import { SafeUser } from "@/app/types";
-import { formatCurrency } from "@/app/utils/format";
 import Container from "@/app/components/Container";
 import Heading from "@/app/components/Heading";
 import Image from "next/image";
@@ -25,6 +24,7 @@ import { Switch } from '@headlessui/react';
 import { FiInfo } from "react-icons/fi";
 import FAQ from "../components/FAQ";
 import toast from "react-hot-toast";
+import useCurrencyFormatter from '@/app/hooks/useCurrencyFormatter';
 export const dynamic = 'force-dynamic';
 
 interface ProfileClientProps {
@@ -52,6 +52,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   currentUser,
   referralBookings,
 }) => {
+  const { formatConverted } = useCurrencyFormatter();
   const { totalCount, totalAmount } = referralBookings;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [profileImage, setProfileImage] = useState(currentUser.image || '');
@@ -2055,7 +2056,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
 
                   <div className="flex justify-between items-center shadow-md rounded-xl p-4 text-lg text-neutral-800 hover:shadow-sm transition">
                     <span className="font-medium">Total Books Revenue</span>
-                    <span className="font-semibold text-black">{formatCurrency(analytics.totalRevenue)}</span>
+                    <span className="font-semibold text-black">{formatConverted(analytics.totalRevenue)}</span>
                   </div>
                 </div>
               </div>
@@ -2068,7 +2069,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                 </p>
                 <div className="rounded-xl p-10 pl-8 pr-8 flex justify-center md:items-center md:h-52 hover:shadow-sm">
                   <p className="text-3xl text-black font-semibold">
-                    {formatCurrency((analytics.totalRevenue || 0) * 0.10)}
+                    {formatConverted((analytics.totalRevenue || 0) * 0.10)}
                   </p>
                 </div>
               </div>
@@ -2177,7 +2178,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
 
               <div className="flex justify-between items-center shadow-md rounded-xl p-4 text-lg text-neutral-800 hover:shadow-sm transition">
                 <span className="font-medium">Total Revenue</span>
-                <span className="font-semibold text-black">{formatCurrency(hostAnalytics.totalRevenue)}</span>
+                <span className="font-semibold text-black">{formatConverted(hostAnalytics.totalRevenue)}</span>
               </div>
             </div>
           </div>
@@ -2190,7 +2191,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
             </p>
             <div className="rounded-xl p-10 pl-8 pr-8 flex justify-center md:items-center md:h-52 hover:shadow-sm">
               <p className="text-3xl text-black font-semibold">
-                {formatCurrency((hostAnalytics.totalRevenue || 0) * 0.90)}
+                {formatConverted((hostAnalytics.totalRevenue || 0) * 0.90)}
               </p>
             </div>
           </div>

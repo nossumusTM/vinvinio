@@ -4,10 +4,13 @@ import { LuGlobe2 } from 'react-icons/lu';
 
 import useLocaleModal from '@/app/hooks/useLocaleModal';
 import useLocaleSettings from '@/app/hooks/useLocaleSettings';
+import useTranslations from '@/app/hooks/useTranslations';
 
 const LocaleButton = () => {
   const modal = useLocaleModal();
-  const { language, currency } = useLocaleSettings();
+  const { language, languageRegion, currency } = useLocaleSettings();
+  const t = useTranslations();
+  const summary = `${language} / ${languageRegion} - ${currency}`;
 
   return (
     <button
@@ -19,8 +22,8 @@ const LocaleButton = () => {
         <LuGlobe2 className="h-4 w-4" />
       </span>
       <span className="hidden flex-col text-left leading-tight md:flex">
-        <span className="text-xs uppercase tracking-wide text-neutral-400">Locale</span>
-        <span>{language} · {currency}</span>
+        <span className="text-xs uppercase tracking-wide text-neutral-400">{t('localeLabel')}</span>
+        <span>{summary}</span>
       </span>
       <span className="md:hidden text-xs font-semibold text-neutral-600">{currency}</span>
     </button>

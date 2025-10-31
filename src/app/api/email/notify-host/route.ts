@@ -73,7 +73,7 @@ export async function POST(req: Request) {
               ${contact ? `<p style="margin: 6px 0;"><strong>Contact:</strong> ${contact}</p>` : ''}
               <p style="margin: 6px 0;"><strong>Date:</strong> ${formattedDateTime}</p>
               <p style="margin: 6px 0;"><strong>Guests:</strong> ${guests}</p>
-              <p style="margin: 6px 0;"><strong>Total Price:</strong> €${total}</p>
+              <p style="margin: 6px 0;"><strong>Total Price:</strong> $${total}</p>
             </div>
 
             <p>Login to your dashboard to see the full details and contact the guest if needed.</p>
