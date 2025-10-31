@@ -83,7 +83,7 @@ const Map: React.FC<MapProps> = ({ center, city, country }) => {
         center={position as L.LatLngExpression}
         zoom={10}
         scrollWheelZoom={false}
-        style={{ height: '88%', width: '100%', borderRadius: '20px' }}
+        style={{ height: '100%', width: '100%', borderRadius: '20px' }}
         attributionControl={false}
         key={mapIdRef.current}
       >

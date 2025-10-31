@@ -144,7 +144,7 @@ const SearchExperienceModal = () => {
           <p className="text-xs text-neutral-500">
             Browse iconic cities or search for hidden gems across the globe.
           </p>
-          <div className="hidden md:block rounded-2xl overflow-hidden border border-white/60 shadow-lg">
+          <div className="hidden md:block rounded-2xl overflow-hidden border border-white/60">
             <SearchMap city={location?.city} country={location?.label} center={location?.latlng} />
           </div>
         </div>
