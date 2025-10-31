@@ -31,21 +31,46 @@ interface MapProps {
 }
 
 // 🔄 Helper to recenter map after coordinates change
+// const RecenterMap = ({ coords }: { coords: number[] }) => {
+//   const map = useMap();
+
+//   useEffect(() => {
+//     if (coords) {
+//       map.setView(coords as [number, number], 10);
+//     }
+//   }, [coords, map]);
+
+//   return null;
+// };
+
+// 1) UPDATE RecenterMap to also invalidate size before recentering
 const RecenterMap = ({ coords }: { coords: number[] }) => {
   const map = useMap();
 
   useEffect(() => {
-    if (coords) {
-      map.setView(coords as [number, number], 10);
-    }
+    if (!coords) return;
+    // allow modal/layout to settle on mobile, then fix size + center
+    const t = setTimeout(() => {
+      map.invalidateSize();
+      map.setView(coords as [number, number], map.getZoom() || 10, { animate: false });
+    }, 80);
+    return () => clearTimeout(t);
   }, [coords, map]);
 
+  return null;
+};
+
+// 1) ADD this tiny helper inside SearchMap.tsx (near RecenterMap)
+const CaptureMapRef = ({ onReady }: { onReady: (m: L.Map) => void }) => {
+  const map = useMap();
+  useEffect(() => { onReady(map); }, [map, onReady]);
   return null;
 };
 
 const Map: React.FC<MapProps> = ({ center, city, country }) => {
   const [coordinates, setCoordinates] = useState<number[] | null>(null);
   const [isClient, setIsClient] = useState(false);
+  const mapRef = useRef<L.Map | null>(null);
   const mapIdRef = useRef(`map-${Math.random().toString(36).substring(2, 9)}`);
 
   useEffect(() => {
@@ -73,28 +98,44 @@ const Map: React.FC<MapProps> = ({ center, city, country }) => {
     }
   }, [city, country]);
 
+  useEffect(() => {
+    const onResize = () => mapRef.current?.invalidateSize();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
   if (!isClient) return null;
 
   const position = coordinates || center || [41.8719, 12.5674]; // Default to Italy
 
   return (
-    <div id={mapIdRef.current} className="h-[35vh] rounded-lg overflow-hidden">
-      <MapContainer
-        center={position as L.LatLngExpression}
-        zoom={10}
-        scrollWheelZoom={false}
-        style={{ height: '100%', width: '100%', borderRadius: '20px' }}
-        attributionControl={false}
-        key={mapIdRef.current}
-      >
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        />
-        {coordinates && <RecenterMap coords={coordinates} />}
-        <Marker position={position as L.LatLngExpression} />
-      </MapContainer>
-    </div>
+    <div className="w-full rounded-lg overflow-hidden relative">
+    <div className="w-full h-[140px] sm:h-[260px] md:h-[360px] flex items-center justify-center">
+    <MapContainer
+      center={position as L.LatLngExpression}
+      zoom={10}
+      scrollWheelZoom={false}
+      style={{ height: '100%', width: '100%' }}
+      attributionControl={false}
+      key={mapIdRef.current}
+    >
+      <CaptureMapRef
+        onReady={(m) => {
+          mapRef.current = m;
+          setTimeout(() => {
+            m.invalidateSize();
+            m.setView(position as L.LatLngExpression, 10, { animate: false });
+          }, 80);
+        }}
+      />
+      <TileLayer
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+      {coordinates && <RecenterMap coords={coordinates} />}
+      <Marker position={(coordinates || position) as L.LatLngExpression} />
+    </MapContainer>
+  </div>
+</div>
   );
 };
 

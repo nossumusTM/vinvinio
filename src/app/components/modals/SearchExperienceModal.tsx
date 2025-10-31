@@ -114,16 +114,16 @@ const SearchExperienceModal = () => {
 
   const StepBadge = ({ stepIndex, label, icon: Icon }: { stepIndex: STEPS; label: string; icon: IconType; }) => (
     <div
-      className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 border ${
+      className={`flex items-center gap-2 px-2 py-2 md:px-4 md:py-3 rounded-2xl transition-all duration-300 border ${
         step === stepIndex ? 'bg-white/80 border-white/40 shadow-lg shadow-white/30 text-neutral-900' : 'bg-white/40 border-white/20 text-neutral-600'
       }`}
     >
-      <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${step === stepIndex ? 'bg-black text-white' : 'bg-white text-neutral-500'}`}>
+      <div className={`flex h-6 w-6 md:h-8 md:w-8 items-center justify-center md:rounded-xl rounded-md ${step === stepIndex ? 'bg-black text-white' : 'bg-white text-neutral-500'}`}>
         <Icon className="h-4 w-4" />
       </div>
       <div className="flex flex-col">
-        <span className="text-xs uppercase tracking-wide">Step {stepIndex + 1}</span>
-        <span className="text-sm font-semibold">{label}</span>
+        <span className="text-[10px] md:text-xs uppercase tracking-wide">Step {stepIndex + 1}</span>
+        <span className="text-[11px] md:text-sm font-semibold">{label}</span>
       </div>
     </div>
   );
@@ -131,7 +131,7 @@ const SearchExperienceModal = () => {
   let bodyContent = (
     <div className="relative flex flex-col gap-8">
       <div className="absolute inset-0 -z-10 bg-gradient-to-br from-rose-200 via-white to-sky-200 rounded-3xl opacity-80 blur-xl" />
-      <div className="flex flex-col gap-6 rounded-3xl bg-white/70 backdrop-blur p-6 shadow-xl">
+      <div className="flex flex-col gap-6 rounded-3xl bg-white/70 backdrop-blur p-6 shadow-xl h-fit">
         <Heading
           title="Where will your next story unfold?"
           subtitle="Choose a destination to unlock curated experiences."
@@ -144,12 +144,23 @@ const SearchExperienceModal = () => {
           <p className="text-xs text-neutral-500">
             Browse iconic cities or search for hidden gems across the globe.
           </p>
-          <div className="hidden md:block rounded-2xl overflow-hidden border border-white/60">
+          {/* <div className="hidden md:block rounded-2xl overflow-hidden border border-white/60">
             <SearchMap city={location?.city} country={location?.label} center={location?.latlng} />
+          </div> */}
+          <div className="rounded-2xl overflow-hidden border border-white/60
+            h-[140px] sm:h-[260px] md:h-[260px] relative">
+            <div className="rounded-2xl overflow-hidden border border-white/60">
+              <SearchMap
+                key={`${modal.isOpen}-${location?.value ?? 'default'}`}  // force proper re-mount/center on open & change
+                city={location?.city ?? 'Rome'}
+                country={location?.label ?? 'Italy'}
+                center={location?.latlng ?? [41.9028, 12.4964]}          // fallback center so mobile always shows a point
+              />
+            </div>
           </div>
         </div>
       </div>
-      <div className="flex flex-col md:flex-row gap-3">
+      <div className="flex flex-row flex-wrap gap-3">
         <StepBadge stepIndex={STEPS.LOCATION} label={t('where')} icon={LuMapPin} />
         <StepBadge stepIndex={STEPS.DATE} label={t('when')} icon={LuCalendarDays} />
         <StepBadge stepIndex={STEPS.GUESTS} label={t('who')} icon={LuUsers} />
@@ -174,7 +185,7 @@ const SearchExperienceModal = () => {
             </div>
           </div>
         </div>
-        <div className="flex flex-col md:flex-row gap-3">
+        <div className="flex flex-row flex-wrap gap-3">
           <StepBadge stepIndex={STEPS.LOCATION} label={t('where')} icon={LuMapPin} />
           <StepBadge stepIndex={STEPS.DATE} label={t('when')} icon={LuCalendarDays} />
           <StepBadge stepIndex={STEPS.GUESTS} label={t('who')} icon={LuUsers} />
@@ -203,7 +214,7 @@ const SearchExperienceModal = () => {
             </div>
           </div>
         </div>
-        <div className="flex flex-col md:flex-row gap-3">
+        <div className="flex flex-row flex-wrap gap-3">
           <StepBadge stepIndex={STEPS.LOCATION} label={t('where')} icon={LuMapPin} />
           <StepBadge stepIndex={STEPS.DATE} label={t('when')} icon={LuCalendarDays} />
           <StepBadge stepIndex={STEPS.GUESTS} label={t('who')} icon={LuUsers} />
