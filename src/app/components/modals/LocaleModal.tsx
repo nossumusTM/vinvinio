@@ -8,6 +8,9 @@ import Modal from './Modal';
 import useLocaleModal from '@/app/hooks/useLocaleModal';
 import useLocaleSettings from '@/app/hooks/useLocaleSettings';
 import useTranslations from '@/app/hooks/useTranslations';
+
+import { getCurrencyOption } from '@/app/constants/locale';
+
 import {
   LANGUAGE_OPTIONS,
   CURRENCY_OPTIONS,
@@ -30,6 +33,8 @@ const LocaleModal = () => {
   } = useLocaleSettings();
   const [activeTab, setActiveTab] = useState<LocaleTab>('language');
   const t = useTranslations();
+
+  const curOpt = getCurrencyOption(currency);
 
   const activeLabel = useMemo(
     () => (activeTab === 'language' ? t('chooseLanguage') : t('selectRegionCurrency')),
@@ -104,9 +109,11 @@ const LocaleModal = () => {
           <span className={clsx('text-sm font-semibold', isSelected ? 'text-white' : 'text-neutral-900')}>
             {option.currency}
           </span>
+
           <span className={clsx('text-xs uppercase tracking-wide', isSelected ? 'text-white/70' : 'text-neutral-500')}>
-            {`${option.currencyName} · ${option.region}`}
+            {option.region} · {option.symbol}
           </span>
+
         </div>
       </button>
     );
@@ -147,9 +154,11 @@ const LocaleModal = () => {
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-neutral-400">{activeLabel}</p>
               <h3 className="mt-1 text-lg font-semibold text-neutral-900">
-                {language} / {languageRegion} – {currency}
+                {language} / {languageRegion}
               </h3>
-              <p className="text-xs text-neutral-500">{currencyRegion}</p>
+              <p className="text-xs text-neutral-500">
+                {currencyRegion} · {curOpt.symbol}
+              </p>
             </div>
           </div>
           <div className="grid max-h-[320px] grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2">

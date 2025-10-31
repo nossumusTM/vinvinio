@@ -17,6 +17,7 @@ interface LocaleSettingsState {
   locale: string;
   currency: string;
   currencyRegion: string;
+  currencySymbol: string; // ⬅️ ADD
   setLanguage: (code: LanguageCode) => void;
   setCurrency: (code: string) => void;
 }
@@ -30,6 +31,7 @@ const useLocaleSettings = create<LocaleSettingsState>()(
       locale: DEFAULT_LANGUAGE.locale,
       currency: DEFAULT_CURRENCY.currency,
       currencyRegion: DEFAULT_CURRENCY.region,
+       currencySymbol: DEFAULT_CURRENCY.symbol,
       setLanguage: (code) => {
         const option = getLanguageOption(code);
         set({
@@ -44,6 +46,7 @@ const useLocaleSettings = create<LocaleSettingsState>()(
         set({
           currency: option.currency,
           currencyRegion: option.region,
+          currencySymbol: option.symbol
         });
       },
     }),
@@ -72,6 +75,7 @@ const useLocaleSettings = create<LocaleSettingsState>()(
 
         nextState.currency = currencyOption.currency;
         nextState.currencyRegion = currencyOption.region;
+        nextState.currencySymbol = currencyOption.symbol;
 
         return nextState;
       },

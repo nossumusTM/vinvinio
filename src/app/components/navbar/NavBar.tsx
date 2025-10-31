@@ -114,8 +114,13 @@ useEffect(() => {
 
             {/* User Menu always on right */}
             <div className="flex-shrink-0 flex items-center gap-3 justify-end z-10">
-              <LocaleButton />
-              <UserMenu currentUser={currentUser} />
+              {/* Desktop: show Locale here */}
+              <div className="hidden md:block">
+                <LocaleButton />
+              </div>
+
+              {/* Mobile: Locale is rendered inside the user menu */}
+              <UserMenu currentUser={currentUser} showLocaleInMenu />
             </div>
           </div>
         </Container>

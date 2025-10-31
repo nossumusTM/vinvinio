@@ -160,13 +160,13 @@ const SearchExperienceModal = () => {
   if (step === STEPS.DATE) {
     bodyContent = (
       <div className="space-y-6">
-        <div className="rounded-3xl bg-gradient-to-br from-sky-200 via-white to-violet-200 p-[1px]">
+        <div className="rounded-3xl p-[1px]">
           <div className="rounded-[26px] bg-white/80 backdrop-blur p-6 shadow-xl">
             <Heading
               title="Select your travel window"
               subtitle="Choose the dates that best match your plans."
             />
-            <div className="mt-4 rounded-2xl border border-black/5">
+            <div className="mt-4 rounded-2xl">
               <SearchCalendar
                 value={dateRange}
                 onChange={(value) => setDateRange(value.selection)}
@@ -186,13 +186,14 @@ const SearchExperienceModal = () => {
   if (step === STEPS.GUESTS) {
     bodyContent = (
       <div className="space-y-6">
-        <div className="rounded-3xl bg-gradient-to-br from-amber-200 via-white to-emerald-200 p-[1px]">
+        {/* <div className="rounded-3xl bg-gradient-to-br from-amber-200 via-white to-emerald-200 p-[1px]"> */}
+        <div className="rounded-3xl p-[1px]">
           <div className="rounded-[26px] bg-white/80 backdrop-blur p-6 shadow-xl">
             <Heading
               title="Who is joining the journey?"
               subtitle="Let us tailor the experience to your group size."
             />
-            <div className="mt-6 rounded-2xl border border-black/5 p-4">
+            <div className="mt-6 rounded-2xl p-4">
               <Counter
                 title={t('guestPlural')}
                 subtitle={t('addGuests')}

@@ -14,12 +14,15 @@ import useTourModal from "@/app/hooks/useExperienceModal";
 import { SafeUser } from "@/app/types";
 import { motion, AnimatePresence } from 'framer-motion';
 
+import LocaleButton from "./LocaleButton";
+
 import MenuItem from "./MenuItem";
 import Avatar from "../Avatar";
 import { twMerge } from "tailwind-merge";
 
 interface UserMenuProps {
   currentUser?: SafeUser | null;
+  showLocaleInMenu?: boolean; // ← add
 }
 
 const getRandomColor = () => {
@@ -29,7 +32,7 @@ const getRandomColor = () => {
   return colors[Math.floor(Math.random() * colors.length)];
 };
 
-const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
+const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = false }) => {
   const router = useRouter();
 
   const loginModal = useLoginModal();
@@ -200,6 +203,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
     flex 
     flex-row 
     items-center 
+    backdrop-blur
     gap-3 
     rounded-full 
     cursor-pointer
@@ -452,6 +456,12 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
               </>
             )}
           </div>
+
+          {showLocaleInMenu && (
+            <div className="md:hidden border-t border-neutral-200 px-4 py-3">
+              <LocaleButton />
+            </div>
+          )}
 
           </motion.div>
         )}
