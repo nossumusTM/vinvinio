@@ -11,7 +11,7 @@ import useSearchModal from "@/app/hooks/useSearchModal";
 
 import Modal from "./Modal";
 import Calendar from "../inputs/Calendar";
-import SearchCalendar from "../inputs/SaerchCalendar";
+import SearchCalendar from '../inputs/SearchCalendar';
 import Counter from "../inputs/Counter";
 import CountrySelect, {
     CountrySelectValue

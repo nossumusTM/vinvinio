@@ -66,6 +66,43 @@ body,
   width: 100% !important;
 }
 
+@media (max-width: 640px) {
+  .rdrCalendarWrapper {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+
+  .rdrMonths {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+  }
+
+  .rdrMonthsVertical .rdrMonth,
+  .rdrMonth {
+    max-width: 320px !important;
+    margin: 0 auto !important;
+  }
+
+  .rdrMonthAndYearWrapper,
+  .rdrMonthAndYearPickers {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+  }
+
+  .rdrMonthAndYearPickers select {
+    text-align: center !important;
+  }
+
+  .rdrWeekDays {
+    display: flex !important;
+    justify-content: center !important;
+  }
+}
+
 .reactEasyCrop_Container {
   background: transparent !important;
   border-radius: 20px;
