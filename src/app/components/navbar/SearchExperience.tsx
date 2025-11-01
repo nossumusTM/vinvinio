@@ -28,9 +28,9 @@ const SearchExperience = () => {
   const locationLabel = useMemo(() => {
     if (!location || !location.value) {
       return (
-        <span className="flex items-center gap-2 text-sm font-semibold text-neutral-500">
+        <span className="flex items-center gap-1 text-sm font-semibold text-neutral-700">
           <LuMapPin className="h-4 w-4" aria-hidden="true" />
-          Choose a destination
+          Take Me There
         </span>
       );
     }
@@ -40,7 +40,7 @@ const SearchExperience = () => {
       : location.value.toLowerCase();
 
     return (
-      <span className="flex items-center gap-2 whitespace-nowrap">
+      <span className="flex items-center gap-1.5 ml-0.5 whitespace-nowrap">
         <Image
           src={`/flags/${countryCode}.svg`}
           alt={location.label}
@@ -56,7 +56,7 @@ const SearchExperience = () => {
   const guestLabel = useMemo(() => {
     const count = Number(guestCount);
     if (!count || Number.isNaN(count)) {
-      return 'Add Guests';
+      return 'We’re In';
     }
     return `${count} ${count === 1 ? 'Guest' : 'Guests'}`;
   }, [guestCount]);
@@ -77,14 +77,14 @@ const SearchExperience = () => {
       return format(new Date(startDate), "d MMM ''yy");
     }
 
-    return 'Select Date';
+    return 'Right Now';
   }, [endDate, startDate]);
 
   return (
     <button
       type="button"
       onClick={searchModal.onOpen}
-      className="flex w-full cursor-pointer select-none items-center justify-between rounded-full bg-white/80 px-3 py-2 shadow-md backdrop-blur transition hover:shadow-lg md:w-auto lg:px-2"
+      className="flex w-full cursor-pointer select-none items-center justify-between rounded-full px-3 py-2 shadow-md backdrop-blur transition hover:shadow-lg md:w-auto lg:px-4"
     >
       <div className="flex flex-1 items-center justify-between lg:hidden">
         <div className="flex flex-1 items-center border-r border-neutral-200 px-3">
@@ -102,7 +102,7 @@ const SearchExperience = () => {
       </div>
 
       <div className="hidden w-full items-center gap-6 lg:flex">
-        <div className="flex min-w-[200px] flex-col items-start leading-tight">
+        <div className="flex min-w-[100px] flex-col items-start leading-tight">
           <span className="text-[8px] uppercase tracking-wide text-neutral-500">Where?</span>
           <div className="text-sm font-medium text-neutral-900">{locationLabel}</div>
         </div>

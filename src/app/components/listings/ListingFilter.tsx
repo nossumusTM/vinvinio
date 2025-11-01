@@ -295,7 +295,7 @@ const ListingFilter: React.FC<ListingFilterProps> = ({ gridSize, onGridChange })
           <div
             ref={buttonRef}
             onClick={() => setIsOpen(prev => !prev)}
-            className="flex items-center gap-2 bg-white py-2 px-4 rounded-full shadow-md hover:shadow-lg transition cursor-pointer font-medium text-neutral-700 text-sm select-none"
+            className="flex items-center gap-2 bg-white py-2 px-4 rounded-full shadow-md hover:shadow-lg transition cursor-pointer font-normal text-neutral-700 text-sm select-none"
           >
             <PiSortDescending />
             <span className="whitespace-nowrap">

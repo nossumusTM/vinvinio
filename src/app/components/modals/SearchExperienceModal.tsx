@@ -88,10 +88,8 @@ const SearchExperienceModal = () => {
       return;
     }
 
-    const currentQuery = params ? qs.parse(params.toString()) : {};
-    const updatedQuery: Record<string, unknown> = {
-      ...currentQuery,
-    };
+    const currentQuery = params ? (qs.parse(params.toString()) as qs.StringifiableRecord) : {};
+    const updatedQuery: qs.StringifiableRecord = { ...currentQuery };
 
     if (location?.value) {
       updatedQuery.locationValue = location.value;
@@ -167,10 +165,10 @@ const SearchExperienceModal = () => {
     <div className="relative flex flex-col gap-8">
       <div className="absolute inset-0 -z-10 bg-gradient-to-br from-rose-200 via-white to-sky-200 rounded-3xl opacity-80 blur-xl" />
       <div className="flex flex-col gap-6 rounded-3xl bg-white/70 backdrop-blur p-6 shadow-xl h-fit">
-        <Heading
+        {/* <Heading
           title="Where will your next story unfold?"
           subtitle="Choose a destination to unlock curated experiences."
-        />
+        /> */}
         <div className="flex flex-col gap-4">
           <CountrySearchSelect
             ref={searchInputRef}
@@ -192,7 +190,7 @@ const SearchExperienceModal = () => {
               key={`${modal.isOpen}-${location?.value ?? 'default'}`}
               city={location?.city ?? 'Rome'}
               country={location?.label ?? 'Italy'}
-              center={location?.latlng ?? [41.9028, 12.4964]}
+              center={(location?.latlng as [number, number]) ?? ([41.9028, 12.4964] as [number, number])}
             />
           </div>
         </div>
@@ -210,10 +208,10 @@ const SearchExperienceModal = () => {
       <div className="space-y-6">
         <div className="rounded-3xl p-[1px]">
           <div className="rounded-[26px] bg-white/80 backdrop-blur p-6 shadow-xl">
-            <Heading
+            {/* <Heading
               title="Select your travel window"
               subtitle="Choose the dates that best match your plans."
-            />
+            /> */}
             <div className="mt-4 rounded-2xl">
               <div className="flex w-full justify-center">
                 <div className="w-full max-w-xs sm:max-w-md md:max-w-lg">
@@ -237,7 +235,7 @@ const SearchExperienceModal = () => {
 
   if (step === STEPS.GUESTS) {
     bodyContent = (
-      <div className="space-y-6">
+      <div className="space-y-6 mt-6">
         <div className="rounded-3xl p-[1px]">
           <div className="rounded-[26px] bg-white/80 backdrop-blur p-6 shadow-xl">
             <Heading

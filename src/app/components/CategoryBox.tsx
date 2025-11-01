@@ -2,6 +2,7 @@
 
 import qs from 'query-string';
 import { useRouter, useSearchParams } from 'next/navigation';
+import type { StringifiableRecord } from 'query-string';
 import { useCallback } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
@@ -24,29 +25,21 @@ const CategoryBox: React.FC<CategoryBoxProps> = ({
   const params = useSearchParams();
 
   const handleClick = useCallback(() => {
-    let currentQuery = {};
+    const currentQuery: StringifiableRecord = params
+      ? (qs.parse(params.toString()) as StringifiableRecord)
+      : {};
 
-    if (params) {
-      currentQuery = qs.parse(params.toString());
-    }
-
-    const updatedQuery: Record<string, unknown> = {
+    const updatedQuery: StringifiableRecord = {
       ...currentQuery,
       category: label,
     };
 
     if (params?.get('category') === label) {
+      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
       delete updatedQuery.category;
     }
 
-    const url = qs.stringifyUrl(
-      {
-        url: '/',
-        query: updatedQuery,
-      },
-      { skipNull: true },
-    );
-
+    const url = qs.stringifyUrl({ url: '/', query: updatedQuery }, { skipNull: true });
     router.push(url);
   }, [label, router, params]);
 
@@ -57,19 +50,16 @@ const CategoryBox: React.FC<CategoryBoxProps> = ({
       aria-pressed={selected}
       title={description}
       className={clsx(
-        'flex min-w-[120px] flex-col items-center justify-center gap-2.5 rounded-2xl border px-4 py-4 text-center transition-all duration-300',
+        'flex w-[100px] h-[100px] aspect-square shrink-0 flex-col items-center justify-between rounded-xl p-2 transition-all duration-300',
         selected
-          ? 'border-neutral-900 bg-neutral-900/5 text-neutral-900 shadow-lg shadow-neutral-200/80'
-          : 'border-neutral-200 bg-white/70 text-neutral-600 hover:border-neutral-300 hover:bg-white',
+          ? 'text-neutral-900 shadow-lg shadow-neutral-200/80'
+          : 'text-neutral-700 hover:shadow-md'
       )}
     >
       <motion.div
         animate={
           selected
-            ? {
-                scale: [1, 1.08, 1],
-                rotate: [0, -2, 2, 0],
-              }
+            ? { scale: [1, 1.08, 1], rotate: [0, -2, 2, 0] }
             : { scale: 1, rotate: 0 }
         }
         transition={{
@@ -77,22 +67,27 @@ const CategoryBox: React.FC<CategoryBoxProps> = ({
           repeat: selected ? Infinity : 0,
           ease: 'easeInOut',
         }}
-        className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm"
+        className="flex h-12 w-12 items-center justify-center rounded-lg shadow-sm"
         aria-hidden="true"
       >
         <Image
           src={icon}
           alt={label}
-          width={56}
-          height={56}
-          className="h-14 w-14 object-contain"
+          width={32}
+          height={32}
+          className="h-12 w-12 object-contain"
           priority={false}
         />
       </motion.div>
-      <span className="text-xs font-semibold uppercase tracking-wide">{label}</span>
+
+      {/* fixed-height label area so long titles don't resize the tile */}
+      <span
+        className="mt-1 block h-10 w-full px-1 text-center text-[10px] font-semibold uppercase leading-tight tracking-wide line-clamp-2 overflow-hidden"
+      >
+        {label}
+      </span>
     </button>
   );
 };
 
 export default CategoryBox;
-

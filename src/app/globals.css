@@ -147,3 +147,32 @@ body.has-announcement-bar #layout-content-wrapper {
 body:not(.has-announcement-bar) #layout-content-wrapper {
   padding-top: 5rem;
 }
+
+.rdrMonthAndYearWrapper {
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  gap: 0 !important;
+}
+
+.rdrNextPrevButton {
+  display: block;
+  width: 24px;
+  height: 24px;
+  margin: 0 -0.833em;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: #EFF2F7;
+}
+
+.rdrMonthAndYearPickers {
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  gap: 0 !important;
+}
+
+.calendardatapicker {
+  margin-top: -30px;
+}

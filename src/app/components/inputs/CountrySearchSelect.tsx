@@ -195,7 +195,7 @@ const CountrySearchSelect = forwardRef<CountrySearchSelectHandle, CountrySelectP
     }, [highlightedIndex, isOpen]);
 
     const borderClass = clsx(
-      'transition ring-0 focus-within:ring-0 rounded-2xl border-2 bg-white/90 backdrop-blur',
+      'transition ring-0 focus-within:ring-0 rounded-2xl border-2 bg-white/90 backdrop-blur shadow-sm hover:shadow-md',
       hasError
         ? 'border-[#2200ffff] shadow-[0_0_0_2px_rgba(34,0,255,0.35)]'
         : 'border-white/60 hover:border-neutral-200',

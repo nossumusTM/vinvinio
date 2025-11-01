@@ -69,44 +69,42 @@ const Map: React.FC<MapProps> = ({ center, city, country }) => {
   }, []);
 
   useEffect(() => {
-    if (center && center.length === 2) {
-      setCoordinates([center[0], center[1]]);
+    if (center && Array.isArray(center) && center.length === 2) {
+      setCoordinates(center);
     }
   }, [center?.[0], center?.[1]]);
 
   useEffect(() => {
-    if (!city || !country || (center && center.length === 2)) {
-      return;
+    if (city && country) {
+      const controller = new AbortController();
+      const fetchCoordinates = async () => {
+        try {
+          const fullQuery = `${city}, ${country}`;
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&accept-language=en&q=${encodeURIComponent(fullQuery)}`,
+            { signal: controller.signal }
+          );
+          const data = await res.json();
+          if (data?.length > 0) {
+            const { lat, lon } = data[0];
+            setCoordinates([parseFloat(lat), parseFloat(lon)]);
+          }
+        } catch (err) {
+          if ((err as Error).name !== 'AbortError') {
+            console.error('Failed to fetch coordinates:', err);
+          }
+        }
+      };
+      setCoordinates((prev) => {
+        if (center && Array.isArray(center) && center.length === 2) {
+          return center;
+        }
+        return prev;
+      });
+      fetchCoordinates();
+      return () => controller.abort();
     }
-
-    const controller = new AbortController();
-
-    const fetchCoordinates = async () => {
-      try {
-        const query = `${city}, ${country}`;
-        const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&accept-language=en&q=${encodeURIComponent(query)}`,
-          { signal: controller.signal },
-        );
-        const data = (await response.json()) as Array<{ lat: string; lon: string }>;
-
-        if (Array.isArray(data) && data.length > 0) {
-          const { lat, lon } = data[0];
-          setCoordinates([Number.parseFloat(lat), Number.parseFloat(lon)]);
-        } else {
-          setCoordinates(DEFAULT_CENTER);
-        }
-      } catch (error) {
-        if ((error as Error).name !== 'AbortError') {
-          console.error('Failed to fetch coordinates:', error);
-        }
-      }
-    };
-
-    fetchCoordinates();
-
-    return () => controller.abort();
-  }, [center?.[0], center?.[1], city, country]);
+  }, [city, country, center]);
 
   useEffect(() => {
     const onResize = () => mapRef.current?.invalidateSize();

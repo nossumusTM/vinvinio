@@ -183,7 +183,7 @@ const Categories = () => {
             <Container>
               <div
                 ref={scrollContainerRef}
-                className="flex w-full snap-x snap-mandatory flex-row items-center gap-2 overflow-x-auto pt-4 scroll-smooth scrollbar-thin sm:w-auto"
+                className="flex w-full snap-x snap-mandatory flex-row items-center gap-2 overflow-x-auto p-4 scroll-smooth scrollbar-thin sm:w-auto"
                 onMouseDown={handleInteractionStart}
                 onMouseUp={handleInteractionEnd}
                 onMouseLeave={handleInteractionEnd}
