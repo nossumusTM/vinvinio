@@ -2,11 +2,10 @@
 
 import { useSearchParams, usePathname } from 'next/navigation';
 import { useMemo, useEffect, useState } from 'react';
-import { BiSearch } from 'react-icons/bi';
-import { differenceInDays } from 'date-fns';
 import { format } from 'date-fns';
 import Image from 'next/image';
 import useExperienceSearchState from '@/app/hooks/useExperienceSearchState';
+import { LuMapPin } from 'react-icons/lu';
 
 import useCountries from '@/app/hooks/useCountries';
 import useSearchExperienceModal from '@/app/hooks/useSearchExperienceModal';
@@ -96,31 +95,19 @@ const SearchExperience = () => {
   }, [searchParams, pathname]);
 
   const locationLabel = useMemo(() => {
-    const fallback = (
-      <span className="pt-1 flex items-center justify-center gap-2 mr-0 md:mr-5 whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
-
-        <Image
-          src="/flags/it.svg"
-          alt="Italy"
-          width={16}
-          height={8}
-          className="rounded object-cover"
-        />
-
-        <p className='ml-1 md:ml-0'>
-          Italy
-          </p>
-      </span>
-    );
-  
     if (!location || !location.value) {
-      return fallback;
+      return (
+        <span className="flex items-center gap-2 mr-0 md:mr-5 text-sm font-semibold text-neutral-500">
+          <LuMapPin className="h-4 w-4" aria-hidden="true" />
+          Choose a destination
+        </span>
+      );
     }
-  
+
     const countryCode = location.value.includes('-')
       ? location.value.split('-').pop()?.toLowerCase()
       : location.value.toLowerCase();
-  
+
     return (
       <span className="flex items-center gap-2 mr-0 md:mr-5 whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
         <Image

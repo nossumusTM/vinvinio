@@ -78,12 +78,20 @@ const Map: React.FC<MapProps> = ({ center, city, country }) => {
   }, []);
 
   useEffect(() => {
+    if (center && Array.isArray(center) && center.length === 2) {
+      setCoordinates(center);
+    }
+  }, [center?.[0], center?.[1]]);
+
+  useEffect(() => {
     if (city && country) {
+      const controller = new AbortController();
       const fetchCoordinates = async () => {
         try {
           const fullQuery = `${city}, ${country}`;
           const res = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&accept-language=en&q=${encodeURIComponent(fullQuery)}`
+            `https://nominatim.openstreetmap.org/search?format=json&accept-language=en&q=${encodeURIComponent(fullQuery)}`,
+            { signal: controller.signal }
           );
           const data = await res.json();
           if (data?.length > 0) {
@@ -91,12 +99,21 @@ const Map: React.FC<MapProps> = ({ center, city, country }) => {
             setCoordinates([parseFloat(lat), parseFloat(lon)]);
           }
         } catch (err) {
-          console.error('Failed to fetch coordinates:', err);
+          if ((err as Error).name !== 'AbortError') {
+            console.error('Failed to fetch coordinates:', err);
+          }
         }
       };
+      setCoordinates((prev) => {
+        if (center && Array.isArray(center) && center.length === 2) {
+          return center;
+        }
+        return prev;
+      });
       fetchCoordinates();
+      return () => controller.abort();
     }
-  }, [city, country]);
+  }, [city, country, center]);
 
   useEffect(() => {
     const onResize = () => mapRef.current?.invalidateSize();

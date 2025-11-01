@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import qs from 'query-string';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -16,7 +16,7 @@ import useExperienceSearchState from '@/app/hooks/useExperienceSearchState';
 
 import Modal from './Modal';
 import SearchCalendar from '../inputs/SaerchCalendar'
-import CountrySearchSelect, { CountrySelectValue } from '../inputs/CountrySearchSelect';
+import CountrySearchSelect, { CountrySelectValue, CountrySearchSelectHandle } from '../inputs/CountrySearchSelect';
 
 import Counter from '../inputs/Counter';
 import useTranslations from '@/app/hooks/useTranslations';
@@ -35,12 +35,15 @@ const SearchExperienceModal = () => {
 
   const [step, setStep] = useState(STEPS.LOCATION);
   const { location, setLocation } = useExperienceSearchState();
+  const [locationError, setLocationError] = useState(false);
   const [guestCount, setGuestCount] = useState(1);
   const [dateRange, setDateRange] = useState<Range>({
     startDate: new Date(),
     endDate: new Date(),
     key: 'selection',
   });
+
+  const searchInputRef = useRef<CountrySearchSelectHandle | null>(null);
 
   const SearchMap = useMemo(() => dynamic(() => import('../SearchMap'), {
     ssr: false
@@ -52,12 +55,26 @@ const SearchExperienceModal = () => {
     }
   }, [modal.isOpen]);
 
+  useEffect(() => {
+    if (!modal.isOpen) {
+      setLocationError(false);
+    }
+  }, [modal.isOpen]);
+
+  useEffect(() => {
+    if (location) {
+      setLocationError(false);
+    }
+  }, [location]);
+
   const onBack = useCallback(() => setStep((val) => val - 1), []);
   const onNext = useCallback(() => setStep((val) => val + 1), []);
 
   const onSubmit = useCallback(() => {
 
     if (step === STEPS.LOCATION && !location) {
+      setLocationError(true);
+      searchInputRef.current?.focus();
       return;
     }
 
@@ -102,7 +119,7 @@ const SearchExperienceModal = () => {
 
   const actionLabel = useMemo(() => {
     if (step === STEPS.GUESTS) return t('search');
-    if (step === STEPS.LOCATION && !location) return t('selectCountry');
+    if (step === STEPS.LOCATION && !location) return 'Choose a destination';
     if (step === STEPS.DATE && (!dateRange?.startDate || !dateRange?.endDate)) return t('selectDates');
     return t('next');
   }, [step, location, dateRange, t]);
@@ -138,8 +155,17 @@ const SearchExperienceModal = () => {
         />
         <div className="flex flex-col gap-4">
           <CountrySearchSelect
+            ref={searchInputRef}
             value={location}
-            onChange={(value) => setLocation(value as CountrySelectValue)}
+            onChange={(value) => {
+              const casted = value as CountrySelectValue | undefined;
+              setLocation(casted);
+              if (casted) {
+                setLocationError(false);
+              }
+            }}
+            hasError={locationError}
+            onErrorCleared={() => setLocationError(false)}
           />
           <p className="text-xs text-neutral-500">
             Browse iconic cities or search for hidden gems across the globe.
@@ -178,10 +204,14 @@ const SearchExperienceModal = () => {
               subtitle="Choose the dates that best match your plans."
             />
             <div className="mt-4 rounded-2xl">
-              <SearchCalendar
-                value={dateRange}
-                onChange={(value) => setDateRange(value.selection)}
-              />
+              <div className="flex w-full justify-center">
+                <div className="w-full max-w-xs sm:max-w-md md:max-w-lg">
+                  <SearchCalendar
+                    value={dateRange}
+                    onChange={(value) => setDateRange(value.selection)}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>

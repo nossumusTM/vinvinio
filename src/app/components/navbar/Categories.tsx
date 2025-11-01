@@ -1,37 +1,12 @@
 'use client';
 
 import { usePathname, useSearchParams } from 'next/navigation';
-import clsx from "clsx";
-import { TbBeach, TbMountain, TbPool, TbScooterElectric, TbCar, TbPhoto, TbBurger, TbShoppingBag } from 'react-icons/tb';
+import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SiFiat, SiVespa } from "react-icons/si";
-import { GrRestaurant } from "react-icons/gr";
-import { BiPhotoAlbum } from "react-icons/bi";
-import { LuShoppingBag } from "react-icons/lu";
-import { MdOutlineTour } from "react-icons/md";
-import { FaPhotoFilm } from "react-icons/fa6";
-import { HiOutlineShoppingBag } from "react-icons/hi";
-import { MdOutlineMonochromePhotos } from "react-icons/md";
-import { SiArtixlinux } from "react-icons/si";
-import {
-    GiBarn,
-    GiBoatFishing,
-    GiCactus,
-    GiCastle,
-    GiCaveEntrance,
-    GiForestCamp,
-    GiIsland,
-    GiWindmill
-} from 'react-icons/gi';
-import { FaSkiing } from 'react-icons/fa';
-import { BsSnow } from 'react-icons/bs';
-import { IoDiamond } from 'react-icons/io5';
-import { MdOutlineVilla } from 'react-icons/md';
-
-import CategoryBox from "../CategoryBox";
+import CategoryBox from '../CategoryBox';
 import Container from '../Container';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { LuChevronUp } from 'react-icons/lu';
 
 declare global {
@@ -41,107 +16,37 @@ declare global {
 }
 
 export const categories = [
-    {
-        label: 'La Bella Tour',
-        icon: SiFiat,
-        description: 'Aventine Hill Tour in Vintage Fiat 500 Convoy',
-    },
-    {
-        label: 'Production',  
-        icon: MdOutlineMonochromePhotos,
-        description: 'Capture the timeless beauty of the most iconic landmarks'
-    },
-    {
-        label: 'Viva Vespa!',
-        icon: SiVespa,
-        description: 'Vespa Sidecar Tour with Pickup, Drop-off',
-    },
-    {
-        label: 'La Moda',
-        icon: HiOutlineShoppingBag,
-        description: "Discover Italy’s finest fashion and artisanal treasures on an exclusive shopping tour."
-    },
-    {
-        label: 'Cooking Class',
-        icon: GrRestaurant,
-        description: 'Guided Food & Wine Tour in Trastevere'
-    },
-    {
-        label: 'Walking Art',
-        icon: SiArtixlinux,
-        description: "Experience the city's heartbeat through unique stories hidden behind the scenes"
-    },
-    // {
-    //     label: 'Lake',
-    //     icon: GiBoatFishing,
-    //     description: 'This property is near a lake!'
-    // },
-    // {
-    //     label: 'Skiing',
-    //     icon: FaSkiing,
-    //     description: 'This property has skiing activies!'
-    // },
-    // {
-    //     label: 'Castles',
-    //     icon: GiCastle,
-    //     description: 'This property is an ancient castle!'
-    // },
-    // {
-    //     label: 'Caves',
-    //     icon: GiCaveEntrance,
-    //     description: 'This property is in a spooky cave!'
-    // },
-    // {
-    //     label: 'Camping',
-    //     icon: GiForestCamp,
-    //     description: 'This property offers camping activities!'
-    // },
-    // {
-    //     label: 'Arctic',
-    //     icon: BsSnow,
-    //     description: 'This property is in arctic environment!'
-    // },
-    // {
-    //     label: 'Desert',
-    //     icon: GiCactus,
-    //     description: 'This property is in the desert!'
-    // },
-    // {
-    //     label: 'Barns',
-    //     icon: GiBarn,
-    //     description: 'This property is in a barn!'
-    // },
-    // {
-    //     label: 'Lux',
-    //     icon: IoDiamond,
-    //     description: 'This property is brand new and luxurious!'
-    // },
-    // {
-    //     label: 'Caves',
-    //     icon: GiCaveEntrance,
-    //     description: 'This property is in a spooky cave!'
-    // },
-    // {
-    //     label: 'Camping',
-    //     icon: GiForestCamp,
-    //     description: 'This property offers camping activities!'
-    // },
-    // {
-    //     label: 'Arctic',
-    //     icon: BsSnow,
-    //     description: 'This property is in arctic environment!'
-    // },
-    // {
-    //     label: 'Desert',
-    //     icon: GiCactus,
-    //     description: 'This property is in the desert!'
-    // },
-    // {
-    //     label: 'Barns',
-    //     icon: GiBarn,
-    //     description: 'This property is in a barn!'
-    // },
-]
+  {
+    label: 'La Bella Tour',
+    icon: '/icons/animated/la-bella-tour.svg',
+    description: 'Aventine Hill Tour in Vintage Fiat 500 Convoy',
+  },
+  {
+    label: 'Production',
+    icon: '/icons/animated/production.svg',
+    description: 'Capture the timeless beauty of the most iconic landmarks',
+  },
+  {
+    label: 'Viva Vespa!',
+    icon: '/icons/animated/viva-vespa.svg',
+    description: 'Vespa Sidecar Tour with pickup and drop-off',
+  },
+  {
+    label: 'La Moda',
+    icon: '/icons/animated/la-moda.svg',
+    description: 'Discover Italy’s finest fashion and artisanal treasures on an exclusive shopping tour.',
+  },
+  {
+    label: 'Cooking Class',
+    icon: '/icons/animated/cooking-class.svg',
+    description: 'Guided food and wine journeys crafted for curious palates.',
+  },
+  {
+    label: 'Walking Art',
+    icon: '/icons/animated/walking-art.svg',
+    description: "Experience the city's heartbeat through stories hidden in plain sight.",
+  },
+];
 
 const Categories = () => {
     const params = useSearchParams();
@@ -149,6 +54,70 @@ const Categories = () => {
     const pathname = usePathname();
     const isMainPage = pathname === '/';
     const [visible, setVisible] = useState(true);
+    const [autoScrollPaused, setAutoScrollPaused] = useState(false);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const resumeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    const pauseAutoScroll = useCallback(() => {
+      setAutoScrollPaused(true);
+      if (resumeTimeoutRef.current) {
+        clearTimeout(resumeTimeoutRef.current);
+        resumeTimeoutRef.current = null;
+      }
+    }, []);
+
+    const scheduleAutoScrollResume = useCallback(() => {
+      if (resumeTimeoutRef.current) {
+        clearTimeout(resumeTimeoutRef.current);
+      }
+      resumeTimeoutRef.current = setTimeout(() => {
+        setAutoScrollPaused(false);
+      }, 3500);
+    }, []);
+
+    const handleInteractionStart = useCallback(() => {
+      pauseAutoScroll();
+    }, [pauseAutoScroll]);
+
+    const handleInteractionEnd = useCallback(() => {
+      scheduleAutoScrollResume();
+    }, [scheduleAutoScrollResume]);
+
+    useEffect(() => {
+      return () => {
+        if (resumeTimeoutRef.current) {
+          clearTimeout(resumeTimeoutRef.current);
+        }
+      };
+    }, []);
+
+    useEffect(() => {
+      if (autoScrollPaused) return;
+
+      let frameId: number;
+      const step = () => {
+        const container = scrollContainerRef.current;
+        if (!container) {
+          frameId = requestAnimationFrame(step);
+          return;
+        }
+
+        if (container.scrollWidth <= container.clientWidth + 4) {
+          return;
+        }
+
+        container.scrollLeft += 0.35;
+        if (container.scrollLeft >= container.scrollWidth - container.clientWidth - 1) {
+          container.scrollLeft = 0;
+        }
+
+        frameId = requestAnimationFrame(step);
+      };
+
+      frameId = requestAnimationFrame(step);
+
+      return () => cancelAnimationFrame(frameId);
+    }, [autoScrollPaused]);
 
     useEffect(() => {
       if (category) {
@@ -225,26 +194,37 @@ const Categories = () => {
             >
               <Container>
                 <div
+                  ref={scrollContainerRef}
                   className="
                     pt-4
-                    flex 
-                    flex-row 
-                    items-center 
+                    flex
+                    flex-row
+                    items-center
                     gap-2
                     overflow-x-auto
                     scroll-smooth
                     scrollbar-thin
-                    snap-x 
+                    snap-x
                     snap-mandatory
                     w-full
                     sm:w-auto
                   "
+                  onMouseDown={handleInteractionStart}
+                  onMouseUp={handleInteractionEnd}
+                  onMouseLeave={handleInteractionEnd}
+                  onTouchStart={handleInteractionStart}
+                  onTouchEnd={handleInteractionEnd}
+                  onWheel={() => {
+                    handleInteractionStart();
+                    scheduleAutoScrollResume();
+                  }}
                 >
                   {categories.map((item) => (
                     <CategoryBox
                       key={item.label}
                       label={item.label}
                       icon={item.icon}
+                      description={item.description}
                       selected={category === item.label}
                     />
                   ))}
