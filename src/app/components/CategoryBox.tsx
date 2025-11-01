@@ -23,15 +23,15 @@ const CategoryBox: React.FC<CategoryBoxProps> = ({
   const params = useSearchParams();
 
   const handleClick = useCallback(() => {
-    let currentQuery = {};
-
+    let currentQuery: qs.StringifiableRecord = {};
+    
     if (params) {
-      currentQuery = qs.parse(params.toString());
+    currentQuery = qs.parse(params.toString());
     }
 
-    const updatedQuery: Record<string, unknown> = {
-      ...currentQuery,
-      category: label,
+    const updatedQuery: qs.StringifiableRecord = {
+    ...currentQuery,
+    category: params?.get('category') === label ? undefined : label,
     };
 
     if (params?.get('category') === label) {
@@ -50,28 +50,33 @@ const CategoryBox: React.FC<CategoryBoxProps> = ({
   }, [label, router, params]);
 
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      aria-pressed={selected}
-      className={`
-        flex
-        min-w-[120px]
-        flex-col
-        items-center
-        justify-center
-        gap-2.5
-        rounded-2xl
-        border
-        px-4
-        py-4
-        text-center
-        transition-all
-        duration-300
-        ${selected ? 'border-neutral-900 bg-neutral-900/5 text-neutral-900 shadow-lg shadow-neutral-200/80' : 'border-neutral-200 bg-white/70 text-neutral-600 hover:border-neutral-300 hover:bg-white'}`
-      `}
-      title={description}
-    >
+  <button
+    type="button"
+    onClick={handleClick}
+    aria-pressed={selected}
+    className={`
+      flex
+      min-w-[150px]
+      h-[80px]
+      flex-col
+      items-center
+      justify-center
+      gap-2.5
+      rounded-2xl
+      px-4
+      py-4
+      mt-0
+      mb-4
+      text-center
+      transition-all
+      duration-300
+      ${selected
+        ? 'text-neutral-900 shadow-lg shadow-neutral-200/80'
+        : 'text-neutral-600 hover:border-neutral-300 bg-neutral-10 hover:shadow-md'
+      }
+    `}
+    title={description}
+  >
       <motion.div
         animate={
           selected
@@ -86,7 +91,7 @@ const CategoryBox: React.FC<CategoryBoxProps> = ({
           repeat: selected ? Infinity : 0,
           ease: 'easeInOut',
         }}
-        className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm"
+        className="flex h-10 w-10 items-center justify-center rounded-lg shadow-sm"
         aria-hidden="true"
       >
         <Image
@@ -94,7 +99,7 @@ const CategoryBox: React.FC<CategoryBoxProps> = ({
           alt={label}
           width={56}
           height={56}
-          className="h-14 w-14 object-contain"
+          className="h-8 w-8 object-contain"
           priority={false}
         />
       </motion.div>

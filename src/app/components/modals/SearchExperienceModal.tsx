@@ -119,7 +119,7 @@ const SearchExperienceModal = () => {
 
   const actionLabel = useMemo(() => {
     if (step === STEPS.GUESTS) return t('search');
-    if (step === STEPS.LOCATION && !location) return 'Choose a destination';
+    if (step === STEPS.LOCATION && !location) return 'Next destination';
     if (step === STEPS.DATE && (!dateRange?.startDate || !dateRange?.endDate)) return t('selectDates');
     return t('next');
   }, [step, location, dateRange, t]);

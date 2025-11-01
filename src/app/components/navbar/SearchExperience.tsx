@@ -97,9 +97,9 @@ const SearchExperience = () => {
   const locationLabel = useMemo(() => {
     if (!location || !location.value) {
       return (
-        <span className="flex items-center gap-2 mr-0 md:mr-5 text-sm font-semibold text-neutral-500">
+        <span className="flex items-center gap-1 mr-0 md:mr-5 text-sm font-medium">
           <LuMapPin className="h-4 w-4" aria-hidden="true" />
-          Choose a destination
+          Take Me There
         </span>
       );
     }
@@ -124,7 +124,7 @@ const SearchExperience = () => {
 
   const guestLabel = useMemo(() => {
     const count = Number(guestCount);
-    if (!count || isNaN(count)) return 'Add Guests';
+    if (!count || isNaN(count)) return 'Count Me In';
     return `${count} ${count === 1 ? 'Guest' : 'Guests'}`;
   }, [guestCount]);
   
@@ -155,7 +155,7 @@ const SearchExperience = () => {
     if (startDate) {
       return format(new Date(startDate as string), "d MMM ''yy");
     }
-    return 'Select Date';
+    return 'Right Now';
   }, [startDate, endDate]);
 
   return (
