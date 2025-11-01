@@ -169,7 +169,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
               cursor-pointer
             "
           >
-            Add Experience
+            Submit Listing
           </div>
         )} */}
 
