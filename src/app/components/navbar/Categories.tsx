@@ -13,6 +13,7 @@ import {
   LuBriefcase,
   LuBus,
   LuChevronUp,
+  LuChevronLeft,
   LuDumbbell,
   LuGem,
   LuGraduationCap,
@@ -438,13 +439,13 @@ const Categories = () => {
                   type="button"
                   onClick={() => setFiltersOpen(true)}
                   className={clsx(
-                    'flex h-[110px] w-[110px] shrink-0 flex-col items-center justify-between rounded-2xl bg-white p-4 text-neutral-600 shadow-md transition-all duration-300 hover:shadow-lg hover:shadow-neutral-300/50',
+                    'flex h-[110px] w-[110px] shrink-0 flex-col items-center justify-between bg-white rounded-2xl p-4 text-neutral-600 shadow-md transition-all duration-300 hover:shadow-lg hover:shadow-neutral-300/50',
                     hasActiveFilters && 'text-neutral-900 shadow-xl shadow-neutral-400/60'
                   )}
                 >
                   <div
                     className={clsx(
-                      'relative flex h-12 w-12 items-center justify-center rounded-full bg-transparent shadow-md shadow-neutral-300/40',
+                      'relative flex h-12 w-12 p-2 items-center justify-center rounded-full bg-transparent shadow-md shadow-neutral-300/40',
                       hasActiveFilters && 'shadow-neutral-400/60'
                     )}
                   >
@@ -456,7 +457,7 @@ const Categories = () => {
                       <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-neutral-900" aria-hidden="true" />
                     )}
                   </div>
-                  <span className="mt-2 block h-10 w-full px-1 text-center text-[10px] font-semibold uppercase leading-tight tracking-wide text-neutral-700">
+                  <span className="mt-4 block h-10 w-full px-1 text-center text-[10px] font-semibold uppercase leading-tight tracking-wide text-neutral-700">
                     Filters
                   </span>
                 </button>
@@ -478,7 +479,7 @@ const Categories = () => {
       <button
         type="button"
         onClick={() => setVisible((prev) => !prev)}
-        className="absolute bottom-[-12px] left-1/2 z-10 -translate-x-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-md transition-transform duration-300"
+        className="absolute bottom-[-12px] left-1/2 z-10 -translate-x-1/2 flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-md transition-transform duration-300"
         aria-label={visible ? 'Collapse categories' : 'Expand categories'}
       >
         <motion.div animate={{ rotate: visible ? 0 : 180 }} transition={{ duration: 0.3 }}>
@@ -491,87 +492,130 @@ const Categories = () => {
           <>
             <motion.div
               key="filters-backdrop"
-              className="fixed inset-0 z-40 bg-black/30"
+              className="fixed inset-0 z-40"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setFiltersOpen(false)}
             />
-            <motion.aside
-              key="filters-panel"
-              className="fixed inset-y-0 left-0 z-50 w-full max-w-md overflow-y-auto bg-white p-6 shadow-xl"
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'spring', stiffness: 260, damping: 30 }}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold text-neutral-900">Refine experiences</h2>
-                  <p className="text-sm text-neutral-600">Choose filters to surface matching listings.</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setFiltersOpen(false)}
-                  className="rounded-full border border-neutral-200 p-2 text-neutral-500 transition hover:text-neutral-900"
-                  aria-label="Close filters"
-                >
-                  <LuChevronUp className="h-4 w-4 rotate-90" aria-hidden="true" />
-                </button>
-              </div>
+            <div
+  className="
+    fixed inset-y-0 left-0 z-50
+    h-screen
+    flex
+    items-start
+    p-3
+    pointer-events-none
+  "
+>
+  <motion.aside
+    key="filters-panel"
+    className="
+      pointer-events-auto
+      h-full w-[80vw] lg:w-[35vw]
+      rounded-2xl
+      z-100
+      bg-white
+      shadow-2xl
+      backdrop-blur-3xl
+      flex flex-col
+      overflow-hidden
+    "
+    initial={{ x: '-100%' }}
+    animate={{ x: 0 }}
+    exit={{ x: '-100%' }}
+    transition={{ type: 'spring', stiffness: 260, damping: 30 }}
+  >
+    {/* Header */}
+    <div className="px-6 md:px-10 pt-6 md:pt-10 pb-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-neutral-900">Refine experiences</h2>
+          <p className="text-sm text-neutral-600">Choose filters to surface matching listings.</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setFiltersOpen(false)}
+          className="rounded-full border border-neutral-200 p-2 text-neutral-500 transition hover:text-neutral-900"
+          aria-label="Close filters"
+        >
+          <LuChevronLeft className="h-4 w-4" aria-hidden="true" />
+        </button>
+      </div>
+    </div>
 
-              <div className="mt-6 flex flex-col gap-6">
-                <FilterSection
-                  title="By Group Style"
-                  description="Select all group styles that fit your experience."
-                  options={GROUP_STYLE_OPTIONS}
-                  values={draftFilters.groupStyles}
-                  onToggle={(value) => toggleMultiFilter('groupStyles', value)}
-                />
+    {/* Scrollable content */}
+    <div className="min-h-0 flex-1 overflow-y-auto px-6 md:px-10 pb-6 scroll-smooth">
+      <div className="mt-2 flex flex-col gap-6">
+        <FilterSection
+          id="group-styles"
+          title="By Group Style"
+          description="Select all group styles that fit your experience."
+          options={GROUP_STYLE_OPTIONS}
+          values={draftFilters.groupStyles}
+          onToggle={(value) => toggleMultiFilter('groupStyles', value)}
+        />
 
-                <FilterSection
-                  title="By Duration"
-                  description="Choose the primary length of your activity."
-                  options={DURATION_OPTIONS}
-                  values={draftFilters.duration ? [draftFilters.duration] : []}
-                  onToggle={(value) => selectDuration(value)}
-                  single
-                />
+        <FilterSection
+          id="duration"
+          title="By Duration"
+          description="Choose the primary length of your activity."
+          options={DURATION_OPTIONS}
+          values={draftFilters.duration ? [draftFilters.duration] : []}
+          onToggle={(value) => selectDuration(value)}
+          single
+        />
 
-                <FilterSection
-                  title="By Environment"
-                  description="Highlight the environments guests will explore."
-                  options={ENVIRONMENT_OPTIONS}
-                  values={draftFilters.environments}
-                  onToggle={(value) => toggleMultiFilter('environments', value)}
-                />
+        <FilterSection
+          id="environments"
+          title="By Environment"
+          description="Highlight the environments guests will explore."
+          options={ENVIRONMENT_OPTIONS}
+          values={draftFilters.environments}
+          onToggle={(value) => toggleMultiFilter('environments', value)}
+        />
 
-                <FilterSection
-                  title="By Activity Form"
-                  description="Tell guests how they will move through the experience."
-                  options={ACTIVITY_FORM_OPTIONS}
-                  values={draftFilters.activityForms}
-                  onToggle={(value) => toggleMultiFilter('activityForms', value)}
-                />
-              </div>
+        <FilterSection
+          id="activity-forms"
+          title="By Activity Form"
+          description="Tell guests how they will move through the experience."
+          options={ACTIVITY_FORM_OPTIONS}
+          values={draftFilters.activityForms}
+          onToggle={(value) => toggleMultiFilter('activityForms', value)}
+        />
+      </div>
+    </div>
 
-              <div className="mt-8 flex flex-col gap-3">
-                <button
-                  type="button"
-                  onClick={handleFiltersApply}
-                  className="w-full rounded-full bg-neutral-900 py-3 text-sm font-semibold text-white transition hover:bg-neutral-800"
-                >
-                  Show {hasActiveFilters ? 'updated' : 'matching'} experiences
-                </button>
-                <button
-                  type="button"
-                  onClick={handleFiltersClear}
-                  className="w-full rounded-full border border-neutral-200 py-3 text-sm font-semibold text-neutral-700 transition hover:border-neutral-300"
-                >
-                  Clear filters
-                </button>
-              </div>
-            </motion.aside>
+    {/* Fixed bottom buttons */}
+    <div
+      className="
+        px-6 md:px-10 pt-3 pb-4 md:pb-6
+        border-t border-neutral-200
+        bg-white/90 backdrop-blur-md
+      "
+      style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 1rem)' }}
+    >
+      <div className="flex flex-col gap-3">
+        <button
+          type="button"
+          onClick={handleFiltersApply}
+          className="w-full rounded-full bg-neutral-900 py-3 text-sm font-semibold text-white transition hover:bg-neutral-800"
+        >
+          Show {hasActiveFilters ? 'updated' : 'matching'} experiences
+        </button>
+        <button
+          type="button"
+          onClick={handleFiltersClear}
+          className="w-full rounded-full border border-neutral-200 py-3 text-sm font-semibold text-neutral-700 transition hover:border-neutral-300"
+        >
+          Clear filters
+        </button>
+      </div>
+    </div>
+  </motion.aside>
+</div>
+
+
           </>
         )}
       </AnimatePresence>
@@ -582,6 +626,7 @@ const Categories = () => {
 export default Categories;
 
 interface FilterSectionProps {
+  id?: string;
   title: string;
   description: string;
   options: { label: string; value: string }[];
@@ -591,6 +636,7 @@ interface FilterSectionProps {
 }
 
 const FilterSection: React.FC<FilterSectionProps> = ({
+  id,
   title,
   description,
   options,
@@ -598,22 +644,39 @@ const FilterSection: React.FC<FilterSectionProps> = ({
   onToggle,
   single = false,
 }) => (
-  <section>
-    <h3 className="text-base font-semibold text-neutral-900">{title}</h3>
-    <p className="mb-3 text-xs text-neutral-500">{description}</p>
+  <section
+    id={id}
+    className="
+      rounded-xl
+      bg-white
+      shadow-sm
+      hover:shadow-md
+      transition-shadow
+      p-4 md:p-5
+      border border-neutral-100
+    "
+  >
+    <h3 className="text-sm font-semibold text-neutral-900 mb-1">
+      {title}
+    </h3>
+    <p className="text-xs text-neutral-500 mb-4">
+      {description}
+    </p>
+
     <div className="flex flex-wrap gap-2">
       {options.map((option) => {
         const isActive = values.includes(option.value);
+
         return (
           <button
             key={option.value}
             type="button"
             onClick={() => onToggle(option.value)}
             className={clsx(
-              'rounded-full border px-3 py-1.5 text-xs font-semibold transition',
+              "rounded-full px-3 py-1.5 text-xs font-medium transition-all border shadow-sm",
               isActive
-                ? 'border-neutral-800 bg-neutral-900 text-white shadow-sm'
-                : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300'
+                ? "bg-neutral-900 text-white border-neutral-900 shadow-md"
+                : "bg-white text-neutral-700 border-neutral-200 hover:border-neutral-300 hover:shadow-sm"
             )}
             aria-pressed={isActive}
           >
@@ -625,3 +688,4 @@ const FilterSection: React.FC<FilterSectionProps> = ({
     </div>
   </section>
 );
+

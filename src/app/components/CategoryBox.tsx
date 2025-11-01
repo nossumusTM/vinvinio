@@ -83,7 +83,7 @@ const CategoryBox: React.FC<CategoryBoxProps> = ({
 
       {/* fixed-height label area so long titles don't resize the tile */}
       <span
-        className="mt-2 block h-10 w-full px-1 text-center text-[10px] font-semibold uppercase leading-tight tracking-wide text-neutral-700 line-clamp-2 overflow-hidden"
+        className="mt-4 block h-10 w-full px-1 text-center text-[8px] font-semibold uppercase leading-tight tracking-wide text-neutral-700 line-clamp-2 overflow-hidden"
       >
         {label}
       </span>

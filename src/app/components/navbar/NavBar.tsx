@@ -126,7 +126,7 @@ useEffect(() => {
         </Container>
       </div>
 
-      <div className="relative z-0">
+      <div className="relative z-100">
         <Categories />
       </div>
     </div>
