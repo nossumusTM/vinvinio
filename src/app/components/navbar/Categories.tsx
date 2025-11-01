@@ -19,7 +19,7 @@ import {
   LuHeart,
   LuHelpingHand,
   LuLandmark,
-  LuLotus,
+  LuFlower2,
   LuMountain,
   LuMusic2,
   LuPalette,
@@ -115,7 +115,7 @@ export const categories: CategoryDefinition[] = [
   },
   {
     label: 'Spirituality, Retreats & Healing',
-    icon: LuLotus,
+    icon: LuFlower2,
     description: 'Restorative journeys for mindfulness, wellness, and inner balance.',
   },
   {
