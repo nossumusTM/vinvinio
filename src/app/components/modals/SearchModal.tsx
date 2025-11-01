@@ -134,7 +134,11 @@ const SearchModal = () => {
           <SearchMap
             city={location?.city}
             country={location?.label}
-            center={location?.latlng}
+            center={
+                Array.isArray(location?.latlng) && location!.latlng.length === 2
+                ? [location!.latlng[0], location!.latlng[1]] as [number, number]
+                : undefined
+            }
           />
         </div>
       );      
