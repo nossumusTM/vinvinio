@@ -179,7 +179,7 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
 
   // drop sm:grid-cols-1 so mobile can show multiple columns
   const gridBaseClasses =
-    "pt-28 md:pt-32 grid max-w-screen-2xl mx-auto relative z-10";
+    "listingscontainer pt-28 md:pt-32 grid max-w-screen-2xl mx-auto relative z-10";
 
   if (!listings && !isFiltering) {
     return (

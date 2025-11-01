@@ -226,33 +226,33 @@ const Categories = () => {
     }
   }, []);
 
-  useEffect(() => {
-    if (autoScrollPaused) return;
+  // useEffect(() => {
+  //   if (autoScrollPaused) return;
 
-    let frameId: number;
-    const step = () => {
-      const container = scrollContainerRef.current;
-      if (!container) {
-        frameId = requestAnimationFrame(step);
-        return;
-      }
+  //   let frameId: number;
+  //   const step = () => {
+  //     const container = scrollContainerRef.current;
+  //     if (!container) {
+  //       frameId = requestAnimationFrame(step);
+  //       return;
+  //     }
 
-      if (container.scrollWidth <= container.clientWidth + 4) {
-        return;
-      }
+  //     if (container.scrollWidth <= container.clientWidth + 4) {
+  //       return;
+  //     }
 
-      container.scrollLeft += 0.35;
-      if (container.scrollLeft >= container.scrollWidth - container.clientWidth - 1) {
-        container.scrollLeft = 0;
-      }
+  //     container.scrollLeft += 0.35;
+  //     if (container.scrollLeft >= container.scrollWidth - container.clientWidth - 1) {
+  //       container.scrollLeft = 0;
+  //     }
 
-      frameId = requestAnimationFrame(step);
-    };
+  //     frameId = requestAnimationFrame(step);
+  //   };
 
-    frameId = requestAnimationFrame(step);
+  //   frameId = requestAnimationFrame(step);
 
-    return () => cancelAnimationFrame(frameId);
-  }, [autoScrollPaused]);
+  //   return () => cancelAnimationFrame(frameId);
+  // }, [autoScrollPaused]);
 
   useEffect(() => {
     setVisible(!category);
@@ -424,7 +424,7 @@ const Categories = () => {
             <Container>
               <div
                 ref={scrollContainerRef}
-                className="flex w-full snap-x snap-mandatory flex-row items-center gap-4 overflow-x-auto px-6 py-6 scroll-smooth scrollbar-thin sm:w-auto"
+                className="flex w-full  flex-row items-center gap-4 overflow-x-auto px-6 py-6 scroll-smooth scrollbar-thin sm:w-auto"
                 onMouseDown={handleInteractionStart}
                 onMouseUp={handleInteractionEnd}
                 onMouseLeave={handleInteractionEnd}

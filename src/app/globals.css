@@ -176,3 +176,7 @@ body:not(.has-announcement-bar) #layout-content-wrapper {
 .calendardatapicker {
   margin-top: -30px;
 }
+
+.listingscontainer {
+  margin-top: 30px;
+}
