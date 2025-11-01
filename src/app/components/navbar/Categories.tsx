@@ -9,7 +9,7 @@ import Container from '../Container';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   LuBaby,
-  LuBinoculars,
+  LuCompass,
   LuBriefcase,
   LuBus,
   LuChevronUp,
@@ -105,7 +105,7 @@ export const categories: CategoryDefinition[] = [
   },
   {
     label: 'Tours & Sightseeing',
-    icon: LuBinoculars,
+    icon: LuCompass,
     description: 'Guided explorations that uncover hidden gems and iconic views.',
   },
   {
