@@ -26,20 +26,22 @@ const CategoryBox: React.FC<CategoryBoxProps> = ({
 
   const handleClick = useCallback(() => {
     const currentQuery: StringifiableRecord = params
-      ? (qs.parse(params.toString()) as StringifiableRecord)
-      : {};
+        ? (qs.parse(params.toString()) as StringifiableRecord)
+        : {};
 
-    const updatedQuery: StringifiableRecord = {
-      ...currentQuery,
-      category: label,
+    // build with the category selected
+    let nextQuery: StringifiableRecord = {
+        ...currentQuery,
+        category: label,
     };
 
+    // if the same category is clicked, remove it immutably (no delete op)
     if (params?.get('category') === label) {
-      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-      delete updatedQuery.category;
+        const { category: _omit, ...rest } = nextQuery;
+        nextQuery = rest;
     }
 
-    const url = qs.stringifyUrl({ url: '/', query: updatedQuery }, { skipNull: true });
+    const url = qs.stringifyUrl({ url: '/', query: nextQuery }, { skipNull: true });
     router.push(url);
   }, [label, router, params]);
 
