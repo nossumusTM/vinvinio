@@ -149,10 +149,10 @@ const SearchExperienceModal = () => {
     <div className="relative flex flex-col gap-8">
       <div className="absolute inset-0 -z-10 bg-gradient-to-br from-rose-200 via-white to-sky-200 rounded-3xl opacity-80 blur-xl" />
       <div className="flex flex-col gap-6 rounded-3xl bg-white/70 backdrop-blur p-6 shadow-xl h-fit">
-        <Heading
+        {/* <Heading
           title="Where will your next story unfold?"
           subtitle="Choose a destination to unlock curated experiences."
-        />
+        /> */}
         <div className="flex flex-col gap-4">
           <CountrySearchSelect
             ref={searchInputRef}
@@ -196,14 +196,14 @@ const SearchExperienceModal = () => {
 
   if (step === STEPS.DATE) {
     bodyContent = (
-      <div className="space-y-6">
+      <div className="space-y-6 datapickermobv">
         <div className="rounded-3xl p-[1px]">
           <div className="rounded-[26px] bg-white/80 backdrop-blur p-6 shadow-xl">
-            <Heading
+            {/* <Heading
               title="Select your travel window"
               subtitle="Choose the dates that best match your plans."
-            />
-            <div className="mt-4 rounded-2xl">
+            /> */}
+            <div className="rounded-2xl">
               <div className="flex w-full justify-center">
                 <div className="w-full max-w-xs sm:max-w-md md:max-w-lg">
                   <SearchCalendar
@@ -263,7 +263,7 @@ const SearchExperienceModal = () => {
       secondaryAction={step === STEPS.LOCATION ? undefined : onBack}
       title="Craft your search"
       body={bodyContent}
-      className='bg-transparent'
+      className="bg-transparent relative w-full md:w-4/6 lg:w-3/6 xl:w-2/5 mx-auto my-4 max-h-[68vh] overflow-y-auto md:max-h-[90vh] md:overflow-visible"
     />
   );
 };

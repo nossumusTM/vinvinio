@@ -124,7 +124,7 @@ const SearchExperience = () => {
 
   const guestLabel = useMemo(() => {
     const count = Number(guestCount);
-    if (!count || isNaN(count)) return 'Count Me In';
+    if (!count || isNaN(count)) return 'We’re In';
     return `${count} ${count === 1 ? 'Guest' : 'Guests'}`;
   }, [guestCount]);
   
