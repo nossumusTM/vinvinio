@@ -108,7 +108,7 @@ useEffect(() => {
             </div>
 
             {/* Search left on desktop, centered on mobile/tablet */}
-            <div className="flex-1 flex justify-center md:justify-start">
+            <div className="flex justify-center md:justify-start">
               <SearchExperience />
             </div>
 

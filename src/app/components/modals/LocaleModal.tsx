@@ -161,7 +161,7 @@ const LocaleModal = () => {
               </p>
             </div>
           </div>
-          <div className="grid max-h-[250px] grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2">
+          <div className="grid max-h-[210px] grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2">
             {activeTab === 'language'
               ? LANGUAGE_OPTIONS.map(renderLanguageOption)
               : CURRENCY_OPTIONS.map(renderCurrencyOption)}
