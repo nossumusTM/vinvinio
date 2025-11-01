@@ -14,6 +14,11 @@ export interface IListingsParams {
   sort?: 'rating' | 'priceLow' | 'priceHigh' | 'random';
   skip?: number;
   take?: number;
+  groupStyles?: string[] | string;
+  duration?: string;
+  environments?: string[] | string;
+  activityForms?: string[] | string;
+  seoKeywords?: string[] | string;
 }
 
 export default async function getListings(params: IListingsParams) {
@@ -27,10 +32,30 @@ export default async function getListings(params: IListingsParams) {
       startDate,
       endDate,
       category,
-      sort
+      sort,
+      groupStyles,
+      duration,
+      environments,
+      activityForms,
+      seoKeywords,
     } = params;
 
     let query: any = {};
+
+    const parseArrayParam = (value?: string | string[]) => {
+      if (!value) return [];
+      if (Array.isArray(value)) {
+        return value
+          .flatMap((item) => String(item).split(','))
+          .map((item) => item.trim())
+          .filter(Boolean);
+      }
+
+      return String(value)
+        .split(',')
+        .map((item) => item.trim())
+        .filter(Boolean);
+    };
 
     if (userId) {
       query.userId = userId;
@@ -48,6 +73,38 @@ export default async function getListings(params: IListingsParams) {
       const value = Array.isArray(category) ? category[0] : category;
       query.category = {
         has: value,
+      };
+    }
+
+    const groupStyleFilter = parseArrayParam(groupStyles);
+    if (groupStyleFilter.length > 0) {
+      query.groupStyles = {
+        hasSome: groupStyleFilter,
+      };
+    }
+
+    if (typeof duration === 'string' && duration.trim().length > 0) {
+      query.durationCategory = duration;
+    }
+
+    const environmentFilter = parseArrayParam(environments);
+    if (environmentFilter.length > 0) {
+      query.environments = {
+        hasSome: environmentFilter,
+      };
+    }
+
+    const activityFormFilter = parseArrayParam(activityForms);
+    if (activityFormFilter.length > 0) {
+      query.activityForms = {
+        hasSome: activityFormFilter,
+      };
+    }
+
+    const keywordFilter = parseArrayParam(seoKeywords);
+    if (keywordFilter.length > 0) {
+      query.seoKeywords = {
+        hasSome: keywordFilter,
       };
     }
 

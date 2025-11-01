@@ -110,6 +110,11 @@ model Listing {
   locationValue       String
   locationType        String[]
   locationDescription String?
+  groupStyles         String[]       @default([])
+  durationCategory    String?
+  environments        String[]       @default([])
+  activityForms       String[]       @default([])
+  seoKeywords         String[]       @default([])
   userId              String        @db.ObjectId
   status              ListingStatus @default(pending)
   price               Int

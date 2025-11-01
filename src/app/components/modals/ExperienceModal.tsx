@@ -14,9 +14,17 @@ import ImageUpload from '../inputs/ImageUpload';
 import CountrySelect from '../inputs/CountrySelect';
 import Counter from '../inputs/Counter';
 import CategoryInput from '../inputs/CategoryInput';
-import Select from 'react-select'
+import Select from 'react-select';
+import CreatableSelect from 'react-select/creatable';
 import { categories } from '../navbar/Categories';
 import { SafeUser } from '@/app/types';
+import {
+  ACTIVITY_FORM_OPTIONS,
+  DURATION_OPTIONS,
+  ENVIRONMENT_OPTIONS,
+  GROUP_STYLE_OPTIONS,
+  SEO_KEYWORD_OPTIONS,
+} from '@/app/constants/experienceFilters';
 
 import useExperienceModal from '@/app/hooks/useExperienceModal';
 
@@ -195,15 +203,41 @@ const locationTypeOptions = [
   },
 ];
 
+const groupStyleOptions = GROUP_STYLE_OPTIONS.map((option) => ({
+  label: option.label,
+  value: option.value,
+}));
+
+const durationCategoryOptions = DURATION_OPTIONS.map((option) => ({
+  label: option.label,
+  value: option.value,
+}));
+
+const environmentOptions = ENVIRONMENT_OPTIONS.map((option) => ({
+  label: option.label,
+  value: option.value,
+}));
+
+const activityFormOptions = ACTIVITY_FORM_OPTIONS.map((option) => ({
+  label: option.label,
+  value: option.value,
+}));
+
+const seoKeywordOptions = SEO_KEYWORD_OPTIONS.map((option) => ({
+  label: option.label,
+  value: option.value,
+}));
+
 enum STEPS {
   CATEGORY = 0,
   LOCATION = 1,
   INFO1 = 2,
   INFO2 = 3,
   INFO3 = 4,
-  IMAGES = 5,
-  DESCRIPTION = 6,
-  PRICE = 7,
+  FILTERS = 5,
+  IMAGES = 6,
+  DESCRIPTION = 7,
+  PRICE = 8,
 }
 
 const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
@@ -236,6 +270,11 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
       languages: [],
       locationType: [],
       locationDescription: '',
+      groupStyles: [],
+      durationCategory: null,
+      environments: [],
+      activityForms: [],
+      seoKeywords: [],
     }
   });
 
@@ -243,6 +282,11 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
   const location = watch('location');
   const guestCount = watch('guestCount');
   const imageSrc = watch('imageSrc');
+  const groupStyles = watch('groupStyles');
+  const durationCategory = watch('durationCategory');
+  const environments = watch('environments');
+  const activityForms = watch('activityForms');
+  const seoKeywords = watch('seoKeywords');
 
   // const Map = useMemo(
   //   () => dynamic(() => import('../Map'), { ssr: false }),
@@ -308,7 +352,32 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
       }
       return onNext();
     }
-  
+
+    if (step === STEPS.FILTERS) {
+      const selectedGroupStyles = Array.isArray(data.groupStyles) ? data.groupStyles : [];
+      const selectedEnvironments = Array.isArray(data.environments) ? data.environments : [];
+      const selectedActivityForms = Array.isArray(data.activityForms) ? data.activityForms : [];
+      const selectedKeywords = Array.isArray(data.seoKeywords) ? data.seoKeywords : [];
+      const selectedDuration = data.durationCategory;
+
+      if (
+        selectedGroupStyles.length === 0 ||
+        !selectedDuration ||
+        selectedEnvironments.length === 0 ||
+        selectedActivityForms.length === 0
+      ) {
+        toast.error('Please select group style, duration, environment, and activity form.');
+        return;
+      }
+
+      if (selectedKeywords.length < 3) {
+        toast.error('Add at least three SEO keywords or custom tags.');
+        return;
+      }
+
+      return onNext();
+    }
+
     if (step === STEPS.IMAGES) {
       if (!imageSrc || !Array.isArray(imageSrc) || imageSrc.length === 0) {
         toast.error('Please upload at least one image or video.');
@@ -327,12 +396,29 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
   
     if (step === STEPS.PRICE) {
       setIsLoading(true);
-  
+
+      const formatMulti = (value: any) =>
+        Array.isArray(value)
+          ? value
+              .map((item: any) => (typeof item === 'string' ? item : item?.value || item?.label))
+              .filter((item: string) => typeof item === 'string' && item.trim().length > 0)
+          : [];
+
+      const durationValue =
+        typeof data.durationCategory === 'string'
+          ? data.durationCategory
+          : data.durationCategory?.value ?? null;
+
       const submissionData = {
         ...data,
+        groupStyles: formatMulti(data.groupStyles),
+        durationCategory: durationValue,
+        environments: formatMulti(data.environments),
+        activityForms: formatMulti(data.activityForms),
+        seoKeywords: formatMulti(data.seoKeywords),
         status: 'pending',
       };
-  
+
       axios.post('/api/listings', submissionData)
         .then(() => {
           toast.success('Listing submitted for review', {
@@ -463,7 +549,7 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
     bodyContent = (
       <div className="flex flex-col gap-8 max-h-[40vh] md:max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
         <Heading title="Languages and location" subtitle="Help guests know what to expect" />
-        
+
         <div className="flex flex-col gap-2">
           <label className="text-md font-medium">Which languages can you provide the experience in?</label>
           <Select
@@ -518,7 +604,92 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
         />
       </div>
     );
-  }  
+  }
+
+  if (step === STEPS.FILTERS) {
+    bodyContent = (
+      <div className="flex flex-col gap-8 max-h-[40vh] md:max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+        <Heading
+          title="Categorise your listing"
+          subtitle="Match your experience with the right audience and improve discovery."
+        />
+
+        <div className="flex flex-col gap-2">
+          <label className="text-md font-medium">Group style</label>
+          <Select
+            options={groupStyleOptions}
+            value={groupStyles}
+            onChange={(value: any) => setCustomValue('groupStyles', value)}
+            isMulti
+            closeMenuOnSelect={false}
+            styles={{
+              menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+              menu: (base) => ({ ...base, zIndex: 9999 }),
+            }}
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label className="text-md font-medium">Duration</label>
+          <Select
+            options={durationCategoryOptions}
+            value={durationCategory}
+            onChange={(value: any) => setCustomValue('durationCategory', value)}
+            styles={{
+              menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+              menu: (base) => ({ ...base, zIndex: 9999 }),
+            }}
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label className="text-md font-medium">Environment</label>
+          <Select
+            options={environmentOptions}
+            value={environments}
+            onChange={(value: any) => setCustomValue('environments', value)}
+            isMulti
+            closeMenuOnSelect={false}
+            styles={{
+              menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+              menu: (base) => ({ ...base, zIndex: 9999 }),
+            }}
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label className="text-md font-medium">Activity form</label>
+          <Select
+            options={activityFormOptions}
+            value={activityForms}
+            onChange={(value: any) => setCustomValue('activityForms', value)}
+            isMulti
+            closeMenuOnSelect={false}
+            styles={{
+              menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+              menu: (base) => ({ ...base, zIndex: 9999 }),
+            }}
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label className="text-md font-medium">SEO keywords (pick at least three)</label>
+          <CreatableSelect
+            isMulti
+            options={seoKeywordOptions}
+            value={seoKeywords}
+            onChange={(value: any) => setCustomValue('seoKeywords', value)}
+            placeholder="Select or write your own tags"
+            formatCreateLabel={(inputValue) => `Use "${inputValue}"`}
+            styles={{
+              menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+              menu: (base) => ({ ...base, zIndex: 9999 }),
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (step === STEPS.IMAGES) {
     bodyContent = (

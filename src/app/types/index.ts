@@ -8,6 +8,11 @@ export type SafeListing = Omit<Listing, "createdAt"> & {
   languages: string[]; // Assuming this is non-null in your DB
   locationType: string[]; // Assuming this is non-null in your DB
   locationDescription: string | null;
+  groupStyles: string[];
+  durationCategory: string | null;
+  environments: string[];
+  activityForms: string[];
+  seoKeywords: string[];
   user: SafeUser;
   slug?: string | null;
 };

@@ -29,6 +29,11 @@ export async function POST(request: Request) {
     languages,
     locationType,
     locationDescription,
+    groupStyles,
+    durationCategory,
+    environments,
+    activityForms,
+    seoKeywords,
   } = body;
 
   if (
@@ -69,6 +74,23 @@ export async function POST(request: Request) {
       return count > 0;
     });
 
+    const normalizeStringArray = (value: unknown): string[] =>
+      Array.isArray(value)
+        ? value
+            .map((item) => (typeof item === 'string' ? item : item?.value ?? item?.label ?? ''))
+            .map((item) => (typeof item === 'string' ? item.trim() : ''))
+            .filter((item): item is string => item.length > 0)
+        : [];
+
+    const normalizedGroupStyles = normalizeStringArray(groupStyles);
+    const normalizedEnvironments = normalizeStringArray(environments);
+    const normalizedActivityForms = normalizeStringArray(activityForms);
+    const normalizedSeoKeywords = normalizeStringArray(seoKeywords);
+    const normalizedDurationCategory =
+      typeof durationCategory === 'string' && durationCategory.trim().length > 0
+        ? durationCategory.trim()
+        : null;
+
     const listing = await prisma.listing.create({
       data: {
         title,
@@ -97,6 +119,11 @@ export async function POST(request: Request) {
           ? { set: locationType.map((type: any) => type.value || type) }
           : undefined,
         locationDescription,
+        groupStyles: { set: normalizedGroupStyles },
+        durationCategory: normalizedDurationCategory,
+        environments: { set: normalizedEnvironments },
+        activityForms: { set: normalizedActivityForms },
+        seoKeywords: { set: normalizedSeoKeywords },
         status: 'pending',
         user: {
           connect: {
@@ -160,6 +187,24 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const params = Object.fromEntries(url.searchParams.entries()) as unknown as IListingsParams;
 
+  const parseArrayParam = (value?: string | string[]) => {
+    if (!value) return undefined;
+    if (Array.isArray(value)) {
+      const parsed = value
+        .flatMap((item) => String(item).split(','))
+        .map((item) => item.trim())
+        .filter(Boolean);
+      return parsed.length > 0 ? parsed : undefined;
+    }
+
+    const parsed = String(value)
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    return parsed.length > 0 ? parsed : undefined;
+  };
+
   const formattedParams: IListingsParams = {
     ...params,
     roomCount: params.roomCount ? Number(params.roomCount) : undefined,
@@ -168,6 +213,11 @@ export async function GET(request: Request) {
     skip: params.skip ? Number(params.skip) : undefined,
     take: params.take ? Number(params.take) : undefined,
     category: Array.isArray(params.category) ? params.category[0] : params.category,
+    groupStyles: parseArrayParam(params.groupStyles),
+    duration: params.duration ? String(params.duration) : undefined,
+    environments: parseArrayParam(params.environments),
+    activityForms: parseArrayParam(params.activityForms),
+    seoKeywords: parseArrayParam(params.seoKeywords),
   };
 
   try {

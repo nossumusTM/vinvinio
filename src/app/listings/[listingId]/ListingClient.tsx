@@ -67,8 +67,13 @@ const ListingClient: React.FC<ListingClientProps> = ({
         meetingPoint = '',
         languages = [],
         locationType = [],
-        locationDescription = ''
-      } = listing;          
+        locationDescription = '',
+        groupStyles = [],
+        durationCategory = null,
+        environments = [],
+        activityForms = [],
+        seoKeywords = [],
+      } = listing;
 
     const disabledDates = useMemo(() => {
         let dates: Date[] = [];
@@ -387,6 +392,11 @@ const ListingClient: React.FC<ListingClientProps> = ({
                             languages={languages}
                             locationType={listing.locationType ?? undefined}
                             locationDescription={listing.locationDescription ?? undefined}
+                            groupStyles={groupStyles}
+                            durationCategory={durationCategory}
+                            environments={environments}
+                            activityForms={activityForms}
+                            seoKeywords={seoKeywords}
                         />
                         <div className="order-first mb-10 md:order-last md:col-span-3">
                             <div className="md:sticky md:top-32">

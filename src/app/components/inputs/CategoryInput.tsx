@@ -1,16 +1,16 @@
 'use client';
 
-import Image from 'next/image';
+import type { IconType } from 'react-icons';
 
 interface CategoryBoxProps {
-    icon: string;
+    icon: IconType;
     label: string;
     selected?: boolean;
     onClick: (value: string) => void;
 }
 
 const CategoryBox: React.FC<CategoryBoxProps> = ({
-    icon,
+    icon: Icon,
     label,
     selected,
     onClick
@@ -35,8 +35,8 @@ const CategoryBox: React.FC<CategoryBoxProps> = ({
         ${selected ? 'border-neutral-900 bg-neutral-900/5 shadow-md' : 'border-neutral-200 bg-white/70'}
       `}
         >
-            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-white shadow-sm">
-                <Image src={icon} alt={label} width={48} height={48} className="h-12 w-12 object-contain" />
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl border bg-neutral-50 shadow-sm">
+                <Icon className="h-8 w-8 text-neutral-600" aria-hidden="true" />
             </div>
             <div className="font-semibold text-sm">
                 {label}

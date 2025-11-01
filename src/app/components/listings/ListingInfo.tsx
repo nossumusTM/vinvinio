@@ -45,6 +45,11 @@ interface ListingInfoProps {
     meetingPoint?: string;
     locationType?: string[];
     locationDescription?: string;
+    groupStyles?: string[];
+    durationCategory?: string | null;
+    environments?: string[];
+    activityForms?: string[];
+    seoKeywords?: string[];
 }
 
 const ListingInfo: React.FC<ListingInfoProps> = ({
@@ -60,11 +65,23 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
     languages,
     meetingPoint,
     locationType,
-    locationDescription
+    locationDescription,
+    groupStyles,
+    durationCategory,
+    environments,
+    activityForms,
+    seoKeywords,
 }) => {
     const { getByValue } = useCountries();
 
     const coordinates = getByValue(locationValue)?.latlng
+
+    const formatToken = (token: string) =>
+        token
+            .replace(/[-_]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .replace(/\b\w/g, (char) => char.toUpperCase());
 
     const [averageRating, setAverageRating] = useState<number | null>(null);
     const [reviewCount, setReviewCount] = useState(0);
@@ -223,15 +240,21 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
 
             <hr />
             
-            {(Array.isArray(locationType) && locationType.length > 0 || locationDescription) && (
+            {(Array.isArray(locationType) && locationType.length > 0 || locationDescription ||
+              (Array.isArray(groupStyles) && groupStyles.length > 0) ||
+              durationCategory ||
+              (Array.isArray(environments) && environments.length > 0) ||
+              (Array.isArray(activityForms) && activityForms.length > 0) ||
+              (Array.isArray(seoKeywords) && seoKeywords.length > 0)
+            ) && (
             <div className="p-5 md:col-span-7 rounded-2xl">
                 <h2 className="text-lg font-semibold mb-2">Moodboard</h2>
 
                 {Array.isArray(locationType) && locationType.length > 0 && (
-                <div className="flex items-center flex-wrap gap-2 text-sm text-neutral-700 mb-2">
-                    {locationType.map((type, i) => (
-                    <span key={i} className="bg-neutral-100 px-2 py-1 rounded-full capitalize">
-                        {type.replace(/_/g, ' ')}
+                <div className="flex items-center flex-wrap gap-2 text-sm text-neutral-700 mb-3">
+                    {locationType.map((type) => (
+                    <span key={type} className="bg-neutral-100 px-2 py-1 rounded-full uppercase tracking-wide text-[11px] text-neutral-700">
+                        {formatToken(type)}
                     </span>
                     ))}
                 </div>
@@ -240,6 +263,75 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                 {locationDescription && (
                 <LocationDescription text={locationDescription} />
                 )}
+
+                {(Array.isArray(groupStyles) && groupStyles.length > 0) || durationCategory ||
+                  (Array.isArray(environments) && environments.length > 0) ||
+                  (Array.isArray(activityForms) && activityForms.length > 0) ||
+                  (Array.isArray(seoKeywords) && seoKeywords.length > 0)
+                ? (
+                  <div className="mt-5 space-y-4">
+                    {Array.isArray(groupStyles) && groupStyles.length > 0 && (
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-1">Group style</p>
+                        <div className="flex flex-wrap gap-2">
+                          {groupStyles.map((style) => (
+                            <span key={style} className="rounded-full bg-neutral-100 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-neutral-700">
+                              {formatToken(style)}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {durationCategory && (
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-1">Duration</p>
+                        <span className="inline-flex rounded-full bg-neutral-900 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">
+                          {formatToken(durationCategory)}
+                        </span>
+                      </div>
+                    )}
+
+                    {Array.isArray(environments) && environments.length > 0 && (
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-1">Environment</p>
+                        <div className="flex flex-wrap gap-2">
+                          {environments.map((environment) => (
+                            <span key={environment} className="rounded-full bg-neutral-100 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-neutral-700">
+                              {formatToken(environment)}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {Array.isArray(activityForms) && activityForms.length > 0 && (
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-1">Activity form</p>
+                        <div className="flex flex-wrap gap-2">
+                          {activityForms.map((activity) => (
+                            <span key={activity} className="rounded-full bg-neutral-100 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-neutral-700">
+                              {formatToken(activity)}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {Array.isArray(seoKeywords) && seoKeywords.length > 0 && (
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-1">Keywords</p>
+                        <div className="flex flex-wrap gap-2">
+                          {seoKeywords.map((keyword) => (
+                            <span key={keyword} className="rounded-full border border-neutral-200 bg-white px-2 py-1 text-xs font-semibold uppercase tracking-wide text-neutral-600">
+                              {formatToken(keyword)}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : null}
             </div>
             )}
             
