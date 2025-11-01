@@ -30,7 +30,10 @@ import {
   LuLeaf,
 } from 'react-icons/lu';
 import type { IconType } from 'react-icons';
-import qs from 'query-string';
+import qs, {
+  type ParsedQuery,
+  type StringifiableRecord,
+} from 'query-string';
 import {
   ACTIVITY_FORM_OPTIONS,
   DURATION_OPTIONS,
@@ -265,15 +268,29 @@ const Categories = () => {
   }, []);
 
   const handleFiltersApply = useCallback(() => {
-    const currentQuery = params ? qs.parse(params.toString()) : {};
+    const parsedQuery = params
+      ? (qs.parse(params.toString()) as ParsedQuery<string>)
+      : {};
 
-    const nextQuery: Record<string, unknown> = {
+    const currentQuery = Object.entries(parsedQuery).reduce<
+      StringifiableRecord
+    >((acc, [key, value]) => {
+      if (Array.isArray(value)) {
+        acc[key] = value;
+      } else if (value !== null && value !== undefined) {
+        acc[key] = value;
+      }
+
+      return acc;
+    }, {});
+
+    const nextQuery: StringifiableRecord = {
       ...currentQuery,
       groupStyles:
         draftFilters.groupStyles.length > 0
           ? draftFilters.groupStyles.join(',')
           : undefined,
-      duration: draftFilters.duration || undefined,
+      duration: draftFilters.duration ?? undefined,
       environments:
         draftFilters.environments.length > 0
           ? draftFilters.environments.join(',')
@@ -301,7 +318,21 @@ const Categories = () => {
       activityForms: [],
     });
 
-    const currentQuery = params ? qs.parse(params.toString()) : {};
+    const parsedQuery = params
+      ? (qs.parse(params.toString()) as ParsedQuery<string>)
+      : {};
+
+    const currentQuery = Object.entries(parsedQuery).reduce<
+      StringifiableRecord
+    >((acc, [key, value]) => {
+      if (Array.isArray(value)) {
+        acc[key] = value;
+      } else if (value !== null && value !== undefined) {
+        acc[key] = value;
+      }
+
+      return acc;
+    }, {});
 
     delete currentQuery.groupStyles;
     delete currentQuery.duration;
