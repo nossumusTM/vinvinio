@@ -26,19 +26,19 @@ const CategoryBox: React.FC<CategoryBoxProps> = ({
 
   const handleClick = useCallback(() => {
     const currentQuery: StringifiableRecord = params
-        ? (qs.parse(params.toString()) as StringifiableRecord)
-        : {};
+      ? (qs.parse(params.toString()) as StringifiableRecord)
+      : {};
 
     // build with the category selected
     let nextQuery: StringifiableRecord = {
-        ...currentQuery,
-        category: label,
+      ...currentQuery,
+      category: label,
     };
 
     // if the same category is clicked, remove it immutably (no delete op)
     if (params?.get('category') === label) {
-        const { category: _omit, ...rest } = nextQuery;
-        nextQuery = rest;
+      const { category: _omit, ...rest } = nextQuery;
+      nextQuery = rest;
     }
 
     const url = qs.stringifyUrl({ url: '/', query: nextQuery }, { skipNull: true });
@@ -52,10 +52,10 @@ const CategoryBox: React.FC<CategoryBoxProps> = ({
       aria-pressed={selected}
       title={description}
       className={clsx(
-        'flex h-[110px] w-[110px] shrink-0 flex-col items-center justify-between rounded-xl border bg-white p-3 transition-all duration-300',
+        'flex h-[110px] w-[110px] shrink-0 flex-col items-center justify-between rounded-2xl bg-white p-4 text-neutral-600 shadow-md transition-all duration-300',
         selected
-          ? 'border-neutral-400 text-neutral-900 shadow-lg shadow-neutral-300/60'
-          : 'border-neutral-200 text-neutral-600 hover:border-neutral-300 hover:shadow-md'
+          ? 'text-neutral-900 shadow-xl shadow-neutral-400/60'
+          : 'hover:shadow-lg hover:shadow-neutral-300/50'
       )}
     >
       <motion.div
@@ -70,12 +70,15 @@ const CategoryBox: React.FC<CategoryBoxProps> = ({
           ease: 'easeInOut',
         }}
         className={clsx(
-          'flex h-12 w-12 items-center justify-center rounded-lg border shadow-sm',
-          selected ? 'border-neutral-400 bg-neutral-50' : 'border-neutral-200 bg-neutral-100'
+          'flex h-12 w-12 items-center justify-center rounded-full bg-transparent shadow-md shadow-neutral-300/40',
+          selected && 'shadow-neutral-400/60'
         )}
         aria-hidden="true"
       >
-        <Icon className="h-7 w-7 text-neutral-600" aria-hidden="true" />
+        <Icon
+          className={clsx('h-7 w-7', selected ? 'text-neutral-900' : 'text-neutral-600')}
+          aria-hidden="true"
+        />
       </motion.div>
 
       {/* fixed-height label area so long titles don't resize the tile */}

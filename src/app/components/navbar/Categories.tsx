@@ -423,7 +423,7 @@ const Categories = () => {
             <Container>
               <div
                 ref={scrollContainerRef}
-                className="flex w-full snap-x snap-mandatory flex-row items-center gap-3 overflow-x-auto p-4 scroll-smooth scrollbar-thin sm:w-auto"
+                className="flex w-full snap-x snap-mandatory flex-row items-center gap-4 overflow-x-auto px-6 py-6 scroll-smooth scrollbar-thin sm:w-auto"
                 onMouseDown={handleInteractionStart}
                 onMouseUp={handleInteractionEnd}
                 onMouseLeave={handleInteractionEnd}
@@ -438,17 +438,20 @@ const Categories = () => {
                   type="button"
                   onClick={() => setFiltersOpen(true)}
                   className={clsx(
-                    'flex h-[110px] w-[110px] shrink-0 flex-col items-center justify-between rounded-xl border bg-white p-3 text-neutral-600 transition-all duration-300 hover:border-neutral-300 hover:shadow-md',
-                    hasActiveFilters && 'border-neutral-400 text-neutral-900 shadow-lg shadow-neutral-300/60'
+                    'flex h-[110px] w-[110px] shrink-0 flex-col items-center justify-between rounded-2xl bg-white p-4 text-neutral-600 shadow-md transition-all duration-300 hover:shadow-lg hover:shadow-neutral-300/50',
+                    hasActiveFilters && 'text-neutral-900 shadow-xl shadow-neutral-400/60'
                   )}
                 >
                   <div
                     className={clsx(
-                      'relative flex h-12 w-12 items-center justify-center rounded-lg border shadow-sm',
-                      hasActiveFilters ? 'border-neutral-400 bg-neutral-50' : 'border-neutral-200 bg-neutral-100'
+                      'relative flex h-12 w-12 items-center justify-center rounded-full bg-transparent shadow-md shadow-neutral-300/40',
+                      hasActiveFilters && 'shadow-neutral-400/60'
                     )}
                   >
-                    <LuSlidersHorizontal className="h-6 w-6 text-neutral-600" aria-hidden="true" />
+                    <LuSlidersHorizontal
+                      className={clsx('h-6 w-6', hasActiveFilters ? 'text-neutral-900' : 'text-neutral-600')}
+                      aria-hidden="true"
+                    />
                     {hasActiveFilters && (
                       <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-neutral-900" aria-hidden="true" />
                     )}
@@ -475,7 +478,7 @@ const Categories = () => {
       <button
         type="button"
         onClick={() => setVisible((prev) => !prev)}
-        className="absolute bottom-[-12px] left-1/2 z-10 -translate-x-1/2 rounded-full bg-white p-1 shadow-md transition-transform duration-300"
+        className="absolute bottom-[-12px] left-1/2 z-10 -translate-x-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-md transition-transform duration-300"
         aria-label={visible ? 'Collapse categories' : 'Expand categories'}
       >
         <motion.div animate={{ rotate: visible ? 0 : 180 }} transition={{ duration: 0.3 }}>
