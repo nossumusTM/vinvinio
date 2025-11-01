@@ -89,8 +89,8 @@ const SearchExperienceModal = () => {
     }
 
     const currentQuery = params ? qs.parse(params.toString()) : {};
-    const updatedQuery: Record<string, unknown> = {
-      ...currentQuery,
+    const updatedQuery: qs.StringifiableRecord = {
+      ...(currentQuery as qs.ParsedQuery<string>),
     };
 
     if (location?.value) {
