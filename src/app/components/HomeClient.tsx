@@ -12,6 +12,7 @@ import axios from "axios";
 import { SafeUser } from "@/app/types";
 import toast from "react-hot-toast";
 import qs from 'query-string';
+import { motion } from 'framer-motion';
 import ListingCardSkeleton from "@/app/components/listings/ListingCardSkeleton";
 
 interface HomeProps {
@@ -29,6 +30,7 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [isFiltering, setIsFiltering] = useState(false);
   const [gridSize, setGridSize] = useState<GridSize>(4);
+  const [categoriesVisible, setCategoriesVisible] = useState(true);
   const searchParams = useSearchParams();
 
   const [isMobile, setIsMobile] = useState(false);
@@ -121,6 +123,12 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
     };
   }, [filterQuery, hasActiveFilters, initialListings]);
 
+  useEffect(() => {
+    const handler = (e: CustomEvent) => setCategoriesVisible(!!(e as any).detail?.visible);
+    window.addEventListener('categories:toggle', handler as unknown as EventListener);
+    return () => window.removeEventListener('categories:toggle', handler as unknown as EventListener);
+  }, []);
+
   const loadMoreListings = async () => {
     if (loadingMore || !hasMore) return;
 
@@ -177,23 +185,32 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
     }
   }, [gridSize]);
 
+  const topPadClass = categoriesVisible ? 'pt-36 md:pt-32' : 'pt-20 md:pt-20';
+
   // drop sm:grid-cols-1 so mobile can show multiple columns
+  // const gridBaseClasses = `listingscontainer ${categoriesVisible ? 'listingscontainer--withCategories' : 'listingscontainer--collapsed'} ${topPadClass} grid max-w-screen-2xl mx-auto relative z-10`;
   const gridBaseClasses =
-    "listingscontainer pt-28 md:pt-32 grid max-w-screen-2xl mx-auto relative z-10";
+  `listingscontainer ${categoriesVisible ? 'listingscontainer--withCategories' : 'listingscontainer--collapsed'} ${topPadClass} grid max-w-screen-2xl mx-auto relative z-10 transition-[padding] duration-300 ease-out`;
 
   if (!listings && !isFiltering) {
     return (
       <ClientOnly>
         <Container>
           <div className="relative z-30">
-            <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-[9999]">
+            <div className="absolute left-1/2 transform -translate-x-1/2 z-[9999]">
               <ListingFilter gridSize={gridSize} onGridChange={handleGridChange} />
             </div>
 
             <div className={`${gridBaseClasses} ${gapClass} ${gridColumnsClass}`}>
+              <motion.div
+                layout
+                transition={{ type: 'spring', duration: 0.35, bounce: 0.2 }}
+                className={`${gridBaseClasses} ${gapClass} ${gridColumnsClass}`}
+              >
               {Array.from({ length: INITIAL_SKELETON_COUNT }).map((_, i) => (
                 <ListingCardSkeleton key={`initial-skeleton-${i}`} compact={compact} />
               ))}
+              </motion.div>
             </div>
           </div>
         </Container>
@@ -207,7 +224,7 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
     <ClientOnly>
       <Container>
         <div className="relative z-30">
-          <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-[9999]">
+          <div className="absolute left-1/2 transform -translate-x-1/2 z-[9999]">
             <ListingFilter gridSize={gridSize} onGridChange={handleGridChange} />
           </div>
 

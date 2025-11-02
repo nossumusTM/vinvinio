@@ -405,6 +405,10 @@ const Categories = () => {
     };
   }, []);
 
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('categories:toggle', { detail: { visible } }));
+  }, [visible]);
+
   if (!isMainPage) {
     return null;
   }

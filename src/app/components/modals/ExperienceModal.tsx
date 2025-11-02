@@ -496,35 +496,35 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
 
   if (step === STEPS.CATEGORY) {
     bodyContent = (
-      <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-6">
         <Heading
           title="What type of experience are you offering?"
           subtitle="Select one category to continue"
         />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[30vh] md:max-h-[50vh] overflow-y-auto">
+
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-[45vh] overflow-y-auto pr-1">
           {categories.map((item) => {
             const isSelected = Array.isArray(category) && category.includes(item.label);
-  
+
             return (
-              <div key={item.label} className="col-span-1">
-                <CategoryInput
-                  onClick={() => {
-                    let updated = [item.label];
-                    setCustomValue('category', updated);
-                    setTimeout(() => setStep(STEPS.LOCATION), 100); // slight delay for UX
-                  }}
-                  selected={isSelected}
-                  label={item.label}
-                  icon={item.icon}
-                />
-              </div>
+              <CategoryInput
+                key={item.label}
+                onClick={() => {
+                  const updated = [item.label];
+                  setCustomValue('category', updated);
+                  setTimeout(() => setStep(STEPS.LOCATION), 120);
+                }}
+                selected={isSelected}
+                label={item.label}
+                icon={item.icon}
+              />
             );
           })}
         </div>
       </div>
-    );    
-  }  
-
+    );
+  }
+ 
   if (step === STEPS.LOCATION) {
     bodyContent = (
       <div className="grid grid-cols-1 gap-4 max-h-[40vh] md:max-h-[60vh] overflow-y-auto pr-1">
