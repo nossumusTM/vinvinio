@@ -218,6 +218,7 @@ export async function GET(request: Request) {
     environments: parseArrayParam(params.environments),
     activityForms: parseArrayParam(params.activityForms),
     seoKeywords: parseArrayParam(params.seoKeywords),
+    languages: parseArrayParam(params.languages),
   };
 
   try {

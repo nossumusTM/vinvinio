@@ -19,6 +19,7 @@ export interface IListingsParams {
   environments?: string[] | string;
   activityForms?: string[] | string;
   seoKeywords?: string[] | string;
+  languages?: string[] | string;
 }
 
 export default async function getListings(params: IListingsParams) {
@@ -38,6 +39,7 @@ export default async function getListings(params: IListingsParams) {
       environments,
       activityForms,
       seoKeywords,
+      languages,
     } = params;
 
     let query: any = {};
@@ -105,6 +107,13 @@ export default async function getListings(params: IListingsParams) {
     if (keywordFilter.length > 0) {
       query.seoKeywords = {
         hasSome: keywordFilter,
+      };
+    }
+
+    const languageFilter = parseArrayParam(languages);
+    if (languageFilter.length > 0) {
+      query.languages = {
+        hasSome: languageFilter,
       };
     }
 
