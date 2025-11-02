@@ -5,6 +5,7 @@ import getListings from "@/app/actions/getListings";
 import { IListingsParams } from "@/app/actions/getListings";
 import nodemailer from "nodemailer";
 import { makeUniqueSlug } from "@/app/libs/slugify";
+import { PricingType } from "@prisma/client";
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
@@ -54,10 +55,10 @@ export async function POST(request: Request) {
     return new NextResponse("Missing or invalid required fields", { status: 400 });
   }
 
-  const allowedPricingTypes = new Set(['fixed', 'group', 'custom']);
-  const normalizedPricingType =
-    typeof pricingType === 'string' && allowedPricingTypes.has(pricingType)
-      ? pricingType
+  const allowedPricingTypes = new Set<PricingType>(['fixed', 'group', 'custom']);
+  const normalizedPricingType: PricingType =
+    typeof pricingType === 'string' && allowedPricingTypes.has(pricingType as PricingType)
+      ? (pricingType as PricingType)
       : 'fixed';
 
   const parsedBasePrice = Math.round(Number(price));
