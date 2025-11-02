@@ -179,10 +179,24 @@ export default async function getListings(params: IListingsParams) {
       const totalRating = listing.reviews.reduce((sum, r) => sum + (r.rating || 0), 0);
       const avgRating = listing.reviews.length > 0 ? totalRating / listing.reviews.length : 0;
 
+      const normalizedCustomPricing = Array.isArray(listing.customPricing)
+        ? (listing.customPricing as any[])
+            .map((tier) => ({
+              minGuests: Number(tier?.minGuests ?? 0),
+              maxGuests: Number(tier?.maxGuests ?? 0),
+              price: Number(tier?.price ?? 0),
+            }))
+            .filter((tier) => tier.minGuests > 0 && tier.maxGuests > 0 && tier.price > 0)
+        : [];
+
       return {
         ...listing,
         createdAt: listing.createdAt.toISOString(),
         avgRating,
+        pricingType: listing.pricingType ?? null,
+        groupPrice: listing.groupPrice ?? null,
+        groupSize: listing.groupSize ?? null,
+        customPricing: normalizedCustomPricing.length > 0 ? normalizedCustomPricing : null,
         user: {
           ...listing.user,
           createdAt: listing.user.createdAt.toISOString(),
