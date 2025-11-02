@@ -372,8 +372,8 @@ const ListingFilter: React.FC<ListingFilterProps> = ({ gridSize, onGridChange })
               className={twMerge(
                 "text-xs px-2 py-1 rounded-full transition flex items-center gap-1",
                 gridSize === size
-                  ? "border border-neutral-100 text-black"
-                  : "bg-transparent text-neutral-700 hover:bg-neutral-100"
+                  ? "border border-neutral-100 text-black bg-neutral-100"
+                  : "bg-transparent text-neutral-700 hover:bg-black hover:text-white"
               )}
               aria-label={`${size}`}
             >

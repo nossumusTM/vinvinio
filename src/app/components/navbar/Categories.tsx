@@ -5,6 +5,7 @@ import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import CategoryBox from '../CategoryBox';
 import Container from '../Container';
+import axios from 'axios';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -165,6 +166,7 @@ const Categories = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const resumeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [previewCount, setPreviewCount] = useState<number | null>(null);
 
   const initialFilters = useMemo<FiltersState>(() => {
     const parseMulti = (value: string | null): string[] =>
@@ -178,6 +180,8 @@ const Categories = () => {
     };
   }, [params]);
 
+  const [draftFilters, setDraftFilters] = useState<FiltersState>(initialFilters);
+
   const hasActiveFilters = useMemo(
     () =>
       initialFilters.groupStyles.length > 0 ||
@@ -187,13 +191,52 @@ const Categories = () => {
     [initialFilters]
   );
 
-  const [draftFilters, setDraftFilters] = useState<FiltersState>(initialFilters);
+  const hasAnyDraftSelected = useMemo(
+    () =>
+      draftFilters.groupStyles.length > 0 ||
+      !!draftFilters.duration ||
+      draftFilters.environments.length > 0 ||
+      draftFilters.activityForms.length > 0,
+    [draftFilters]
+  );
 
   useEffect(() => {
     if (!filtersOpen) {
       setDraftFilters(initialFilters);
     }
   }, [filtersOpen, initialFilters]);
+
+  // B) replace the preview-count effect so it runs whenever any filter is chosen (debounced)
+  useEffect(() => {
+    if (!hasAnyDraftSelected) {
+      setPreviewCount(null);
+      return;
+    }
+
+    const queryObj: StringifiableRecord = {
+      groupStyles: draftFilters.groupStyles.length ? draftFilters.groupStyles.join(',') : undefined,
+      duration: draftFilters.duration ?? undefined,
+      environments: draftFilters.environments.length ? draftFilters.environments.join(',') : undefined,
+      activityForms: draftFilters.activityForms.length ? draftFilters.activityForms.join(',') : undefined,
+    };
+
+    const query = qs.stringify(queryObj, { skipNull: true, skipEmptyString: true });
+
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      try {
+        const res = await axios.get(`/api/listings?${query}`);
+        if (!cancelled) setPreviewCount(Array.isArray(res.data) ? res.data.length : 0);
+      } catch {
+        if (!cancelled) setPreviewCount(null);
+      }
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [draftFilters, hasAnyDraftSelected]);
 
   const pauseAutoScroll = useCallback(() => {
     setAutoScrollPaused(true);
@@ -516,24 +559,24 @@ const Categories = () => {
   "
 >
   <motion.aside
-    onClick={(e) => e.stopPropagation()}
-    key="filters-panel"
-    className="
-      pointer-events-auto
-      h-full w-[80vw] lg:w-[35vw]
-      rounded-2xl
-      z-[101]
-      bg-white
-      shadow-2xl
-      backdrop-blur-3xl
-      flex flex-col
-      overflow-hidden
-    "
-    initial={{ x: '-100%' }}
-    animate={{ x: 0 }}
-    exit={{ x: '-100%' }}
-    transition={{ type: 'spring', stiffness: 260, damping: 30 }}
-  >
+      onClick={(e) => e.stopPropagation()}
+      key="filters-panel"
+      className="
+        pointer-events-auto
+        h-full w-[80vw] lg:w-[35vw]
+        rounded-2xl
+        z-[101]
+        bg-white
+        shadow-2xl
+        backdrop-blur-3xl
+        flex flex-col
+        overflow-hidden
+      "
+      initial={{ x: '-100%', opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      exit={{ x: '-100%', opacity: 0 }}
+      transition={{ duration: 0.25, ease: 'easeInOut', type: 'tween' }}
+    >
 
                 {/* Header */}
                 <div className="px-6 md:px-10 pt-6 md:pt-10 pb-4">
@@ -605,13 +648,17 @@ const Categories = () => {
                   style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 1rem)' }}
                 >
                   <div className="flex flex-col gap-3">
+
                     <button
                       type="button"
                       onClick={handleFiltersApply}
                       className="w-full rounded-full bg-neutral-900 py-3 text-sm font-semibold text-white transition hover:bg-neutral-800"
                     >
-                      Show {hasActiveFilters ? 'updated' : 'matching'} experiences
+                      {hasAnyDraftSelected && previewCount !== null
+                        ? `Show ${previewCount} ${previewCount === 1 ? 'experience' : 'experiences'}`
+                        : `Show ${hasActiveFilters ? 'updated' : 'matching'} experiences`}
                     </button>
+
                     <button
                       type="button"
                       onClick={handleFiltersClear}
