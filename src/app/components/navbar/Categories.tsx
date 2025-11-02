@@ -190,6 +190,7 @@ const Categories = () => {
   const countryHelpers = useCountries();
   const [keywordDraft, setKeywordDraft] = useState('');
   const previousLocationRef = useRef<CountrySelectValue | undefined>(undefined);
+  const prevFiltersOpenRef = useRef(filtersOpen);
   const closeReasonRef = useRef<'apply' | 'dismiss'>('dismiss');
   const languageOptions = useMemo(
     () =>
@@ -283,17 +284,25 @@ const Categories = () => {
   }, [filtersOpen, initialFilters, resolvedInitialLocation]);
 
   useEffect(() => {
-    if (filtersOpen) {
+    if (filtersOpen && !prevFiltersOpenRef.current) {
       previousLocationRef.current = globalLocation ?? resolvedInitialLocation ?? undefined;
       closeReasonRef.current = 'dismiss';
-    } else {
+    } else if (!filtersOpen && prevFiltersOpenRef.current) {
       if (closeReasonRef.current === 'dismiss') {
         setGlobalLocation(previousLocationRef.current);
         setLocationDraft(previousLocationRef.current);
       }
       closeReasonRef.current = 'dismiss';
     }
-  }, [filtersOpen, globalLocation, resolvedInitialLocation, setGlobalLocation]);
+
+    prevFiltersOpenRef.current = filtersOpen;
+  }, [
+    filtersOpen,
+    globalLocation,
+    resolvedInitialLocation,
+    setGlobalLocation,
+    setLocationDraft,
+  ]);
 
   // B) replace the preview-count effect so it runs whenever any filter is chosen (debounced)
   useEffect(() => {
