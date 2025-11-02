@@ -17,6 +17,7 @@ interface ModalProps {
   secondaryAction?: () => void;
   secondaryActionLabel?: string;
   className: string;
+  submitOnEnter?: boolean;
 }
 
 const Modal: React.FC<ModalProps> = ({
@@ -30,7 +31,8 @@ const Modal: React.FC<ModalProps> = ({
   disabled,
   secondaryAction,
   secondaryActionLabel,
-  className
+  className,
+  submitOnEnter = true,
 }) => {
   const [showModal, setShowModal] = useState(isOpen);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -76,21 +78,25 @@ const Modal: React.FC<ModalProps> = ({
   }, [secondaryAction, disabled]);
 
   useEffect(() => {
+    if (!submitOnEnter) {
+      return;
+    }
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Enter') {
         event.preventDefault();
         handleSubmit();
       }
     };
-  
+
     if (isOpen) {
       document.addEventListener('keydown', handleKeyDown);
     }
-  
+
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, handleSubmit]);  
+  }, [isOpen, handleSubmit, submitOnEnter]);
 
   if (!isOpen) return null;
 
