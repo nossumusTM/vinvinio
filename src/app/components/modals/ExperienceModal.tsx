@@ -1,16 +1,16 @@
 'use client';
 
 import axios from 'axios';
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { useForm, FieldValues, SubmitHandler } from 'react-hook-form';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { Controller, useFieldArray, useForm, FieldValues, SubmitHandler } from 'react-hook-form';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import clsx from 'clsx';
 import Modal from './Modal';
 import Input from '../inputs/Input';
 import Heading from '../Heading';
 import ImageUpload from '../inputs/ImageUpload';
-import CountrySelect from '../inputs/CountrySelect';
 import Counter from '../inputs/Counter';
 import CategoryInput from '../inputs/CategoryInput';
 import Select from 'react-select';
@@ -18,6 +18,7 @@ import CreatableSelect from 'react-select/creatable';
 import useCountries from '@/app/hooks/useCountries';
 import { categories } from '../navbar/Categories';
 import CountrySearchSelect, { CountrySearchSelectHandle } from '../inputs/CountrySearchSelect';
+import MeetingPointAutocomplete from '../inputs/MeetingPointAutocomplete';
 import { SafeUser } from '@/app/types';
 import {
   ACTIVITY_FORM_OPTIONS,
@@ -246,6 +247,18 @@ enum STEPS {
   PRICE = 8,
 }
 
+type PricingTier = {
+  minGuests: number;
+  maxGuests: number;
+  price: number;
+};
+
+const PRICING_TYPES = {
+  FIXED: 'fixed',
+  GROUP: 'group',
+  CUSTOM: 'custom',
+} as const;
+
 const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
   const experienceModal = useExperienceModal();
   const router = useRouter();
@@ -291,6 +304,7 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
     setValue,
     watch,
     reset,
+    control,
     formState: { errors }
   } = useForm<FieldValues>({
     defaultValues: {
@@ -301,17 +315,28 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
       title: '',
       description: '',
       price: 100,
-      experienceHour: '',
+      experienceHour: null,
       hostDescription: '',
       meetingPoint: '',
       languages: [],
       locationType: [],
       locationDescription: '',
-      groupStyles: [],
+      groupStyles: null,
       durationCategory: null,
       environments: [],
       activityForms: [],
+      primarySeoKeyword: null,
       seoKeywords: [],
+      pricingType: PRICING_TYPES.FIXED,
+      groupPrice: null,
+      groupSize: null,
+      customPricing: [
+        {
+          minGuests: 1,
+          maxGuests: 2,
+          price: 100,
+        },
+      ] as PricingTier[],
     }
   });
 
@@ -324,6 +349,21 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
   const environments = watch('environments');
   const activityForms = watch('activityForms');
   const seoKeywords = watch('seoKeywords');
+  const primarySeoKeyword = watch('primarySeoKeyword');
+  const pricingType = watch('pricingType');
+  const customPricing = watch('customPricing');
+  const groupPrice = watch('groupPrice');
+  const groupSize = watch('groupSize');
+  const price = watch('price');
+
+  const {
+    fields: customPricingFields,
+    append: appendPricingTier,
+    remove: removePricingTier,
+  } = useFieldArray({
+    control,
+    name: 'customPricing',
+  });
 
   // const Map = useMemo(
   //   () => dynamic(() => import('../Map'), { ssr: false }),
@@ -334,13 +374,26 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
     []
   );  
 
-  const setCustomValue = (id: string, value: any) => {
-    setValue(id, value, {
-      shouldDirty: true,
-      shouldTouch: true,
-      shouldValidate: true,
-    });
-  };
+  const setCustomValue = useCallback(
+    (id: string, value: any) => {
+      setValue(id, value, {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true,
+      });
+    },
+    [setValue],
+  );
+
+  const previousStepRef = useRef(step);
+
+  useEffect(() => {
+    if (step === STEPS.CATEGORY && previousStepRef.current !== STEPS.CATEGORY) {
+      setCustomValue('category', []);
+    }
+
+    previousStepRef.current = step;
+  }, [step, setCustomValue]);
 
   useEffect(() => {
   if (step === STEPS.LOCATION && experienceModal.isOpen) {
@@ -381,7 +434,7 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
     }
   
     if (step === STEPS.INFO2) {
-      if (!data.experienceHour || !data.meetingPoint) {
+      if (!data.experienceHour || !data.meetingPoint || !String(data.meetingPoint).trim()) {
         toast.error('Please provide duration and meeting point.');
         return;
       }
@@ -401,10 +454,17 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
     }
 
     if (step === STEPS.FILTERS) {
-      const selectedGroupStyles = Array.isArray(data.groupStyles) ? data.groupStyles : [];
-      const selectedEnvironments = Array.isArray(data.environments) ? data.environments : [];
-      const selectedActivityForms = Array.isArray(data.activityForms) ? data.activityForms : [];
-      const selectedKeywords = Array.isArray(data.seoKeywords) ? data.seoKeywords : [];
+      const selectedGroupStyles = data.groupStyles
+        ? Array.isArray(data.groupStyles)
+          ? data.groupStyles.filter(Boolean)
+          : [data.groupStyles]
+        : [];
+      const selectedEnvironments = Array.isArray(data.environments)
+        ? data.environments.filter(Boolean)
+        : [];
+      const selectedActivityForms = Array.isArray(data.activityForms)
+        ? data.activityForms.filter(Boolean)
+        : [];
       const selectedDuration = data.durationCategory;
 
       if (
@@ -417,8 +477,8 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
         return;
       }
 
-      if (selectedKeywords.length < 3) {
-        toast.error('Add at least three SEO keywords or custom tags.');
+      if (!data.primarySeoKeyword) {
+        toast.error('Choose a primary SEO keyword.');
         return;
       }
 
@@ -442,27 +502,142 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
     }
   
     if (step === STEPS.PRICE) {
+      const activePricingType: string = data.pricingType ?? PRICING_TYPES.FIXED;
+
+      const ensurePositiveNumber = (value: any) => {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+      };
+
+      const fixedPrice = ensurePositiveNumber(data.price);
+
+      if (activePricingType === PRICING_TYPES.FIXED) {
+        if (!fixedPrice) {
+          toast.error('Enter a valid price per person.');
+          return;
+        }
+      }
+
+      if (activePricingType === PRICING_TYPES.GROUP) {
+        const parsedGroupPrice = ensurePositiveNumber(data.groupPrice);
+        const parsedGroupSize = ensurePositiveNumber(data.groupSize);
+
+        if (!parsedGroupSize) {
+          toast.error('Specify how many guests are covered by the group price.');
+          return;
+        }
+
+        if (!parsedGroupPrice) {
+          toast.error('Enter a valid total group price.');
+          return;
+        }
+      }
+
+      if (activePricingType === PRICING_TYPES.CUSTOM) {
+        const tiers: PricingTier[] = Array.isArray(customPricing)
+          ? customPricing
+          : [];
+
+        if (!tiers.length) {
+          toast.error('Add at least one custom pricing range.');
+          return;
+        }
+
+        const hasInvalidTier = tiers.some((tier) => {
+          const minGuests = ensurePositiveNumber(tier.minGuests);
+          const maxGuests = ensurePositiveNumber(tier.maxGuests);
+          const pricePerPerson = ensurePositiveNumber(tier.price);
+
+          if (!minGuests || !maxGuests || !pricePerPerson) {
+            return true;
+          }
+
+          return minGuests > maxGuests;
+        });
+
+        if (hasInvalidTier) {
+          toast.error('Review your custom price ranges. Ensure guest counts and prices are valid.');
+          return;
+        }
+      }
+
       setIsLoading(true);
 
-      const formatMulti = (value: any) =>
-        Array.isArray(value)
-          ? value
-              .map((item: any) => (typeof item === 'string' ? item : item?.value || item?.label))
-              .filter((item: string) => typeof item === 'string' && item.trim().length > 0)
-          : [];
+      const toValueArray = (value: any) => {
+        if (!value) return [] as string[];
+        const items = Array.isArray(value) ? value : [value];
+        return items
+          .map((item: any) => (typeof item === 'string' ? item : item?.value || item?.label))
+          .filter((item): item is string => typeof item === 'string' && item.trim().length > 0);
+      };
 
       const durationValue =
         typeof data.durationCategory === 'string'
           ? data.durationCategory
           : data.durationCategory?.value ?? null;
 
+      const experienceDuration =
+        typeof data.experienceHour === 'string'
+          ? Number(data.experienceHour)
+          : Number(data.experienceHour?.value ?? 0);
+
+      const parsedCustomPricing =
+        activePricingType === PRICING_TYPES.CUSTOM
+          ? (customPricing as PricingTier[]).map((tier) => ({
+              minGuests: Number(tier.minGuests),
+              maxGuests: Number(tier.maxGuests),
+              price: Number(tier.price),
+            }))
+          : [];
+
+      const groupPriceValue = ensurePositiveNumber(data.groupPrice);
+      const groupSizeValue = ensurePositiveNumber(data.groupSize);
+
+      const seoKeywordSet = new Set<string>();
+      const primaryKeyword =
+        typeof data.primarySeoKeyword === 'string'
+          ? data.primarySeoKeyword
+          : data.primarySeoKeyword?.value || data.primarySeoKeyword?.label;
+
+      if (primaryKeyword) {
+        seoKeywordSet.add(primaryKeyword);
+      }
+
+      toValueArray(data.seoKeywords).forEach((keyword) => seoKeywordSet.add(keyword));
+
+      const computeBasePrice = () => {
+        if (activePricingType === PRICING_TYPES.FIXED) {
+          return Number(fixedPrice ?? 0);
+        }
+
+        if (activePricingType === PRICING_TYPES.GROUP) {
+          return Number(groupPriceValue ?? 0);
+        }
+
+        if (parsedCustomPricing.length > 0) {
+          return parsedCustomPricing[0].price;
+        }
+
+        return Number(data.price ?? 0);
+      };
+
       const submissionData = {
         ...data,
-        groupStyles: formatMulti(data.groupStyles),
+        groupStyles: toValueArray(data.groupStyles),
         durationCategory: durationValue,
-        environments: formatMulti(data.environments),
-        activityForms: formatMulti(data.activityForms),
-        seoKeywords: formatMulti(data.seoKeywords),
+        environments: toValueArray(data.environments),
+        activityForms: toValueArray(data.activityForms),
+        languages: toValueArray(data.languages),
+        locationType: toValueArray(data.locationType),
+        seoKeywords: Array.from(seoKeywordSet),
+        experienceHour: Number.isFinite(experienceDuration) && experienceDuration > 0
+          ? experienceDuration
+          : null,
+        pricingType: activePricingType,
+        groupPrice: activePricingType === PRICING_TYPES.GROUP ? groupPriceValue : null,
+        groupSize: activePricingType === PRICING_TYPES.GROUP ? groupSizeValue : null,
+        customPricing: parsedCustomPricing,
+        price: computeBasePrice(),
         status: 'pending',
       };
 
@@ -473,7 +648,7 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
               primary: '#2200ffff',
               secondary: '#fff',
             },
-          });          
+          });
           reset();
           experienceModal.onClose();
           router.refresh();
@@ -502,7 +677,7 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
           subtitle="Select one category to continue"
         />
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-[45vh] overflow-y-auto pr-1">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-[55vh] md:max-h-[60vh] overflow-y-auto pr-1">
           {categories.map((item) => {
             const isSelected = Array.isArray(category) && category.includes(item.label);
 
@@ -512,7 +687,6 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
                 onClick={() => {
                   const updated = [item.label];
                   setCustomValue('category', updated);
-                  setTimeout(() => setStep(STEPS.LOCATION), 120);
                 }}
                 selected={isSelected}
                 label={item.label}
@@ -596,13 +770,18 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
             }}
           />
         </div>
-        <Input
-          id="meetingPoint"
-          label="Provide a meeting-point"
-          disabled={isLoading}
-          register={register}
-          errors={errors}
-          required
+        <Controller
+          control={control}
+          name="meetingPoint"
+          rules={{ required: 'Please choose a meeting point.' }}
+          render={({ field, fieldState }) => (
+            <MeetingPointAutocomplete
+              value={field.value as string}
+              onChange={field.onChange}
+              disabled={isLoading}
+              errorMessage={fieldState.error?.message}
+            />
+          )}
         />
       </div>
     );
@@ -683,13 +862,14 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
             options={groupStyleOptions}
             value={groupStyles}
             onChange={(value: any) => setCustomValue('groupStyles', value)}
-            isMulti
-            closeMenuOnSelect={false}
+            placeholder="Choose one style"
+            menuPlacement="auto"
             styles={{
               menuPortal: (base) => ({ ...base, zIndex: 9999 }),
               menu: (base) => ({ ...base, zIndex: 9999 }),
             }}
           />
+          <p className="text-xs text-neutral-500">Select the group dynamic that best matches your experience.</p>
         </div>
 
         <div className="flex flex-col gap-2">
@@ -736,19 +916,34 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-md font-medium">SEO keywords (pick at least three)</label>
+          <label className="text-md font-medium">Primary SEO keyword</label>
+          <Select
+            options={seoKeywordOptions}
+            value={primarySeoKeyword}
+            onChange={(value: any) => setCustomValue('primarySeoKeyword', value)}
+            placeholder="Select the main keyword"
+            styles={{
+              menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+              menu: (base) => ({ ...base, zIndex: 9999 }),
+            }}
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label className="text-md font-medium">Additional keywords (optional)</label>
           <CreatableSelect
             isMulti
             options={seoKeywordOptions}
             value={seoKeywords}
             onChange={(value: any) => setCustomValue('seoKeywords', value)}
-            placeholder="Select or write your own tags"
+            placeholder="Add supporting keywords"
             formatCreateLabel={(inputValue) => `Use "${inputValue}"`}
             styles={{
               menuPortal: (base) => ({ ...base, zIndex: 9999 }),
               menu: (base) => ({ ...base, zIndex: 9999 }),
             }}
           />
+          <p className="text-xs text-neutral-500">Use extra tags to help travellers find you. They are optional.</p>
         </div>
       </div>
     );
@@ -799,17 +994,179 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
   if (step === STEPS.PRICE) {
     bodyContent = (
       <div className="flex flex-col gap-8">
-        <Heading title="Pricing" subtitle="Set your price per person" />
-        <Input
-          id="price"
-          label="Price / Person"
-          type="number"
-          formatPrice
-          disabled={isLoading}
-          register={register}
-          errors={errors}
-          required
+        <Heading
+          title="Pricing"
+          subtitle="Choose how guests will be charged for your experience"
         />
+
+        <div className="flex flex-col gap-3">
+          <span className="text-sm font-semibold text-neutral-700">Pricing mode</span>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {[
+              {
+                key: PRICING_TYPES.FIXED,
+                title: 'Fixed price',
+                description: 'Same price for every guest',
+              },
+              {
+                key: PRICING_TYPES.GROUP,
+                title: 'Group pricing',
+                description: 'Charge one amount for a private group',
+              },
+              {
+                key: PRICING_TYPES.CUSTOM,
+                title: 'Custom ranges',
+                description: 'Set different prices for guest ranges',
+              },
+            ].map((option) => {
+              const isActive = pricingType === option.key;
+              return (
+                <button
+                  key={option.key}
+                  type="button"
+                  onClick={() => setCustomValue('pricingType', option.key)}
+                  aria-pressed={isActive}
+                  className={clsx(
+                    'rounded-2xl border p-4 text-left shadow-sm transition focus:outline-none focus:ring-2 focus:ring-black/20',
+                    isActive
+                      ? 'border-black bg-white shadow-lg shadow-black/10'
+                      : 'border-neutral-200 bg-white/80 hover:border-black/30',
+                  )}
+                >
+                  <h3 className="text-base font-semibold text-neutral-900">{option.title}</h3>
+                  <p className="mt-1 text-sm text-neutral-500">{option.description}</p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {pricingType === PRICING_TYPES.FIXED && (
+          <Input
+            id="price"
+            label="Price per person"
+            type="number"
+            formatPrice
+            disabled={isLoading}
+            register={register}
+            errors={errors}
+            required={pricingType === PRICING_TYPES.FIXED}
+            inputClassName="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          />
+        )}
+
+        {pricingType === PRICING_TYPES.GROUP && (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Input
+              id="groupSize"
+              name="groupSize"
+              label="Guests included"
+              type="number"
+              disabled={isLoading}
+              register={register}
+              errors={errors}
+              required={pricingType === PRICING_TYPES.GROUP}
+              inputClassName="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            />
+            <Input
+              id="groupPrice"
+              name="groupPrice"
+              label="Total price for the group"
+              type="number"
+              formatPrice
+              disabled={isLoading}
+              register={register}
+              errors={errors}
+              required={pricingType === PRICING_TYPES.GROUP}
+              inputClassName="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            />
+          </div>
+        )}
+
+        {pricingType === PRICING_TYPES.CUSTOM && (
+          <div className="flex flex-col gap-4">
+            <p className="text-sm text-neutral-600">
+              Create price tiers for different group sizes. Guests will see the range that applies to
+              their party.
+            </p>
+
+            <div className="flex flex-col gap-4">
+              {customPricingFields.map((field, index) => (
+                <div
+                  key={field.id}
+                  className="rounded-2xl border border-neutral-200 bg-white/80 p-4 shadow-sm"
+                >
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <Input
+                      id={`custom-tier-${index}-min`}
+                      name={`customPricing.${index}.minGuests`}
+                      label="From guests"
+                      type="number"
+                      disabled={isLoading}
+                      register={register}
+                      errors={errors}
+                      required={pricingType === PRICING_TYPES.CUSTOM}
+                      inputClassName="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <Input
+                      id={`custom-tier-${index}-max`}
+                      name={`customPricing.${index}.maxGuests`}
+                      label="To guests"
+                      type="number"
+                      disabled={isLoading}
+                      register={register}
+                      errors={errors}
+                      required={pricingType === PRICING_TYPES.CUSTOM}
+                      inputClassName="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <Input
+                      id={`custom-tier-${index}-price`}
+                      name={`customPricing.${index}.price`}
+                      label="Price per person"
+                      type="number"
+                      formatPrice
+                      disabled={isLoading}
+                      register={register}
+                      errors={errors}
+                      required={pricingType === PRICING_TYPES.CUSTOM}
+                      inputClassName="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                  </div>
+
+                  {customPricingFields.length > 1 && (
+                    <div className="mt-3 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => removePricingTier(index)}
+                        className="text-sm font-semibold text-rose-500 hover:text-rose-600"
+                      >
+                        Remove tier
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                const lastTier = Array.isArray(customPricing) && customPricing.length > 0
+                  ? customPricing[customPricing.length - 1]
+                  : null;
+
+                appendPricingTier({
+                  minGuests: Math.max(1, Number(lastTier?.maxGuests ?? 1) + 1),
+                  maxGuests: Math.max(1, Number(lastTier?.maxGuests ?? 1) + 1),
+                  price: Number(lastTier?.price ?? price ?? 100),
+                });
+              }}
+              className="self-start rounded-full border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-700 transition hover:border-neutral-400 hover:text-neutral-900"
+            >
+              Add another range
+            </button>
+          </div>
+        )}
       </div>
     );
   }
