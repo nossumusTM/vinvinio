@@ -2,6 +2,12 @@ export const dynamic = 'force-dynamic';
 import prisma from "@/app/libs/prismadb";
 import { ensureListingSlug } from "@/app/libs/ensureListingSlug";
 
+interface CustomPricingTier {
+  minGuests: number;
+  maxGuests: number;
+  price: number;
+}
+
 interface IParams {
   listingId?: string;
 }
@@ -25,8 +31,49 @@ export default async function getListingById(params: IParams) {
 
     const listingWithSlug = await ensureListingSlug(listing);
 
+    const normalizedCustomPricing = Array.isArray(listingWithSlug.customPricing)
+      ? (listingWithSlug.customPricing as CustomPricingTier[])
+          .map((tier) => ({
+            minGuests: Number(tier?.minGuests ?? 0),
+            maxGuests: Number(tier?.maxGuests ?? 0),
+            price: Number(tier?.price ?? 0),
+          }))
+          .filter(
+            (tier) =>
+              Number.isFinite(tier.minGuests) &&
+              Number.isFinite(tier.maxGuests) &&
+              Number.isFinite(tier.price) &&
+              tier.minGuests > 0 &&
+              tier.maxGuests >= tier.minGuests &&
+              tier.price > 0
+          )
+      : [];
+
     return {
       ...listingWithSlug,
+      languages: Array.isArray(listingWithSlug.languages)
+        ? listingWithSlug.languages
+        : [],
+      locationType: Array.isArray(listingWithSlug.locationType)
+        ? listingWithSlug.locationType
+        : [],
+      groupStyles: Array.isArray(listingWithSlug.groupStyles)
+        ? listingWithSlug.groupStyles
+        : [],
+      environments: Array.isArray(listingWithSlug.environments)
+        ? listingWithSlug.environments
+        : [],
+      activityForms: Array.isArray(listingWithSlug.activityForms)
+        ? listingWithSlug.activityForms
+        : [],
+      seoKeywords: Array.isArray(listingWithSlug.seoKeywords)
+        ? listingWithSlug.seoKeywords
+        : [],
+      pricingType: listingWithSlug.pricingType ?? null,
+      groupPrice: listingWithSlug.groupPrice ?? null,
+      groupSize: listingWithSlug.groupSize ?? null,
+      customPricing:
+        normalizedCustomPricing.length > 0 ? normalizedCustomPricing : null,
       createdAt: listingWithSlug.createdAt.toString(),
       user: {
         ...listingWithSlug.user,
