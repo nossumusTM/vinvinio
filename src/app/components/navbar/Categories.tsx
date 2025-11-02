@@ -649,6 +649,7 @@ const Categories = () => {
                 >
                   <div className="flex flex-col gap-3">
 
+
                     <button
                       type="button"
                       onClick={handleFiltersApply}
