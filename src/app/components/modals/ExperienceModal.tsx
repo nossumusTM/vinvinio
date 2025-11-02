@@ -567,8 +567,11 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
         if (!value) return [] as string[];
         const items = Array.isArray(value) ? value : [value];
         return items
-          .map((item: any) => (typeof item === 'string' ? item : item?.value || item?.label))
-          .filter((item): item is string => typeof item === 'string' && item.trim().length > 0);
+          .map((item: any) => {
+            const resolved = typeof item === 'string' ? item : item?.value || item?.label;
+            return typeof resolved === 'string' ? resolved.trim() : '';
+          })
+          .filter((item): item is string => item.length > 0);
       };
 
       const durationValue =
@@ -594,13 +597,16 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
       const groupSizeValue = ensurePositiveNumber(data.groupSize);
 
       const seoKeywordSet = new Set<string>();
-      const primaryKeyword =
+      const rawPrimaryKeyword =
         typeof data.primarySeoKeyword === 'string'
           ? data.primarySeoKeyword
           : data.primarySeoKeyword?.value || data.primarySeoKeyword?.label;
 
-      if (primaryKeyword) {
-        seoKeywordSet.add(primaryKeyword);
+      const normalizedPrimaryKeyword =
+        typeof rawPrimaryKeyword === 'string' ? rawPrimaryKeyword.trim() : '';
+
+      if (normalizedPrimaryKeyword) {
+        seoKeywordSet.add(normalizedPrimaryKeyword);
       }
 
       toValueArray(data.seoKeywords).forEach((keyword) => seoKeywordSet.add(keyword));
@@ -621,23 +627,73 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
         return Number(data.price ?? 0);
       };
 
+      const normalizedCategory = Array.isArray(data.category)
+        ? data.category.filter((value: unknown): value is string => typeof value === 'string' && value.trim().length > 0)
+        : typeof data.category === 'string' && data.category.trim().length > 0
+          ? [data.category.trim()]
+          : [];
+
+      const uniqueStrings = (values: string[]) => Array.from(new Set(values));
+
+      const sanitizedLanguages = uniqueStrings(toValueArray(data.languages));
+      const sanitizedLocationTypes = uniqueStrings(toValueArray(data.locationType));
+      const sanitizedGroupStyles = uniqueStrings(toValueArray(data.groupStyles));
+      const sanitizedEnvironments = uniqueStrings(toValueArray(data.environments));
+      const sanitizedActivityForms = uniqueStrings(toValueArray(data.activityForms));
+
+      const sortedCustomPricing =
+        activePricingType === PRICING_TYPES.CUSTOM && parsedCustomPricing.length > 0
+          ? [...parsedCustomPricing].sort((a, b) => a.minGuests - b.minGuests)
+          : [];
+
       const submissionData = {
-        ...data,
-        groupStyles: toValueArray(data.groupStyles),
-        durationCategory: durationValue,
-        environments: toValueArray(data.environments),
-        activityForms: toValueArray(data.activityForms),
-        languages: toValueArray(data.languages),
-        locationType: toValueArray(data.locationType),
-        seoKeywords: Array.from(seoKeywordSet),
-        experienceHour: Number.isFinite(experienceDuration) && experienceDuration > 0
-          ? experienceDuration
-          : null,
+        title: typeof data.title === 'string' ? data.title.trim() : '',
+        description: typeof data.description === 'string' ? data.description.trim() : '',
+        hostDescription: typeof data.hostDescription === 'string' ? data.hostDescription.trim() : '',
+        imageSrc: Array.isArray(imageSrc)
+          ? imageSrc.filter((src) => typeof src === 'string' && src.trim().length > 0)
+          : [],
+        category: normalizedCategory,
+        guestCount: (() => {
+          const parsed = Math.round(Number(data.guestCount ?? 1));
+          return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+        })(),
+        location,
+        price: Math.round(Number(computeBasePrice()) || 0),
+        experienceHour:
+          Number.isFinite(experienceDuration) && experienceDuration > 0
+            ? experienceDuration
+            : null,
+        meetingPoint: typeof data.meetingPoint === 'string' ? data.meetingPoint.trim() : '',
+        languages: sanitizedLanguages,
+        locationType: sanitizedLocationTypes,
+        locationDescription:
+          typeof data.locationDescription === 'string' ? data.locationDescription.trim() : '',
+        groupStyles: sanitizedGroupStyles,
+        durationCategory: typeof durationValue === 'string' ? durationValue : null,
+        environments: sanitizedEnvironments,
+        activityForms: sanitizedActivityForms,
+        seoKeywords: Array.from(seoKeywordSet)
+          .map((keyword) => keyword.trim())
+          .filter((keyword) => keyword.length > 0),
+        primarySeoKeyword: normalizedPrimaryKeyword || null,
         pricingType: activePricingType,
-        groupPrice: activePricingType === PRICING_TYPES.GROUP ? groupPriceValue : null,
-        groupSize: activePricingType === PRICING_TYPES.GROUP ? groupSizeValue : null,
-        customPricing: parsedCustomPricing,
-        price: computeBasePrice(),
+        groupPrice:
+          activePricingType === PRICING_TYPES.GROUP && groupPriceValue
+            ? Math.round(groupPriceValue)
+            : null,
+        groupSize:
+          activePricingType === PRICING_TYPES.GROUP && groupSizeValue
+            ? Math.round(groupSizeValue)
+            : null,
+        customPricing:
+          activePricingType === PRICING_TYPES.CUSTOM && sortedCustomPricing.length > 0
+            ? sortedCustomPricing.map((tier) => ({
+                minGuests: Math.max(1, Math.round(tier.minGuests)),
+                maxGuests: Math.max(1, Math.round(tier.maxGuests)),
+                price: Math.max(1, Math.round(tier.price)),
+              }))
+            : null,
         status: 'pending',
       };
 
@@ -1183,6 +1239,7 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
       onClose={experienceModal.onClose}
       body={bodyContent}
       className="max-h-[90vh] overflow-y-auto"
+      submitOnEnter={false}
     />
   );
 };
