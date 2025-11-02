@@ -32,21 +32,34 @@ export default async function getListingById(params: IParams) {
     const listingWithSlug = await ensureListingSlug(listing);
 
     const normalizedCustomPricing = Array.isArray(listingWithSlug.customPricing)
-      ? (listingWithSlug.customPricing as CustomPricingTier[])
-          .map((tier) => ({
-            minGuests: Number(tier?.minGuests ?? 0),
-            maxGuests: Number(tier?.maxGuests ?? 0),
-            price: Number(tier?.price ?? 0),
-          }))
-          .filter(
-            (tier) =>
+      ? (listingWithSlug.customPricing as unknown[])
+          .map((tier) => {
+            if (!tier || typeof tier !== "object") {
+              return null;
+            }
+
+            const tierRecord = tier as Record<string, unknown>;
+
+            return {
+              minGuests: Number(tierRecord.minGuests ?? 0),
+              maxGuests: Number(tierRecord.maxGuests ?? 0),
+              price: Number(tierRecord.price ?? 0),
+            };
+          })
+          .filter((tier): tier is CustomPricingTier => {
+            if (!tier) {
+              return false;
+            }
+
+            return (
               Number.isFinite(tier.minGuests) &&
               Number.isFinite(tier.maxGuests) &&
               Number.isFinite(tier.price) &&
               tier.minGuests > 0 &&
               tier.maxGuests >= tier.minGuests &&
               tier.price > 0
-          )
+            );
+          })
       : [];
 
     return {
