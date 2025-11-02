@@ -174,7 +174,7 @@ export async function POST(request: Request) {
                 ? parseFloat(experienceHour)
                 : null,
         meetingPoint: meetingPoint || null,
-        languages: normalizedLanguages.length > 0 ? { set: normalizedLanguages } : undefined,
+        languages: { set: normalizedLanguages },
         locationValue,
         price: parsedBasePrice,
         pricingType: normalizedPricingType,
@@ -184,7 +184,7 @@ export async function POST(request: Request) {
           normalizedPricingType === 'custom' && parsedCustomPricing.length > 0
             ? parsedCustomPricing
             : null,
-        locationType: normalizedLocationTypes.length > 0 ? { set: normalizedLocationTypes } : undefined,
+        locationType: { set: normalizedLocationTypes },
         locationDescription,
         groupStyles: { set: normalizedGroupStyles },
         durationCategory: normalizedDurationCategory,
