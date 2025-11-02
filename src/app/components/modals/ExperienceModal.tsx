@@ -1,12 +1,11 @@
 'use client';
 
 import axios from 'axios';
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useForm, FieldValues, SubmitHandler } from 'react-hook-form';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-
 import Modal from './Modal';
 import Input from '../inputs/Input';
 import Heading from '../Heading';
@@ -16,7 +15,9 @@ import Counter from '../inputs/Counter';
 import CategoryInput from '../inputs/CategoryInput';
 import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
+import useCountries from '@/app/hooks/useCountries';
 import { categories } from '../navbar/Categories';
+import CountrySearchSelect, { CountrySearchSelectHandle } from '../inputs/CountrySearchSelect';
 import { SafeUser } from '@/app/types';
 import {
   ACTIVITY_FORM_OPTIONS,
@@ -37,6 +38,11 @@ const languageOptions = [
   'English', 'Italian', 'Turkish', 'Russian', 'Español', 'Azerbaijani',
   'Français', 'Polski', 'Українська', 'Nederlands', 'Português', 'Română'
 ].map((lang) => ({ label: lang, value: lang }));
+
+const SearchMap = dynamic(() => import('../SearchMap'), {
+  ssr: false,
+  loading: () => <div className="h-56 md:h-80 w-full rounded-xl bg-neutral-100 animate-pulse" />,
+});
 
 const locationTypeOptions = [
   // {
@@ -247,6 +253,37 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
   const [step, setStep] = useState(STEPS.CATEGORY);
   const [isLoading, setIsLoading] = useState(false);
 
+  const [locationQuery, setLocationQuery] = useState('');
+  const { getAll } = useCountries();
+  const allLocations = getAll();
+
+  const searchInputRef = useRef<CountrySearchSelectHandle | null>(null);
+  const [locationError, setLocationError] = useState(false);
+
+  const locationMatches = useMemo(() => {
+    const q = locationQuery.trim().toLowerCase();
+    if (!q) return [];
+    return allLocations
+      .filter((c: any) => {
+        const hay = [
+          c.label,          // country name
+          c.region,         // region/continent
+          c.city,           // common city (if provided by your hook)
+          c.value,          // country code
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+        return hay.includes(q);
+      })
+      .slice(0, 8);
+  }, [locationQuery, allLocations]);
+
+  const applyLocation = (opt: any) => {
+    setCustomValue('location', opt);
+    setLocationQuery(`${opt.city ? `${opt.city}, ` : ''}${opt.label}`);
+  };
+
 
   const {
     register,
@@ -305,6 +342,15 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
     });
   };
 
+  useEffect(() => {
+  if (step === STEPS.LOCATION && experienceModal.isOpen) {
+    // give the modal time to render then trigger a resize
+    const id = setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
+    return () => clearTimeout(id);
+  }
+}, [step, experienceModal.isOpen]);
+
+
   const onBack = () => setStep((prev) => prev - 1);
   const onNext = () => setStep((prev) => prev + 1);
 
@@ -318,8 +364,9 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
     }
   
     if (step === STEPS.LOCATION) {
-      if (!location || !location.value) {
-        toast.error('Please select a location.');
+      if (!location?.value) {
+        setLocationError(true);
+        searchInputRef.current?.focus();
         return;
       }
       return onNext();
@@ -480,14 +527,30 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
 
   if (step === STEPS.LOCATION) {
     bodyContent = (
-      <div className="grid grid-cols-1 md:grid-cols-1 gap-3 max-h-[40vh] md:max-h-[60vh] overflow-y-auto pr-1">
-        <Heading title="Where is your event located?" subtitle="Choose a location" />
-        <CountrySelect
+      <div className="grid grid-cols-1 gap-4 max-h-[40vh] md:max-h-[60vh] overflow-y-auto pr-1">
+        {/* <Heading title="Where is your event located?" subtitle="Choose a location" /> */}
+
+        <CountrySearchSelect
+          ref={searchInputRef}
           value={location}
-          onChange={(value) => setCustomValue('location', value)}
+          onChange={(value) => {
+            setCustomValue('location', value);
+            setLocationError(false);
+          }}
+          hasError={locationError}
+          onErrorCleared={() => setLocationError(false)}
         />
-        <div className='pt-5 md:pt-10'>
-        <Map center={location?.latlng} />
+
+        <div className="pt-4">
+          <div className="h-64 md:h-80 w-full overflow-hidden rounded-xl border border-neutral-200">
+            <SearchMap
+              key={`map-${experienceModal.isOpen}-${location?.value ?? 'default'}`}
+              city={location?.city ?? 'Rome'}
+              country={location?.label ?? 'Italy'}
+              center={(location?.latlng as [number, number]) ?? ([41.9028, 12.4964] as [number, number])}
+              // className="h-full w-full"
+            />
+          </div>
         </div>
       </div>
     );

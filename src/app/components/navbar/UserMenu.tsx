@@ -153,7 +153,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
   return (
     <div className="relative" ref={menuRef}>
       <div className="flex flex-row items-center gap-3">
-        {userRole === 'host' && (
+        {/* {userRole === 'host' && (
           <div
             onClick={onRent}
             className="
@@ -171,7 +171,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
           >
             Add Experience
           </div>
-        )}
+        )} */}
 
         {userRole === 'promoter' && (
           <div
@@ -296,6 +296,26 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                     />
 
                     <hr className="my-2" />
+
+                    {/* {userRole === 'host' && (
+          <div
+            onClick={onRent}
+            className="
+              hidden
+              md:block
+              text-sm 
+              font-semibold 
+              py-3 
+              px-4 
+              rounded-full 
+              hover:bg-neutral-100 
+              transition 
+              cursor-pointer
+            "
+          >
+            Add Experience
+          </div>
+        )} */}
                   </>
                 )}
 
@@ -334,6 +354,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                           onPromote();
                         }} />
                     </div>
+                    
                     <MenuItem label="Appointments" 
                       onClick={() => {
                         setIsOpen(false);
@@ -361,11 +382,14 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
 
                 {userRole === 'host' && (
                   <>
-                    <div className="md:hidden">
-                      <MenuItem label="Add Experience"  onClick={() => {
+                    <div>
+                      <div className="font-semibold text-md">
+                      <MenuItem label="Become a Partner"  onClick={() => {
                       setIsOpen(false);
                       onRent();
                     }} />
+                    </div>
+                    
                     <hr className="my-2" />
                     </div>
                     <MenuItem label="Appointments" 

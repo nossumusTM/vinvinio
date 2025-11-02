@@ -180,3 +180,7 @@ body:not(.has-announcement-bar) #layout-content-wrapper {
 .listingscontainer {
   margin-top: 30px;
 }
+
+.categorybox {
+  margin-left: -10px;
+}
