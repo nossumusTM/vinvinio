@@ -7,7 +7,7 @@ import CategoryBox from '../CategoryBox';
 import Container from '../Container';
 import axios from 'axios';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import {
   LuBaby,
   LuCompass,
@@ -30,6 +30,14 @@ import {
   LuUtensils,
   LuWaves,
   LuLeaf,
+  LuSearch,
+  LuLanguages,
+  LuTag,
+  LuLoader2,
+  LuUsers,
+  LuClock3,
+  LuGlobe2,
+  LuActivity,
 } from 'react-icons/lu';
 import type { IconType } from 'react-icons';
 import qs, {
@@ -42,6 +50,13 @@ import {
   ENVIRONMENT_OPTIONS,
   GROUP_STYLE_OPTIONS,
 } from '@/app/constants/experienceFilters';
+import CountrySearchSelect, {
+  type CountrySelectValue,
+  type CountrySearchSelectHandle,
+} from '../inputs/CountrySearchSelect';
+import useExperienceSearchState from '@/app/hooks/useExperienceSearchState';
+import useCountries from '@/app/hooks/useCountries';
+import { LANGUAGE_OPTIONS } from '@/app/constants/locale';
 
 declare global {
   interface WindowEventMap {
@@ -60,6 +75,8 @@ type FiltersState = {
   duration: string | null;
   environments: string[];
   activityForms: string[];
+  languages: string[];
+  keywords: string[];
 };
 
 export const categories: CategoryDefinition[] = [
@@ -167,6 +184,46 @@ const Categories = () => {
   const resumeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [previewCount, setPreviewCount] = useState<number | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const locationInputRef = useRef<CountrySearchSelectHandle | null>(null);
+  const { location: globalLocation, setLocation: setGlobalLocation } = useExperienceSearchState();
+  const countryHelpers = useCountries();
+  const [keywordDraft, setKeywordDraft] = useState('');
+  const previousLocationRef = useRef<CountrySelectValue | undefined>(undefined);
+  const closeReasonRef = useRef<'apply' | 'dismiss'>('dismiss');
+  const languageOptions = useMemo(
+    () =>
+      LANGUAGE_OPTIONS.map((option) => ({
+        label: `${option.language}${option.region ? ` (${option.region})` : ''}`,
+        value: option.code,
+      })),
+    [],
+  );
+
+  const resolvedInitialLocation = useMemo(() => {
+    if (globalLocation) {
+      return globalLocation;
+    }
+
+    const locationValue = params?.get('locationValue');
+    if (!locationValue) {
+      return undefined;
+    }
+
+    const popularMatch = countryHelpers
+      .getPopularCities()
+      .find((entry) => entry.value === locationValue);
+
+    if (popularMatch) {
+      return popularMatch;
+    }
+
+    const countryMatch = countryHelpers
+      .getAll()
+      .find((entry) => entry.value === locationValue);
+
+    return countryMatch ?? undefined;
+  }, [countryHelpers, globalLocation, params]);
 
   const initialFilters = useMemo<FiltersState>(() => {
     const parseMulti = (value: string | null): string[] =>
@@ -177,18 +234,32 @@ const Categories = () => {
       duration: params?.get('duration') ?? null,
       environments: parseMulti(params?.get('environments') ?? null),
       activityForms: parseMulti(params?.get('activityForms') ?? null),
+      languages: parseMulti(params?.get('languages') ?? null),
+      keywords: parseMulti(params?.get('seoKeywords') ?? null),
     };
   }, [params]);
 
   const [draftFilters, setDraftFilters] = useState<FiltersState>(initialFilters);
+  const [locationDraft, setLocationDraft] = useState<CountrySelectValue | undefined>(
+    resolvedInitialLocation,
+  );
+
+  useEffect(() => {
+    if (!globalLocation && resolvedInitialLocation) {
+      setGlobalLocation(resolvedInitialLocation);
+    }
+  }, [globalLocation, resolvedInitialLocation, setGlobalLocation]);
 
   const hasActiveFilters = useMemo(
     () =>
       initialFilters.groupStyles.length > 0 ||
       !!initialFilters.duration ||
       initialFilters.environments.length > 0 ||
-      initialFilters.activityForms.length > 0,
-    [initialFilters]
+      initialFilters.activityForms.length > 0 ||
+      initialFilters.languages.length > 0 ||
+      initialFilters.keywords.length > 0 ||
+      !!params?.get('locationValue'),
+    [initialFilters, params]
   );
 
   const hasAnyDraftSelected = useMemo(
@@ -196,20 +267,39 @@ const Categories = () => {
       draftFilters.groupStyles.length > 0 ||
       !!draftFilters.duration ||
       draftFilters.environments.length > 0 ||
-      draftFilters.activityForms.length > 0,
-    [draftFilters]
+      draftFilters.activityForms.length > 0 ||
+      draftFilters.languages.length > 0 ||
+      draftFilters.keywords.length > 0 ||
+      !!locationDraft,
+    [draftFilters, locationDraft]
   );
 
   useEffect(() => {
     if (!filtersOpen) {
       setDraftFilters(initialFilters);
+      setLocationDraft(resolvedInitialLocation);
+      setKeywordDraft('');
     }
-  }, [filtersOpen, initialFilters]);
+  }, [filtersOpen, initialFilters, resolvedInitialLocation]);
+
+  useEffect(() => {
+    if (filtersOpen) {
+      previousLocationRef.current = globalLocation ?? resolvedInitialLocation ?? undefined;
+      closeReasonRef.current = 'dismiss';
+    } else {
+      if (closeReasonRef.current === 'dismiss') {
+        setGlobalLocation(previousLocationRef.current);
+        setLocationDraft(previousLocationRef.current);
+      }
+      closeReasonRef.current = 'dismiss';
+    }
+  }, [filtersOpen, globalLocation, resolvedInitialLocation, setGlobalLocation]);
 
   // B) replace the preview-count effect so it runs whenever any filter is chosen (debounced)
   useEffect(() => {
     if (!hasAnyDraftSelected) {
       setPreviewCount(null);
+      setPreviewLoading(false);
       return;
     }
 
@@ -218,25 +308,38 @@ const Categories = () => {
       duration: draftFilters.duration ?? undefined,
       environments: draftFilters.environments.length ? draftFilters.environments.join(',') : undefined,
       activityForms: draftFilters.activityForms.length ? draftFilters.activityForms.join(',') : undefined,
+      languages: draftFilters.languages.length ? draftFilters.languages.join(',') : undefined,
+      seoKeywords: draftFilters.keywords.length ? draftFilters.keywords.join(',') : undefined,
+      locationValue: locationDraft?.value,
     };
 
     const query = qs.stringify(queryObj, { skipNull: true, skipEmptyString: true });
 
     let cancelled = false;
+    setPreviewLoading(true);
     const t = setTimeout(async () => {
       try {
         const res = await axios.get(`/api/listings?${query}`);
-        if (!cancelled) setPreviewCount(Array.isArray(res.data) ? res.data.length : 0);
+        if (!cancelled) {
+          setPreviewCount(Array.isArray(res.data) ? res.data.length : 0);
+        }
       } catch {
-        if (!cancelled) setPreviewCount(null);
+        if (!cancelled) {
+          setPreviewCount(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setPreviewLoading(false);
+        }
       }
     }, 250);
 
     return () => {
       cancelled = true;
       clearTimeout(t);
+      setPreviewLoading(false);
     };
-  }, [draftFilters, hasAnyDraftSelected]);
+  }, [draftFilters, hasAnyDraftSelected, locationDraft]);
 
   const pauseAutoScroll = useCallback(() => {
     setAutoScrollPaused(true);
@@ -343,6 +446,15 @@ const Categories = () => {
         draftFilters.activityForms.length > 0
           ? draftFilters.activityForms.join(',')
           : undefined,
+      languages:
+        draftFilters.languages.length > 0
+          ? draftFilters.languages.join(',')
+          : undefined,
+      seoKeywords:
+        draftFilters.keywords.length > 0
+          ? draftFilters.keywords.join(',')
+          : undefined,
+      locationValue: locationDraft?.value ?? undefined,
     };
 
     const url = qs.stringifyUrl(
@@ -351,8 +463,10 @@ const Categories = () => {
     );
 
     router.push(url);
+    setGlobalLocation(locationDraft);
+    closeReasonRef.current = 'apply';
     setFiltersOpen(false);
-  }, [draftFilters, params, router]);
+  }, [draftFilters, locationDraft, params, router, setGlobalLocation]);
 
   const handleFiltersClear = useCallback(() => {
     setDraftFilters({
@@ -360,7 +474,12 @@ const Categories = () => {
       duration: null,
       environments: [],
       activityForms: [],
+      languages: [],
+      keywords: [],
     });
+    setLocationDraft(undefined);
+    setGlobalLocation(undefined);
+    previousLocationRef.current = undefined;
 
     const parsedQuery = params
       ? (qs.parse(params.toString()) as ParsedQuery<string>)
@@ -382,6 +501,9 @@ const Categories = () => {
     delete currentQuery.duration;
     delete currentQuery.environments;
     delete currentQuery.activityForms;
+    delete currentQuery.languages;
+    delete currentQuery.seoKeywords;
+    delete currentQuery.locationValue;
 
     const url = qs.stringifyUrl(
       { url: '/', query: currentQuery },
@@ -389,10 +511,10 @@ const Categories = () => {
     );
 
     router.push(url);
-  }, [params, router]);
+  }, [params, router, setGlobalLocation]);
 
   const toggleMultiFilter = useCallback(
-    (key: keyof Omit<FiltersState, 'duration'>, value: string) => {
+    (key: keyof Omit<FiltersState, 'duration' | 'keywords'>, value: string) => {
       setDraftFilters((prev) => {
         const current = prev[key];
         const nextValues = current.includes(value)
@@ -414,6 +536,39 @@ const Categories = () => {
       duration: prev.duration === value ? null : value,
     }));
   }, []);
+
+  const addKeyword = useCallback((value: string) => {
+    const keyword = value.trim();
+    if (!keyword) {
+      return;
+    }
+
+    setDraftFilters((prev) => {
+      if (prev.keywords.includes(keyword)) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        keywords: [...prev.keywords, keyword],
+      };
+    });
+  }, []);
+
+  const removeKeyword = useCallback((value: string) => {
+    setDraftFilters((prev) => ({
+      ...prev,
+      keywords: prev.keywords.filter((item) => item !== value),
+    }));
+  }, []);
+
+  const handleLocationChange = useCallback(
+    (value: CountrySelectValue | undefined) => {
+      setLocationDraft(value ?? undefined);
+      setGlobalLocation(value);
+    },
+    [setGlobalLocation],
+  );
 
   useEffect(() => {
     let timeout: NodeJS.Timeout | null = null;
@@ -545,33 +700,36 @@ const Categories = () => {
         {filtersOpen && (
           <>
             <div
-  onClick={() => setFiltersOpen(false)}
-  tabIndex={-1}
-  className="
-    fixed inset-0 z-[100]
-    h-screen
-    flex
-    items-start
-    p-3
-    pointer-events-auto
-    outline-none focus:outline-none
-    bg-black/30 w-full
-  "
->
-  <motion.aside
-      onClick={(e) => e.stopPropagation()}
-      key="filters-panel"
-      className="
-        pointer-events-auto
-        h-full w-[80vw] lg:w-[35vw]
-        rounded-2xl
-        z-[101]
-        bg-white
-        shadow-2xl
-        backdrop-blur-3xl
-        flex flex-col
-        overflow-hidden
-      "
+              onClick={() => {
+                closeReasonRef.current = 'dismiss';
+                setFiltersOpen(false);
+              }}
+              tabIndex={-1}
+              className="
+                fixed inset-0 z-[100]
+                h-screen
+                flex
+                items-start
+                p-3
+                pointer-events-auto
+                outline-none focus:outline-none
+                bg-black/30 w-full
+              "
+            >
+              <motion.aside
+                onClick={(e) => e.stopPropagation()}
+                key="filters-panel"
+                className="
+                  pointer-events-auto
+                  h-full w-[80vw] lg:w-[35vw]
+                  rounded-2xl
+                  z-[101]
+                  bg-white
+                  shadow-2xl
+                  backdrop-blur-3xl
+                  flex flex-col
+                  overflow-hidden
+                "
       initial={{ x: '-100%', opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: '-100%', opacity: 0 }}
@@ -587,7 +745,10 @@ const Categories = () => {
                     </div>
                     <button
                       type="button"
-                      onClick={() => setFiltersOpen(false)}
+                      onClick={() => {
+                        closeReasonRef.current = 'dismiss';
+                        setFiltersOpen(false);
+                      }}
                       className="rounded-full border border-neutral-200 p-2 text-neutral-500 transition hover:text-neutral-900"
                       aria-label="Close filters"
                     >
@@ -599,8 +760,32 @@ const Categories = () => {
                 {/* Scrollable content */}
                 <div className="min-h-0 flex-1 overflow-y-auto px-6 md:px-10 pb-6 scroll-smooth">
                   <div className="mt-2 flex flex-col gap-6">
+                    <section
+                      className="rounded-xl bg-white p-4 md:p-5 shadow-sm hover:shadow-md transition-shadow border border-neutral-100"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-900/10 text-neutral-900">
+                          <LuSearch className="h-5 w-5" aria-hidden="true" />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-semibold text-neutral-900">Search by location</h3>
+                          <p className="text-xs text-neutral-500">
+                            Find experiences in a specific city or country.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-4">
+                        <CountrySearchSelect
+                          ref={locationInputRef}
+                          value={locationDraft}
+                          onChange={handleLocationChange}
+                        />
+                      </div>
+                    </section>
+
                     <FilterSection
                       id="group-styles"
+                      icon={LuUsers}
                       title="By Group Style"
                       description="Select all group styles that fit your experience."
                       options={GROUP_STYLE_OPTIONS}
@@ -610,6 +795,7 @@ const Categories = () => {
 
                     <FilterSection
                       id="duration"
+                      icon={LuClock3}
                       title="By Duration"
                       description="Choose the primary length of your activity."
                       options={DURATION_OPTIONS}
@@ -620,6 +806,7 @@ const Categories = () => {
 
                     <FilterSection
                       id="environments"
+                      icon={LuGlobe2}
                       title="By Environment"
                       description="Highlight the environments guests will explore."
                       options={ENVIRONMENT_OPTIONS}
@@ -629,11 +816,37 @@ const Categories = () => {
 
                     <FilterSection
                       id="activity-forms"
+                      icon={LuActivity}
                       title="By Activity Form"
                       description="Tell guests how they will move through the experience."
                       options={ACTIVITY_FORM_OPTIONS}
                       values={draftFilters.activityForms}
                       onToggle={(value) => toggleMultiFilter('activityForms', value)}
+                    />
+
+                    <FilterSection
+                      id="languages"
+                      icon={LuLanguages}
+                      title="By Language"
+                      description="Select the languages your host can speak."
+                      options={languageOptions}
+                      values={draftFilters.languages}
+                      onToggle={(value) => toggleMultiFilter('languages', value)}
+                    />
+
+                    <KeywordsSection
+                      id="keywords"
+                      icon={LuTag}
+                      title="By Keywords"
+                      description="Surface experiences with matching SEO keywords."
+                      values={draftFilters.keywords}
+                      inputValue={keywordDraft}
+                      onInputChange={setKeywordDraft}
+                      onAdd={(value) => {
+                        addKeyword(value);
+                        setKeywordDraft('');
+                      }}
+                      onRemove={removeKeyword}
                     />
                   </div>
                 </div>
@@ -655,9 +868,26 @@ const Categories = () => {
                       onClick={handleFiltersApply}
                       className="w-full rounded-full bg-neutral-900 py-3 text-sm font-semibold text-white transition hover:bg-neutral-800"
                     >
-                      {hasAnyDraftSelected && previewCount !== null
-                        ? `Show ${previewCount} ${previewCount === 1 ? 'experience' : 'experiences'}`
-                        : `Show ${hasActiveFilters ? 'updated' : 'matching'} experiences`}
+                      {!hasAnyDraftSelected ? (
+                        'Apply changes'
+                      ) : (
+                        <span className="flex items-center justify-center gap-2">
+                          <span>Show</span>
+                          {previewLoading && (
+                            <LuLoader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                          )}
+                          {previewCount !== null && !previewLoading && (
+                            <span className="font-semibold">{previewCount}</span>
+                          )}
+                          <span>
+                            {previewCount !== null && !previewLoading
+                              ? previewCount === 1
+                                ? 'experience'
+                                : 'experiences'
+                              : 'experiences'}
+                          </span>
+                        </span>
+                      )}
                     </button>
 
                     <button
@@ -688,6 +918,7 @@ interface FilterSectionProps {
   values: string[];
   onToggle: (value: string) => void;
   single?: boolean;
+  icon: IconType;
 }
 
 const FilterSection: React.FC<FilterSectionProps> = ({
@@ -698,6 +929,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({
   values,
   onToggle,
   single = false,
+  icon: Icon,
 }) => (
   <section
     id={id}
@@ -711,12 +943,15 @@ const FilterSection: React.FC<FilterSectionProps> = ({
       border border-neutral-100
     "
   >
-    <h3 className="text-sm font-semibold text-neutral-900 mb-1">
-      {title}
-    </h3>
-    <p className="text-xs text-neutral-500 mb-4">
-      {description}
-    </p>
+    <div className="mb-4 flex items-start gap-3">
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-900/10 text-neutral-900">
+        <Icon className="h-5 w-5" aria-hidden="true" />
+      </div>
+      <div>
+        <h3 className="text-sm font-semibold text-neutral-900">{title}</h3>
+        <p className="text-xs text-neutral-500">{description}</p>
+      </div>
+    </div>
 
     <div className="flex flex-wrap gap-2">
       {options.map((option) => {
@@ -727,10 +962,10 @@ const FilterSection: React.FC<FilterSectionProps> = ({
             type="button"
             onClick={() => onToggle(option.value)}
             className={clsx(
-              "rounded-full px-3 py-1.5 text-xs font-medium transition-all border shadow-sm",
+              'rounded-full px-3 py-1.5 text-xs font-medium transition-all border shadow-sm',
               isActive
-                ? "bg-neutral-900 text-white border-neutral-900 shadow-md"
-                : "bg-white text-neutral-700 border-neutral-200 hover:border-neutral-300 hover:shadow-sm"
+                ? 'bg-neutral-900 text-white border-neutral-900 shadow-md'
+                : 'bg-white text-neutral-700 border-neutral-200 hover:border-neutral-300 hover:shadow-sm',
             )}
             aria-pressed={isActive}
           >
@@ -742,3 +977,97 @@ const FilterSection: React.FC<FilterSectionProps> = ({
     </div>
   </section>
 );
+
+interface KeywordsSectionProps {
+  id?: string;
+  title: string;
+  description: string;
+  values: string[];
+  inputValue: string;
+  onInputChange: (value: string) => void;
+  onAdd: (value: string) => void;
+  onRemove: (value: string) => void;
+  icon: IconType;
+}
+
+const KeywordsSection: React.FC<KeywordsSectionProps> = ({
+  id,
+  title,
+  description,
+  values,
+  inputValue,
+  onInputChange,
+  onAdd,
+  onRemove,
+  icon: Icon,
+}) => {
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter' || event.key === ',') {
+      event.preventDefault();
+      onAdd(inputValue);
+      onInputChange('');
+    }
+  };
+
+  return (
+    <section
+      id={id}
+      className="
+        rounded-xl
+        bg-white
+        shadow-sm
+        hover:shadow-md
+        transition-shadow
+        p-4 md:p-5
+        border border-neutral-100
+      "
+    >
+      <div className="mb-4 flex items-start gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-900/10 text-neutral-900">
+          <Icon className="h-5 w-5" aria-hidden="true" />
+        </div>
+        <div>
+          <h3 className="text-sm font-semibold text-neutral-900">{title}</h3>
+          <p className="text-xs text-neutral-500">{description}</p>
+        </div>
+      </div>
+
+      <div className="mb-3 flex flex-wrap gap-2">
+        {values.map((keyword) => (
+          <span
+            key={keyword}
+            className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1 text-xs font-medium text-neutral-700"
+          >
+            #{keyword}
+            <button
+              type="button"
+              onClick={() => onRemove(keyword)}
+              className="rounded-full bg-white/80 p-0.5 text-neutral-400 transition hover:text-neutral-700"
+              aria-label={`Remove keyword ${keyword}`}
+            >
+              ×
+            </button>
+          </span>
+        ))}
+        {values.length === 0 && (
+          <span className="text-xs text-neutral-400">No keywords selected yet.</span>
+        )}
+      </div>
+
+      <div>
+        <label className="sr-only" htmlFor={`${id}-input`}>
+          Add keyword
+        </label>
+        <input
+          id={`${id}-input`}
+          type="text"
+          value={inputValue}
+          onChange={(event) => onInputChange(event.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Press enter to add keywords"
+          className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm focus:border-neutral-400 focus:outline-none focus:ring-0"
+        />
+      </div>
+    </section>
+  );
+};
