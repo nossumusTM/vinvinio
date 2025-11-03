@@ -220,7 +220,7 @@ const CountrySearchSelect = forwardRef<CountrySearchSelectHandle, CountrySelectP
               }}
               onKeyDown={handleKeyDown}
               placeholder="Search for a country or city"
-              className="w-full bg-transparent text-sm md:text-base font-medium text-neutral-900 placeholder:text-neutral-400 focus:outline-none" // ← ensure ≥16px on mobile to prevent iOS zoom
+              className="w-full bg-transparent text-sm md:text-lg font-medium text-neutral-900 placeholder:text-neutral-400 focus:outline-none"
               autoComplete="off"
               inputMode="search"
             />

@@ -5,6 +5,7 @@ import getListings from "@/app/actions/getListings";
 import { IListingsParams } from "@/app/actions/getListings";
 import nodemailer from "nodemailer";
 import { makeUniqueSlug } from "@/app/libs/slugify";
+import { PricingType } from "@prisma/client";
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
@@ -34,6 +35,10 @@ export async function POST(request: Request) {
     environments,
     activityForms,
     seoKeywords,
+    pricingType,
+    groupPrice,
+    groupSize,
+    customPricing,
   } = body;
 
   if (
@@ -45,9 +50,39 @@ export async function POST(request: Request) {
     !category ||
     !guestCount ||
     !location ||
-    !price
+    price === null || price === undefined
   ) {
     return new NextResponse("Missing or invalid required fields", { status: 400 });
+  }
+
+  const allowedPricingTypes = new Set<PricingType>(['fixed', 'group', 'custom']);
+  const normalizedPricingType: PricingType =
+    typeof pricingType === 'string' && allowedPricingTypes.has(pricingType as PricingType)
+      ? (pricingType as PricingType)
+      : 'fixed';
+
+  const parsedBasePrice = Math.round(Number(price));
+  if (!Number.isFinite(parsedBasePrice) || parsedBasePrice <= 0) {
+    return new NextResponse('Price must be a positive number', { status: 400 });
+  }
+
+  const parsedGroupPrice = groupPrice !== null && groupPrice !== undefined
+    ? Math.round(Number(groupPrice))
+    : null;
+  const parsedGroupSize = groupSize !== null && groupSize !== undefined
+    ? Math.round(Number(groupSize))
+    : null;
+
+  if (normalizedPricingType === 'group') {
+    if (!parsedGroupPrice || parsedGroupPrice <= 0 || !parsedGroupSize || parsedGroupSize <= 0) {
+      return new NextResponse('Group pricing requires a price and group size', { status: 400 });
+    }
+  }
+
+  if (normalizedPricingType === 'custom') {
+    if (!Array.isArray(customPricing) || customPricing.length === 0) {
+      return new NextResponse('Custom pricing requires at least one tier', { status: 400 });
+    }
   }
 
   try {
@@ -86,10 +121,37 @@ export async function POST(request: Request) {
     const normalizedEnvironments = normalizeStringArray(environments);
     const normalizedActivityForms = normalizeStringArray(activityForms);
     const normalizedSeoKeywords = normalizeStringArray(seoKeywords);
+    const normalizedLanguages = normalizeStringArray(languages);
+    const normalizedLocationTypes = normalizeStringArray(locationType);
     const normalizedDurationCategory =
       typeof durationCategory === 'string' && durationCategory.trim().length > 0
         ? durationCategory.trim()
         : null;
+
+    const parsedCustomPricing = Array.isArray(customPricing)
+      ? customPricing
+          .map((tier: any) => ({
+            minGuests: Number(tier?.minGuests ?? 0),
+            maxGuests: Number(tier?.maxGuests ?? 0),
+            price: Number(tier?.price ?? 0),
+          }))
+          .filter((tier) => tier.minGuests > 0 && tier.maxGuests > 0 && tier.price > 0)
+      : [];
+
+    if (normalizedPricingType === 'custom' && parsedCustomPricing.length === 0) {
+      return new NextResponse('Provide at least one valid custom pricing tier', { status: 400 });
+    }
+
+    const locationValue =
+      typeof location === 'string'
+        ? location
+        : typeof location === 'object'
+          ? location?.value
+          : null;
+
+    if (!locationValue) {
+      return new NextResponse('Invalid location information', { status: 400 });
+    }
 
     const listing = await prisma.listing.create({
       data: {
@@ -104,20 +166,25 @@ export async function POST(request: Request) {
         roomCount: 0,
         bathroomCount: 0,
         experienceHour:
-          experienceHour && typeof experienceHour === 'object'
-            ? parseFloat(experienceHour.value)
-            : experienceHour
-              ? parseFloat(experienceHour)
-              : null,
+          typeof experienceHour === 'number'
+            ? experienceHour
+            : experienceHour && typeof experienceHour === 'object'
+              ? parseFloat(experienceHour.value)
+              : experienceHour
+                ? parseFloat(experienceHour)
+                : null,
         meetingPoint: meetingPoint || null,
-        languages: Array.isArray(languages)
-          ? { set: languages.map((lang: any) => lang.value || lang) }
-          : undefined,
-        locationValue: location.value,
-        price: parseInt(price, 10),
-        locationType: Array.isArray(locationType)
-          ? { set: locationType.map((type: any) => type.value || type) }
-          : undefined,
+        languages: { set: normalizedLanguages },
+        locationValue,
+        price: parsedBasePrice,
+        pricingType: normalizedPricingType,
+        groupPrice: normalizedPricingType === 'group' ? parsedGroupPrice : null,
+        groupSize: normalizedPricingType === 'group' ? parsedGroupSize : null,
+        customPricing:
+          normalizedPricingType === 'custom' && parsedCustomPricing.length > 0
+            ? parsedCustomPricing
+            : null,
+        locationType: { set: normalizedLocationTypes },
         locationDescription,
         groupStyles: { set: normalizedGroupStyles },
         durationCategory: normalizedDurationCategory,
@@ -218,6 +285,7 @@ export async function GET(request: Request) {
     environments: parseArrayParam(params.environments),
     activityForms: parseArrayParam(params.activityForms),
     seoKeywords: parseArrayParam(params.seoKeywords),
+    languages: parseArrayParam(params.languages),
   };
 
   try {
