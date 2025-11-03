@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/app/libs/prismadb";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import { ensureListingSlug } from "@/app/libs/ensureListingSlug";
+import { toSafeListing } from "@/app/libs/serializers";
 
 export async function GET() {
   const currentUser = await getCurrentUser();
@@ -12,20 +13,34 @@ export async function GET() {
   }
 
   try {
-    const pendingListings = await prisma.listing.findMany({
-      where: {
-        status: 'pending',
-      },
-      include: {
-        user: true,
-      },
+    const [pendingListings, revisionListings] = await Promise.all([
+      prisma.listing.findMany({
+        where: {
+          status: 'pending',
+        },
+        include: {
+          user: true,
+        },
+      }),
+      prisma.listing.findMany({
+        where: {
+          status: 'revision',
+        },
+        include: {
+          user: true,
+        },
+      }),
+    ]);
+
+    const [pendingWithSlug, revisionWithSlug] = await Promise.all([
+      Promise.all(pendingListings.map((listing) => ensureListingSlug(listing))),
+      Promise.all(revisionListings.map((listing) => ensureListingSlug(listing))),
+    ]);
+
+    return NextResponse.json({
+      pending: pendingWithSlug.map((listing) => toSafeListing(listing)),
+      revision: revisionWithSlug.map((listing) => toSafeListing(listing)),
     });
-
-    const listingsWithSlug = await Promise.all(
-      pendingListings.map((listing) => ensureListingSlug(listing))
-    );
-
-    return NextResponse.json(listingsWithSlug);
   } catch (error) {
     console.error("[FETCH_PENDING_LISTINGS]", error);
     return new NextResponse("Internal Server Error", { status: 500 });

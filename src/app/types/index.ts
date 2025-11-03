@@ -1,7 +1,8 @@
 import { Listing, Reservation, User } from "@prisma/client";
 
-export type SafeListing = Omit<Listing, "createdAt"> & {
+export type SafeListing = Omit<Listing, "createdAt" | "updatedAt"> & {
   createdAt: string;
+  updatedAt: string;
   hostDescription: string | null;
   experienceHour: number | null;
   meetingPoint: string | null;
@@ -13,6 +14,10 @@ export type SafeListing = Omit<Listing, "createdAt"> & {
   environments: string[];
   activityForms: string[];
   seoKeywords: string[];
+  pricingType: string | null;
+  groupPrice: number | null;
+  groupSize: number | null;
+  customPricing: { minGuests: number; maxGuests: number; price: number }[] | null;
   user: SafeUser;
   slug?: string | null;
 };
