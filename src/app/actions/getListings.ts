@@ -1,5 +1,6 @@
 import prisma from "@/app/libs/prismadb";
 import { ensureListingSlug } from "@/app/libs/ensureListingSlug";
+import { normalizePricingSnapshot } from "@/app/libs/pricing";
 export const dynamic = 'force-dynamic';
 
 export interface IListingsParams {
@@ -19,6 +20,7 @@ export interface IListingsParams {
   environments?: string[] | string;
   activityForms?: string[] | string;
   seoKeywords?: string[] | string;
+  languages?: string[] | string;
 }
 
 export default async function getListings(params: IListingsParams) {
@@ -38,6 +40,7 @@ export default async function getListings(params: IListingsParams) {
       environments,
       activityForms,
       seoKeywords,
+      languages,
     } = params;
 
     let query: any = {};
@@ -108,6 +111,13 @@ export default async function getListings(params: IListingsParams) {
       };
     }
 
+    const languageFilter = parseArrayParam(languages);
+    if (languageFilter.length > 0) {
+      query.languages = {
+        hasSome: languageFilter,
+      };
+    }
+
     if (roomCount) {
       query.roomCount = {
         gte: +roomCount,
@@ -170,10 +180,17 @@ export default async function getListings(params: IListingsParams) {
       const totalRating = listing.reviews.reduce((sum, r) => sum + (r.rating || 0), 0);
       const avgRating = listing.reviews.length > 0 ? totalRating / listing.reviews.length : 0;
 
+      const pricingSnapshot = normalizePricingSnapshot(listing.customPricing, listing.price);
+
       return {
         ...listing,
         createdAt: listing.createdAt.toISOString(),
         avgRating,
+        price: pricingSnapshot.basePrice > 0 ? pricingSnapshot.basePrice : listing.price,
+        pricingType: pricingSnapshot.mode ?? null,
+        groupPrice: pricingSnapshot.groupPrice,
+        groupSize: pricingSnapshot.groupSize,
+        customPricing: pricingSnapshot.tiers.length > 0 ? pricingSnapshot.tiers : null,
         user: {
           ...listing.user,
           createdAt: listing.user.createdAt.toISOString(),
