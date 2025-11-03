@@ -29,16 +29,41 @@ export default async function getListings(
     });
 
     const listingsWithSlug = await Promise.all(
-      listings.map((listing) => ensureListingSlug(listing))
+      listings.map(async (listing) => {
+        try {
+          return await ensureListingSlug(listing);
+        } catch (error) {
+          console.error(
+            "[GET_LISTINGS] Failed to ensure slug",
+            { listingId: listing.id },
+            error,
+          );
+          return listing;
+        }
+      })
     );
 
-    const decoratedListings = listingsWithSlug.map((listing) => {
-      const reviews = Array.isArray(listing.reviews) ? listing.reviews : [];
-      const totalRating = reviews.reduce((sum, r) => sum + (r.rating || 0), 0);
-      const avgRating = reviews.length > 0 ? totalRating / reviews.length : 0;
+    const decoratedListings = listingsWithSlug
+      .map((listing) => {
+        try {
+          const reviews = Array.isArray(listing.reviews) ? listing.reviews : [];
+          const totalRating = reviews.reduce(
+            (sum, r) => sum + Number(r?.rating ?? 0),
+            0,
+          );
+          const avgRating = reviews.length > 0 ? totalRating / reviews.length : 0;
 
-      return { listing: toSafeListing(listing), avgRating };
-    });
+          return { listing: toSafeListing(listing), avgRating };
+        } catch (error) {
+          console.error(
+            "[GET_LISTINGS] Failed to serialize listing",
+            { listingId: listing.id },
+            error,
+          );
+          return null;
+        }
+      })
+      .filter((entry): entry is { listing: SafeListing; avgRating: number } => entry !== null);
 
     if (sort === 'rating') {
       decoratedListings.sort((a, b) => (b.avgRating || 0) - (a.avgRating || 0));
