@@ -189,6 +189,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { TbPhotoPlus } from 'react-icons/tb';
 import Sortable from 'sortablejs';
 import toast from 'react-hot-toast';
+import clsx from 'clsx';
 
 const uploadPreset = 'vuolapreset';
 const cloudName = 'dlomv0hbe';
@@ -209,6 +210,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [loadedState, setLoadedState] = useState<Record<string, boolean>>({});
 
   const handleFiles = async (files: FileList | null) => {
     if (!files) return;
@@ -330,20 +332,33 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
             return (
               <div
                 key={url}
-                className="relative w-full h-40 rounded overflow-hidden border border-neutral-300"
+                className={clsx(
+                  'relative w-full h-40 overflow-hidden rounded-xl bg-neutral-100 shadow-lg shadow-neutral-300/60 transition-all duration-500 ease-out hover:-translate-y-0.5',
+                  loadedState[url] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+                )}
               >
                 {isVideo ? (
                   <video
                     src={url}
                     controls
-                    className="w-full h-full object-cover"
+                    className="h-full w-full object-cover"
+                    onLoadedData={() =>
+                      setLoadedState((prev) => ({ ...prev, [url]: true }))
+                    }
                   />
                 ) : (
                   <Image
                     src={url}
                     alt={`upload-${idx}`}
                     fill
-                    className="object-cover"
+                    loading="lazy"
+                    onLoadingComplete={() =>
+                      setLoadedState((prev) => ({ ...prev, [url]: true }))
+                    }
+                    className={clsx(
+                      'object-cover transition-opacity duration-500 ease-out',
+                      loadedState[url] ? 'opacity-100' : 'opacity-0'
+                    )}
                   />
                 )}
 
@@ -359,6 +374,12 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                   onClick={() => {
                     const updated = value.filter((v) => v !== url);
                     onChange(updated);
+                    setLoadedState((prev) => {
+                      if (!(url in prev)) return prev;
+                      const next = { ...prev };
+                      delete next[url];
+                      return next;
+                    });
                   }}
                   className="absolute top-1 right-1 bg-white rounded-full text-black hover:bg-neutral-100 pl-2 pr-2 shadow"
                   aria-label="Remove"

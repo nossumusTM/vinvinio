@@ -1,16 +1,16 @@
 'use client';
 
 import axios from 'axios';
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { useForm, FieldValues, SubmitHandler } from 'react-hook-form';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { Controller, useFieldArray, useForm, FieldValues, SubmitHandler } from 'react-hook-form';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import clsx from 'clsx';
 import Modal from './Modal';
 import Input from '../inputs/Input';
 import Heading from '../Heading';
 import ImageUpload from '../inputs/ImageUpload';
-import CountrySelect from '../inputs/CountrySelect';
 import Counter from '../inputs/Counter';
 import CategoryInput from '../inputs/CategoryInput';
 import Select from 'react-select';
@@ -18,6 +18,7 @@ import CreatableSelect from 'react-select/creatable';
 import useCountries from '@/app/hooks/useCountries';
 import { categories } from '../navbar/Categories';
 import CountrySearchSelect, { CountrySearchSelectHandle } from '../inputs/CountrySearchSelect';
+import MeetingPointAutocomplete from '../inputs/MeetingPointAutocomplete';
 import { SafeUser } from '@/app/types';
 import {
   ACTIVITY_FORM_OPTIONS,
@@ -246,6 +247,18 @@ enum STEPS {
   PRICE = 8,
 }
 
+type PricingTier = {
+  minGuests: number;
+  maxGuests: number;
+  price: number;
+};
+
+const PRICING_TYPES = {
+  FIXED: 'fixed',
+  GROUP: 'group',
+  CUSTOM: 'custom',
+} as const;
+
 const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
   const experienceModal = useExperienceModal();
   const router = useRouter();
@@ -254,8 +267,12 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const [locationQuery, setLocationQuery] = useState('');
-  const { getAll } = useCountries();
+  const { getAll, getByValue } = useCountries();
   const allLocations = getAll();
+  const flatLocationTypeOptions = useMemo(
+    () => locationTypeOptions.flatMap((group) => group.options),
+    [],
+  );
 
   const searchInputRef = useRef<CountrySearchSelectHandle | null>(null);
   const [locationError, setLocationError] = useState(false);
@@ -285,15 +302,8 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
   };
 
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    reset,
-    formState: { errors }
-  } = useForm<FieldValues>({
-    defaultValues: {
+  const defaultFormValues = useMemo(
+    () => ({
       category: [],
       location: null,
       guestCount: 1,
@@ -301,7 +311,7 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
       title: '',
       description: '',
       price: 100,
-      experienceHour: '',
+      experienceHour: null,
       hostDescription: '',
       meetingPoint: '',
       languages: [],
@@ -311,8 +321,32 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
       durationCategory: null,
       environments: [],
       activityForms: [],
+      primarySeoKeyword: null,
       seoKeywords: [],
-    }
+      pricingType: PRICING_TYPES.FIXED,
+      groupPrice: null,
+      groupSize: null,
+      customPricing: [
+        {
+          minGuests: 1,
+          maxGuests: 2,
+          price: 100,
+        },
+      ] as PricingTier[],
+    }),
+    [],
+  );
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    reset,
+    control,
+    formState: { errors }
+  } = useForm<FieldValues>({
+    defaultValues: defaultFormValues,
   });
 
   const category = watch('category');
@@ -324,6 +358,24 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
   const environments = watch('environments');
   const activityForms = watch('activityForms');
   const seoKeywords = watch('seoKeywords');
+  const primarySeoKeyword = watch('primarySeoKeyword');
+  const pricingType = watch('pricingType');
+  const customPricing = watch('customPricing');
+  const groupPrice = watch('groupPrice');
+  const groupSize = watch('groupSize');
+  const price = watch('price');
+
+  const {
+    fields: customPricingFields,
+    append: appendPricingTier,
+    remove: removePricingTier,
+  } = useFieldArray({
+    control,
+    name: 'customPricing',
+  });
+
+  const editingListing = experienceModal.editingListing;
+  const isEditing = Boolean(editingListing);
 
   // const Map = useMemo(
   //   () => dynamic(() => import('../Map'), { ssr: false }),
@@ -334,13 +386,249 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
     []
   );  
 
-  const setCustomValue = (id: string, value: any) => {
-    setValue(id, value, {
-      shouldDirty: true,
-      shouldTouch: true,
-      shouldValidate: true,
-    });
-  };
+  const setCustomValue = useCallback(
+    (id: string, value: any) => {
+      setValue(id, value, {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true,
+      });
+    },
+    [setValue],
+  );
+
+  useEffect(() => {
+    if (!experienceModal.isOpen) {
+      reset(defaultFormValues);
+      setLocationQuery('');
+      setLocationError(false);
+      setStep(STEPS.CATEGORY);
+      return;
+    }
+
+    if (!editingListing) {
+      reset(defaultFormValues);
+      setLocationQuery('');
+      setLocationError(false);
+      setStep(STEPS.CATEGORY);
+      return;
+    }
+
+    const toOption = (
+      value: string,
+      options: { value: string; label: string }[],
+    ) => {
+      const normalized = value?.trim();
+      if (!normalized) {
+        return undefined;
+      }
+      const match = options.find(
+        (option) =>
+          option.value === normalized || option.label === normalized,
+      );
+
+      if (match) {
+        return match;
+      }
+
+      return { value: normalized, label: normalized };
+    };
+
+    const resolveOptions = (
+      values: string[] | null | undefined,
+      options: { value: string; label: string }[],
+    ) =>
+      Array.isArray(values)
+        ? values
+            .map((value) => toOption(value, options))
+            .filter((value): value is { value: string; label: string } => Boolean(value))
+        : [];
+
+    const resolvedLanguages = resolveOptions(
+      editingListing.languages,
+      languageOptions,
+    );
+
+    const resolvedLocationTypes = resolveOptions(
+      editingListing.locationType,
+      flatLocationTypeOptions,
+    );
+
+    const resolvedGroupStyles = resolveOptions(
+      editingListing.groupStyles,
+      GROUP_STYLE_OPTIONS,
+    );
+
+    const resolvedEnvironments = resolveOptions(
+      editingListing.environments,
+      ENVIRONMENT_OPTIONS,
+    );
+
+    const resolvedActivities = resolveOptions(
+      editingListing.activityForms,
+      ACTIVITY_FORM_OPTIONS,
+    );
+
+    const resolvedKeywords = resolveOptions(
+      editingListing.seoKeywords,
+      SEO_KEYWORD_OPTIONS,
+    );
+
+    const [primaryKeywordOption, ...additionalKeywordOptions] =
+      resolvedKeywords;
+
+    const resolvedDuration = editingListing.durationCategory
+      ? toOption(editingListing.durationCategory, DURATION_OPTIONS)
+      : null;
+
+    const experienceHourValue = (() => {
+      if (typeof editingListing.experienceHour === 'number') {
+        return editingListing.experienceHour;
+      }
+      if (typeof editingListing.experienceHour === 'string') {
+        return Number(editingListing.experienceHour);
+      }
+      return null;
+    })();
+
+    const resolvedExperienceHour = experienceHourValue
+      ? hourOptions.find(
+          (option) => Number(option.value) === Number(experienceHourValue),
+        ) ?? { value: String(experienceHourValue), label: `${experienceHourValue} hours` }
+      : null;
+
+    const determineLocation = () => {
+      const raw = editingListing.locationValue;
+      if (!raw) return null;
+
+      const directMatch = allLocations.find(
+        (location: any) => location.value === raw,
+      );
+      if (directMatch) {
+        return { ...directMatch, value: raw };
+      }
+
+      const segments = raw.split('-');
+      if (segments.length === 0) {
+        return null;
+      }
+
+      const countryCode = segments[segments.length - 1]?.toUpperCase();
+      const fallbackCountry = countryCode ? getByValue(countryCode) : null;
+      const citySlug = segments.slice(0, -1).join('-');
+      const formattedCity = citySlug
+        ? citySlug
+            .split('-')
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+            .join(' ')
+        : fallbackCountry?.city;
+
+      if (fallbackCountry) {
+        return {
+          ...fallbackCountry,
+          value: raw,
+          city: formattedCity || fallbackCountry.city,
+        };
+      }
+
+      if (!formattedCity) {
+        return null;
+      }
+
+      return {
+        value: raw,
+        label: formattedCity,
+        city: formattedCity,
+        flag: '',
+        latlng: [0, 0] as [number, number],
+        region: '',
+      };
+    };
+
+    const resolvedLocation = determineLocation();
+
+    const pricingMode = (() => {
+      if (editingListing.pricingType) {
+        return editingListing.pricingType;
+      }
+      if (Array.isArray(editingListing.customPricing) && editingListing.customPricing.length > 0) {
+        return PRICING_TYPES.CUSTOM;
+      }
+      return PRICING_TYPES.FIXED;
+    })();
+
+    const normalizedCustomPricing =
+      pricingMode === PRICING_TYPES.CUSTOM &&
+      Array.isArray(editingListing.customPricing) &&
+      editingListing.customPricing.length > 0
+        ? editingListing.customPricing.map((tier) => ({
+            minGuests: Number(tier?.minGuests ?? 0),
+            maxGuests: Number(tier?.maxGuests ?? 0),
+            price: Number(tier?.price ?? 0),
+          }))
+        : defaultFormValues.customPricing;
+
+    reset(
+      {
+        ...defaultFormValues,
+        category: Array.isArray(editingListing.category)
+          ? editingListing.category
+          : [],
+        location: resolvedLocation,
+        guestCount: editingListing.guestCount ?? defaultFormValues.guestCount,
+        imageSrc: Array.isArray(editingListing.imageSrc)
+          ? editingListing.imageSrc
+          : [],
+        title: editingListing.title ?? '',
+        description: editingListing.description ?? '',
+        price: editingListing.price ?? defaultFormValues.price,
+        experienceHour: resolvedExperienceHour,
+        hostDescription: editingListing.hostDescription ?? '',
+        meetingPoint: editingListing.meetingPoint ?? '',
+        languages: resolvedLanguages,
+        locationType: resolvedLocationTypes,
+        locationDescription: editingListing.locationDescription ?? '',
+        groupStyles: resolvedGroupStyles,
+        durationCategory: resolvedDuration,
+        environments: resolvedEnvironments,
+        activityForms: resolvedActivities,
+        primarySeoKeyword: primaryKeywordOption ?? null,
+        seoKeywords: additionalKeywordOptions,
+        pricingType: pricingMode,
+        groupPrice: editingListing.groupPrice ?? null,
+        groupSize: editingListing.groupSize ?? null,
+        customPricing: normalizedCustomPricing,
+      },
+      { keepDefaultValues: true },
+    );
+
+    setLocationQuery(
+      resolvedLocation
+        ? `${resolvedLocation.city ? `${resolvedLocation.city}, ` : ''}${resolvedLocation.label}`
+        : '',
+    );
+    setLocationError(false);
+    setStep(STEPS.CATEGORY);
+  }, [
+    experienceModal.isOpen,
+    editingListing,
+    reset,
+    defaultFormValues,
+    setLocationError,
+    allLocations,
+    getByValue,
+    flatLocationTypeOptions,
+  ]);
+
+  const previousStepRef = useRef(step);
+
+  useEffect(() => {
+    if (step === STEPS.CATEGORY && previousStepRef.current !== STEPS.CATEGORY) {
+      setCustomValue('category', []);
+    }
+
+    previousStepRef.current = step;
+  }, [step, setCustomValue]);
 
   useEffect(() => {
   if (step === STEPS.LOCATION && experienceModal.isOpen) {
@@ -381,7 +669,7 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
     }
   
     if (step === STEPS.INFO2) {
-      if (!data.experienceHour || !data.meetingPoint) {
+      if (!data.experienceHour || !data.meetingPoint || !String(data.meetingPoint).trim()) {
         toast.error('Please provide duration and meeting point.');
         return;
       }
@@ -401,10 +689,17 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
     }
 
     if (step === STEPS.FILTERS) {
-      const selectedGroupStyles = Array.isArray(data.groupStyles) ? data.groupStyles : [];
-      const selectedEnvironments = Array.isArray(data.environments) ? data.environments : [];
-      const selectedActivityForms = Array.isArray(data.activityForms) ? data.activityForms : [];
-      const selectedKeywords = Array.isArray(data.seoKeywords) ? data.seoKeywords : [];
+      const selectedGroupStyles = data.groupStyles
+        ? Array.isArray(data.groupStyles)
+          ? data.groupStyles.filter(Boolean)
+          : [data.groupStyles]
+        : [];
+      const selectedEnvironments = Array.isArray(data.environments)
+        ? data.environments.filter(Boolean)
+        : [];
+      const selectedActivityForms = Array.isArray(data.activityForms)
+        ? data.activityForms.filter(Boolean)
+        : [];
       const selectedDuration = data.durationCategory;
 
       if (
@@ -417,8 +712,8 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
         return;
       }
 
-      if (selectedKeywords.length < 3) {
-        toast.error('Add at least three SEO keywords or custom tags.');
+      if (!data.primarySeoKeyword) {
+        toast.error('Choose a primary SEO keyword.');
         return;
       }
 
@@ -442,39 +737,218 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
     }
   
     if (step === STEPS.PRICE) {
+      const activePricingType: string = data.pricingType ?? PRICING_TYPES.FIXED;
+
+      const ensurePositiveNumber = (value: any) => {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+      };
+
+      const fixedPrice = ensurePositiveNumber(data.price);
+
+      if (activePricingType === PRICING_TYPES.FIXED) {
+        if (!fixedPrice) {
+          toast.error('Enter a valid price per person.');
+          return;
+        }
+      }
+
+      if (activePricingType === PRICING_TYPES.GROUP) {
+        const parsedGroupPrice = ensurePositiveNumber(data.groupPrice);
+        const parsedGroupSize = ensurePositiveNumber(data.groupSize);
+
+        if (!parsedGroupSize) {
+          toast.error('Specify how many guests are covered by the group price.');
+          return;
+        }
+
+        if (!parsedGroupPrice) {
+          toast.error('Enter a valid total group price.');
+          return;
+        }
+      }
+
+      if (activePricingType === PRICING_TYPES.CUSTOM) {
+        const tiers: PricingTier[] = Array.isArray(customPricing)
+          ? customPricing
+          : [];
+
+        if (!tiers.length) {
+          toast.error('Add at least one custom pricing range.');
+          return;
+        }
+
+        const hasInvalidTier = tiers.some((tier) => {
+          const minGuests = ensurePositiveNumber(tier.minGuests);
+          const maxGuests = ensurePositiveNumber(tier.maxGuests);
+          const pricePerPerson = ensurePositiveNumber(tier.price);
+
+          if (!minGuests || !maxGuests || !pricePerPerson) {
+            return true;
+          }
+
+          return minGuests > maxGuests;
+        });
+
+        if (hasInvalidTier) {
+          toast.error('Review your custom price ranges. Ensure guest counts and prices are valid.');
+          return;
+        }
+      }
+
       setIsLoading(true);
 
-      const formatMulti = (value: any) =>
-        Array.isArray(value)
-          ? value
-              .map((item: any) => (typeof item === 'string' ? item : item?.value || item?.label))
-              .filter((item: string) => typeof item === 'string' && item.trim().length > 0)
-          : [];
+      const toValueArray = (value: any) => {
+        if (!value) return [] as string[];
+        const items = Array.isArray(value) ? value : [value];
+        return items
+          .map((item: any) => {
+            const resolved = typeof item === 'string' ? item : item?.value || item?.label;
+            return typeof resolved === 'string' ? resolved.trim() : '';
+          })
+          .filter((item): item is string => item.length > 0);
+      };
 
       const durationValue =
         typeof data.durationCategory === 'string'
           ? data.durationCategory
           : data.durationCategory?.value ?? null;
 
-      const submissionData = {
-        ...data,
-        groupStyles: formatMulti(data.groupStyles),
-        durationCategory: durationValue,
-        environments: formatMulti(data.environments),
-        activityForms: formatMulti(data.activityForms),
-        seoKeywords: formatMulti(data.seoKeywords),
-        status: 'pending',
+      const experienceDuration =
+        typeof data.experienceHour === 'string'
+          ? Number(data.experienceHour)
+          : Number(data.experienceHour?.value ?? 0);
+
+      const parsedCustomPricing =
+        activePricingType === PRICING_TYPES.CUSTOM
+          ? (customPricing as PricingTier[]).map((tier) => ({
+              minGuests: Number(tier.minGuests),
+              maxGuests: Number(tier.maxGuests),
+              price: Number(tier.price),
+            }))
+          : [];
+
+      const groupPriceValue = ensurePositiveNumber(data.groupPrice);
+      const groupSizeValue = ensurePositiveNumber(data.groupSize);
+
+      const seoKeywordSet = new Set<string>();
+      const rawPrimaryKeyword =
+        typeof data.primarySeoKeyword === 'string'
+          ? data.primarySeoKeyword
+          : data.primarySeoKeyword?.value || data.primarySeoKeyword?.label;
+
+      const normalizedPrimaryKeyword =
+        typeof rawPrimaryKeyword === 'string' ? rawPrimaryKeyword.trim() : '';
+
+      if (normalizedPrimaryKeyword) {
+        seoKeywordSet.add(normalizedPrimaryKeyword);
+      }
+
+      toValueArray(data.seoKeywords).forEach((keyword) => seoKeywordSet.add(keyword));
+
+      const computeBasePrice = () => {
+        if (activePricingType === PRICING_TYPES.FIXED) {
+          return Number(fixedPrice ?? 0);
+        }
+
+        if (activePricingType === PRICING_TYPES.GROUP) {
+          return Number(groupPriceValue ?? 0);
+        }
+
+        if (parsedCustomPricing.length > 0) {
+          return parsedCustomPricing[0].price;
+        }
+
+        return Number(data.price ?? 0);
       };
 
-      axios.post('/api/listings', submissionData)
+      const normalizedCategory = Array.isArray(data.category)
+        ? data.category.filter((value: unknown): value is string => typeof value === 'string' && value.trim().length > 0)
+        : typeof data.category === 'string' && data.category.trim().length > 0
+          ? [data.category.trim()]
+          : [];
+
+      const uniqueStrings = (values: string[]) => Array.from(new Set(values));
+
+      const sanitizedLanguages = uniqueStrings(toValueArray(data.languages));
+      const sanitizedLocationTypes = uniqueStrings(toValueArray(data.locationType));
+      const sanitizedGroupStyles = uniqueStrings(toValueArray(data.groupStyles));
+      const sanitizedEnvironments = uniqueStrings(toValueArray(data.environments));
+      const sanitizedActivityForms = uniqueStrings(toValueArray(data.activityForms));
+
+      const sortedCustomPricing =
+        activePricingType === PRICING_TYPES.CUSTOM && parsedCustomPricing.length > 0
+          ? [...parsedCustomPricing].sort((a, b) => a.minGuests - b.minGuests)
+          : [];
+
+      const submissionData = {
+        title: typeof data.title === 'string' ? data.title.trim() : '',
+        description: typeof data.description === 'string' ? data.description.trim() : '',
+        hostDescription: typeof data.hostDescription === 'string' ? data.hostDescription.trim() : '',
+        imageSrc: Array.isArray(imageSrc)
+          ? imageSrc.filter((src) => typeof src === 'string' && src.trim().length > 0)
+          : [],
+        category: normalizedCategory,
+        guestCount: (() => {
+          const parsed = Math.round(Number(data.guestCount ?? 1));
+          return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+        })(),
+        location,
+        price: Math.round(Number(computeBasePrice()) || 0),
+        experienceHour:
+          Number.isFinite(experienceDuration) && experienceDuration > 0
+            ? experienceDuration
+            : null,
+        meetingPoint: typeof data.meetingPoint === 'string' ? data.meetingPoint.trim() : '',
+        languages: sanitizedLanguages,
+        locationType: sanitizedLocationTypes,
+        locationDescription:
+          typeof data.locationDescription === 'string' ? data.locationDescription.trim() : '',
+        groupStyles: sanitizedGroupStyles,
+        durationCategory: typeof durationValue === 'string' ? durationValue : null,
+        environments: sanitizedEnvironments,
+        activityForms: sanitizedActivityForms,
+        seoKeywords: Array.from(seoKeywordSet)
+          .map((keyword) => keyword.trim())
+          .filter((keyword) => keyword.length > 0),
+        primarySeoKeyword: normalizedPrimaryKeyword || null,
+        pricingType: activePricingType,
+        groupPrice:
+          activePricingType === PRICING_TYPES.GROUP && groupPriceValue
+            ? Math.round(groupPriceValue)
+            : null,
+        groupSize:
+          activePricingType === PRICING_TYPES.GROUP && groupSizeValue
+            ? Math.round(groupSizeValue)
+            : null,
+        customPricing:
+          activePricingType === PRICING_TYPES.CUSTOM && sortedCustomPricing.length > 0
+            ? sortedCustomPricing.map((tier) => ({
+                minGuests: Math.max(1, Math.round(tier.minGuests)),
+                maxGuests: Math.max(1, Math.round(tier.maxGuests)),
+                price: Math.max(1, Math.round(tier.price)),
+              }))
+            : null,
+      };
+
+      const request = isEditing && editingListing
+        ? axios.patch(`/api/listings/${editingListing.id}`, submissionData)
+        : axios.post('/api/listings', submissionData);
+
+      request
         .then(() => {
-          toast.success('Listing submitted for review', {
+          toast.success(
+            isEditing
+              ? 'Listing updates submitted for review'
+              : 'Listing submitted for review',
+            {
             iconTheme: {
               primary: '#2200ffff',
               secondary: '#fff',
             },
-          });          
-          reset();
+          });
+          reset(defaultFormValues);
+          setLocationQuery('');
           experienceModal.onClose();
           router.refresh();
           setStep(STEPS.CATEGORY);
@@ -484,9 +958,13 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
     }
   };  
   
-  const actionLabel = useMemo(() => (
-    step === STEPS.PRICE ? 'Create' : 'Next'
-  ), [step]);
+  const actionLabel = useMemo(() => {
+    if (step === STEPS.PRICE) {
+      return isEditing ? 'Submit updates' : 'Create';
+    }
+
+    return 'Next';
+  }, [step, isEditing]);
 
   const secondaryActionLabel = useMemo(() => (
     step === STEPS.CATEGORY ? undefined : 'Back'
@@ -502,7 +980,7 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
           subtitle="Select one category to continue"
         />
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-[45vh] overflow-y-auto pr-1">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-[55vh] md:max-h-[60vh] overflow-y-auto pr-1">
           {categories.map((item) => {
             const isSelected = Array.isArray(category) && category.includes(item.label);
 
@@ -512,7 +990,6 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
                 onClick={() => {
                   const updated = [item.label];
                   setCustomValue('category', updated);
-                  setTimeout(() => setStep(STEPS.LOCATION), 120);
                 }}
                 selected={isSelected}
                 label={item.label}
@@ -596,13 +1073,18 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
             }}
           />
         </div>
-        <Input
-          id="meetingPoint"
-          label="Provide a meeting-point"
-          disabled={isLoading}
-          register={register}
-          errors={errors}
-          required
+        <Controller
+          control={control}
+          name="meetingPoint"
+          rules={{ required: 'Please choose a meeting point.' }}
+          render={({ field, fieldState }) => (
+            <MeetingPointAutocomplete
+              value={field.value as string}
+              onChange={field.onChange}
+              disabled={isLoading}
+              errorMessage={fieldState.error?.message}
+            />
+          )}
         />
       </div>
     );
@@ -683,13 +1165,14 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
             options={groupStyleOptions}
             value={groupStyles}
             onChange={(value: any) => setCustomValue('groupStyles', value)}
-            isMulti
-            closeMenuOnSelect={false}
+            placeholder="Choose one style"
+            menuPlacement="auto"
             styles={{
               menuPortal: (base) => ({ ...base, zIndex: 9999 }),
               menu: (base) => ({ ...base, zIndex: 9999 }),
             }}
           />
+          <p className="text-xs text-neutral-500">Select the group dynamic that best matches your experience.</p>
         </div>
 
         <div className="flex flex-col gap-2">
@@ -736,19 +1219,34 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-md font-medium">SEO keywords (pick at least three)</label>
+          <label className="text-md font-medium">Primary SEO keyword</label>
+          <Select
+            options={seoKeywordOptions}
+            value={primarySeoKeyword}
+            onChange={(value: any) => setCustomValue('primarySeoKeyword', value)}
+            placeholder="Select the main keyword"
+            styles={{
+              menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+              menu: (base) => ({ ...base, zIndex: 9999 }),
+            }}
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label className="text-md font-medium">Additional keywords (optional)</label>
           <CreatableSelect
             isMulti
             options={seoKeywordOptions}
             value={seoKeywords}
             onChange={(value: any) => setCustomValue('seoKeywords', value)}
-            placeholder="Select or write your own tags"
+            placeholder="Add supporting keywords"
             formatCreateLabel={(inputValue) => `Use "${inputValue}"`}
             styles={{
               menuPortal: (base) => ({ ...base, zIndex: 9999 }),
               menu: (base) => ({ ...base, zIndex: 9999 }),
             }}
           />
+          <p className="text-xs text-neutral-500">Use extra tags to help travellers find you. They are optional.</p>
         </div>
       </div>
     );
@@ -799,17 +1297,179 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
   if (step === STEPS.PRICE) {
     bodyContent = (
       <div className="flex flex-col gap-8">
-        <Heading title="Pricing" subtitle="Set your price per person" />
-        <Input
-          id="price"
-          label="Price / Person"
-          type="number"
-          formatPrice
-          disabled={isLoading}
-          register={register}
-          errors={errors}
-          required
+        <Heading
+          title="Pricing"
+          subtitle="Choose how guests will be charged for your experience"
         />
+
+        <div className="flex flex-col gap-3">
+          <span className="text-sm font-semibold text-neutral-700">Pricing mode</span>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {[
+              {
+                key: PRICING_TYPES.FIXED,
+                title: 'Fixed price',
+                description: 'Same price for every guest',
+              },
+              {
+                key: PRICING_TYPES.GROUP,
+                title: 'Group pricing',
+                description: 'Charge one amount for a private group',
+              },
+              {
+                key: PRICING_TYPES.CUSTOM,
+                title: 'Custom ranges',
+                description: 'Set different prices for guest ranges',
+              },
+            ].map((option) => {
+              const isActive = pricingType === option.key;
+              return (
+                <button
+                  key={option.key}
+                  type="button"
+                  onClick={() => setCustomValue('pricingType', option.key)}
+                  aria-pressed={isActive}
+                  className={clsx(
+                    'rounded-2xl border p-4 text-left shadow-sm transition focus:outline-none focus:ring-2 focus:ring-black/20',
+                    isActive
+                      ? 'border-black bg-white shadow-lg shadow-black/10'
+                      : 'border-neutral-200 bg-white/80 hover:border-black/30',
+                  )}
+                >
+                  <h3 className="text-base font-semibold text-neutral-900">{option.title}</h3>
+                  <p className="mt-1 text-sm text-neutral-500">{option.description}</p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {pricingType === PRICING_TYPES.FIXED && (
+          <Input
+            id="price"
+            label="Price per person"
+            type="number"
+            formatPrice
+            disabled={isLoading}
+            register={register}
+            errors={errors}
+            required={pricingType === PRICING_TYPES.FIXED}
+            inputClassName="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          />
+        )}
+
+        {pricingType === PRICING_TYPES.GROUP && (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Input
+              id="groupSize"
+              name="groupSize"
+              label="Guests included"
+              type="number"
+              disabled={isLoading}
+              register={register}
+              errors={errors}
+              required={pricingType === PRICING_TYPES.GROUP}
+              inputClassName="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            />
+            <Input
+              id="groupPrice"
+              name="groupPrice"
+              label="Total price for the group"
+              type="number"
+              formatPrice
+              disabled={isLoading}
+              register={register}
+              errors={errors}
+              required={pricingType === PRICING_TYPES.GROUP}
+              inputClassName="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            />
+          </div>
+        )}
+
+        {pricingType === PRICING_TYPES.CUSTOM && (
+          <div className="flex flex-col gap-4">
+            <p className="text-sm text-neutral-600">
+              Create price tiers for different group sizes. Guests will see the range that applies to
+              their party.
+            </p>
+
+            <div className="flex flex-col gap-4">
+              {customPricingFields.map((field, index) => (
+                <div
+                  key={field.id}
+                  className="rounded-2xl border border-neutral-200 bg-white/80 p-4 shadow-sm"
+                >
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <Input
+                      id={`custom-tier-${index}-min`}
+                      name={`customPricing.${index}.minGuests`}
+                      label="From guests"
+                      type="number"
+                      disabled={isLoading}
+                      register={register}
+                      errors={errors}
+                      required={pricingType === PRICING_TYPES.CUSTOM}
+                      inputClassName="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <Input
+                      id={`custom-tier-${index}-max`}
+                      name={`customPricing.${index}.maxGuests`}
+                      label="To guests"
+                      type="number"
+                      disabled={isLoading}
+                      register={register}
+                      errors={errors}
+                      required={pricingType === PRICING_TYPES.CUSTOM}
+                      inputClassName="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <Input
+                      id={`custom-tier-${index}-price`}
+                      name={`customPricing.${index}.price`}
+                      label="Price per person"
+                      type="number"
+                      formatPrice
+                      disabled={isLoading}
+                      register={register}
+                      errors={errors}
+                      required={pricingType === PRICING_TYPES.CUSTOM}
+                      inputClassName="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                  </div>
+
+                  {customPricingFields.length > 1 && (
+                    <div className="mt-3 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => removePricingTier(index)}
+                        className="text-sm font-semibold text-rose-500 hover:text-rose-600"
+                      >
+                        Remove tier
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                const lastTier = Array.isArray(customPricing) && customPricing.length > 0
+                  ? customPricing[customPricing.length - 1]
+                  : null;
+
+                appendPricingTier({
+                  minGuests: Math.max(1, Number(lastTier?.maxGuests ?? 1) + 1),
+                  maxGuests: Math.max(1, Number(lastTier?.maxGuests ?? 1) + 1),
+                  price: Number(lastTier?.price ?? price ?? 100),
+                });
+              }}
+              className="self-start rounded-full border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-700 transition hover:border-neutral-400 hover:text-neutral-900"
+            >
+              Add another range
+            </button>
+          </div>
+        )}
       </div>
     );
   }
@@ -826,6 +1486,7 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
       onClose={experienceModal.onClose}
       body={bodyContent}
       className="max-h-[90vh] overflow-y-auto"
+      submitOnEnter={false}
     />
   );
 };

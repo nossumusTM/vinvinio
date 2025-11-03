@@ -22,23 +22,27 @@ const CategoryInput: React.FC<CategoryInputProps> = ({
       aria-pressed={!!selected}
       aria-label={label}
       className={[
-        'group w-full rounded-2xl p-5',
+        'group w-full rounded-2xl p-5 border-0',
         'flex flex-col items-center justify-center gap-3 text-center',
         'bg-white shadow-sm transition-all duration-200',
         'hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98]',
-        'focus:outline-none focus:ring-2 focus:ring-black/20',
-        selected ? 'scale-[1.02] shadow-xl shadow-neutral-400/40' : '',
+        'focus:outline-none focus-visible:ring-2 focus-visible:ring-black/20',
+        selected
+          ? 'scale-[1.02] shadow-xl shadow-neutral-400/40 ring-0 outline-none'
+          : '',
       ].join(' ')}
     >
       <div
         className={[
           'flex h-14 w-14 items-center justify-center rounded-xl',
-          'bg-neutral-50 shadow-sm transition-transform duration-200',
+          'shadow-sm transition-transform duration-200',
           'group-hover:scale-105',
-          selected ? 'shadow-md' : '',
+          selected
+            ? 'bg-neutral-900 text-white shadow-lg'
+            : 'bg-neutral-50 text-neutral-700',
         ].join(' ')}
       >
-        <Icon className="h-8 w-8 text-neutral-700" aria-hidden="true" />
+        <Icon className="h-8 w-8" aria-hidden="true" />
       </div>
       <div className="text-xs font-semibold leading-tight text-neutral-900">
         {label}
