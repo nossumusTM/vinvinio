@@ -8,7 +8,6 @@ import { toast } from 'react-hot-toast';
 import clsx from 'clsx';
 import { format } from 'date-fns';
 
-import useExperienceModal from '@/app/hooks/useExperienceModal';
 import Container from '@/app/components/Container';
 import Heading from '@/app/components/Heading';
 import Button from '@/app/components/Button';
@@ -45,7 +44,6 @@ const STATUS_STYLES: Record<string, { label: string; badgeClass: string }> = {
 
 const MyListingsClient: React.FC<MyListingsClientProps> = ({ listings, currentUser }) => {
   const router = useRouter();
-  const experienceModal = useExperienceModal();
   const [processingId, setProcessingId] = useState<string | null>(null);
 
   const grouped = useMemo(() => {
@@ -58,7 +56,7 @@ const MyListingsClient: React.FC<MyListingsClientProps> = ({ listings, currentUs
   }, [listings]);
 
   const handleEdit = (listing: SafeListing) => {
-    experienceModal.openForEditing(listing);
+    router.push(`/edit-listing/${listing.id}`);
   };
 
   const handleDeactivate = async (listing: SafeListing) => {

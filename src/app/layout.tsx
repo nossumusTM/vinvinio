@@ -25,7 +25,6 @@ import AnnouncementModal from './components/AnnouncementModal';
 import './globals.css';
 import ClientOnly from './components/ClientOnly';
 import getCurrentUser from './actions/getCurrentUser';
-import ExperienceModal from './components/modals/ExperienceModal';
 import Footer from './components/Footer';
 
 import SessionProviderWrapper from './providers/SessionProviderWrapper';
@@ -70,7 +69,6 @@ export default async function RootLayout({
           <LocaleModal />
           {/* <SearchModal /> */}
           <RentModal />
-          <ExperienceModal currentUser={currentUser}/>
           <PromoteModal currentUser={currentUser} />
           {currentUser && <Messenger currentUser={currentUser} />}
         </ClientOnly>
