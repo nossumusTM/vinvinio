@@ -332,13 +332,19 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
             return (
               <div
                 key={url}
-                className="relative w-full h-40 overflow-hidden rounded-xl bg-neutral-100 shadow-lg shadow-neutral-300/60 transition-transform duration-300 hover:-translate-y-0.5"
+                className={clsx(
+                  'relative w-full h-40 overflow-hidden rounded-xl bg-neutral-100 shadow-lg shadow-neutral-300/60 transition-all duration-500 ease-out hover:-translate-y-0.5',
+                  loadedState[url] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+                )}
               >
                 {isVideo ? (
                   <video
                     src={url}
                     controls
                     className="h-full w-full object-cover"
+                    onLoadedData={() =>
+                      setLoadedState((prev) => ({ ...prev, [url]: true }))
+                    }
                   />
                 ) : (
                   <Image

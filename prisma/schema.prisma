@@ -21,6 +21,8 @@ enum ListingStatus {
   pending
   approved
   rejected
+  revision
+  inactive
 }
 
 enum ReservationStatus {
@@ -106,6 +108,7 @@ model Listing {
   hostDescription     String?
   imageSrc            String[]
   createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
   category            String[]
   roomCount           Int
   bathroomCount       Int

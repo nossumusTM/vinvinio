@@ -38,6 +38,7 @@ export default async function getListingById(params: IParams) {
     return {
       ...listingWithSlug,
       price: normalizedBasePrice,
+      updatedAt: listingWithSlug.updatedAt.toISOString(),
       languages: Array.isArray(listingWithSlug.languages)
         ? listingWithSlug.languages
         : [],
