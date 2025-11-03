@@ -44,7 +44,8 @@ type DataEntry = {
 };
 
 const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
-  const [listings, setListings] = useState<Listing[]>([]);
+  const [pendingListings, setPendingListings] = useState<Listing[]>([]);
+  const [revisionListings, setRevisionListings] = useState<Listing[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [targetUserId, setTargetUserId] = useState('');
   const [platformData, setPlatformData] = useState<{
@@ -80,7 +81,8 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
   const fetchListings = async () => {
     try {
       const res = await axios.get('/api/listings/pending');
-      setListings(res.data);
+      setPendingListings(Array.isArray(res.data?.pending) ? res.data.pending : []);
+      setRevisionListings(Array.isArray(res.data?.revision) ? res.data.revision : []);
     } catch {
       toast.error("Couldn't fetch listings");
     }
@@ -286,6 +288,84 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
     }
   }, [currentUser, router]);
 
+  const renderListingCard = (listing: Listing) => (
+    <div key={listing.id} className="p-6 rounded-xl shadow-lg space-y-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2 pt-2">
+        {listing.imageSrc.map((src, i) => {
+          const isVideo = src.endsWith('.mp4') || src.endsWith('.webm') || src.endsWith('.mov');
+
+          return isVideo ? (
+            <video
+              key={i}
+              controls
+              className="w-full h-40 object-cover rounded-xl"
+            >
+              <source src={src} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          ) : (
+            <Image
+              key={i}
+              src={src}
+              alt={`media-${i}`}
+              width={500}
+              height={300}
+              className="w-full h-40 object-cover rounded-xl"
+              unoptimized
+            />
+          );
+        })}
+      </div>
+      <h2 className="text-xl font-bold">{listing.title}</h2>
+      <p>
+        <strong>Location:</strong>{' '}
+        {listing?.location?.city
+          ? `${listing.location.city}, `
+          : ''}
+        {listing?.location?.label
+          ? listing.location.label.toUpperCase()
+          : listing?.locationValue
+            ? listing.locationValue.toUpperCase()
+            : 'N/A'}
+      </p>
+
+      <p className="text-neutral-700">{listing.description}</p>
+      <div className="text-sm text-neutral-500 gap-2 flex flex-col">
+        <p><strong>Submitted by:</strong> {listing.user.name} ({listing.user.email})</p>
+        <div className='flex flex-row gap-1'><strong>Status:</strong> <p className='text-red-500 font-semibold'>{listing.status.toUpperCase()}</p></div>
+        <p><strong>Host Description:</strong> {listing.hostDescription}</p>
+        <p><strong>Guest Capacity:</strong> {listing.guestCount}</p>
+        <p><strong>Duration:</strong> {listing.experienceHour} hours</p>
+        <p><strong>Meeting Point:</strong> {listing.meetingPoint}</p>
+        <p><strong>Languages:</strong> {listing.languages?.join(', ')}</p>
+        <div className='flex flex-row gap-1'><strong>Location Types:</strong><p> {listing.locationType?.join(', ').toUpperCase()}</p></div>
+        <p><strong>Location Description:</strong> {listing.locationDescription}</p>
+      </div>
+
+      <div className="flex gap-4 pt-4">
+        <button
+          onClick={() => handleApprove(listing.id)}
+          disabled={isLoading}
+          className="relative px-4 py-2 text-white rounded-xl overflow-hidden group"
+        >
+          <span className="relative z-10">Approve</span>
+
+          <span className="absolute inset-0 bg-gradient-to-br from-[#08e2ff] to-[#3F00FF] transition-opacity duration-300 opacity-100 group-hover:opacity-0"></span>
+
+          <span className="absolute inset-0 bg-gradient-to-br from-[#3F00FF] to-[#08e2ff] transition-opacity duration-300 opacity-0 group-hover:opacity-100"></span>
+        </button>
+
+        <button
+          onClick={() => handleReject(listing.id)}
+          disabled={isLoading}
+          className="px-4 py-2 bg-neutral-900 text-white rounded-xl hover:bg-neutral-100 transition"
+        >
+          Reject
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <>
     <div className="px-5 md:px-60 pt-2 md:pt-10 pb-0">
@@ -300,104 +380,16 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
       {/* Listings */}
       <div className="lg:col-span-8 space-y-6 max-h-[670px] overflow-y-auto pr-2">
         <h1 className="text-2xl font-semibold mb-4 ml-8">Pending Listings</h1>
-        {listings.length === 0 ? (
+        {pendingListings.length === 0 ? (
           <p className="text-neutral-500">No listings pending moderation.</p>
         ) : (
-          listings.map((listing) => (
-            <div key={listing.id} className="p-6 rounded-xl shadow-lg space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 pt-2">
-                {/* {listing.imageSrc.map((src, i) => (
-                  // <img key={i} src={src} alt={`media-${i}`} className="w-full h-40 object-cover rounded-xl" />
-                  <Image
-                    key={i}
-                    src={src}
-                    alt={`media-${i}`}
-                    width={500}
-                    height={300}
-                    className="w-full h-40 object-cover rounded-xl"
-                    unoptimized // optional if using external URLs or Cloudinary
-                  />
-
-                ))} */}
-                {listing.imageSrc.map((src, i) => {
-                  const isVideo = src.endsWith('.mp4') || src.endsWith('.webm') || src.endsWith('.mov');
-
-                  return isVideo ? (
-                    <video
-                      key={i}
-                      controls
-                      className="w-full h-40 object-cover rounded-xl"
-                    >
-                      <source src={src} type="video/mp4" />
-                      Your browser does not support the video tag.
-                    </video>
-                  ) : (
-                    <Image
-                      key={i}
-                      src={src}
-                      alt={`media-${i}`}
-                      width={500}
-                      height={300}
-                      className="w-full h-40 object-cover rounded-xl"
-                      unoptimized
-                    />
-                  );
-                })}
-              </div>
-              <h2 className="text-xl font-bold">{listing.title}</h2>
-              {/* {listing.locationValue && (
-                <p><strong>Location:</strong> {listing.locationValue!.toUpperCase() || 'N/A'}</p>
-              )} */}
-              <p>
-                <strong>Location:</strong>{' '}
-                {listing?.location?.city
-                  ? `${listing.location.city}, `
-                  : ''}
-                {listing?.location?.label
-                  ? listing.location.label.toUpperCase()
-                  : listing?.locationValue
-                  ? listing.locationValue.toUpperCase()
-                  : 'N/A'}
-              </p>
-
-              <p className="text-neutral-700">{listing.description}</p>
-              <div className="text-sm text-neutral-500 gap-2 flex flex-col">
-                <p><strong>Submitted by:</strong> {listing.user.name} ({listing.user.email})</p>
-                <div className='flex flex-row gap-1'><strong>Status:</strong> <p className='text-red-500 font-semibold'>{listing.status.toUpperCase()}</p></div>
-                <p><strong>Host Description:</strong> {listing.hostDescription}</p>
-                <p><strong>Guest Capacity:</strong> {listing.guestCount}</p>
-                <p><strong>Duration:</strong> {listing.experienceHour} hours</p>
-                <p><strong>Meeting Point:</strong> {listing.meetingPoint}</p>
-                <p><strong>Languages:</strong> {listing.languages?.join(', ')}</p>
-                <div className='flex flex-row gap-1'><strong>Location Types:</strong><p> {listing.locationType?.join(', ').toUpperCase()}</p></div>
-                <p><strong>Location Description:</strong> {listing.locationDescription}</p>
-              </div>
-              
-              <div className="flex gap-4 pt-4">
-              <button
-                onClick={() => handleApprove(listing.id)}
-                disabled={isLoading}
-                className="relative px-4 py-2 text-white rounded-xl overflow-hidden group"
-              >
-                <span className="relative z-10">Approve</span>
-
-                {/* Base Gradient */}
-                <span className="absolute inset-0 bg-gradient-to-br from-[#08e2ff] to-[#3F00FF] transition-opacity duration-300 opacity-100 group-hover:opacity-0"></span>
-
-                {/* Hover Gradient */}
-                <span className="absolute inset-0 bg-gradient-to-br from-[#3F00FF] to-[#08e2ff] transition-opacity duration-300 opacity-0 group-hover:opacity-100"></span>
-              </button>
-
-                <button
-                  onClick={() => handleReject(listing.id)}
-                  disabled={isLoading}
-                  className="px-4 py-2 bg-neutral-900 text-white rounded-xl hover:bg-neutral-100 transition"
-                >
-                  Reject
-                </button>
-              </div>
-            </div>
-          ))
+          pendingListings.map(renderListingCard)
+        )}
+        <h2 className="text-xl font-semibold mb-4 ml-8">Revision Requests</h2>
+        {revisionListings.length === 0 ? (
+          <p className="text-neutral-500">No updated listings awaiting review.</p>
+        ) : (
+          revisionListings.map(renderListingCard)
         )}
       </div>
 
