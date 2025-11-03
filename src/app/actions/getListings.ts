@@ -38,12 +38,30 @@ export default async function getListings(
 
       const pricingSnapshot = normalizePricingSnapshot(listing.customPricing, listing.price);
 
-      const baseListing = listing as unknown as SafeListing;
+      const { reviews: _reviews, user, ...listingWithoutRelations } = listing;
+
+      const baseListing = listingWithoutRelations as unknown as Omit<
+        SafeListing,
+        |
+          'user'
+          | 'price'
+          | 'pricingType'
+          | 'groupPrice'
+          | 'groupSize'
+          | 'customPricing'
+          | 'languages'
+          | 'locationType'
+          | 'groupStyles'
+          | 'environments'
+          | 'activityForms'
+          | 'seoKeywords'
+      >;
+
       const safeUser: SafeUser = {
-        ...(listing.user as unknown as SafeUser),
-        createdAt: listing.user.createdAt.toISOString(),
-        updatedAt: listing.user.updatedAt.toISOString(),
-        emailVerified: listing.user.emailVerified?.toISOString() || null,
+        ...(user as unknown as SafeUser),
+        createdAt: user.createdAt.toISOString(),
+        updatedAt: user.updatedAt.toISOString(),
+        emailVerified: user.emailVerified?.toISOString() || null,
       };
 
       const safeListing: SafeListing = {
@@ -54,13 +72,13 @@ export default async function getListings(
         pricingType: pricingSnapshot.mode ?? null,
         groupPrice: pricingSnapshot.groupPrice,
         groupSize: pricingSnapshot.groupSize,
-        customPricing: pricingSnapshot.tiers.length > 0 ? pricingSnapshot.tiers : null,
-        languages: Array.isArray(listing.languages) ? listing.languages : [],
-        locationType: Array.isArray(listing.locationType) ? listing.locationType : [],
-        groupStyles: Array.isArray(listing.groupStyles) ? listing.groupStyles : [],
-        environments: Array.isArray(listing.environments) ? listing.environments : [],
-        activityForms: Array.isArray(listing.activityForms) ? listing.activityForms : [],
-        seoKeywords: Array.isArray(listing.seoKeywords) ? listing.seoKeywords : [],
+        customPricing: pricingSnapshot.tiers.length > 0 ? pricingSnapshot.tiers.map((tier) => ({ ...tier })) : null,
+        languages: Array.isArray(listing.languages) ? [...listing.languages] : [],
+        locationType: Array.isArray(listing.locationType) ? [...listing.locationType] : [],
+        groupStyles: Array.isArray(listing.groupStyles) ? [...listing.groupStyles] : [],
+        environments: Array.isArray(listing.environments) ? [...listing.environments] : [],
+        activityForms: Array.isArray(listing.activityForms) ? [...listing.activityForms] : [],
+        seoKeywords: Array.isArray(listing.seoKeywords) ? [...listing.seoKeywords] : [],
         user: safeUser,
       };
 
