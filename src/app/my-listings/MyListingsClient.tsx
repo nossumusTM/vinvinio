@@ -7,6 +7,7 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import clsx from 'clsx';
 import { format } from 'date-fns';
+import { FiClock, FiMapPin, FiUsers } from 'react-icons/fi';
 
 import Container from '@/app/components/Container';
 import Heading from '@/app/components/Heading';
@@ -154,6 +155,9 @@ const MyListingsClient: React.FC<MyListingsClientProps> = ({ listings, currentUs
       }
     })();
 
+    const infoCardBase =
+      'flex items-center gap-3 rounded-2xl border border-neutral-200/80 bg-white/80 p-3 shadow-sm backdrop-blur-sm';
+
     return (
       <article
         key={listing.id}
@@ -213,21 +217,36 @@ const MyListingsClient: React.FC<MyListingsClientProps> = ({ listings, currentUs
               <p className="text-sm leading-relaxed text-neutral-600 line-clamp-4 md:line-clamp-3">
                 {listing.description}
               </p>
-              <dl className="grid grid-cols-1 gap-3 text-sm text-neutral-500 sm:grid-cols-2">
-                <div className="flex items-center gap-2 rounded-2xl bg-neutral-50 px-3 py-2">
-                  <span className="text-neutral-400">Guests</span>
-                  <span className="font-medium text-neutral-700">{listing.guestCount}</span>
+              <dl className="grid grid-cols-1 gap-3 text-sm text-neutral-500 sm:grid-cols-3">
+                <div className={clsx(infoCardBase, 'sm:max-w-[230px]')}>
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 text-neutral-600">
+                    <FiUsers className="text-base" />
+                  </span>
+                  <div className="min-w-0">
+                    <dt className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Guests</dt>
+                    <dd className="truncate font-medium text-neutral-800">{listing.guestCount}</dd>
+                  </div>
                 </div>
                 {listing.durationCategory && (
-                  <div className="flex items-center gap-2 rounded-2xl bg-neutral-50 px-3 py-2">
-                    <span className="text-neutral-400">Duration</span>
-                    <span className="font-medium text-neutral-700">{listing.durationCategory}</span>
+                  <div className={clsx(infoCardBase, 'sm:max-w-[230px]')}>
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 text-neutral-600">
+                      <FiClock className="text-base" />
+                    </span>
+                    <div className="min-w-0">
+                      <dt className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Duration</dt>
+                      <dd className="truncate font-medium text-neutral-800">{listing.durationCategory}</dd>
+                    </div>
                   </div>
                 )}
                 {listing.locationValue && (
-                  <div className="flex items-center gap-2 rounded-2xl bg-neutral-50 px-3 py-2 sm:col-span-2">
-                    <span className="text-neutral-400">Location</span>
-                    <span className="font-medium text-neutral-700">{listing.locationValue}</span>
+                  <div className={clsx(infoCardBase, 'sm:col-span-3 sm:max-w-2xl')}>
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 text-neutral-600">
+                      <FiMapPin className="text-base" />
+                    </span>
+                    <div className="min-w-0">
+                      <dt className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Location</dt>
+                      <dd className="line-clamp-2 font-medium text-neutral-800">{listing.locationValue}</dd>
+                    </div>
                   </div>
                 )}
               </dl>
