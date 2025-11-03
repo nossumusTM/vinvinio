@@ -403,14 +403,20 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                         router.push('/favorites')
                       }}/>
                           <hr className="my-2" />
-                    <MenuItem label="Bookings" 
+                    <MenuItem label="Bookings"
                       onClick={() => {
                         setIsOpen(false);
                         router.push('/reservations')
                       }}/>
+                    <MenuItem label="My listings"
+                      onClick={() => {
+                        setIsOpen(false);
+                        router.push('/my-listings');
+                      }}
+                    />
                     {(userRole === 'host') && (
                         <>
-                          <MenuItem label="Dashboard" 
+                          <MenuItem label="Dashboard"
                             onClick={() => {
                               setIsOpen(false);
                               router.push('/profile')

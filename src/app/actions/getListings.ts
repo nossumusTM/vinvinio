@@ -1,153 +1,19 @@
 import prisma from "@/app/libs/prismadb";
 import { ensureListingSlug } from "@/app/libs/ensureListingSlug";
+import { normalizePricingSnapshot } from "@/app/libs/pricing";
+import type { SafeListing, SafeUser } from "@/app/types";
+import { buildListingsWhereClause } from "./listingFilters";
+import type { IListingsParams } from "./listings.types";
+export type { IListingsParams } from "./listings.types";
 export const dynamic = 'force-dynamic';
 
-export interface IListingsParams {
-  userId?: string;
-  guestCount?: number;
-  roomCount?: number;
-  bathroomCount?: number;
-  startDate?: string;
-  endDate?: string;
-  locationValue?: string;
-  category?: string;
-  sort?: 'rating' | 'priceLow' | 'priceHigh' | 'random';
-  skip?: number;
-  take?: number;
-  groupStyles?: string[] | string;
-  duration?: string;
-  environments?: string[] | string;
-  activityForms?: string[] | string;
-  seoKeywords?: string[] | string;
-}
-
-export default async function getListings(params: IListingsParams) {
+export default async function getListings(
+  params: IListingsParams,
+): Promise<SafeListing[]> {
   try {
-    const {
-      userId,
-      roomCount,
-      guestCount,
-      bathroomCount,
-      locationValue,
-      startDate,
-      endDate,
-      category,
-      sort,
-      groupStyles,
-      duration,
-      environments,
-      activityForms,
-      seoKeywords,
-    } = params;
+    const { sort } = params;
 
-    let query: any = {};
-
-    const parseArrayParam = (value?: string | string[]) => {
-      if (!value) return [];
-      if (Array.isArray(value)) {
-        return value
-          .flatMap((item) => String(item).split(','))
-          .map((item) => item.trim())
-          .filter(Boolean);
-      }
-
-      return String(value)
-        .split(',')
-        .map((item) => item.trim())
-        .filter(Boolean);
-    };
-
-    if (userId) {
-      query.userId = userId;
-    }
-
-    query.status = 'approved';
-
-    // if (category) {
-    //   query.category = {
-    //     has: category,
-    //   };
-    // }    
-
-    if (category) {
-      const value = Array.isArray(category) ? category[0] : category;
-      query.category = {
-        has: value,
-      };
-    }
-
-    const groupStyleFilter = parseArrayParam(groupStyles);
-    if (groupStyleFilter.length > 0) {
-      query.groupStyles = {
-        hasSome: groupStyleFilter,
-      };
-    }
-
-    if (typeof duration === 'string' && duration.trim().length > 0) {
-      query.durationCategory = duration;
-    }
-
-    const environmentFilter = parseArrayParam(environments);
-    if (environmentFilter.length > 0) {
-      query.environments = {
-        hasSome: environmentFilter,
-      };
-    }
-
-    const activityFormFilter = parseArrayParam(activityForms);
-    if (activityFormFilter.length > 0) {
-      query.activityForms = {
-        hasSome: activityFormFilter,
-      };
-    }
-
-    const keywordFilter = parseArrayParam(seoKeywords);
-    if (keywordFilter.length > 0) {
-      query.seoKeywords = {
-        hasSome: keywordFilter,
-      };
-    }
-
-    if (roomCount) {
-      query.roomCount = {
-        gte: +roomCount,
-      };
-    }
-
-    if (guestCount) {
-      query.guestCount = {
-        gte: +guestCount,
-      };
-    }
-
-    if (bathroomCount) {
-      query.bathroomCount = {
-        gte: +bathroomCount,
-      };
-    }
-
-    if (locationValue) {
-      query.locationValue = locationValue;
-    }
-
-    if (startDate && endDate) {
-      query.NOT = {
-        reservations: {
-          some: {
-            OR: [
-              {
-                endDate: { gte: startDate },
-                startDate: { lte: startDate },
-              },
-              {
-                startDate: { lte: endDate },
-                endDate: { gte: endDate },
-              },
-            ],
-          },
-        },
-      };
-    }
+    const query = buildListingsWhereClause(params);
 
     const listings = await prisma.listing.findMany({
       where: query,
@@ -166,34 +32,52 @@ export default async function getListings(params: IListingsParams) {
       listings.map((listing) => ensureListingSlug(listing))
     );
 
-    const safeListings = listingsWithSlug.map((listing) => {
+    const decoratedListings = listingsWithSlug.map((listing) => {
       const totalRating = listing.reviews.reduce((sum, r) => sum + (r.rating || 0), 0);
       const avgRating = listing.reviews.length > 0 ? totalRating / listing.reviews.length : 0;
 
-      return {
-        ...listing,
-        createdAt: listing.createdAt.toISOString(),
-        avgRating,
-        user: {
-          ...listing.user,
-          createdAt: listing.user.createdAt.toISOString(),
-          updatedAt: listing.user.updatedAt.toISOString(),
-          emailVerified: listing.user.emailVerified?.toISOString() || null,
-        },
+      const pricingSnapshot = normalizePricingSnapshot(listing.customPricing, listing.price);
+
+      const baseListing = listing as unknown as SafeListing;
+      const safeUser: SafeUser = {
+        ...(listing.user as unknown as SafeUser),
+        createdAt: listing.user.createdAt.toISOString(),
+        updatedAt: listing.user.updatedAt.toISOString(),
+        emailVerified: listing.user.emailVerified?.toISOString() || null,
       };
+
+      const safeListing: SafeListing = {
+        ...baseListing,
+        createdAt: listing.createdAt.toISOString(),
+        updatedAt: listing.updatedAt.toISOString(),
+        price: pricingSnapshot.basePrice > 0 ? pricingSnapshot.basePrice : listing.price,
+        pricingType: pricingSnapshot.mode ?? null,
+        groupPrice: pricingSnapshot.groupPrice,
+        groupSize: pricingSnapshot.groupSize,
+        customPricing: pricingSnapshot.tiers.length > 0 ? pricingSnapshot.tiers : null,
+        languages: Array.isArray(listing.languages) ? listing.languages : [],
+        locationType: Array.isArray(listing.locationType) ? listing.locationType : [],
+        groupStyles: Array.isArray(listing.groupStyles) ? listing.groupStyles : [],
+        environments: Array.isArray(listing.environments) ? listing.environments : [],
+        activityForms: Array.isArray(listing.activityForms) ? listing.activityForms : [],
+        seoKeywords: Array.isArray(listing.seoKeywords) ? listing.seoKeywords : [],
+        user: safeUser,
+      };
+
+      return { listing: safeListing, avgRating };
     });
 
     if (sort === 'rating') {
-      safeListings.sort((a, b) => (b.avgRating || 0) - (a.avgRating || 0));
+      decoratedListings.sort((a, b) => (b.avgRating || 0) - (a.avgRating || 0));
     } else if (sort === 'priceLow') {
-      safeListings.sort((a, b) => a.price - b.price);
+      decoratedListings.sort((a, b) => a.listing.price - b.listing.price);
     } else if (sort === 'priceHigh') {
-      safeListings.sort((a, b) => b.price - a.price);
+      decoratedListings.sort((a, b) => b.listing.price - a.listing.price);
     } else {
-      safeListings.sort(() => Math.random() - 0.5);
+      decoratedListings.sort(() => Math.random() - 0.5);
     }
 
-    return safeListings;
+    return decoratedListings.map((entry) => entry.listing);
   } catch (error: any) {
     throw new Error(error);
   }
