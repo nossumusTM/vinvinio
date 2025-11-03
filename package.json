@@ -73,7 +73,7 @@
   },
   "devDependencies": {
     "@netlify/next": "^1.4.9",
-    "@netlify/plugin-nextjs": "^5.10.3",
+    "@netlify/plugin-nextjs": "^5.14.4",
     "@types/bcrypt": "^5.0.0",
     "@types/canvas-confetti": "^1.9.0",
     "@types/cookie": "^0.6.0",
