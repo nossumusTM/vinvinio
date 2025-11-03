@@ -773,7 +773,7 @@ const Categories = () => {
                       className="rounded-xl bg-white p-4 md:p-5 shadow-sm hover:shadow-md transition-shadow border border-neutral-100"
                     >
                       <div className="flex items-start gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-900/10 text-neutral-900">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl aspect-square shadow-md text-neutral-900">
                           <LuSearch className="h-5 w-5" aria-hidden="true" />
                         </div>
                         <div>
@@ -953,7 +953,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({
     "
   >
     <div className="mb-4 flex items-start gap-3">
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-900/10 text-neutral-900">
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl aspect-square shadow-md text-neutral-900">
         <Icon className="h-5 w-5" aria-hidden="true" />
       </div>
       <div>
@@ -1032,7 +1032,7 @@ const KeywordsSection: React.FC<KeywordsSectionProps> = ({
       "
     >
       <div className="mb-4 flex items-start gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-900/10 text-neutral-900">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl aspect-square shadow-md text-neutral-900">
           <Icon className="h-5 w-5" aria-hidden="true" />
         </div>
         <div>

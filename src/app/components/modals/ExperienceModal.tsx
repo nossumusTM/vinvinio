@@ -733,7 +733,7 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
           subtitle="Select one category to continue"
         />
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-[55vh] md:max-h-[60vh] overflow-y-auto pr-1">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-[40vh] p-4 md:max-h-[50vh] overflow-y-auto pr-1">
           {categories.map((item) => {
             const isSelected = Array.isArray(category) && category.includes(item.label);
 
@@ -1238,7 +1238,7 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
       secondaryAction={step === STEPS.CATEGORY ? undefined : onBack}
       onClose={experienceModal.onClose}
       body={bodyContent}
-      className="max-h-[90vh] overflow-y-auto"
+      className="max-h-[60vh] overflow-y-auto"
       submitOnEnter={false}
     />
   );

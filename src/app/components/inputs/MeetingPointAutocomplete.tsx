@@ -182,7 +182,7 @@ const MeetingPointAutocomplete: React.FC<MeetingPointAutocompleteProps> = ({
           disabled={disabled}
           autoComplete="off"
           aria-invalid={errorMessage ? 'true' : 'false'}
-          className="w-full bg-transparent text-base font-medium text-neutral-900 placeholder:text-neutral-400 focus:outline-none"
+          className="w-full bg-transparent text-sm md:text-base font-medium text-neutral-900 placeholder:text-neutral-400 focus:outline-none"
         />
         {isLoading && <LuLoader2 className="h-5 w-5 animate-spin text-neutral-400" aria-hidden="true" />}
       </div>
