@@ -982,7 +982,6 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
 
   const currentStepIndex = stepsMeta.findIndex((item) => item.id === step);
   const isFirstStep = step === STEPS.CATEGORY;
-  const isLastStep = step === STEPS.PRICE;
 
   const secondaryLabel = isFirstStep
     ? onCancel
@@ -1019,12 +1018,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
 
   const handlePrimaryClick = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
-    if (isLastStep) {
-      void handleSubmit(onSubmit)();
-      return;
-    }
-
-    onNext();
+    void handleSubmit(onSubmit)();
   };
 
   let bodyContent: JSX.Element = <div />;
