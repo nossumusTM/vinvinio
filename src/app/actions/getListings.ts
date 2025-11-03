@@ -13,6 +13,17 @@ export default async function getListings(
   try {
     const { sort } = params;
 
+    await Promise.all([
+      prisma.listing.updateMany({
+        where: { updatedAt: null },
+        data: { updatedAt: new Date() },
+      }),
+      prisma.user.updateMany({
+        where: { updatedAt: null },
+        data: { updatedAt: new Date() },
+      }),
+    ]);
+
     const query = buildListingsWhereClause(params);
 
     const listings = await prisma.listing.findMany({
