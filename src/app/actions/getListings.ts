@@ -2,6 +2,7 @@ import prisma from "@/app/libs/prismadb";
 import { ensureListingSlug } from "@/app/libs/ensureListingSlug";
 import { normalizePricingSnapshot } from "@/app/libs/pricing";
 import type { SafeListing, SafeUser } from "@/app/types";
+import { Prisma } from "@prisma/client";
 import { buildListingsWhereClause } from "./listingFilters";
 import type { IListingsParams } from "./listings.types";
 export type { IListingsParams } from "./listings.types";
@@ -13,15 +14,38 @@ export default async function getListings(
   try {
     const { sort } = params;
 
+    const backfillMissingUpdatedAt = (
+      collection: "Listing" | "User",
+    ): Prisma.InputJsonObject => ({
+      update: collection,
+      updates: [
+        {
+          q: {
+            $or: [
+              { updatedAt: { $exists: false } },
+              { updatedAt: null },
+            ],
+          },
+          u: [
+            {
+              $set: {
+                updatedAt: {
+                  $ifNull: [
+                    "$updatedAt",
+                    { $ifNull: ["$createdAt", "$$NOW"] },
+                  ],
+                },
+              },
+            },
+          ],
+          multi: true,
+        },
+      ],
+    });
+
     await Promise.all([
-      prisma.listing.updateMany({
-        where: { updatedAt: null },
-        data: { updatedAt: new Date() },
-      }),
-      prisma.user.updateMany({
-        where: { updatedAt: null },
-        data: { updatedAt: new Date() },
-      }),
+      prisma.$runCommandRaw(backfillMissingUpdatedAt("Listing")),
+      prisma.$runCommandRaw(backfillMissingUpdatedAt("User")),
     ]);
 
     const query = buildListingsWhereClause(params);
