@@ -62,8 +62,10 @@
 // export default useCountries;
 
 
+
 'use client';
 
+import { useCallback, useMemo } from 'react';
 import countries from 'world-countries';
 
 // 🧭 Base country data
@@ -106,13 +108,13 @@ const popularCityEntries = Object.entries(popularCitiesMap).flatMap(([countryNam
 });
 
 const useCountries = () => {
-  const getAll = () => formattedCountries;
+  const getAll = useCallback(() => formattedCountries, []);
 
-  const getByValue = (value: string) => {
+  const getByValue = useCallback((value: string) => {
     return formattedCountries.find((item) => item.value === value);
-  };
+  }, []);
 
-  const getCities = () => {
+  const getCities = useCallback(() => {
     return formattedCountries
       .filter((c) => c.city && c.city !== 'Unknown')
       .map((c) => ({
@@ -122,18 +124,21 @@ const useCountries = () => {
         flag: c.flag,
         region: c.region,
       }));
-  };
+  }, []);
 
-  const getPopularCities = () => {
+  const getPopularCities = useCallback(() => {
     return popularCityEntries;
-  };
+  }, []);
 
-  return {
-    getAll,
-    getByValue,
-    getCities,        // 🏛 Capital cities
-    getPopularCities, // 🌇 Manually curated destinations
-  };
+  return useMemo(
+    () => ({
+      getAll,
+      getByValue,
+      getCities,        // 🏛 Capital cities
+      getPopularCities, // 🌇 Manually curated destinations
+    }),
+    [getAll, getByValue, getCities, getPopularCities],
+  );
 };
 
 export default useCountries;

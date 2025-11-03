@@ -2,6 +2,7 @@
 
 import { useCallback, useState, useRef, useEffect } from "react";
 import { AiOutlineMenu } from "react-icons/ai";
+import { FaHandshake } from "react-icons/fa";
 import { signOut } from "next-auth/react";
 import useMessenger from "@/app/hooks/useMessager";
 import { useRouter } from 'next/navigation';
@@ -383,17 +384,17 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
 
                 {userRole === 'host' && (
                   <>
-                    <div>
-                      <div className="font-semibold text-md">
-                      <MenuItem label="Become a Partner"  onClick={() => {
-                      setIsOpen(false);
-                      onRent();
-                    }} />
-                    </div>
-                    
+                    <MenuItem
+                      label="Become a Partner"
+                      icon={<FaHandshake />}
+                      className="font-semibold text-neutral-900"
+                      onClick={() => {
+                        setIsOpen(false);
+                        onRent();
+                      }}
+                    />
                     <hr className="my-2" />
-                    </div>
-                    <MenuItem label="Appointments" 
+                    <MenuItem label="Appointments"
                       onClick={() => {
                         setIsOpen(false);
                       }}
