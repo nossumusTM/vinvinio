@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".test-dist",
+    "module": "CommonJS",
+    "target": "ES2018",
+    "jsx": "react-jsx",
+    "declaration": false,
+    "emitDeclarationOnly": false,
+    "moduleResolution": "node",
+    "esModuleInterop": true
+  },
+  "include": [
+    "src/app/actions/listingFilters.ts",
+    "src/app/actions/__tests__/**/*.test.ts",
+    "src/app/api/listings/validation.ts",
+    "src/app/api/listings/__tests__/**/*.test.ts",
+    "src/app/libs/pricing.ts",
+    "src/types/**/*.d.ts"
+  ]
+}
