@@ -1,5 +1,6 @@
 'use client';
 
+import { ReactNode } from 'react';
 import clsx from 'clsx';
 import { useRouter } from 'next/navigation';
 
@@ -9,6 +10,7 @@ interface MenuItemProps {
   badgeCount?: number;
   className?: string;
   href?: string;
+  icon?: ReactNode;
 }
 
 const MenuItem: React.FC<MenuItemProps> = ({
@@ -17,10 +19,11 @@ const MenuItem: React.FC<MenuItemProps> = ({
   badgeCount,
   className,
   href,
+  icon,
 }) => {
   const router = useRouter();
   const baseClasses = clsx(
-    'relative flex items-center justify-between px-4 py-2 text-left transition',
+    'relative flex w-full items-center justify-between px-4 py-2 text-left transition',
     'focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/10',
     className,
   );
@@ -39,13 +42,21 @@ const MenuItem: React.FC<MenuItemProps> = ({
       </span>
     ) : null;
 
+  const isInteractive = Boolean(onClick || href);
+
   return (
     <button
       type="button"
       onClick={handleClick}
-      className={clsx(baseClasses, onClick ? 'cursor-pointer hover:bg-neutral-100' : 'cursor-default')}
+      className={clsx(
+        baseClasses,
+        isInteractive ? 'cursor-pointer hover:bg-neutral-100' : 'cursor-default',
+      )}
     >
-      <span className="flex items-center gap-2">{label}</span>
+      <span className="flex items-center gap-2">
+        {icon && <span className="text-lg text-neutral-600">{icon}</span>}
+        <span>{label}</span>
+      </span>
       {badge}
     </button>
   );

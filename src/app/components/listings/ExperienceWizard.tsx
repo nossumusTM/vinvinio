@@ -281,7 +281,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
 
   const [locationQuery, setLocationQuery] = useState('');
   const { getAll, getByValue } = useCountries();
-  const allLocations = getAll();
+  const allLocations = useMemo(() => getAll(), [getAll]);
   const flatLocationTypeOptions = useMemo(
     () => locationTypeOptions.flatMap((group) => group.options),
     [],
@@ -401,9 +401,9 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
     [setValue],
   );
 
-  useEffect(() => {
+  const editingHydration = useMemo(() => {
     if (!editingListing) {
-      return;
+      return null;
     }
 
     const toOption = (
@@ -558,19 +558,31 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
             maxGuests: Number(tier?.maxGuests ?? 0),
             price: Number(tier?.price ?? 0),
           }))
-        : defaultFormValues.customPricing;
+        : defaultFormValues.customPricing.map((tier: PricingTier) => ({
+            minGuests: tier.minGuests,
+            maxGuests: tier.maxGuests,
+            price: tier.price,
+          }));
 
-    reset(
-      {
+    const normalizedCategories = Array.isArray(editingListing.category)
+      ? editingListing.category
+      : typeof editingListing.category === 'string'
+        ? [editingListing.category]
+        : [];
+
+    const normalizedImages = Array.isArray(editingListing.imageSrc)
+      ? editingListing.imageSrc
+      : typeof editingListing.imageSrc === 'string'
+        ? [editingListing.imageSrc]
+        : [];
+
+    return {
+      formValues: {
         ...defaultFormValues,
-        category: Array.isArray(editingListing.category)
-          ? editingListing.category
-          : [],
+        category: normalizedCategories,
         location: resolvedLocation,
         guestCount: editingListing.guestCount ?? defaultFormValues.guestCount,
-        imageSrc: Array.isArray(editingListing.imageSrc)
-          ? editingListing.imageSrc
-          : [],
+        imageSrc: normalizedImages,
         title: editingListing.title ?? '',
         description: editingListing.description ?? '',
         price: editingListing.price ?? defaultFormValues.price,
@@ -591,26 +603,29 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
         groupSize: editingListing.groupSize ?? null,
         customPricing: normalizedCustomPricing,
       },
-      { keepDefaultValues: true },
-    );
-
-    setLocationQuery(
-      resolvedLocation
-        ? `${resolvedLocation.city ? `${resolvedLocation.city}, ` : ''}${resolvedLocation.label}`
-        : '',
-    );
-    setLocationError(false);
-    setStep(STEPS.CATEGORY);
+      locationQueryText:
+        resolvedLocation
+          ? `${resolvedLocation.city ? `${resolvedLocation.city}, ` : ''}${resolvedLocation.label}`
+          : '',
+    };
   }, [
     editingListing,
-    reset,
     defaultFormValues,
-    setLocationError,
-    setLocationQuery,
     allLocations,
     getByValue,
     flatLocationTypeOptions,
   ]);
+
+  useEffect(() => {
+    if (!editingHydration) {
+      return;
+    }
+
+    reset(editingHydration.formValues, { keepDefaultValues: true });
+    setLocationQuery(editingHydration.locationQueryText);
+    setLocationError(false);
+    setStep(STEPS.CATEGORY);
+  }, [editingHydration, reset]);
 
   useEffect(() => {
     if (step === STEPS.LOCATION) {
