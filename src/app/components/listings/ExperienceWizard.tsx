@@ -1530,7 +1530,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 lg:flex-row">
         <aside className="hidden w-full max-w-xs shrink-0 lg:block">
           <div className="lg:sticky lg:top-32">
-            <nav className="space-y-3 overflow-y-auto pr-1 lg:max-h-[calc(100vh-9rem)]">
+            <nav className="flex flex-col gap-2 overflow-y-auto pr-1 lg:h-full lg:overflow-visible">
               {stepsMeta.map((item, index) => {
                 const Icon = item.icon;
                 const status = index < currentStepIndex
@@ -1545,8 +1545,8 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
                     type="button"
                     onClick={() => handleStepSelect(item.id)}
                     className={clsx(
-                      'flex w-full items-center gap-4 rounded-2xl border bg-white p-4 text-left shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-black/80',
-                      status === 'current' && 'border-black shadow-lg',
+                      'flex w-full items-center gap-3 rounded-xl border bg-white/95 p-3 text-left shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-black/80',
+                      status === 'current' && 'border-black shadow-md',
                       status === 'complete' && 'border-emerald-500 text-emerald-700 hover:border-emerald-400',
                       status === 'upcoming' && 'border-neutral-200 text-neutral-400 hover:border-neutral-300'
                     )}
@@ -1554,7 +1554,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
                   >
                     <span
                       className={clsx(
-                        'flex h-10 w-10 items-center justify-center rounded-full border text-lg',
+                        'flex h-9 w-9 items-center justify-center rounded-full border text-base',
                         status === 'current' && 'border-black bg-black text-white',
                         status === 'complete' && 'border-emerald-500 text-emerald-600',
                         status === 'upcoming' && 'border-neutral-200 text-neutral-400'
@@ -1563,8 +1563,8 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
                       <Icon />
                     </span>
                     <span className="flex flex-col">
-                      <span className="text-sm font-semibold tracking-wide uppercase">Step {index + 1}</span>
-                      <span className="text-base font-semibold">{item.title}</span>
+                      <span className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Step {index + 1}</span>
+                      <span className="text-sm font-semibold text-neutral-800">{item.title}</span>
                       <span className="text-xs text-neutral-500">{item.description}</span>
                     </span>
                   </button>
