@@ -1,7 +1,7 @@
 'use client';
 
 import clsx from 'clsx';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface MenuItemProps {
   label: string;
@@ -18,6 +18,7 @@ const MenuItem: React.FC<MenuItemProps> = ({
   className,
   href,
 }) => {
+  const router = useRouter();
   const baseClasses = clsx(
     'relative flex items-center justify-between px-4 py-2 text-left transition',
     'focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/10',
@@ -26,6 +27,9 @@ const MenuItem: React.FC<MenuItemProps> = ({
 
   const handleClick = () => {
     onClick?.();
+    if (href) {
+      router.push(href);
+    }
   };
 
   const badge =
@@ -34,19 +38,6 @@ const MenuItem: React.FC<MenuItemProps> = ({
         {badgeCount > 99 ? '99+' : badgeCount}
       </span>
     ) : null;
-
-  if (href) {
-    return (
-      <Link
-        href={href}
-        onClick={handleClick}
-        className={clsx(baseClasses, 'cursor-pointer hover:bg-neutral-100')}
-      >
-        <span className="flex items-center gap-2">{label}</span>
-        {badge}
-      </Link>
-    );
-  }
 
   return (
     <button

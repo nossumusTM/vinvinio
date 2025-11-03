@@ -4,11 +4,11 @@ import { useCallback, useState, useRef, useEffect } from "react";
 import { AiOutlineMenu } from "react-icons/ai";
 import { signOut } from "next-auth/react";
 import useMessenger from "@/app/hooks/useMessager";
+import { useRouter } from 'next/navigation';
 
 import useLoginModal from "@/app/hooks/useLoginModal";
 import usePromoteModal from '@/app/hooks/usePromoteModal';
 import useRegisterModal from "@/app/hooks/useRegisterModal";
-import useTourModal from "@/app/hooks/useExperienceModal";
 import { SafeUser } from "@/app/types";
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -33,8 +33,8 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
 
   const loginModal = useLoginModal();
   const registerModal = useRegisterModal();
-  const rentModal = useTourModal();
   const promoteModal = usePromoteModal();
+  const router = useRouter();
 
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -51,8 +51,8 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
       return loginModal.onOpen();
     }
 
-    rentModal.onOpen();
-  }, [loginModal, rentModal, currentUser]);
+    router.push('/become-a-partner');
+  }, [loginModal, currentUser, router]);
 
   const onPromote = () => {
     promoteModal.onOpen();

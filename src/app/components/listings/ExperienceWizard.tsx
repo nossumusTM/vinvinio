@@ -1,25 +1,25 @@
 'use client';
 
 import axios from 'axios';
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback, type MouseEvent } from 'react';
 import { Controller, useFieldArray, useForm, FieldValues, SubmitHandler } from 'react-hook-form';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
-import Modal from './Modal';
 import Input from '../inputs/Input';
 import Heading from '../Heading';
 import ImageUpload from '../inputs/ImageUpload';
 import Counter from '../inputs/Counter';
 import CategoryInput from '../inputs/CategoryInput';
+import Button from '../Button';
 import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 import useCountries from '@/app/hooks/useCountries';
 import { categories } from '../navbar/Categories';
 import CountrySearchSelect, { CountrySearchSelectHandle } from '../inputs/CountrySearchSelect';
 import MeetingPointAutocomplete from '../inputs/MeetingPointAutocomplete';
-import { SafeUser } from '@/app/types';
+import { SafeListing, SafeUser } from '@/app/types';
 import {
   ACTIVITY_FORM_OPTIONS,
   DURATION_OPTIONS,
@@ -27,8 +27,8 @@ import {
   GROUP_STYLE_OPTIONS,
   SEO_KEYWORD_OPTIONS,
 } from '@/app/constants/experienceFilters';
+import { FiClock, FiDollarSign, FiFileText, FiGlobe, FiImage, FiList, FiMapPin, FiSliders, FiUsers } from 'react-icons/fi';
 
-import useExperienceModal from '@/app/hooks/useExperienceModal';
 
 const hourOptions = [
   '1', '1.5', '2', '2.5', '3', '4', '5', '6', '7', '8', '9',
@@ -259,8 +259,21 @@ const PRICING_TYPES = {
   CUSTOM: 'custom',
 } as const;
 
-const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
-  const experienceModal = useExperienceModal();
+interface ExperienceWizardProps {
+  currentUser: SafeUser | null;
+  initialListing?: SafeListing | null;
+  onCancel?: () => void;
+  onCompleted?: (listingId?: string) => void;
+  headingOverride?: { title: string; subtitle?: string };
+}
+
+const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
+  currentUser,
+  initialListing = null,
+  onCancel,
+  onCompleted,
+  headingOverride,
+}) => {
   const router = useRouter();
 
   const [step, setStep] = useState(STEPS.CATEGORY);
@@ -374,17 +387,8 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
     name: 'customPricing',
   });
 
-  const editingListing = experienceModal.editingListing;
+  const editingListing = initialListing;
   const isEditing = Boolean(editingListing);
-
-  // const Map = useMemo(
-  //   () => dynamic(() => import('../Map'), { ssr: false }),
-  //   [location]
-  // );
-  const Map = useMemo(
-    () => dynamic(() => import('../Map'), { ssr: false }),
-    []
-  );  
 
   const setCustomValue = useCallback(
     (id: string, value: any) => {
@@ -398,19 +402,7 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
   );
 
   useEffect(() => {
-    if (!experienceModal.isOpen) {
-      reset(defaultFormValues);
-      setLocationQuery('');
-      setLocationError(false);
-      setStep(STEPS.CATEGORY);
-      return;
-    }
-
     if (!editingListing) {
-      reset(defaultFormValues);
-      setLocationQuery('');
-      setLocationError(false);
-      setStep(STEPS.CATEGORY);
       return;
     }
 
@@ -610,23 +602,23 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
     setLocationError(false);
     setStep(STEPS.CATEGORY);
   }, [
-    experienceModal.isOpen,
     editingListing,
     reset,
     defaultFormValues,
     setLocationError,
+    setLocationQuery,
     allLocations,
     getByValue,
     flatLocationTypeOptions,
   ]);
 
   useEffect(() => {
-  if (step === STEPS.LOCATION && experienceModal.isOpen) {
-    // give the modal time to render then trigger a resize
-    const id = setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
-    return () => clearTimeout(id);
-  }
-}, [step, experienceModal.isOpen]);
+    if (step === STEPS.LOCATION) {
+      const id = setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
+      return () => clearTimeout(id);
+    }
+    return undefined;
+  }, [step]);
 
 
   const onBack = () => setStep((prev) => prev - 1);
@@ -926,7 +918,7 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
         : axios.post('/api/listings', submissionData);
 
       request
-        .then(() => {
+        .then((response) => {
           toast.success(
             isEditing
               ? 'Listing updates submitted for review'
@@ -939,8 +931,13 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
           });
           reset(defaultFormValues);
           setLocationQuery('');
-          experienceModal.onClose();
           router.refresh();
+          const listingId = editingListing?.id ?? response?.data?.id;
+          if (onCompleted) {
+            onCompleted(listingId);
+          } else {
+            router.push('/my-listings');
+          }
           setStep(STEPS.CATEGORY);
         })
         .catch(() => toast.error('Something went wrong.'))
@@ -956,9 +953,64 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
     return 'Next';
   }, [step, isEditing]);
 
-  const secondaryActionLabel = useMemo(() => (
-    step === STEPS.CATEGORY ? undefined : 'Back'
-  ), [step]);
+  const stepsMeta = [
+    { id: STEPS.CATEGORY, title: 'Category', description: 'Experience type', icon: FiList },
+    { id: STEPS.LOCATION, title: 'Location', description: 'Where it happens', icon: FiMapPin },
+    { id: STEPS.INFO1, title: 'Details', description: 'Group basics', icon: FiUsers },
+    { id: STEPS.INFO2, title: 'Logistics', description: 'Duration & meeting point', icon: FiClock },
+    { id: STEPS.INFO3, title: 'Languages', description: 'Accessibility', icon: FiGlobe },
+    { id: STEPS.FILTERS, title: 'Filters', description: 'Match the right guests', icon: FiSliders },
+    { id: STEPS.IMAGES, title: 'Media', description: 'Photos & video', icon: FiImage },
+    { id: STEPS.DESCRIPTION, title: 'Story', description: 'Describe the experience', icon: FiFileText },
+    { id: STEPS.PRICE, title: 'Pricing', description: 'How guests pay', icon: FiDollarSign },
+  ] as const;
+
+  const currentStepIndex = stepsMeta.findIndex((item) => item.id === step);
+  const isFirstStep = step === STEPS.CATEGORY;
+  const isLastStep = step === STEPS.PRICE;
+
+  const secondaryLabel = isFirstStep
+    ? onCancel
+      ? isEditing
+        ? 'Exit without saving'
+        : 'Cancel'
+      : undefined
+    : 'Back';
+
+  const heading = headingOverride ?? {
+    title: isEditing ? 'Update your experience' : 'Become a Vuola partner',
+    subtitle: isEditing
+      ? 'Review each section to make sure your activity stays accurate for travellers.'
+      : 'Complete every section to publish a compelling experience and start hosting.',
+  };
+
+  const handleStepSelect = (target: STEPS) => {
+    if (target <= step) {
+      setStep(target);
+    }
+  };
+
+  const handleSecondaryClick = (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    if (!isFirstStep) {
+      onBack();
+      return;
+    }
+
+    if (secondaryLabel && onCancel) {
+      onCancel();
+    }
+  };
+
+  const handlePrimaryClick = (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    if (isLastStep) {
+      void handleSubmit(onSubmit)();
+      return;
+    }
+
+    onNext();
+  };
 
   let bodyContent: JSX.Element = <div />;
 
@@ -1011,7 +1063,7 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
         <div className="pt-4">
           <div className="h-64 md:h-80 w-full overflow-hidden rounded-xl border border-neutral-200">
             <SearchMap
-              key={`map-${experienceModal.isOpen}-${location?.value ?? 'default'}`}
+              key={`map-${editingListing?.id ?? 'new'}-${location?.value ?? 'default'}`}
               city={location?.city ?? 'Rome'}
               country={location?.label ?? 'Italy'}
               center={(location?.latlng as [number, number]) ?? ([41.9028, 12.4964] as [number, number])}
@@ -1465,20 +1517,130 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
   }
 
   return (
-    <Modal
-      disabled={isLoading}
-      isOpen={experienceModal.isOpen}
-      title="Add an Experience"
-      actionLabel={actionLabel}
-      onSubmit={handleSubmit(onSubmit)}
-      secondaryActionLabel={secondaryActionLabel}
-      secondaryAction={step === STEPS.CATEGORY ? undefined : onBack}
-      onClose={experienceModal.onClose}
-      body={bodyContent}
-      className="max-h-[90vh] overflow-y-auto"
-      submitOnEnter={false}
-    />
+    <div className="bg-neutral-50 py-10 sm:py-14">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 lg:flex-row">
+        <aside className="hidden w-full max-w-xs shrink-0 lg:block">
+          <nav className="space-y-3 rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
+            {stepsMeta.map((item, index) => {
+              const Icon = item.icon;
+              const status = index < currentStepIndex
+                ? 'complete'
+                : index === currentStepIndex
+                  ? 'current'
+                  : 'upcoming';
+
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => handleStepSelect(item.id)}
+                  className={clsx(
+                    'flex w-full items-center gap-4 rounded-2xl border p-4 text-left transition',
+                    status === 'current' && 'border-black/80 bg-black text-white shadow-md',
+                    status === 'complete' && 'border-emerald-500/60 bg-emerald-50 text-emerald-700 hover:border-emerald-500',
+                    status === 'upcoming' && 'border-transparent bg-neutral-100 text-neutral-400 hover:border-neutral-200'
+                  )}
+                  disabled={status === 'upcoming'}
+                >
+                  <span
+                    className={clsx(
+                      'flex h-10 w-10 items-center justify-center rounded-full border text-lg',
+                      status === 'current' && 'border-white bg-white/20 text-white',
+                      status === 'complete' && 'border-emerald-500 bg-white text-emerald-600',
+                      status === 'upcoming' && 'border-neutral-200 bg-white text-neutral-400'
+                    )}
+                  >
+                    <Icon />
+                  </span>
+                  <span className="flex flex-col">
+                    <span className="text-sm font-semibold tracking-wide uppercase">Step {index + 1}</span>
+                    <span className="text-base font-semibold">{item.title}</span>
+                    <span className="text-xs text-neutral-500">{item.description}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </nav>
+        </aside>
+
+        <div className="flex-1 space-y-6">
+          <div className="lg:hidden">
+            <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
+              {stepsMeta.map((item, index) => {
+                const Icon = item.icon;
+                const status = index < currentStepIndex
+                  ? 'complete'
+                  : index === currentStepIndex
+                    ? 'current'
+                    : 'upcoming';
+
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => handleStepSelect(item.id)}
+                    className={clsx(
+                      'flex min-w-[170px] flex-col items-start gap-2 rounded-2xl border px-4 py-3 text-left transition',
+                      status === 'current' && 'border-black bg-black text-white shadow-md',
+                      status === 'complete' && 'border-emerald-500/60 bg-emerald-50 text-emerald-700',
+                      status === 'upcoming' && 'border-neutral-200 bg-white text-neutral-400'
+                    )}
+                    disabled={status === 'upcoming'}
+                  >
+                    <span
+                      className={clsx(
+                        'flex h-9 w-9 items-center justify-center rounded-full border text-base',
+                        status === 'current' && 'border-white bg-white/20 text-white',
+                        status === 'complete' && 'border-emerald-500 bg-white text-emerald-600',
+                        status === 'upcoming' && 'border-neutral-200 bg-neutral-100 text-neutral-400'
+                      )}
+                    >
+                      <Icon />
+                    </span>
+                    <span className="text-sm font-semibold">{item.title}</span>
+                    <span className="text-xs text-neutral-500">{item.description}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <header className="space-y-2">
+            <Heading title={heading.title} subtitle={heading.subtitle} />
+            <p className="text-sm text-neutral-500">
+              Step {currentStepIndex + 1} of {stepsMeta.length}
+            </p>
+          </header>
+
+          <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm sm:p-8">
+            {bodyContent}
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+              {secondaryLabel && (
+                <div className="sm:w-auto sm:min-w-[160px]">
+                  <Button
+                    outline
+                    label={secondaryLabel}
+                    onClick={handleSecondaryClick}
+                    disabled={isLoading || (isFirstStep && !onCancel)}
+                  />
+                </div>
+              )}
+              <div className="sm:w-auto sm:min-w-[160px]">
+                <Button
+                  label={actionLabel}
+                  onClick={handlePrimaryClick}
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
-export default ExperienceModal;
+export default ExperienceWizard;
