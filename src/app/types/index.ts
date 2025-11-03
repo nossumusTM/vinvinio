@@ -13,6 +13,10 @@ export type SafeListing = Omit<Listing, "createdAt"> & {
   environments: string[];
   activityForms: string[];
   seoKeywords: string[];
+  pricingType: string | null;
+  groupPrice: number | null;
+  groupSize: number | null;
+  customPricing: { minGuests: number; maxGuests: number; price: number }[] | null;
   user: SafeUser;
   slug?: string | null;
 };
