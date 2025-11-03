@@ -112,6 +112,29 @@ const MyListingsClient: React.FC<MyListingsClientProps> = ({ listings, currentUs
       badgeClass: 'bg-neutral-100 text-neutral-700 border border-neutral-200',
     };
 
+    const pricingSummary = (() => {
+      if (listing.pricingType === 'group') {
+        if (listing.groupSize) {
+          return `Group size: ${listing.groupSize}`;
+        }
+        return 'Flat group rate';
+      }
+
+      if (listing.pricingType === 'custom') {
+        return 'Custom pricing tiers active';
+      }
+
+      return 'Per guest pricing';
+    })();
+
+    const displayPrice = (() => {
+      if (listing.pricingType === 'group' && listing.groupPrice) {
+        return `${listing.groupPrice.toLocaleString()} €`;
+      }
+
+      return `${listing.price.toLocaleString()} €`;
+    })();
+
     const timestampMeta = (() => {
       switch (listing.status) {
         case 'approved':
@@ -134,12 +157,12 @@ const MyListingsClient: React.FC<MyListingsClientProps> = ({ listings, currentUs
     })();
 
     return (
-      <div
+      <article
         key={listing.id}
-        className="flex flex-col gap-4 rounded-2xl border border-neutral-200/60 bg-white p-6 shadow-sm transition hover:shadow-md"
+        className="rounded-3xl border border-neutral-200/70 bg-white/90 p-4 shadow-sm ring-1 ring-transparent transition hover:shadow-lg hover:ring-neutral-200 sm:p-6"
       >
-        <div className="flex flex-col gap-4 md:flex-row md:items-stretch">
-          <div className="relative h-44 w-full overflow-hidden rounded-xl bg-neutral-100 md:w-64">
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,280px)_1fr] lg:items-start">
+          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-neutral-100 ring-1 ring-inset ring-neutral-200/60">
             {coverMedia ? (
               isVideo ? (
                 <video
@@ -173,62 +196,81 @@ const MyListingsClient: React.FC<MyListingsClientProps> = ({ listings, currentUs
             </span>
           </div>
 
-          <div className="flex flex-1 flex-col justify-between gap-4">
-            <div className="space-y-2">
-              <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                <h3 className="text-lg font-semibold text-neutral-900">{listing.title}</h3>
-                <p className="text-sm text-neutral-500">
-                  {timestampMeta.label}: <span className="font-medium text-neutral-700">{formattedTimestamp}</span>
-                </p>
+          <div className="flex flex-1 flex-col justify-between gap-5">
+            <div className="space-y-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="space-y-1">
+                  <h3 className="text-lg font-semibold text-neutral-900 sm:text-xl">
+                    {listing.title}
+                  </h3>
+                  <p className="text-sm text-neutral-500">
+                    {timestampMeta.label}: <span className="font-medium text-neutral-700">{formattedTimestamp}</span>
+                  </p>
+                </div>
+                <div className="grid gap-1 text-sm text-neutral-500 sm:text-right">
+                  <span className="font-semibold text-neutral-800">{displayPrice}</span>
+                  <span>{pricingSummary}</span>
+                </div>
               </div>
-              <p className="text-sm text-neutral-600 line-clamp-3">{listing.description}</p>
-              <div className="flex flex-wrap gap-2 text-xs font-medium text-neutral-500">
-                <span>
-                  Guests: <span className="text-neutral-700">{listing.guestCount}</span>
-                </span>
+              <p className="text-sm leading-relaxed text-neutral-600 line-clamp-4 md:line-clamp-3">
+                {listing.description}
+              </p>
+              <dl className="grid grid-cols-1 gap-3 text-sm text-neutral-500 sm:grid-cols-2">
+                <div className="flex items-center gap-2 rounded-2xl bg-neutral-50 px-3 py-2">
+                  <span className="text-neutral-400">Guests</span>
+                  <span className="font-medium text-neutral-700">{listing.guestCount}</span>
+                </div>
                 {listing.durationCategory && (
-                  <span>
-                    Duration: <span className="text-neutral-700">{listing.durationCategory}</span>
-                  </span>
+                  <div className="flex items-center gap-2 rounded-2xl bg-neutral-50 px-3 py-2">
+                    <span className="text-neutral-400">Duration</span>
+                    <span className="font-medium text-neutral-700">{listing.durationCategory}</span>
+                  </div>
                 )}
                 {listing.locationValue && (
-                  <span>
-                    Location: <span className="text-neutral-700">{listing.locationValue}</span>
-                  </span>
+                  <div className="flex items-center gap-2 rounded-2xl bg-neutral-50 px-3 py-2 sm:col-span-2">
+                    <span className="text-neutral-400">Location</span>
+                    <span className="font-medium text-neutral-700">{listing.locationValue}</span>
+                  </div>
                 )}
-              </div>
+              </dl>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <Button
-                small
-                label="Edit listing"
-                onClick={() => handleEdit(listing)}
-                outline
-                disabled={processingId === listing.id}
-              />
-
-              {listing.status === 'approved' && (
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <div className="w-full sm:w-auto">
                 <Button
                   small
-                  label="Deactivate"
-                  onClick={() => handleDeactivate(listing)}
+                  label="Edit listing"
+                  onClick={() => handleEdit(listing)}
+                  outline
                   disabled={processingId === listing.id}
                 />
+              </div>
+
+              {listing.status === 'approved' && (
+                <div className="w-full sm:w-auto">
+                  <Button
+                    small
+                    label="Deactivate"
+                    onClick={() => handleDeactivate(listing)}
+                    disabled={processingId === listing.id}
+                  />
+                </div>
               )}
 
               {listing.status === 'inactive' && (
-                <Button
-                  small
-                  label="Activate"
-                  onClick={() => handleActivate(listing)}
-                  disabled={processingId === listing.id}
-                />
+                <div className="w-full sm:w-auto">
+                  <Button
+                    small
+                    label="Activate"
+                    onClick={() => handleActivate(listing)}
+                    disabled={processingId === listing.id}
+                  />
+                </div>
               )}
             </div>
           </div>
         </div>
-      </div>
+      </article>
     );
   };
 
@@ -248,7 +290,7 @@ const MyListingsClient: React.FC<MyListingsClientProps> = ({ listings, currentUs
           No listings in this section yet.
         </div>
       ) : (
-        <div className="space-y-5">
+        <div className="grid gap-6">
           {data.map((listing) => renderListingCard(listing))}
         </div>
       )}
