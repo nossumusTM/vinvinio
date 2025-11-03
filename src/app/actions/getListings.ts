@@ -53,7 +53,12 @@ export default async function getListings(
           );
           const avgRating = reviews.length > 0 ? totalRating / reviews.length : 0;
 
-          return { listing: toSafeListing(listing), avgRating };
+          const safeListing = toSafeListing(listing);
+          const plainListing = JSON.parse(
+            JSON.stringify(safeListing),
+          ) as SafeListing;
+
+          return { listing: plainListing, avgRating };
         } catch (error) {
           console.error(
             "[GET_LISTINGS] Failed to serialize listing",
