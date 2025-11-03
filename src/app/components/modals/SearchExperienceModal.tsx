@@ -207,7 +207,7 @@ const SearchExperienceModal = () => {
     bodyContent = (
       <div className="space-y-6">
         <div className="rounded-3xl p-[1px]">
-          <div className="rounded-[26px] bg-white/80 backdrop-blur p-6 shadow-xl">
+          <div className="rounded-[26px] bg-white/80 backdrop-blur">
             {/* <Heading
               title="Select your travel window"
               subtitle="Choose the dates that best match your plans."
