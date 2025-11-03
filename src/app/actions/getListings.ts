@@ -60,14 +60,14 @@ export default async function getListings(
       const safeUser: SafeUser = {
         ...(user as unknown as SafeUser),
         createdAt: user.createdAt.toISOString(),
-        updatedAt: user.updatedAt.toISOString(),
+        updatedAt: (user.updatedAt ?? user.createdAt).toISOString(),
         emailVerified: user.emailVerified?.toISOString() || null,
       };
 
       const safeListing: SafeListing = {
         ...baseListing,
         createdAt: listing.createdAt.toISOString(),
-        updatedAt: listing.updatedAt.toISOString(),
+        updatedAt: (listing.updatedAt ?? listing.createdAt).toISOString(),
         price: pricingSnapshot.basePrice > 0 ? pricingSnapshot.basePrice : listing.price,
         pricingType: pricingSnapshot.mode ?? null,
         groupPrice: pricingSnapshot.groupPrice,
@@ -97,6 +97,6 @@ export default async function getListings(
 
     return decoratedListings.map((entry) => entry.listing);
   } catch (error: any) {
-    throw new Error(error);
+    throw error;
   }
 }
