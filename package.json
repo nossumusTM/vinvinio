@@ -22,7 +22,7 @@
     "axios": "^1.4.0",
     "bcrypt": "^5.1.0",
     "canvas-confetti": "^1.9.3",
-    "cloudinary": "^2.6.0",
+    "cloudinary": "^2.8.0",
     "clsx": "^2.1.1",
     "country-city-state": "^1.0.9",
     "country-state-city": "^3.2.1",
