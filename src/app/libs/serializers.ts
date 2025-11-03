@@ -1,7 +1,7 @@
 import type { Listing, User } from "@prisma/client";
 
 import type { SafeListing, SafeUser } from "@/app/types";
-import { normalizePricingSnapshot } from "./pricing";
+import { normalizePricingSnapshot, type PricingSnapshot } from "./pricing";
 
 type SupportedUserShape =
   | (Partial<SafeUser> & Pick<SafeUser, "id" | "role">)
@@ -107,16 +107,39 @@ const ensureNumber = (value: unknown): number => {
   return Number.isFinite(numeric) ? numeric : 0;
 };
 
+const defaultPricingSnapshot = (basePrice: number): PricingSnapshot => ({
+  mode: 'fixed',
+  basePrice,
+  groupPrice: null,
+  groupSize: null,
+  tiers: [],
+});
+
 export const toSafeListing = (listing: ListingWithRelations): SafeListing => {
-  const pricingSnapshot = normalizePricingSnapshot(
-    (listing as Listing).customPricing ?? (listing as SafeListing).customPricing,
-    ensureNumber((listing as Listing).price ?? (listing as SafeListing).price ?? 0),
+  const fallbackPrice = ensureNumber(
+    (listing as Listing).price ?? (listing as SafeListing).price ?? 0,
   );
+
+  const pricingSnapshot = (() => {
+    try {
+      return normalizePricingSnapshot(
+        (listing as Listing).customPricing ?? (listing as SafeListing).customPricing,
+        fallbackPrice,
+      );
+    } catch (error) {
+      console.error(
+        "[SERIALIZERS] Failed to normalize pricing snapshot",
+        { listingId: listing.id },
+        error,
+      );
+      return defaultPricingSnapshot(fallbackPrice);
+    }
+  })();
 
   const normalizedBasePrice =
     pricingSnapshot.basePrice > 0
       ? pricingSnapshot.basePrice
-      : ensureNumber((listing as Listing).price ?? (listing as SafeListing).price ?? 0);
+      : fallbackPrice;
 
   const normalizedGroupPrice =
     pricingSnapshot.groupPrice ??
