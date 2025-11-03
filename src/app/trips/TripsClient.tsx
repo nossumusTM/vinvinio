@@ -270,28 +270,15 @@ const TripsClient: React.FC<TripsClientProps> = ({
     return () => window.removeEventListener("scroll", handleScroll);
   }, [hasMore, loadingMore, loadMoreReservations]);
 
-  return (
-    <>
-    <Container>
-      <div className="pl-4 pt-4 md:pt-6">
+    return (
+      <>
+      <Container className="py-10">
+      <div className="space-y-6">
       <Heading
         title="Appointments"
         subtitle="Tracing your steps — behind and ahead"
       />
-      </div>
-      <div className="
-        mt-6
-        grid 
-        grid-cols-1 
-        sm:grid-cols-1 
-        md:grid-cols-2 
-        xl:grid-cols-2
-        2xl:grid-cols-4
-        gap-10
-        max-w-screen-2xl
-        mx-auto
-        p-2
-      ">
+      <div className="mt-6 grid grid-cols-1 gap-10 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4">
         {loadedReservations.map((reservation) => {
           const host = reservation.listing?.user ?? {};
           const hostName = host?.name ?? 'Unknown';
@@ -634,6 +621,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
             }            
           />        
         )}
+      </div>
       </div>
 
       {hasMore && (

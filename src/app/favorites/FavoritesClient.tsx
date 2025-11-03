@@ -14,35 +14,23 @@ const FavoritesClient: React.FC<FavoritesClientProps> = ({
     currentUser
 }) => {
     return (
-        <Container>
-            <div className="pl-4 pt-4 md:pt-6">
-            <Heading
-                title="Bookmarks"
-                subtitle="Experiences You've Saved"
-            />
-            </div>
-            <div
-                className="
-          mt-6
-          grid-cols-1 
-          grid 
-          md:grid-cols-2 
-          sm:grid-cols-1 
-          2xl:grid-cols-4
-          xl:grid-cols-2
-          max-w-screen-2xl
-          gap-12
-          mx-auto
-          p-2
-          "
-            >
-                {listings.map((listing: any) => (
-                    <ListingCard
-                        currentUser={currentUser}
-                        key={listing.id}
-                        data={listing}
-                    />
-                ))}
+        <Container className="py-10">
+            <div className="space-y-6">
+                <Heading
+                    title="Bookmarks"
+                    subtitle="Experiences You've Saved"
+                />
+                <div
+                    className="mt-6 grid grid-cols-1 gap-12 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4"
+                >
+                    {listings.map((listing: any) => (
+                        <ListingCard
+                            currentUser={currentUser}
+                            key={listing.id}
+                            data={listing}
+                        />
+                    ))}
+                </div>
             </div>
         </Container>
     );

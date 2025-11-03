@@ -1535,47 +1535,49 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
     <div className="bg-neutral-50 py-10 sm:py-14">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 lg:flex-row">
         <aside className="hidden w-full max-w-xs shrink-0 lg:block">
-          <nav className="space-y-3 rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
-            {stepsMeta.map((item, index) => {
-              const Icon = item.icon;
-              const status = index < currentStepIndex
-                ? 'complete'
-                : index === currentStepIndex
-                  ? 'current'
-                  : 'upcoming';
+          <div className="lg:sticky lg:top-32">
+            <nav className="space-y-3 overflow-y-auto pr-1 lg:max-h-[calc(100vh-9rem)]">
+              {stepsMeta.map((item, index) => {
+                const Icon = item.icon;
+                const status = index < currentStepIndex
+                  ? 'complete'
+                  : index === currentStepIndex
+                    ? 'current'
+                    : 'upcoming';
 
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => handleStepSelect(item.id)}
-                  className={clsx(
-                    'flex w-full items-center gap-4 rounded-2xl border p-4 text-left transition',
-                    status === 'current' && 'border-black/80 bg-black text-white shadow-md',
-                    status === 'complete' && 'border-emerald-500/60 bg-emerald-50 text-emerald-700 hover:border-emerald-500',
-                    status === 'upcoming' && 'border-transparent bg-neutral-100 text-neutral-400 hover:border-neutral-200'
-                  )}
-                  disabled={status === 'upcoming'}
-                >
-                  <span
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => handleStepSelect(item.id)}
                     className={clsx(
-                      'flex h-10 w-10 items-center justify-center rounded-full border text-lg',
-                      status === 'current' && 'border-white bg-white/20 text-white',
-                      status === 'complete' && 'border-emerald-500 bg-white text-emerald-600',
-                      status === 'upcoming' && 'border-neutral-200 bg-white text-neutral-400'
+                      'flex w-full items-center gap-4 rounded-2xl border bg-white p-4 text-left shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-black/80',
+                      status === 'current' && 'border-black shadow-lg',
+                      status === 'complete' && 'border-emerald-500 text-emerald-700 hover:border-emerald-400',
+                      status === 'upcoming' && 'border-neutral-200 text-neutral-400 hover:border-neutral-300'
                     )}
+                    disabled={status === 'upcoming'}
                   >
-                    <Icon />
-                  </span>
-                  <span className="flex flex-col">
-                    <span className="text-sm font-semibold tracking-wide uppercase">Step {index + 1}</span>
-                    <span className="text-base font-semibold">{item.title}</span>
-                    <span className="text-xs text-neutral-500">{item.description}</span>
-                  </span>
-                </button>
-              );
-            })}
-          </nav>
+                    <span
+                      className={clsx(
+                        'flex h-10 w-10 items-center justify-center rounded-full border text-lg',
+                        status === 'current' && 'border-black bg-black text-white',
+                        status === 'complete' && 'border-emerald-500 text-emerald-600',
+                        status === 'upcoming' && 'border-neutral-200 text-neutral-400'
+                      )}
+                    >
+                      <Icon />
+                    </span>
+                    <span className="flex flex-col">
+                      <span className="text-sm font-semibold tracking-wide uppercase">Step {index + 1}</span>
+                      <span className="text-base font-semibold">{item.title}</span>
+                      <span className="text-xs text-neutral-500">{item.description}</span>
+                    </span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
         </aside>
 
         <div className="flex-1 space-y-6">
@@ -1595,19 +1597,19 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
                     type="button"
                     onClick={() => handleStepSelect(item.id)}
                     className={clsx(
-                      'flex min-w-[170px] flex-col items-start gap-2 rounded-2xl border px-4 py-3 text-left transition',
-                      status === 'current' && 'border-black bg-black text-white shadow-md',
-                      status === 'complete' && 'border-emerald-500/60 bg-emerald-50 text-emerald-700',
-                      status === 'upcoming' && 'border-neutral-200 bg-white text-neutral-400'
+                      'flex min-w-[170px] flex-col items-start gap-2 rounded-2xl border bg-white px-4 py-3 text-left shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-black/80',
+                      status === 'current' && 'border-black shadow-lg',
+                      status === 'complete' && 'border-emerald-500 text-emerald-700',
+                      status === 'upcoming' && 'border-neutral-200 text-neutral-400'
                     )}
                     disabled={status === 'upcoming'}
                   >
                     <span
                       className={clsx(
                         'flex h-9 w-9 items-center justify-center rounded-full border text-base',
-                        status === 'current' && 'border-white bg-white/20 text-white',
-                        status === 'complete' && 'border-emerald-500 bg-white text-emerald-600',
-                        status === 'upcoming' && 'border-neutral-200 bg-neutral-100 text-neutral-400'
+                        status === 'current' && 'border-black bg-black text-white',
+                        status === 'complete' && 'border-emerald-500 text-emerald-600',
+                        status === 'upcoming' && 'border-neutral-200 text-neutral-400'
                       )}
                     >
                       <Icon />
@@ -1631,25 +1633,23 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
             {bodyContent}
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-              {secondaryLabel && (
-                <div className="sm:w-auto sm:min-w-[160px]">
-                  <Button
-                    outline
-                    label={secondaryLabel}
-                    onClick={handleSecondaryClick}
-                    disabled={isLoading || (isFirstStep && !onCancel)}
-                  />
-                </div>
-              )}
-              <div className="sm:w-auto sm:min-w-[160px]">
+          <div className="flex w-full flex-col gap-3 sm:flex-row">
+            {secondaryLabel && (
+              <div className="w-full sm:flex-1">
                 <Button
-                  label={actionLabel}
-                  onClick={handlePrimaryClick}
-                  disabled={isLoading}
+                  outline
+                  label={secondaryLabel}
+                  onClick={handleSecondaryClick}
+                  disabled={isLoading || (isFirstStep && !onCancel)}
                 />
               </div>
+            )}
+            <div className="w-full sm:flex-1">
+              <Button
+                label={actionLabel}
+                onClick={handlePrimaryClick}
+                disabled={isLoading}
+              />
             </div>
           </div>
         </div>
