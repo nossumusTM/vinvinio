@@ -620,16 +620,6 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
     flatLocationTypeOptions,
   ]);
 
-  const previousStepRef = useRef(step);
-
-  useEffect(() => {
-    if (step === STEPS.CATEGORY && previousStepRef.current !== STEPS.CATEGORY) {
-      setCustomValue('category', []);
-    }
-
-    previousStepRef.current = step;
-  }, [step, setCustomValue]);
-
   useEffect(() => {
   if (step === STEPS.LOCATION && experienceModal.isOpen) {
     // give the modal time to render then trigger a resize

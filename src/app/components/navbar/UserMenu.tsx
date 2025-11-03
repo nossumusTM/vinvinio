@@ -3,13 +3,11 @@
 import { useCallback, useState, useRef, useEffect } from "react";
 import { AiOutlineMenu } from "react-icons/ai";
 import { signOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import useMessenger from "@/app/hooks/useMessager";
 
 import useLoginModal from "@/app/hooks/useLoginModal";
 import usePromoteModal from '@/app/hooks/usePromoteModal';
 import useRegisterModal from "@/app/hooks/useRegisterModal";
-import useRentModal from "@/app/hooks/useRentModal";
 import useTourModal from "@/app/hooks/useExperienceModal";
 import { SafeUser } from "@/app/types";
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,7 +16,6 @@ import LocaleButton from "./LocaleButton";
 
 import MenuItem from "./MenuItem";
 import Avatar from "../Avatar";
-import { twMerge } from "tailwind-merge";
 
 interface UserMenuProps {
   currentUser?: SafeUser | null;
@@ -33,7 +30,6 @@ const getRandomColor = () => {
 };
 
 const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = false }) => {
-  const router = useRouter();
 
   const loginModal = useLoginModal();
   const registerModal = useRegisterModal();
@@ -322,22 +318,25 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                 {userRole === 'customer' && (
                   <>
                     <MenuItem label="Appointments" onClick={() => {
-                      setIsOpen(false);
-                      router.push('/trips');
-                    }} />
-                    <MenuItem label="Wishlist" 
+                        setIsOpen(false);
+                      }}
+                      href="/trips"
+                    />
+                    <MenuItem label="Wishlist"
                       onClick={() => {
                         setIsOpen(false);
-                        router.push('/favorites')
-                      }} />
+                      }}
+                      href="/favorites"
+                    />
                     {(userRole === 'customer') && (
                         <>
                         <hr className="my-2" />
-                          <MenuItem label="Account" 
+                          <MenuItem label="Account"
                             onClick={() => {
                               setIsOpen(false);
-                              router.push('/profile')
-                            }} />
+                            }}
+                            href="/profile"
+                          />
                           <hr className="my-2" />
                         </>
                       )}
@@ -358,21 +357,23 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                     <MenuItem label="Appointments" 
                       onClick={() => {
                         setIsOpen(false);
-                        router.push('/trips')
-                      }}/>
-                    <MenuItem label="Wishlist" 
+                      }}
+                      href="/trips"
+                    />
+                    <MenuItem label="Wishlist"
                       onClick={() => {
                         setIsOpen(false);
-                        router.push('/favorites')
-                      }}/>
+                      }}
+                      href="/favorites"
+                    />
                     {(userRole === 'promoter' || userRole === 'promoter' || userRole === 'host' || userRole === 'moder') && (
                         <>
                         <hr className="my-2" />
-                          <MenuItem label="Dashboard" 
+                          <MenuItem label="Dashboard"
                             onClick={() => {
                               setIsOpen(false);
-                              router.push('/profile')
-                            }} 
+                            }}
+                            href="/profile"
                           />
                           <hr className="my-2" />
                         </>
@@ -395,32 +396,36 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                     <MenuItem label="Appointments" 
                       onClick={() => {
                         setIsOpen(false);
-                        router.push('/trips')
-                      }}/>
-                    <MenuItem label="Wishlist" 
+                      }}
+                      href="/trips"
+                    />
+                    <MenuItem label="Wishlist"
                       onClick={() => {
                         setIsOpen(false);
-                        router.push('/favorites')
-                      }}/>
+                      }}
+                      href="/favorites"
+                    />
                           <hr className="my-2" />
                     <MenuItem label="Bookings"
                       onClick={() => {
                         setIsOpen(false);
-                        router.push('/reservations')
-                      }}/>
+                      }}
+                      href="/reservations"
+                    />
                     <MenuItem label="My listings"
                       onClick={() => {
                         setIsOpen(false);
-                        router.push('/my-listings');
                       }}
+                      href="/my-listings"
                     />
                     {(userRole === 'host') && (
                         <>
                           <MenuItem label="Dashboard"
                             onClick={() => {
                               setIsOpen(false);
-                              router.push('/profile')
-                            }} />
+                            }}
+                            href="/profile"
+                          />
                           <hr className="my-2" />
                         </>
                     )}
@@ -439,26 +444,30 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                     <MenuItem label="Appointments" 
                       onClick={() => {
                         setIsOpen(false);
-                        router.push('/trips')
-                      }}/>
-                    <MenuItem label="Wishlist" 
+                      }}
+                      href="/trips"
+                    />
+                    <MenuItem label="Wishlist"
                       onClick={() => {
                         setIsOpen(false);
-                        router.push('/favorites')
-                      }}/>
+                      }}
+                      href="/favorites"
+                    />
                     {(userRole === 'moder') && (
                         <>
-                          <MenuItem label="Account" 
+                          <MenuItem label="Account"
                             onClick={() => {
                               setIsOpen(false);
-                              router.push('/profile')
-                            }} />
+                            }}
+                            href="/profile"
+                          />
                           <hr className="my-2" />
-                            <MenuItem label="Dashboard" 
+                            <MenuItem label="Dashboard"
                             onClick={() => {
                               setIsOpen(false);
-                              router.push('/moderation')
-                            }} />
+                            }}
+                            href="/moderation"
+                          />
                           <hr className="my-2" />
                         </>
                     )}
