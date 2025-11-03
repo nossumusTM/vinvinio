@@ -32,11 +32,16 @@ export async function POST(
     return new NextResponse('Password is required to deactivate a listing', { status: 400 });
   }
 
-  if (!currentUser.hashedPassword) {
+  const storedUser = await prisma.user.findUnique({
+    where: { id: currentUser.id },
+    select: { hashedPassword: true },
+  });
+
+  if (!storedUser?.hashedPassword) {
     return new NextResponse('Password authentication is not available for this account', { status: 400 });
   }
 
-  const isValidPassword = await bcrypt.compare(password, currentUser.hashedPassword);
+  const isValidPassword = await bcrypt.compare(password, storedUser.hashedPassword);
 
   if (!isValidPassword) {
     return new NextResponse('Incorrect password. Please try again.', { status: 403 });
