@@ -690,8 +690,8 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
     }
   };
 
-  return (
-    <Container>
+    return (
+    <Container className="py-10">
       <div className="pl-5">
       {/* <Heading title="Account" subtitle="" /> */}
       </div>

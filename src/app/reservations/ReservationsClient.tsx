@@ -70,54 +70,54 @@ const ReservationsClient: React.FC<ReservationsClientProps> = ({
         return () => window.removeEventListener("scroll", handleScroll);
       }, [hasMore, loadingMore, loadMoreReservations]);
 
-    return (
-        <Container>
-            <div className="mb-8 pl-4 pt-4 md:pt-6">
-                <Heading
-                    title="Booking Inbox"
-                    subtitle="Who said ' YesSsSs! ' to your experience"
-                />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-10 mt-6 p-2">
-                {loadedReservations.map((reservation: any) => (
-                    <div key={reservation.id} className="relative">
-                    {reservation.status === 'cancelled' ? (
-                        <div className="absolute top-4 left-4 px-2 py-1 bg-red-100 text-red-600 text-xs font-semibold uppercase rounded-md z-10">
-                        Cancelled
-                        </div>
-                    ) : (
-                        <div className="absolute top-4 left-4 px-2 py-1 bg-green-100 text-green-600 text-xs font-semibold uppercase rounded-md z-10">
-                        Confirmed
-                        </div>
-                    )}
+      return (
+          <Container className="py-10">
+              <div className="space-y-6">
+                  <Heading
+                      title="Booking Inbox"
+                      subtitle="Who said ' YesSsSs! ' to your experience"
+                  />
+                  <div className="mt-6 grid grid-cols-1 gap-10 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+                      {loadedReservations.map((reservation: any) => (
+                          <div key={reservation.id} className="relative">
+                          {reservation.status === 'cancelled' ? (
+                              <div className="absolute top-4 left-4 px-2 py-1 bg-red-100 text-red-600 text-xs font-semibold uppercase rounded-md z-10">
+                              Cancelled
+                              </div>
+                          ) : (
+                              <div className="absolute top-4 left-4 px-2 py-1 bg-green-100 text-green-600 text-xs font-semibold uppercase rounded-md z-10">
+                              Confirmed
+                              </div>
+                          )}
 
-                    <ReservationCard
-                         reservation={reservation}
-                         guestName={reservation.user?.name || 'Guest'}
-                         guestImage={reservation.user?.image}
-                         guestId={reservation.user?.id}
-                         currentUser={currentUser}
-                    />
+                          <ReservationCard
+                               reservation={reservation}
+                               guestName={reservation.user?.name || 'Guest'}
+                               guestImage={reservation.user?.image}
+                               guestId={reservation.user?.id}
+                               currentUser={currentUser}
+                          />
+                          </div>
+
+                      ))}
                     </div>
+                </div>
 
-                ))}
-            </div>
-
-            {hasMore && (
-            <div className="flex justify-center mt-20">
-                <button
-                onClick={loadMoreReservations}
-                disabled={loadingMore}
-                className="px-6 py-2 rounded-full bg-black text-white hover:bg-neutral-800 transition text-sm"
-                >
-                {loadingMore ? (
-                    <div className="loader inline-block w-5 h-5 border-2 border-t-transparent border-white rounded-full animate-spin mt-1"></div>
-                ) : (
-                    "Load More"
+                {hasMore && (
+                  <div className="flex justify-center mt-20">
+                      <button
+                      onClick={loadMoreReservations}
+                      disabled={loadingMore}
+                      className="px-6 py-2 rounded-full bg-black text-white hover:bg-neutral-800 transition text-sm"
+                      >
+                      {loadingMore ? (
+                          <div className="loader inline-block w-5 h-5 border-2 border-t-transparent border-white rounded-full animate-spin mt-1"></div>
+                      ) : (
+                          "Load More"
+                      )}
+                      </button>
+                  </div>
                 )}
-                </button>
-            </div>
-            )}
 
             {showConfirm && pendingCancel && (
                 <ConfirmPopup

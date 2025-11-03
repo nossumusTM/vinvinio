@@ -1,20 +1,24 @@
 'use client';
 
-interface ContatinerProps {
-    children: React.ReactNode;
+import clsx from 'clsx';
+import { type ReactNode } from 'react';
+
+interface ContainerProps {
+  children: ReactNode;
+  className?: string;
 }
 
-const Container: React.FC<ContatinerProps> = ({ children }) => {
-    return (
-        <div
-            className="max-w-[2520px]
-                        mx-auto
-                        xl:px-10
-                        md:px-50
-                        sm:px-2
-                        px-4">
-            {children}
-        </div>);
-}
+const Container: React.FC<ContainerProps> = ({ children, className }) => {
+  return (
+    <div
+      className={clsx(
+        'mx-auto w-full max-w-[2520px] px-4 sm:px-6 lg:px-10',
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
+};
 
 export default Container;

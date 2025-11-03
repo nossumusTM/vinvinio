@@ -296,8 +296,8 @@ const MyListingsClient: React.FC<MyListingsClientProps> = ({ listings, currentUs
   );
 
   return (
-    <Container>
-      <div className="flex flex-col gap-10 py-10">
+    <Container className="py-10">
+      <div className="flex flex-col gap-10">
         <header className="space-y-2">
           <Heading
             title="My listings"
