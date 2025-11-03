@@ -245,7 +245,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
     fetchReviews();
   }, [reservations]);  
 
-  const loadMoreReservations = async () => {
+  const loadMoreReservations = useCallback(async () => {
     setLoadingMore(true);
     try {
       const res = await axios.get(`/api/reservations/load?skip=${page * 4}&take=4`);
@@ -258,8 +258,8 @@ const TripsClient: React.FC<TripsClientProps> = ({
     } finally {
       setLoadingMore(false);
     }
-  };  
-  
+  }, [page]);
+
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY < 50 && hasMore && !loadingMore) {
@@ -268,7 +268,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [hasMore, loadingMore]);
+  }, [hasMore, loadingMore, loadMoreReservations]);
 
   return (
     <>

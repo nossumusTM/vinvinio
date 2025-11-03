@@ -267,7 +267,7 @@ const MyListingsClient: React.FC<MyListingsClientProps> = ({ listings, currentUs
 
         {listings.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50/70 p-10 text-center text-neutral-500">
-            You haven't created any listings yet. Submit your first experience to see it here.
+            You haven&apos;t created any listings yet. Submit your first experience to see it here.
           </div>
         ) : (
           <div className="space-y-12">
