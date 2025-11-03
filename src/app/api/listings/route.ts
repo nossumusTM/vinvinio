@@ -326,6 +326,7 @@ export async function GET(request: Request) {
     activityForms: parseArrayParam(params.activityForms),
     seoKeywords: parseArrayParam(params.seoKeywords),
     languages: parseArrayParam(params.languages),
+    statuses: parseArrayParam(params.statuses),
   };
 
   try {

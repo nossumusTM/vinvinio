@@ -267,8 +267,12 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const [locationQuery, setLocationQuery] = useState('');
-  const { getAll } = useCountries();
+  const { getAll, getByValue } = useCountries();
   const allLocations = getAll();
+  const flatLocationTypeOptions = useMemo(
+    () => locationTypeOptions.flatMap((group) => group.options),
+    [],
+  );
 
   const searchInputRef = useRef<CountrySearchSelectHandle | null>(null);
   const [locationError, setLocationError] = useState(false);
@@ -298,16 +302,8 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
   };
 
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    reset,
-    control,
-    formState: { errors }
-  } = useForm<FieldValues>({
-    defaultValues: {
+  const defaultFormValues = useMemo(
+    () => ({
       category: [],
       location: null,
       guestCount: 1,
@@ -321,7 +317,7 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
       languages: [],
       locationType: [],
       locationDescription: '',
-      groupStyles: null,
+      groupStyles: [],
       durationCategory: null,
       environments: [],
       activityForms: [],
@@ -337,7 +333,20 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
           price: 100,
         },
       ] as PricingTier[],
-    }
+    }),
+    [],
+  );
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    reset,
+    control,
+    formState: { errors }
+  } = useForm<FieldValues>({
+    defaultValues: defaultFormValues,
   });
 
   const category = watch('category');
@@ -365,6 +374,9 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
     name: 'customPricing',
   });
 
+  const editingListing = experienceModal.editingListing;
+  const isEditing = Boolean(editingListing);
+
   // const Map = useMemo(
   //   () => dynamic(() => import('../Map'), { ssr: false }),
   //   [location]
@@ -384,6 +396,229 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
     },
     [setValue],
   );
+
+  useEffect(() => {
+    if (!experienceModal.isOpen) {
+      reset(defaultFormValues);
+      setLocationQuery('');
+      setLocationError(false);
+      setStep(STEPS.CATEGORY);
+      return;
+    }
+
+    if (!editingListing) {
+      reset(defaultFormValues);
+      setLocationQuery('');
+      setLocationError(false);
+      setStep(STEPS.CATEGORY);
+      return;
+    }
+
+    const toOption = (
+      value: string,
+      options: { value: string; label: string }[],
+    ) => {
+      const normalized = value?.trim();
+      if (!normalized) {
+        return undefined;
+      }
+      const match = options.find(
+        (option) =>
+          option.value === normalized || option.label === normalized,
+      );
+
+      if (match) {
+        return match;
+      }
+
+      return { value: normalized, label: normalized };
+    };
+
+    const resolveOptions = (
+      values: string[] | null | undefined,
+      options: { value: string; label: string }[],
+    ) =>
+      Array.isArray(values)
+        ? values
+            .map((value) => toOption(value, options))
+            .filter((value): value is { value: string; label: string } => Boolean(value))
+        : [];
+
+    const resolvedLanguages = resolveOptions(
+      editingListing.languages,
+      languageOptions,
+    );
+
+    const resolvedLocationTypes = resolveOptions(
+      editingListing.locationType,
+      flatLocationTypeOptions,
+    );
+
+    const resolvedGroupStyles = resolveOptions(
+      editingListing.groupStyles,
+      GROUP_STYLE_OPTIONS,
+    );
+
+    const resolvedEnvironments = resolveOptions(
+      editingListing.environments,
+      ENVIRONMENT_OPTIONS,
+    );
+
+    const resolvedActivities = resolveOptions(
+      editingListing.activityForms,
+      ACTIVITY_FORM_OPTIONS,
+    );
+
+    const resolvedKeywords = resolveOptions(
+      editingListing.seoKeywords,
+      SEO_KEYWORD_OPTIONS,
+    );
+
+    const [primaryKeywordOption, ...additionalKeywordOptions] =
+      resolvedKeywords;
+
+    const resolvedDuration = editingListing.durationCategory
+      ? toOption(editingListing.durationCategory, DURATION_OPTIONS)
+      : null;
+
+    const experienceHourValue = (() => {
+      if (typeof editingListing.experienceHour === 'number') {
+        return editingListing.experienceHour;
+      }
+      if (typeof editingListing.experienceHour === 'string') {
+        return Number(editingListing.experienceHour);
+      }
+      return null;
+    })();
+
+    const resolvedExperienceHour = experienceHourValue
+      ? hourOptions.find(
+          (option) => Number(option.value) === Number(experienceHourValue),
+        ) ?? { value: String(experienceHourValue), label: `${experienceHourValue} hours` }
+      : null;
+
+    const determineLocation = () => {
+      const raw = editingListing.locationValue;
+      if (!raw) return null;
+
+      const directMatch = allLocations.find(
+        (location: any) => location.value === raw,
+      );
+      if (directMatch) {
+        return { ...directMatch, value: raw };
+      }
+
+      const segments = raw.split('-');
+      if (segments.length === 0) {
+        return null;
+      }
+
+      const countryCode = segments[segments.length - 1]?.toUpperCase();
+      const fallbackCountry = countryCode ? getByValue(countryCode) : null;
+      const citySlug = segments.slice(0, -1).join('-');
+      const formattedCity = citySlug
+        ? citySlug
+            .split('-')
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+            .join(' ')
+        : fallbackCountry?.city;
+
+      if (fallbackCountry) {
+        return {
+          ...fallbackCountry,
+          value: raw,
+          city: formattedCity || fallbackCountry.city,
+        };
+      }
+
+      if (!formattedCity) {
+        return null;
+      }
+
+      return {
+        value: raw,
+        label: formattedCity,
+        city: formattedCity,
+        flag: '',
+        latlng: [0, 0] as [number, number],
+        region: '',
+      };
+    };
+
+    const resolvedLocation = determineLocation();
+
+    const pricingMode = (() => {
+      if (editingListing.pricingType) {
+        return editingListing.pricingType;
+      }
+      if (Array.isArray(editingListing.customPricing) && editingListing.customPricing.length > 0) {
+        return PRICING_TYPES.CUSTOM;
+      }
+      return PRICING_TYPES.FIXED;
+    })();
+
+    const normalizedCustomPricing =
+      pricingMode === PRICING_TYPES.CUSTOM &&
+      Array.isArray(editingListing.customPricing) &&
+      editingListing.customPricing.length > 0
+        ? editingListing.customPricing.map((tier) => ({
+            minGuests: Number(tier?.minGuests ?? 0),
+            maxGuests: Number(tier?.maxGuests ?? 0),
+            price: Number(tier?.price ?? 0),
+          }))
+        : defaultFormValues.customPricing;
+
+    reset(
+      {
+        ...defaultFormValues,
+        category: Array.isArray(editingListing.category)
+          ? editingListing.category
+          : [],
+        location: resolvedLocation,
+        guestCount: editingListing.guestCount ?? defaultFormValues.guestCount,
+        imageSrc: Array.isArray(editingListing.imageSrc)
+          ? editingListing.imageSrc
+          : [],
+        title: editingListing.title ?? '',
+        description: editingListing.description ?? '',
+        price: editingListing.price ?? defaultFormValues.price,
+        experienceHour: resolvedExperienceHour,
+        hostDescription: editingListing.hostDescription ?? '',
+        meetingPoint: editingListing.meetingPoint ?? '',
+        languages: resolvedLanguages,
+        locationType: resolvedLocationTypes,
+        locationDescription: editingListing.locationDescription ?? '',
+        groupStyles: resolvedGroupStyles,
+        durationCategory: resolvedDuration,
+        environments: resolvedEnvironments,
+        activityForms: resolvedActivities,
+        primarySeoKeyword: primaryKeywordOption ?? null,
+        seoKeywords: additionalKeywordOptions,
+        pricingType: pricingMode,
+        groupPrice: editingListing.groupPrice ?? null,
+        groupSize: editingListing.groupSize ?? null,
+        customPricing: normalizedCustomPricing,
+      },
+      { keepDefaultValues: true },
+    );
+
+    setLocationQuery(
+      resolvedLocation
+        ? `${resolvedLocation.city ? `${resolvedLocation.city}, ` : ''}${resolvedLocation.label}`
+        : '',
+    );
+    setLocationError(false);
+    setStep(STEPS.CATEGORY);
+  }, [
+    experienceModal.isOpen,
+    editingListing,
+    reset,
+    defaultFormValues,
+    setLocationError,
+    allLocations,
+    getByValue,
+    flatLocationTypeOptions,
+  ]);
 
   const previousStepRef = useRef(step);
 
@@ -694,18 +929,26 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
                 price: Math.max(1, Math.round(tier.price)),
               }))
             : null,
-        status: 'pending',
       };
 
-      axios.post('/api/listings', submissionData)
+      const request = isEditing && editingListing
+        ? axios.patch(`/api/listings/${editingListing.id}`, submissionData)
+        : axios.post('/api/listings', submissionData);
+
+      request
         .then(() => {
-          toast.success('Listing submitted for review', {
+          toast.success(
+            isEditing
+              ? 'Listing updates submitted for review'
+              : 'Listing submitted for review',
+            {
             iconTheme: {
               primary: '#2200ffff',
               secondary: '#fff',
             },
           });
-          reset();
+          reset(defaultFormValues);
+          setLocationQuery('');
           experienceModal.onClose();
           router.refresh();
           setStep(STEPS.CATEGORY);
@@ -715,9 +958,13 @@ const ExperienceModal = ({ currentUser }: { currentUser: SafeUser | null }) => {
     }
   };  
   
-  const actionLabel = useMemo(() => (
-    step === STEPS.PRICE ? 'Create' : 'Next'
-  ), [step]);
+  const actionLabel = useMemo(() => {
+    if (step === STEPS.PRICE) {
+      return isEditing ? 'Submit updates' : 'Create';
+    }
+
+    return 'Next';
+  }, [step, isEditing]);
 
   const secondaryActionLabel = useMemo(() => (
     step === STEPS.CATEGORY ? undefined : 'Back'
