@@ -1,0 +1,186 @@
+'use client';
+
+import { useCallback, useState } from "react";
+import { toast } from "react-hot-toast";
+import { signIn } from 'next-auth/react';
+import { getSession } from "next-auth/react";
+import {
+    FieldValues,
+    SubmitHandler,
+    useForm
+} from "react-hook-form";
+import { FcGoogle } from "react-icons/fc";
+import { AiFillGithub } from "react-icons/ai";
+import { useRouter } from "next/navigation";
+
+import useRegisterModal from "@/app/(marketplace)/hooks/useRegisterModal";
+import useLoginModal from "@/app/(marketplace)/hooks/useLoginModal";
+
+import ForgetPasswordModal from "./ForgetPasswordModal";
+import useForgetPasswordModal from "@/app/(marketplace)/hooks/useForgetPasswordModal";
+
+import Modal from "./Modal";
+import Input from "../inputs/Input";
+import Heading from "../Heading";
+import Button from "../Button";
+
+import axios from "axios";
+
+const LoginModal = () => {
+    const router = useRouter();
+    const loginModal = useLoginModal();
+    const registerModal = useRegisterModal();
+    const [isLoading, setIsLoading] = useState(false);
+    const [showGoogleConfirm, setShowGoogleConfirm] = useState(false);
+
+    const forgetPasswordModal = useForgetPasswordModal();
+
+    const {
+        register,
+        handleSubmit,
+        formState: {
+            errors,
+        },
+    } = useForm<FieldValues>({
+        defaultValues: {
+            email: '',
+            password: ''
+        },
+    });
+
+    const onSubmit: SubmitHandler<FieldValues> = async (data) => {
+        setIsLoading(true);
+      
+        const callback = await signIn('credentials', {
+          ...data,
+          redirect: false,
+        });
+      
+        setIsLoading(false);
+      
+        if (callback?.ok) {
+          toast.success('Benvenuto!', {
+            iconTheme: {
+                primary: '#2200ffff',
+                secondary: '#fff',
+            },
+          });
+      
+          await getSession(); // Refresh session
+          router.refresh();   // Refresh UI (re-fetch currentUser)
+          loginModal.onClose();
+        }
+      
+        if (callback?.error) {
+          toast.error(callback.error);
+        }
+      };      
+
+      const handleGoogleLogin = async () => {
+        try {
+          setIsLoading(true);
+      
+          await signIn('google', { callbackUrl: '/' });
+        } catch (err) {
+          console.error(err);
+          toast.error('Google login failed.');
+        } finally {
+          setIsLoading(false);
+        }
+      };      
+
+    const onToggle = useCallback(() => {
+        loginModal.onClose();
+        registerModal.onOpen();
+    }, [loginModal, registerModal])
+
+    const bodyContent = (
+        <div className="flex flex-col gap-4">
+            <Heading
+                title="The world&apos;s calling. You in?"
+                subtitle="Proceed with your account to plan your next adventure."
+            />
+            <Input
+                id="email"
+                label="Email"
+                disabled={isLoading}
+                register={register}
+                errors={errors}
+                required
+                inputClassName="rounded-xl"
+            />
+            <Input
+                id="password"
+                label="Password"
+                type="password"
+                disabled={isLoading}
+                register={register}
+                errors={errors}
+                required
+                inputClassName="rounded-xl"
+            />
+            <button
+                onClick={() => {
+                    loginModal.onClose();
+                    forgetPasswordModal.onOpen();
+                }}
+                className="text-sm text-neutral-600
+                            hover:text-neutral-800
+                            font-normal
+                            cursor-pointer 
+                            mt-1 px-1 self-start"
+                >
+                Need help signing in?
+            </button>
+        </div>
+    )
+
+    const footerContent = (
+        <div className="flex flex-col gap-4 mt-3">
+            <hr />
+            <Button
+                outline
+                label="Continue with Google"
+                icon={FcGoogle}
+                onClick={() => signIn('google')}
+            />
+            {/* <Button
+                outline
+                label="Continue with Github"
+                icon={AiFillGithub}
+                onClick={() => signIn('github')}
+            /> */}
+            
+            <div className="
+      text-neutral-800 text-center mt-4 font-light">
+                <p>New on <strong>Vuola</strong>?
+                    <span
+                        onClick={onToggle}
+                        className="
+              text-black
+              font-normal
+              cursor-pointer 
+              underline
+            "
+                    > Create an account</span>
+                </p>
+            </div>
+        </div>
+    )
+
+    return (
+        <Modal
+            disabled={isLoading}
+            isOpen={loginModal.isOpen}
+            title="Sign In"
+            actionLabel="Continue"
+            onClose={loginModal.onClose}
+            onSubmit={handleSubmit(onSubmit)}
+            body={bodyContent}
+            footer={footerContent}
+            className=""
+        />
+    );
+}
+
+export default LoginModal;
