@@ -21,11 +21,19 @@ enum ListingStatus {
   pending
   approved
   rejected
+  revision
+  inactive
 }
 
 enum ReservationStatus {
   active
   cancelled
+}
+
+enum PricingType {
+  fixed
+  group
+  custom
 }
 
 enum NewsletterType {
@@ -100,6 +108,7 @@ model Listing {
   hostDescription     String?
   imageSrc            String[]
   createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
   category            String[]
   roomCount           Int
   bathroomCount       Int
@@ -118,6 +127,10 @@ model Listing {
   userId              String        @db.ObjectId
   status              ListingStatus @default(pending)
   price               Int
+  pricingType         PricingType?  @default(fixed)
+  groupPrice          Int?
+  groupSize           Int?
+  customPricing       Json?
   user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   reservations        Reservation[]
   reviews             Review[]
