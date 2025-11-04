@@ -43,7 +43,7 @@ const ReservationsClient: React.FC<ReservationsClientProps> = ({
         setShowConfirm(true);
     }, []);
 
-    const loadMoreReservations = async () => {
+    const loadMoreReservations = useCallback(async () => {
         setLoadingMore(true);
         try {
           const res = await axios.get(`/api/reservations/load?skip=${page * 4}&take=4`); // 👈 Fetch 4
@@ -56,7 +56,7 @@ const ReservationsClient: React.FC<ReservationsClientProps> = ({
         } finally {
           setLoadingMore(false);
         }
-      };      
+      }, [page]);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -65,10 +65,10 @@ const ReservationsClient: React.FC<ReservationsClientProps> = ({
             loadMoreReservations();
           }
         };
-      
+
         window.addEventListener("scroll", handleScroll);
         return () => window.removeEventListener("scroll", handleScroll);
-      }, [hasMore, loadingMore]);      
+      }, [hasMore, loadingMore, loadMoreReservations]);
 
     return (
         <Container>

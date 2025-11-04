@@ -9,6 +9,7 @@ import { TbCurrencyEuro } from "react-icons/tb";
 
 interface InputProps {
   id: string;
+  name?: string;
   label: string;
   type?: string;
   disabled?: boolean;
@@ -23,6 +24,7 @@ interface InputProps {
 
 const Input: React.FC<InputProps> = ({
   id,
+  name,
   label,
   type = "text",
   disabled,
@@ -33,6 +35,27 @@ const Input: React.FC<InputProps> = ({
   textarea,
   inputClassName
 }) => {
+  const fieldName = name ?? id;
+
+  const resolveError = (path: string, bag: FieldErrors<FieldValues>): unknown => {
+    return path.split('.').reduce<unknown>((acc, segment) => {
+      if (acc === undefined || acc === null) return undefined;
+
+      if (Array.isArray(acc)) {
+        const index = Number(segment);
+        return Number.isNaN(index) ? undefined : acc[index];
+      }
+
+      if (typeof acc === 'object') {
+        return (acc as Record<string, unknown>)[segment];
+      }
+
+      return undefined;
+    }, bag);
+  };
+
+  const fieldError = resolveError(fieldName, errors);
+  const hasError = Boolean(fieldError);
   return (
     <div className="w-full relative">
       {formatPrice && (
@@ -46,15 +69,15 @@ const Input: React.FC<InputProps> = ({
         <textarea
           id={id}
           disabled={disabled}
-          {...register(id, { required })}
+          {...register(fieldName, { required })}
           placeholder=" "
           rows={6}
           className={`
             peer w-full px-4 pt-6 pb-2 text-base font-light bg-white shadow-md rounded-md outline-none transition
             disabled:opacity-70 disabled:cursor-not-allowed
             ${formatPrice ? 'pl-9' : ''}
-            ${errors[id] ? 'border-rose-500' : 'border-neutral-300'}
-            ${errors[id] ? 'focus:border-rose-500' : 'focus:border-black'}
+            ${hasError ? 'border-rose-500' : 'border-neutral-300'}
+            ${hasError ? 'focus:border-rose-500' : 'focus:border-black'}
             ${inputClassName || ''}
           `}
         />
@@ -62,15 +85,15 @@ const Input: React.FC<InputProps> = ({
         <input
           id={id}
           disabled={disabled}
-          {...register(id, { required })}
+          {...register(fieldName, { required })}
           placeholder=" "
           type={type}
           className={`
             peer w-full h-11 px-4 pt-[14px] pb-[2px] text-base font-light bg-white shadow-md rounded-md outline-none transition
             disabled:opacity-70 disabled:cursor-not-allowed
             ${formatPrice ? 'pl-9' : ''}
-            ${errors[id] ? 'border-rose-500' : 'border-neutral-300'}
-            ${errors[id] ? 'focus:border-rose-500' : 'focus:border-black'}
+            ${hasError ? 'border-rose-500' : 'border-neutral-300'}
+            ${hasError ? 'focus:border-rose-500' : 'focus:border-black'}
             ${inputClassName || ''}
           `}
         />
@@ -87,8 +110,8 @@ const Input: React.FC<InputProps> = ({
             peer-focus:scale-90 peer-placeholder-shown:scale-100
             peer-[&:not(:placeholder-shown)]:top-1 peer-[&:not(:placeholder-shown)]:translate-y-0
             peer-[&:not(:placeholder-shown)]:scale-90
-            ${errors[id] ? 'text-rose-500' : 'text-zinc-400'}
-          `}          
+            ${hasError ? 'text-rose-500' : 'text-zinc-400'}
+          `}
       >
         {label}
       </label>
