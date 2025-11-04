@@ -7,6 +7,9 @@
     "build": "prisma generate && next build",
     "start": "prisma generate && next start",
     "lint": "next lint",
+    "test": "npm run test:build && npm run test:run",
+    "test:build": "tsc -p tsconfig.test.json",
+    "test:run": "node --test \".test-dist/**/*.test.js\"",
     "postinstall": "prisma generate && patch-package"
   },
   "dependencies": {

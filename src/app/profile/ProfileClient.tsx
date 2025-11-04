@@ -321,7 +321,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   
     // Clear interval on unmount
     return () => clearInterval(interval);
-  }, []);  
+  }, [currentUser?.role]);
 
   useEffect(() => {
     const fetchUserCoupon = async () => {
@@ -361,7 +361,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
     const interval = setInterval(fetchHostAnalytics, 20000);
   
     return () => clearInterval(interval);
-  }, [currentUser]);  
+  }, [currentUser?.role]);
 
   useEffect(() => {
     try {
@@ -401,7 +401,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
       fetchPayoutMethod();
     }
     // fetchPayoutMethod();
-  }, [payoutUpdated]);
+  }, [payoutUpdated, currentUser?.role]);
 
   useEffect(() => {
     if (['promoter', 'host'].includes(currentUser.role)) {
