@@ -104,6 +104,13 @@ export default async function getCurrentUser(): Promise<SafeUser | null> {
         contact: true,
         legalName: true,
         address: true,
+        bio: true,
+        visitedCountries: true,
+        visitedCities: true,
+        profession: true,
+        hobbies: true,
+        preferredContacts: true,
+        identityVerified: true,
         createdAt: true,
         updatedAt: true,
         emailVerified: true,
@@ -122,6 +129,13 @@ export default async function getCurrentUser(): Promise<SafeUser | null> {
       legalName: user.legalName ?? null,
       address: user.address ?? null,
       hostName: user.hostName || null,
+      bio: user.bio ?? null,
+      visitedCountries: Array.isArray(user.visitedCountries) ? user.visitedCountries : [],
+      visitedCities: Array.isArray(user.visitedCities) ? user.visitedCities : [],
+      profession: user.profession ?? null,
+      hobbies: Array.isArray(user.hobbies) ? user.hobbies : [],
+      preferredContacts: Array.isArray(user.preferredContacts) ? user.preferredContacts : [],
+      identityVerified: typeof user.identityVerified === 'boolean' ? user.identityVerified : false,
     };
   } catch (error) {
     console.error("getCurrentUser error:", error);

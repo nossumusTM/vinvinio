@@ -9,7 +9,7 @@ import { RiUserHeartFill } from "react-icons/ri";
 import { GiExtraTime } from "react-icons/gi";
 import LocationDescription from '../LocationDescription';
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Button from "../Button";
 
 import useCountries from "@/app/(marketplace)/hooks/useCountries";
@@ -17,6 +17,7 @@ import { SafeUser } from "@/app/(marketplace)/types";
 
 import Avatar from "../Avatar";
 import ListingCategory from "./ListingCategory";
+import { useRouter } from "next/navigation";
 
 const Map = dynamic(() => import('../Map'), {
     ssr: false
@@ -73,6 +74,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
     seoKeywords,
 }) => {
     const { getByValue } = useCountries();
+    const router = useRouter();
 
     const coordinates = getByValue(locationValue)?.latlng
 
@@ -109,6 +111,13 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
         if (user?.id) fetchHostReviews();
     }, [user?.id]);
 
+    const handleHostNavigate = useCallback(() => {
+        if (!user?.id) {
+            return;
+        }
+        router.push(`/hosts/${user.id}`);
+    }, [router, user?.id]);
+
     return (
         <div className="col-span-4 flex flex-col gap-8">
             <div className="flex flex-col gap-2">
@@ -126,9 +135,13 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                     <div className="w-full rounded-2xl p-8 rounded-xl flex items-center gap-3 justify-center items-center">
                     <Avatar src={user?.image} name={user?.name} size={65}/>
                     <div className="mt-2 flex text-sm flex-col justify-start font-normal items-center">
-                        <div className="px-2 py-1 rounded-full font-semibold bg-neutral-100 select-none">
-                        {user?.name}
-                        </div>
+                        <button
+                            type="button"
+                            onClick={handleHostNavigate}
+                            className="px-3 py-1 rounded-full font-semibold bg-neutral-100 hover:bg-neutral-200 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300"
+                        >
+                        {user?.name || 'Host'}
+                        </button>
 
                     {averageRating !== null && (
                         <div className="flex items-center gap-2 justify-center">

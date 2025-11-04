@@ -51,4 +51,11 @@ export type SafeUser = Omit<
   legalName: string | null;
   address: string | null;
   hostName: string | null;
+  bio: string | null;
+  visitedCountries: string[];
+  visitedCities: string[];
+  profession: string | null;
+  hobbies: string[];
+  preferredContacts: string[];
+  identityVerified: boolean;
 };
