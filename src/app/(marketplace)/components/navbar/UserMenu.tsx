@@ -43,6 +43,8 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
 
   const messenger = useMessenger();
 
+  const hostCardHref = currentUser?.id ? `/hosts/${currentUser.id}` : '/';
+
   const toggleOpen = useCallback(() => {
     setIsOpen((value) => !value);
   }, []);
@@ -329,6 +331,13 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                       }}
                       href="/favorites"
                     />
+                    <MenuItem
+                      label="My Social Card"
+                      onClick={() => {
+                        setIsOpen(false);
+                      }}
+                      href="/social-card"
+                    />
                     {(userRole === 'customer') && (
                         <>
                         <hr className="my-2" />
@@ -418,6 +427,13 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                         setIsOpen(false);
                       }}
                       href="/my-listings"
+                    />
+                    <MenuItem
+                      label="Host Profile Card"
+                      onClick={() => {
+                        setIsOpen(false);
+                      }}
+                      href={hostCardHref}
                     />
                     {(userRole === 'host') && (
                         <>

@@ -76,6 +76,13 @@ model User {
   legalName String?
   address   String?
   hostName  String?
+  bio              String?
+  visitedCountries String[] @default([])
+  visitedCities    String[] @default([])
+  profession       String?
+  hobbies          String[] @default([])
+  preferredContacts String[] @default([])
+  identityVerified Boolean  @default(false)
 
   resetTokens PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]

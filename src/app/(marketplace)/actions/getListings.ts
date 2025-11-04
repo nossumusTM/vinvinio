@@ -92,11 +92,28 @@ export default async function getListings(
           | 'seoKeywords'
       >;
 
+      const prismaUser = user as unknown as SafeUser & {
+        visitedCountries?: string[];
+        visitedCities?: string[];
+        hobbies?: string[];
+        preferredContacts?: string[];
+        bio?: string | null;
+        profession?: string | null;
+        identityVerified?: boolean;
+      };
+
       const safeUser: SafeUser = {
-        ...(user as unknown as SafeUser),
+        ...(prismaUser as SafeUser),
         createdAt: user.createdAt.toISOString(),
         updatedAt: (user.updatedAt ?? user.createdAt).toISOString(),
         emailVerified: user.emailVerified?.toISOString() || null,
+        bio: prismaUser.bio ?? null,
+        visitedCountries: Array.isArray(prismaUser.visitedCountries) ? [...prismaUser.visitedCountries] : [],
+        visitedCities: Array.isArray(prismaUser.visitedCities) ? [...prismaUser.visitedCities] : [],
+        profession: prismaUser.profession ?? null,
+        hobbies: Array.isArray(prismaUser.hobbies) ? [...prismaUser.hobbies] : [],
+        preferredContacts: Array.isArray(prismaUser.preferredContacts) ? [...prismaUser.preferredContacts] : [],
+        identityVerified: typeof prismaUser.identityVerified === 'boolean' ? prismaUser.identityVerified : false,
       };
 
       const safeListing: SafeListing = {
