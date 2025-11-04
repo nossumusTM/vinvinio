@@ -13,7 +13,7 @@ import {
 import { LuMapPin, LuSparkles } from 'react-icons/lu';
 import clsx from 'clsx';
 
-import useCountries from '@/app/hooks/useCountries';
+import useCountries from '@/app/(marketplace)/hooks/useCountries';
 
 export type CountrySelectValue = {
   flag: string;

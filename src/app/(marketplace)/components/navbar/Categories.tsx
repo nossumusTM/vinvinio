@@ -49,14 +49,14 @@ import {
   DURATION_OPTIONS,
   ENVIRONMENT_OPTIONS,
   GROUP_STYLE_OPTIONS,
-} from '@/app/constants/experienceFilters';
+} from '@/app/(marketplace)/constants/experienceFilters';
 import CountrySearchSelect, {
   type CountrySelectValue,
   type CountrySearchSelectHandle,
 } from '../inputs/CountrySearchSelect';
-import useExperienceSearchState from '@/app/hooks/useExperienceSearchState';
-import useCountries from '@/app/hooks/useCountries';
-import { LANGUAGE_OPTIONS } from '@/app/constants/locale';
+import useExperienceSearchState from '@/app/(marketplace)/hooks/useExperienceSearchState';
+import useCountries from '@/app/(marketplace)/hooks/useCountries';
+import { LANGUAGE_OPTIONS } from '@/app/(marketplace)/constants/locale';
 
 declare global {
   interface WindowEventMap {
