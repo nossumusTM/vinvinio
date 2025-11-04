@@ -2,10 +2,13 @@ export const dynamic = 'force-dynamic';
 import prisma from "@/app/(marketplace)/libs/prismadb";
 import { ensureListingSlug } from "@/app/(marketplace)/libs/ensureListingSlug";
 import { normalizePricingSnapshot } from "@/app/(marketplace)/libs/pricing";
+import type { Prisma } from '@prisma/client';
 
 interface IParams {
   listingId?: string;
 }
+
+type SafePricingTier = { minGuests: number; maxGuests: number; price: number };
 
 export default async function getListingById(params: IParams) {
   try {
@@ -60,7 +63,11 @@ export default async function getListingById(params: IParams) {
       pricingType: pricingSnapshot.mode ?? null,
       groupPrice: pricingSnapshot.groupPrice,
       groupSize: pricingSnapshot.groupSize,
-      customPricing: pricingSnapshot.tiers.length > 0 ? pricingSnapshot.tiers : null,
+      // customPricing: pricingSnapshot.tiers.length > 0 ? pricingSnapshot.tiers : null,
+      customPricing:
+        pricingSnapshot.tiers.length > 0
+          ? (pricingSnapshot.tiers as SafePricingTier[])
+          : null,
       createdAt: listingWithSlug.createdAt.toString(),
       user: {
         ...listingWithSlug.user,

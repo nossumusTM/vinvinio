@@ -23,10 +23,12 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
     notFound();
   }
 
+  const isStaff = (role: unknown): role is 'moder' | 'admin' =>
+    role === 'moder' || role === 'admin';
+
   const canEdit =
     listing.userId === currentUser.id ||
-    currentUser.role === 'moder' ||
-    currentUser.role === 'admin';
+    isStaff(currentUser.role);
 
   if (!canEdit) {
     redirect('/my-listings');
