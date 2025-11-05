@@ -1,0 +1,16 @@
+<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="tourGradient" x1="20" y1="18" x2="76" y2="76" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF9A9E" />
+      <stop offset="1" stop-color="#FAD0C4" />
+    </linearGradient>
+  </defs>
+  <rect x="14" y="30" width="68" height="30" rx="12" fill="url(#tourGradient)" />
+  <rect x="24" y="22" width="28" height="16" rx="6" fill="#fff" opacity="0.8" />
+  <rect x="52" y="22" width="20" height="16" rx="6" fill="#fff" opacity="0.65" />
+  <circle cx="30" cy="64" r="8" fill="#4C4C6D" />
+  <circle cx="66" cy="64" r="8" fill="#4C4C6D" />
+  <circle cx="30" cy="64" r="4" fill="#D1D1E0" />
+  <circle cx="66" cy="64" r="4" fill="#D1D1E0" />
+  <path d="M20 54H76" stroke="#fff" stroke-width="3" stroke-linecap="round" />
+</svg>

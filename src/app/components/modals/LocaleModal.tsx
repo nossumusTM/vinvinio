@@ -179,7 +179,7 @@ const LocaleModal = () => {
       actionLabel={t('done')}
       title={t('personaliseExperience')}
       body={bodyContent}
-      className="max-h-[70vh]"
+      className="max-h-[60vh]"
     />
   );
 };
