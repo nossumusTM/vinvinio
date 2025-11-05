@@ -40,7 +40,7 @@ export const metadata = {
   title: 'Vuola - Experience World Beyond the Ordinary | 2025',
   description: 'Beyond Experiences & More',
   icons: {
-    icon: '/favicon.ico', // ✅ tells Next.js where to find it
+    icon: '/favicon.ico',
   },
 };
 

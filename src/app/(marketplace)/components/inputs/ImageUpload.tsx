@@ -304,6 +304,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
           relative
           cursor-pointer
           hover:opacity-70
+          rounded-xl
           transition
           border-dashed 
           border-2 

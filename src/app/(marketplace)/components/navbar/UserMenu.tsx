@@ -429,7 +429,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                       href="/my-listings"
                     />
                     <MenuItem
-                      label="Host Profile Card"
+                      label="Host Card"
                       onClick={() => {
                         setIsOpen(false);
                       }}

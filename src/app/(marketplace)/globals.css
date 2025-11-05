@@ -188,3 +188,18 @@ body:not(.has-announcement-bar) #layout-content-wrapper {
 .categorybox {
   margin-left: -10px;
 }
+
+.reactEasyCrop_Container {
+  background: transparent !important;
+}
+
+.reactEasyCrop_Image {
+  background: transparent !important; /* in case your image has no alpha */
+}
+
+/* This shadow is the dark mask outside the crop box */
+.reactEasyCrop_CropArea {
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0) !important; /* fully transparent */
+  background: transparent !important;  /* ensure the crop box itself has no bg */
+  border: none; /* optional: remove white border if you don’t want it */
+}

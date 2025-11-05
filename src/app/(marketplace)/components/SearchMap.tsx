@@ -57,6 +57,12 @@ const Map: React.FC<MapProps> = ({ center, city, country }) => {
   const mapRef = useRef<L.Map | null>(null);
   const mapIdRef = useRef(`map-${Math.random().toString(36).slice(2, 9)}`);
 
+  const [inView, setInView] = useState(false);
+  const [isMapReady, setIsMapReady] = useState(false);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+
+  const [coordsReady, setCoordsReady] = useState<boolean>(!!center);
+
   const effectiveCenter = useMemo<L.LatLngTuple>(() => {
     if (coordinates && coordinates.length === 2) {
       return [coordinates[0], coordinates[1]];
@@ -71,6 +77,7 @@ const Map: React.FC<MapProps> = ({ center, city, country }) => {
   useEffect(() => {
     if (center && Array.isArray(center) && center.length === 2) {
       setCoordinates(center);
+      setCoordsReady(true);
     }
   }, [center?.[0], center?.[1]]);
 
@@ -88,6 +95,7 @@ const Map: React.FC<MapProps> = ({ center, city, country }) => {
           if (data?.length > 0) {
             const { lat, lon } = data[0];
             setCoordinates([parseFloat(lat), parseFloat(lon)]);
+            setCoordsReady(true);
           }
         } catch (err) {
           if ((err as Error).name !== 'AbortError') {
@@ -112,33 +120,87 @@ const Map: React.FC<MapProps> = ({ center, city, country }) => {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  if (!isClient) return null;
+  // if (!isClient) return null;
+
+  useEffect(() => {
+    if (!rootRef.current) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+    io.observe(rootRef.current);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (center || city || country) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('https://ipapi.co/json/');
+        const data = await res.json();
+        if (!cancelled && data?.latitude && data?.longitude) {
+          setCoordinates([Number(data.latitude), Number(data.longitude)]);
+          setCoordsReady(true);
+        }
+      } catch {
+        // silently ignore, fallback stays in place
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [center, city, country]);
+
+  useEffect(() => {
+    if (!isMapReady || !mapRef.current) return;
+    mapRef.current.setView(effectiveCenter, 10, { animate: false });
+  }, [effectiveCenter, isMapReady]);
 
   return (
-    <div className="relative h-full w-full">
-      <MapContainer
-        key={mapIdRef.current}
-        center={effectiveCenter as L.LatLngExpression}
-        zoom={10}
-        scrollWheelZoom={false}
-        className="h-full w-full"
-        attributionControl={false}
-      >
-        <CaptureMapRef
-          onReady={(mapInstance) => {
-            mapRef.current = mapInstance;
-            window.setTimeout(() => {
-              mapInstance.invalidateSize();
-              mapInstance.setView(effectiveCenter, 10, { animate: false });
-            }, 80);
-          }}
-        />
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        <RecenterMap coords={effectiveCenter} />
-        <Marker position={effectiveCenter as L.LatLngExpression} />
-      </MapContainer>
+    <div ref={rootRef} className="relative h-full w-full">
+      {(!isClient || !inView || !coordsReady) && (
+        <div className="absolute inset-0 animate-pulse bg-neutral-100 rounded-lg" />
+      )}
+
+      {isClient && inView && coordsReady && (
+        <MapContainer
+          key={mapIdRef.current}
+          center={effectiveCenter as L.LatLngExpression}
+          zoom={10}
+          scrollWheelZoom={false}
+          className="h-full w-full"
+          attributionControl={false}
+          whenReady={() => setIsMapReady(true)}
+        >
+          <CaptureMapRef
+            onReady={(mapInstance) => {
+              mapRef.current = mapInstance;
+              window.setTimeout(() => mapInstance.invalidateSize(), 80);
+            }}
+          />
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            eventHandlers={{ load: () => setIsMapReady(true) }}
+          />
+          <Marker position={effectiveCenter as L.LatLngExpression} />
+        </MapContainer>
+      )}
+
+      {isClient && inView && coordsReady && !isMapReady && (
+        <div className="absolute inset-0 pointer-events-none bg-white/70">
+          <div className="absolute inset-0 flex items-center justify-center text-sm text-neutral-600">
+            Loading map…
+          </div>
+        </div>
+      )}
     </div>
   );
+
+
 };
 
 export default Map;

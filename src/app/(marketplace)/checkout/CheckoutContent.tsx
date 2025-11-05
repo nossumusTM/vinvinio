@@ -626,7 +626,7 @@ const handleSubmit = async () => {
             placeholder="Full name (Name and Surname)"
             value={legalName}
             onChange={(e) => setLegalName(e.target.value)}
-            className="w-full transition border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-black p-2 rounded-lg"
+            className="w-full transition border border-neutral-300 focus:outline-none focus:ring-2 -black p-2 rounded-lg"
           />
         </div>
 

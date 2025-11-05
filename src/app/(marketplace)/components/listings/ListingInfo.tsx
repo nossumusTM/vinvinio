@@ -134,7 +134,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                     {/* <div className="w-full rounded-2xl p-8 rounded-xl flex items-center gap-3 justify-between items-center"> */}
                     <div className="w-full rounded-2xl p-8 rounded-xl flex items-center gap-3 justify-center items-center">
                     <Avatar src={user?.image} name={user?.name} size={65}/>
-                    <div className="mt-2 flex text-sm flex-col justify-start font-normal items-center">
+                    <div className="mt-2 flex text-md md:text-lg flex-col justify-start font-normal items-center">
                         <button
                             type="button"
                             onClick={handleHostNavigate}
