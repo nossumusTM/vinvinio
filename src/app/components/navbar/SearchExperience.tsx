@@ -1,6 +1,6 @@
 'use client';
 
-import { useSearchParams, usePathname } from 'next/navigation';
+import { useSearchParams, usePathname } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import Image from 'next/image';
@@ -120,4 +120,3 @@ const SearchExperience = () => {
 };
 
 export default SearchExperience;
-
