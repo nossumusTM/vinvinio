@@ -33,6 +33,7 @@ const nextConfig = {
       "lh3.googleusercontent.com",
     ],
   },
+  transpilePackages: ['maplibre-gl'],
 };
 
 module.exports = nextConfig;

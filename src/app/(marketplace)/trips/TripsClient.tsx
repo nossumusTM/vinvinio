@@ -287,7 +287,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
           return (
             <div
               key={reservation.id}
-              className="relative bg-white border border-neutral-200 rounded-3xl shadow-md hover:shadow-lg transition duration-300 overflow-hidden"
+              className="relative bg-white rounded-3xl shadow-md hover:shadow-lg transition duration-300 overflow-hidden"
             >
               {/* ✅ Status Label with fallback */}
               {reservation.status === 'cancelled' ? (
@@ -319,40 +319,70 @@ const TripsClient: React.FC<TripsClientProps> = ({
                 </div>
               )}
 
-              <div className="p-4 flex flex-col gap-2 items-center text-black">
-
-              <div className="flex flex-wrap items-center gap-3 text-[15px] text-neutral-800 shadow-md border border-white rounded-full px-2 py-1 mb-4 mt-4">
-
-              {/* Guest Count */}
-              <div className="flex items-center gap-1 text-xs font-semibold">
-                <span className="font-semibold">{reservation.guestCount}</span>
-                {reservation.guestCount === 1 ? "Guest" : "Guests"}
-              </div>
-
-              {/* Dot Separator */}
-              <span className="text-neutral-400 select-none text-xs">•</span>
-
-              {/* Date */}
-              <div className="text-neutral-600 text-xs font-semibold">
-                {format(new Date(reservation.startDate), "PPP")}
-              </div>
-
-              {/* Dot Separator */}
-              <span className="text-neutral-400 select-none text-xs">•</span>
-
-              {/* Time */}
-              <div className="text-neutral-600 text-xs font-semibold">
-                {(() => {
-                  const [h, m] = reservation.time.split(":").map(Number);
-                  const hour12 = (h % 12) || 12;
-                  const ampm = h >= 12 ? "PM" : "AM";
-                  return `${hour12}:${String(m).padStart(2, "0")} ${ampm}`;
-                })()}
-              </div>
-
-            </div>
+              <div className="px-4 pt-2 flex flex-col gap-2 text-black">
 
                 <div className="p-4 text-lg font-semibold">{reservation.listing.title}</div>
+                
+
+              {/* Reservation Meta — stacked, left-aligned (same as ReservationCard) */}
+              <div className="pt-2 pb-4 w-full max-w-md p-4 rounded-xl md:mx-0 mx-auto">
+                <div className="flex flex-col gap-3">
+
+                  {/* Guests */}
+                  <div className="w-full rounded-2xl bg-white/90 backdrop-blur-md px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="shadow-md shrink-0 h-9 w-9 rounded-xl flex items-center justify-center">
+                        <TbUserSquareRounded className="text-neutral-700 text-[18px]" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[8px] uppercase tracking-wide text-neutral-500">Guests</p>
+                        <p className="text-[15px] font-semibold text-neutral-900">
+                          {reservation.guestCount}{' '}
+                          <span className="font-normal text-neutral-700">
+                            {reservation.guestCount === 1 ? 'Guest' : 'Guests'}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Date */}
+                  <div className="w-full rounded-2xl bg:white/90 backdrop-blur-md px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="shadow-md shrink-0 h-9 w-9 rounded-xl flex items-center justify-center">
+                        <TbCalendarTime className="text-neutral-700 text-[18px]" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[8px] uppercase tracking-wide text-neutral-500">Date</p>
+                        <p className="text-[15px] font-semibold text-neutral-900 break-words">
+                          {format(new Date(reservation.startDate), 'PPP')}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Time */}
+                  <div className="w-full rounded-2xl bg-white/90 backdrop-blur-md px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="shadow-md shrink-0 h-9 w-9 rounded-xl flex items-center justify-center">
+                        <TbClock className="text-neutral-700 text-[18px]" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[8px] uppercase tracking-wide text-neutral-500">Time</p>
+                        <p className="text-[15px] font-semibold text-neutral-900">
+                          {(() => {
+                            const [h, m] = reservation.time.split(':').map(Number);
+                            const hour12 = (h % 12) || 12;
+                            const ampm = h >= 12 ? 'PM' : 'AM';
+                            return `${hour12}:${String(m ?? 0).padStart(2, '0')} ${ampm}`;
+                          })()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
 
                  {/* <div className="text-sm text-neutral-600">{reservationDate}</div> */}
 
@@ -385,39 +415,53 @@ const TripsClient: React.FC<TripsClientProps> = ({
                 })()}</div>
                 </div> */}
 
-                <hr className="mt-6 mb-6 w-screen relative left-1/2 right-1/2 -translate-x-1/2 border-t border-neutral-200" />
+                {/* <hr className="mt-3 mb-6 w-screen relative left-1/2 right-1/2 -translate-x-1/2 border-t border-neutral-200" /> */}
+                <div className="flex flex-col items-center mt-4">
+                  <p className="text-xs font-medium text-neutral-700">Hosted by</p>
+                  </div>
 
                 <div className="flex flex-col items-center gap-2">
-                  {/* <p className="text-md font-medium text-neutral-700 pt-6">Guided by</p> */}
-                  <Avatar src={hostImage} name={hostName} />
-                  <span className="text-md font-semibold">{hostName}</span>
+                  {/* Avatar (click → open host profile) */}
+                  <button
+                    type="button"
+                    onClick={() => window.open(`/hosts/${host?.id}`, "_blank")}
+                    className="rounded-full outline-none focus:ring-2 focus:ring-black/40 transition"
+                  >
+                    <Avatar src={hostImage} name={hostName} />
+                  </button>
+
+                  {/* Host Name (click → open host profile) */}
+                  <span
+                    onClick={() => window.open(`/hosts/${host?.id}`, "_blank")}
+                    className="text-md font-semibold text-neutral-900 hover:underline cursor-pointer"
+                  >
+                    {hostName}
+                  </span>
+
+                  {/* Direct Message Button */}
                   <button
                     onClick={() => {
                       if (currentUser?.id === host?.id) return;
 
-                      const recipient = {
-                        id: host?.id ?? '',
+                      messenger.openChat({
+                        id: host?.id ?? "",
                         name: hostName,
                         image: hostImage ?? undefined,
-                      };
-
-                      messenger.openChat(recipient);
+                      });
                     }}
-                    className="text-xs text-neutral-700 hover:bg-neutral-200 bg-neutral-100 p-3 font-semibold rounded-lg transition"
+                    className="text-xs text-neutral-700 hover:bg-neutral-200 bg-neutral-100 px-3 py-2 font-semibold rounded-lg transition"
                   >
                     <div className="flex flex-row gap-1 items-center">
-                      {/* <BiPaperPlane size={12} /> */}
-                      <p> Send a Message</p>
+                      <p>Direct Message</p>
                     </div>
                   </button>
                 </div>
-
 
                 {new Date(reservation.startDate) > new Date(Date.now() + 24 * 60 * 60 * 1000) ? (
                   <button
                     onClick={() => openCancelModal(reservation.id)}
                     disabled={deletingId === reservation.id}
-                    className="mt-4 text-sm font-medium text-neutral-700 hover:underline hover:text-black transition disabled:opacity-50"
+                    className="mb-6 mt-4 text-sm font-medium text-neutral-700 hover:underline hover:text-black transition disabled:opacity-50"
                   >
                     Need to cancel for some reason?
                   </button>
@@ -439,7 +483,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
 
               </div>
 
-              {currentUser?.role === 'customer' || currentUser?.role === 'promoter' && (
+              {currentUser?.role === 'customer' && (
                 <div className="mt-4 border-t pt-6 flex flex-col items-center justify-center text-center">
                   {submittedReviews[reservation.id] ? (
                     <>

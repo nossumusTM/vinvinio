@@ -1,7 +1,12 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
+import NextImage from 'next/image';
+import { FiCamera } from 'react-icons/fi';
+// import cropImage from '@/app/(marketplace)/utils/cropImage';
+import axios from 'axios';
+
 import { AnimatePresence, motion } from 'framer-motion';
 import { SafeListing, SafeUser } from "@/app/(marketplace)/types";
 import useCountries from "@/app/(marketplace)/hooks/useCountries";
@@ -12,6 +17,27 @@ import Link from "next/link";
 import { twMerge } from 'tailwind-merge';
 import { FaCheckCircle } from 'react-icons/fa';
 import { HiOutlineShieldExclamation } from 'react-icons/hi';
+import { HiOutlineChatBubbleOvalLeft } from "react-icons/hi2";
+import { BiSolidPaperPlane } from "react-icons/bi";
+import Modal from '../../components/modals/Modal';
+
+import Cropper from 'react-easy-crop';
+import getCroppedImg from '@/app/(marketplace)/utils/cropImage';
+
+import useMessenger from '@/app/(marketplace)/hooks/useMessager';
+import useLoginModal from '@/app/(marketplace)/hooks/useLoginModal';
+import { useCallback } from 'react';
+
+type HostCardReviewWithImage = HostCardReview & {
+  reviewerImage?: string | null;
+  userImage?: string | null;
+  user?: { image?: string | null } | null;
+};
+
+const getReviewAvatarSrc = (r: HostCardReview): string | undefined => {
+  const rr = r as HostCardReviewWithImage;
+  return rr.reviewerImage ?? rr.userImage ?? rr.user?.image ?? undefined;
+};
 
 interface HostCardClientProps {
   host: SafeUser;
@@ -43,10 +69,93 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
   const [activeTab, setActiveTab] = useState<TabKey>('experiences');
   const { getByValue } = useCountries();
 
+  const messenger = useMessenger();
+  const loginModal = useLoginModal();
+
+  const [visibleReviews, setVisibleReviews] = useState(5);
+  const [isOwner, setIsOwner] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
+
+  const coverInputRef = useRef<HTMLInputElement | null>(null);
+
+  type CropTarget = 'avatar' | 'cover';
+  const [cropTarget, setCropTarget] = useState<CropTarget | null>(null);
+
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
+
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [isCropping, setIsCropping] = useState(false);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+
+  const busy = isCropping;
+
+  // local optimistic previews (optional)
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [coverPreview, setCoverPreview]   = useState<string | null>(null);
+
+
+
+  const handleContactHost = useCallback(async () => {
+    try {
+      const res = await fetch('/api/users/current');
+      if (!res.ok) {
+        if (res.status === 401) {
+          loginModal.onOpen();
+          return;
+        }
+        throw new Error(`Unexpected status: ${res.status}`);
+      }
+
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error('Unexpected response format');
+      }
+
+      const me = await res.json();
+      if (!me?.id) {
+        loginModal.onOpen();
+        return;
+      }
+
+      if (host?.id) {
+        messenger.openChat({
+          id: host.id,
+          name: host.hostName ?? host.name ?? 'Host',
+          image: host.image ?? '',
+        });
+      }
+    } catch (e) {
+      console.error(e);
+      loginModal.onOpen();
+    }
+  }, [host?.id, host?.name, host?.hostName, host?.image, loginModal, messenger]);
+
   const coverImage = useMemo(() => {
-    const firstListingWithImage = listings.find((listing) => Array.isArray(listing.imageSrc) && listing.imageSrc.length > 0);
-    return firstListingWithImage?.imageSrc?.[0] ?? null;
-  }, [listings]);
+    // 1) fetched from API
+    if (coverImageUrl) return coverImageUrl;
+    // 2) host object (if you already hydrate it elsewhere)
+    if ((host as any).coverImage) return (host as any).coverImage as string;
+    // 3) fallback to first listing’s first image
+    const first = listings.find(l => Array.isArray(l.imageSrc) && l.imageSrc[0]);
+    return first?.imageSrc?.[0] ?? null;
+  }, [coverImageUrl, host, listings]);
+
+  const pickCover  = () => coverInputRef.current?.click();
+
+  const fileToDataURL = (file: File) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+  const pickAvatar = () => avatarInputRef.current?.click();
 
   const primaryLocation = useMemo(() => {
     const locationValue = listings[0]?.locationValue;
@@ -66,59 +175,296 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
     return Array.from(languageSet);
   }, [listings]);
 
+  const averageRating = useMemo(() => {
+    if (!reviews?.length) return 0;
+    const sum = reviews.reduce((acc, r) => acc + (r.rating ?? 0), 0);
+    return sum / reviews.length;
+  }, [reviews]);
+
+  const starGradientId = useMemo(() => `starGradient-${host.id}`, [host.id]);
+
   const handleTabChange = (tab: TabKey) => {
     setActiveTab(tab);
   };
 
+  const slugifySegment = (s: string) =>
+    s
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+
+  const pathForListing = (listing: SafeListing) => {
+    if (listing.slug) {
+      const cat = listing.primaryCategory
+        ? slugifySegment(listing.primaryCategory)
+        : "experience";
+      return `/tours/${cat}/${listing.slug}`;
+    }
+    return `/listings/${listing.id}`;
+  };
+
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>, target: CropTarget) => {
+  const file = e.target.files?.[0];
+    if (!file) return;
+
+    const dataUrl = await fileToDataURL(file);
+    setUploadedImage(dataUrl);
+    setCropTarget(target);
+    setIsCropping(true);
+    setZoom(1);
+    setCrop({ x: 0, y: 0 });
+
+    // Clear input so selecting the same file later still triggers change
+    e.target.value = '';
+  };
+
+  const onCropComplete = (_: any, area: any) => setCroppedAreaPixels(area);
+
+  const handleCropCancel = () => {
+    setIsCropping(false);
+    setUploadedImage(null);
+    setCropTarget(null);
+    setCroppedAreaPixels(null);
+  };
+
+  const handleCropSubmit = async () => {
+    if (!uploadedImage || !croppedAreaPixels || !cropTarget) return;
+
+    // 1) produce cropped base64 (dataURL)
+    const croppedDataUrl = await getCroppedImg(uploadedImage, croppedAreaPixels);
+
+    // 2) optimistic local preview
+    if (cropTarget === 'avatar') setAvatarPreview(croppedDataUrl);
+    if (cropTarget === 'cover')  setCoverPreview(croppedDataUrl);
+
+    setIsCropping(false);
+    setUploadedImage(null);
+
+    // 3) strip prefix for API
+    const base64 = croppedDataUrl.replace(/^data:image\/\w+;base64,/, '');
+
+    // 4) upload to the right endpoint
+    try {
+      if (cropTarget === 'avatar') {
+        await axios.put('/api/users/profile-image', { image: base64 });
+      } else {
+        await axios.put('/api/users/cover', { image: base64 });
+      }
+    } catch (err) {
+      console.error('Image upload failed', err);
+      // (optional) rollback preview if you want
+    } finally {
+      setCropTarget(null);
+      setCroppedAreaPixels(null);
+    }
+  };
+
+  const signedUpText = useMemo(() => {
+    const d = new Date(host.createdAt);
+    const now = new Date();
+    const days = Math.max(1, Math.floor((now.getTime() - d.getTime()) / 86400000));
+    if (days < 30) return `Signed up ${days} day${days === 1 ? '' : 's'} ago`;
+    if (now.getFullYear() === d.getFullYear()) {
+      return `Signed up in ${d.toLocaleString(undefined, { month: 'long' })}`;
+    }
+    return `Signed up in ${d.getFullYear()}`;
+  }, [host.createdAt]);
+
+  const languageToFlagCode: Record<string, string> = {
+    english: "gb",
+    italian: "it",
+    french: "fr",
+    spanish: "es",
+    german: "de",
+    portuguese: "pt",
+    russian: "ru",
+    turkish: "tr",
+    arabic: "sa",
+    chinese: "cn",
+    japanese: "jp",
+    korean: "kr",
+    dutch: "nl",
+    swedish: "se",
+    norwegian: "no",
+    danish: "dk",
+    finnish: "fi",
+    polish: "pl",
+    ukrainian: "ua",
+    azerbaijani: "az",
+    georgian: "ge",
+    hindi: "in",
+    greek: "gr",
+    czech: "cz",
+    slovak: "sk",
+    romanian: "ro",
+    bulgarian: "bg",
+    hungarian: "hu",
+    // add more as needed
+  };
+
+  const toFlagCode = (lang: string) =>
+    languageToFlagCode[lang.toLowerCase().trim()] ?? null;
+
+  // If your files are pngs under /public/flags/<code>.png:
+  const flagSrc = (code: string) => `/flags/${code}.svg`;
+
+  // const flagPath = (countryCode: string) =>
+  //   `/flags/${countryCode.toLowerCase()}.svg`; // e.g. /flags/it.png
+  const flagPath = (cc: string) => `/flags/${cc.toLowerCase()}.svg`;
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await fetch('/api/users/current');
+        if (!r.ok) return;
+        const me = await r.json();
+        setIsOwner(Boolean(me?.id && me.id === host.id));
+      } catch {}
+    })();
+  }, [host.id]);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const res = await fetch(`/api/users/cover?userId=${encodeURIComponent(host.id)}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (alive) setCoverImageUrl(data?.coverImage ?? null);
+      } catch {}
+    })();
+    return () => { alive = false; };
+  }, [host.id]);
+
   return (
-    <div className="max-w-6xl mx-auto py-12 px-4 sm:px-6 lg:px-8 space-y-8">
-      <Heading
-        title="Host profile card"
+    <div className="pageadjust max-w-6xl mx-auto py-12 px-4 sm:px-6 lg:px-8 space-y-8">
+      {/* <Heading
+        title="Host Card"
         subtitle="A quick glance at the host's experiences and reputation."
-      />
+      /> */}
 
       <div className="rounded-3xl overflow-hidden shadow-xl border border-neutral-200 bg-white">
         <div className="relative h-56 sm:h-64 md:h-72">
-          {coverImage ? (
-            <Image
-              src={coverImage}
-              alt={`Cover for ${host.name ?? host.hostName ?? 'host'}`}
-              fill
-              className="object-cover"
-              priority
-            />
-          ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-neutral-900 via-neutral-700 to-neutral-500" />
-          )}
+
+          {coverPreview ? (
+              <NextImage
+                src={coverPreview}
+                alt={`Cover for ${host.name ?? host.hostName ?? 'host'}`}
+                fill
+                className="object-cover"
+                priority
+              />
+            ) : coverImage ? (
+              <NextImage
+                src={coverImage}
+                alt={`Cover for ${host.name ?? host.hostName ?? 'host'}`}
+                fill
+                className="object-cover"
+                priority
+              />
+            ) : (
+              <div className="absolute inset-0 bg-gradient-to-br from-neutral-900 via-neutral-700 to-neutral-500" />
+            )}
+
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+
+            {isOwner && (
+              <>
+                <button
+                  type="button"
+                  onClick={pickCover}
+                  disabled={busy}
+                  className="absolute aspect-square top-3 right-3 z-30 inline-flex items-center gap-2 rounded-full shadow-md text-white px-3 py-1.5 text-xs font-semibold hover:shadow-lg transition"
+                  title=""
+                >
+                  <FiCamera className="h-4 w-4" />
+                  {uploadingCover ? 'Uploading…' : ''}
+                </button>
+                {/* <input
+                  ref={coverInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handleImageSelect(e, 'cover')}
+                /> */}
+              </>
+            )}
+
+
+          
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+
+          <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 z-20">
+          </div>
 
           <div className="absolute inset-x-0 bottom-0 px-6 pb-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div className="flex items-center gap-4">
                 <div className="relative">
-                  <Avatar src={host.image} name={host.name ?? host.hostName ?? 'Host'} size={92} />
-                  <div className="absolute -top-1 -right-1">
+                  {isOwner ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={pickAvatar}
+                        disabled={busy}
+                        className="group rounded-full outline-none focus:ring-2 focus:ring-white/80 focus:ring-offset-2 focus:ring-offset-black/20"
+                        title="Change avatar"
+                      >
+                        <div className="rounded-full overflow-hidden ring-0 transition shadow-md hover:shadow-lg cursor-pointer">
+                          <Avatar
+                            src={avatarPreview ?? host.image}
+                            name={host.name ?? host.hostName ?? 'Host'}
+                            size={92}
+                          />
+                        </div>
+                      </button>
+
+                      {/* Hidden input stays to receive the file */}
+                     <input
+                        ref={avatarInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => handleImageSelect(e, 'avatar')}
+                      />
+
+                      <input
+                        ref={coverInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => handleImageSelect(e, 'cover')}
+                      />
+
+                    </>
+                  ) : (
+                    <Avatar src={host.image} name={host.name ?? host.hostName ?? 'Host'} size={92} />
+                  )}
+
+                  <div className="absolute -top-2 -right-2">
                     {host.identityVerified ? (
-                      <div className="flex items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg p-1" title="Identity verified">
-                        <FaCheckCircle className="h-4 w-4" />
-                      </div>
+                      <span className="aspect-square inline-flex items-center gap-1 rounded-full shadow-md backdrop-blur-sm text-[#2200ff] px-2.5 py-2.5 text-xs font-semibold">
+                        <FaCheckCircle className="h-5 w-5" />
+                      </span>
                     ) : (
-                      <div className="flex items-center justify-center rounded-full bg-white/70 text-amber-600 shadow-lg p-1" title="Identity verification pending">
-                        <HiOutlineShieldExclamation className="h-4 w-4" />
-                      </div>
+                      <span className="inline-flex items-center gap-1 rounded-full shadow-md backdrop-blur-sm text-yellow-500 px-2.5 py-2.5 text-xs font-semibold">
+                        <HiOutlineShieldExclamation className="h-5 w-5" />
+                      </span>
                     )}
                   </div>
                 </div>
+
                 <div className="text-white drop-shadow-lg">
-                  <p className="text-2xl font-semibold">
+                  <p className="text-2xl font-semibold flex items-center gap-2">
                     {host.hostName || host.name || 'Host'}
                   </p>
                   {host.legalName && (
                     <p className="text-sm text-white/80">{host.legalName}</p>
                   )}
                   {primaryLocation && (
-                    <p className="text-sm text-white/80">
-                      Experiences in {primaryLocation.label}
+                    <p className="text-sm text-white/80 flex flex-row gap-1">
+                      Located in <p className='font-semibold'>{primaryLocation.label}</p>
                     </p>
                   )}
                 </div>
@@ -130,15 +476,76 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                     {host.profession}
                   </span>
                 )}
+
+                <div className="flex flex-col gap-1 md:gap-2 w-full items-start md:items-end text-left md:text-right">
+                {reviews.length > 0 && (
+                      <span className="px-1 md:px-0 flex items-center gap-1 text-white/90">
+                        {/* partial-fill star */}
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                          <defs>
+                            <linearGradient id={starGradientId}>
+                              <stop offset={`${(averageRating / 5) * 100}%`} stopColor="currentColor" />
+                              <stop offset={`${(averageRating / 5) * 100}%`} stopColor="rgba(255,255,255,0.5)" />
+                            </linearGradient>
+                          </defs>
+                          <path
+                            fill={`url(#${starGradientId})`}
+                            d="M12 17.27L18.18 21 16.54 13.97 22 9.24 
+                              14.81 8.63 12 2 9.19 8.63 2 9.24 
+                              7.46 13.97 5.82 21 12 17.27z"
+                          />
+                        </svg>
+
+                        <span className="text-sm font-medium">
+                          {averageRating.toFixed(1)} · {reviews.length} review{reviews.length !== 1 ? 's' : ''}
+                        </span>
+                      </span>
+                    )}
+
                 {spokenLanguages.length > 0 ? (
-                  <span className="rounded-full bg-white/20 px-4 py-2 text-sm font-medium">
-                    Speaks {spokenLanguages.join(', ')}
-                  </span>
+                  <div className="flex items-center gap-2 p-2 shadow-xl rounded-xl">
+                    <span className="text-sm font-medium text-white/90">Available in</span>
+                    <div className="flex items-center gap-1.5">
+                      {spokenLanguages.map((lang) => {
+                        const code = toFlagCode(lang);
+                        if (!code) {
+                          // fallback pill if flag not found
+                          return (
+                            <span
+                              key={lang}
+                              className="px-2 py-1 rounded-full bg-white/20 text-xs text-white/90"
+                              title={lang}
+                            >
+                              {lang}
+                            </span>
+                          );
+                        }
+                        return (
+                          <span
+                            key={lang}
+                            className="inline-flex items-center justify-center rounded-sm overflow-hidden"
+                            title={lang}
+                          >
+                            {/* 20x20 circle flag */}
+                            <NextImage
+                              src={flagSrc(code)}
+                              alt={lang}
+                              width={14}
+                              height={14}
+                              className="rounded-sm"
+                            />
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
                 ) : null}
+                </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
         <div className="px-6 py-6">
           <div className="flex flex-col gap-6">
@@ -148,25 +555,59 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
               </p>
             )}
 
-            <div>
-              <div className="inline-flex rounded-full border border-neutral-200 bg-neutral-50 p-1">
-                {(['experiences', 'reviews'] as TabKey[]).map((tab) => (
-                  <button
-                    key={tab}
-                    type="button"
-                    onClick={() => handleTabChange(tab)}
-                    className={twMerge(
-                      'px-4 py-2 text-sm font-medium rounded-full transition-all',
-                      activeTab === tab
-                        ? 'bg-neutral-900 text-white shadow'
-                        : 'text-neutral-600 hover:text-neutral-900'
-                    )}
-                  >
-                    {tab === 'experiences' ? 'Live experiences' : 'Reviews'}
-                  </button>
-                ))}
+            <div className="flex flex-col items-center md:flex-row md:items-center md:justify-between w-full">
+  
+            {/* Tabs group (center on mobile, left on desktop) */}
+            <div className="w-full md:w-auto flex justify-center md:justify-start">
+              <div className="flex w-full md:w-auto rounded-full border border-neutral-200 bg-neutral-50 p-1">
+                {(['experiences', 'reviews'] as TabKey[]).map((tab) => {
+                  const reviewCount = reviews.length;
+                  const reviewLabel =
+                    reviewCount === 0 ? 'Reviews' :
+                    reviewCount === 1 ? '1 Review' :
+                    `${reviewCount} Reviews`;
+
+                  return (
+                    <button
+                      key={tab}
+                      type="button"
+                      onClick={() => handleTabChange(tab)}
+                      className={twMerge(
+                        'relative flex-1 md:flex-none px-4 py-2 text-sm font-medium rounded-full transition-all flex items-center gap-2 justify-center text-center',
+                        activeTab === tab
+                          ? 'bg-neutral-900 text-white shadow'
+                          : 'text-neutral-600 hover:text-neutral-900'
+                      )}
+                    >
+                      {/* Only show ping if Experiences tab is active */}
+                      {tab === 'experiences' && activeTab === 'experiences' && (
+                        <div className="relative flex items-center justify-center">
+                          <span className="absolute inline-flex h-3.5 w-3.5 rounded-full bg-emerald-400 opacity-75 animate-ping"></span>
+                          <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 shadow-md"></span>
+                        </div>
+                      )}
+                      
+                      {tab === 'experiences' ? 'Experiences' : reviewLabel}
+                    </button>
+                  );
+                })}
+
               </div>
             </div>
+
+            {/* Message button (center on mobile, right on desktop) */}
+            <div className="w-full md:w-auto flex justify-center md:justify-end mt-3 md:mt-0">
+              <button
+                onClick={handleContactHost}
+                className="w-full md:w-auto px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-white text-neutral-900 shadow-md border border-neutral-200 tracking-[0.14em] text-[11px] sm:text-xs font-semibold hover:shadow-lg transition text-center"
+                title="Direct Message"
+              >
+                DIRECT MESSAGE
+              </button>
+            </div>
+
+          </div>
+
 
             <div className="min-h-[220px]">
               <AnimatePresence mode="wait">
@@ -188,13 +629,13 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
 
                     {listings.map((listing) => (
                       <Link
-                        key={listing.id}
-                        href={listing.slug ? `/listings/${listing.slug}` : `/listings/${listing.id}`}
-                        className="group relative overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm transition hover:shadow-lg"
-                      >
+                          key={listing.id}
+                          href={pathForListing(listing)}
+                          className="group relative overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm transition hover:shadow-lg"
+                        >
                         <div className="relative h-48">
                           {listing.imageSrc?.[0] ? (
-                            <Image
+                            <NextImage
                               src={listing.imageSrc?.[0] as string}
                               alt={listing.title}
                               fill
@@ -211,11 +652,31 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                         </div>
                         <div className="p-4 space-y-3">
                           <p className="text-sm text-neutral-600 line-clamp-3">{listing.description}</p>
-                          {listing.locationValue && (
-                            <p className="text-xs uppercase tracking-widest text-neutral-400">
-                              {getByValue(listing.locationValue)?.label ?? 'Location pending'}
-                            </p>
-                          )}
+                            {listing.locationValue && (() => {
+                              const loc = getByValue(listing.locationValue);
+                              if (!loc) return null;
+
+                              const countryCode = (loc.value || "").toLowerCase(); // "it"
+                              const countryName = loc.label;                        // "Italy"
+                              const cityName = loc.city?.trim();                    // "Milan" or "Rome"
+
+                              return (
+                                <div className="flex items-center gap-2 text-neutral-500 text-xs">
+                                  {countryCode && (
+                                    <NextImage
+                                      src={flagPath(countryCode)}
+                                      alt={countryName}
+                                      width={14}
+                                      height={14}
+                                      className="rounded-sm aspect-square"
+                                    />
+                                  )}
+                                  <span className="uppercase tracking-widest">
+                                    {cityName ? `${cityName}, ${countryName}` : countryName}
+                                  </span>
+                                </div>
+                              );
+                            })()}
                         </div>
                       </Link>
                     ))}
@@ -236,36 +697,99 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                       </div>
                     )}
 
-                    {reviews.map((review) => (
-                      <div
-                        key={review.id}
-                        className="rounded-2xl border border-neutral-200 bg-white shadow-sm p-6 space-y-4"
-                      >
-                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                          <div>
-                            <p className="text-base font-semibold text-neutral-900">{review.listingTitle}</p>
-                            <p className="text-sm text-neutral-500">{new Date(review.createdAt).toLocaleDateString()}</p>
-                          </div>
-                          <div className="flex items-center gap-2 text-amber-500">
-                            {'★'.repeat(Math.max(1, Math.min(review.rating, 5)))}
-                            <span className="text-sm font-medium text-neutral-600">
-                              {review.reviewerName}
-                            </span>
+                    {reviews.slice(0, visibleReviews).map((review) => {
+                      const avatarSrc = getReviewAvatarSrc(review);
+                      const initial = (review.reviewerName?.[0] || 'U').toUpperCase();
+
+                      return (
+                        <div key={review.id} className="rounded-2xl border border-neutral-200 bg-white shadow-sm hover:shadow-md transition p-5 sm:p-6 space-y-4">
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                              {avatarSrc ? (
+                                <Avatar src={avatarSrc} name={review.reviewerName} size={36} />
+                              ) : (
+                                <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold bg-neutral-900">
+                                  {initial}
+                                </div>
+                              )}
+                              <div>
+                                <p className="text-sm font-semibold text-neutral-900">{review.reviewerName}</p>
+                                <p className="text-xs text-neutral-500">
+                                  {new Date(review.createdAt).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+
+                          {/* stars */}
+                          <div className="flex gap-1">
+                            {[1,2,3,4,5].map((i) => (
+                              <span key={i} className={`text-lg ${i <= review.rating ? 'text-[#2200ffff]' : 'text-neutral-300'}`}>★</span>
+                            ))}
                           </div>
                         </div>
+
+                        {/* listing title */}
+                        <p className="text-sm font-medium text-neutral-700">{review.listingTitle}</p>
+
+                        {/* comment */}
                         <p className="text-sm text-neutral-700 leading-relaxed whitespace-pre-line">
                           {review.comment}
                         </p>
                       </div>
-                    ))}
+                    );
+                  })}
+
+                    {visibleReviews < reviews.length && (
+                      <div className="flex justify-center mt-4">
+                        <button
+                          onClick={() => setVisibleReviews((n) => Math.min(n + 5, reviews.length))}
+                          className="text-sm px-4 py-2 rounded-full border border-neutral-200 bg-neutral-50 hover:bg-white shadow-sm"
+                        >
+                          Show more reviews ({reviews.length - visibleReviews} left)
+                        </button>
+                      </div>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
           </div>
         </div>
+
+        {isCropping && uploadedImage && cropTarget && (
+          <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+            <div className="w-[92vw] max-w-[1000px] h-[68vh] relative rounded-xl shadow-lg">
+              <Cropper
+                image={uploadedImage}
+                crop={crop}
+                zoom={zoom}
+                aspect={cropTarget === 'avatar' ? 1 : 16 / 9}
+                cropShape={cropTarget === 'avatar' ? 'round' : 'rect'}
+                showGrid={cropTarget !== 'avatar'}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={onCropComplete}
+              />
+            </div>
+
+            <div className="flex gap-4 mt-4">
+              <button
+                onClick={handleCropSubmit}
+                className="px-6 py-2 bg-[#000] text-white rounded-xl hover:opacity-90"
+              >
+                Save
+              </button>
+              <button
+                onClick={handleCropCancel}
+                className="px-6 py-2 bg-gray-300 text-gray-800 rounded-xl hover:bg-gray-200"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
       </div>
-    </div>
   );
 };
 

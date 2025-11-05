@@ -8,19 +8,32 @@ interface IParams {
   listingId?: string;
 }
 
+function looksLikeObjectId(value?: string) {
+  return !!value && /^[0-9a-fA-F]{24}$/.test(value);
+}
+
 type SafePricingTier = { minGuests: number; maxGuests: number; price: number };
 
 export default async function getListingById(params: IParams) {
   try {
     const { listingId } = params;
 
-    const listing = await prisma.listing.findUnique({
-      where: {
-        id: listingId,
-      },
-      include: {
-        user: true,
-      },
+    // const listing = await prisma.listing.findUnique({
+    //   where: {
+    //     id: listingId,
+    //   },
+    //   include: {
+    //     user: true,
+    //   },
+    // });
+
+    const where = looksLikeObjectId(listingId)
+      ? { id: listingId! }
+      : { slug: listingId! };
+
+    const listing = await prisma.listing.findFirst({
+      where,
+      include: { user: true },
     });
 
     if (!listing) {
@@ -28,6 +41,21 @@ export default async function getListingById(params: IParams) {
     }
 
     const listingWithSlug = await ensureListingSlug(listing);
+
+    type UserOptionals = {
+      bio?: string | null;
+      visitedCountries?: string[];
+      visitedCities?: string[];
+      profession?: string | null;
+      identityVerified?: boolean;
+      phone?: string | null;
+      contact?: string | null;
+      legalName?: string | null;
+      address?: string | null;
+      hostName?: string | null;
+    };
+
+    const u = listingWithSlug.user as typeof listingWithSlug.user & UserOptionals;
 
     const pricingSnapshot = normalizePricingSnapshot(
       listingWithSlug.customPricing,
@@ -69,11 +97,34 @@ export default async function getListingById(params: IParams) {
           ? (pricingSnapshot.tiers as SafePricingTier[])
           : null,
       createdAt: listingWithSlug.createdAt.toString(),
+      // user: {
+      //   ...listingWithSlug.user,
+      //   createdAt: listingWithSlug.user.createdAt.toString(),
+      //   updatedAt: listingWithSlug.user.updatedAt.toString(),
+      //   emailVerified: listingWithSlug.user.emailVerified?.toString() || null,
+      // },
       user: {
-        ...listingWithSlug.user,
-        createdAt: listingWithSlug.user.createdAt.toString(),
-        updatedAt: listingWithSlug.user.updatedAt.toString(),
-        emailVerified: listingWithSlug.user.emailVerified?.toString() || null,
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        image: u.image,
+        role: u.role,
+        createdAt: u.createdAt.toISOString(),
+        updatedAt: u.updatedAt.toISOString(),
+        emailVerified: u.emailVerified ? u.emailVerified.toISOString() : null,
+
+        // safely supply fields expected by SafeUser (fallbacks if not in schema)
+        phone: u.phone ?? null,
+        contact: u.contact ?? null,
+        legalName: u.legalName ?? null,
+        address: u.address ?? null,
+        hostName: u.hostName ?? null,
+
+        bio: u.bio ?? null,
+        visitedCountries: u.visitedCountries ?? [],
+        visitedCities: u.visitedCities ?? [],
+        profession: u.profession ?? null,
+        identityVerified: Boolean(u.identityVerified),
       },
     };
   } catch (error: any) {
