@@ -83,7 +83,7 @@ export default async function getHostCardData(hostId: string): Promise<HostCardD
   const listings: SafeListing[] = listingsWithSlug.map((listing) => {
     const pricingSnapshot = normalizePricingSnapshot(listing.customPricing, listing.price);
 
-    const { reviews: _reviews, user, ...rest } = listing;
+    const { reviews: _reviews, ...rest } = listing;
 
     const safeListing: SafeListing = {
       ...(rest as unknown as SafeListing),
