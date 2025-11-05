@@ -20,6 +20,7 @@ import { categories } from '../navbar/Categories';
 import CountrySearchSelect, { CountrySearchSelectHandle } from '../inputs/CountrySearchSelect';
 import MeetingPointAutocomplete from '../inputs/MeetingPointAutocomplete';
 import { motion, AnimatePresence } from 'framer-motion';
+import type { Variants, Transition } from 'framer-motion';
 import { SafeListing, SafeUser } from '@/app/(marketplace)/types';
 import {
   ACTIVITY_FORM_OPTIONS,
@@ -211,6 +212,57 @@ const locationTypeOptions = [
   },
 ];
 
+const itemFade: Variants = {
+  hidden: { opacity: 0, y: 8 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: 'spring', // now typed correctly
+      stiffness: 380,
+      damping: 30,
+      mass: 0.6,
+    },
+  },
+};
+
+// Reusable, correctly typed spring
+const springX: Transition = {
+  type: 'spring' as const,  // <- keep the literal
+  stiffness: 380,
+  damping: 30,
+  mass: 0.6,
+};
+
+const stepVariants: Variants = {
+  enter: (custom) => {
+    const direction = typeof custom === 'number' ? custom : 1;
+    return {
+      opacity: 0,
+      x: 20 * direction,
+      filter: 'blur(4px)',
+    };
+  },
+  center: {
+    opacity: 1,
+    x: 0,
+    filter: 'blur(0px)',
+    transition: {
+      x: { type: 'spring', stiffness: 380, damping: 30, mass: 0.6 },
+      opacity: { duration: 0.18 },
+    },
+  },
+  exit: (custom) => {
+    const direction = typeof custom === 'number' ? custom : 1;
+    return {
+      opacity: 0,
+      x: -20 * direction,
+      filter: 'blur(4px)',
+      transition: { duration: 0.16 },
+    };
+  },
+};
+
 const groupStyleOptions = GROUP_STYLE_OPTIONS.map((option) => ({
   label: option.label,
   value: option.value,
@@ -296,10 +348,10 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
     show: { opacity: 1, transition: { staggerChildren: 0.06 } },
   };
 
-  const itemFade = {
-    hidden: { opacity: 0, y: 8 },
-    show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 380, damping: 30, mass: 0.6 } },
-  };
+  // const itemFade = {
+  //   hidden: { opacity: 0, y: 8 },
+  //   show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 380, damping: 30, mass: 0.6 } },
+  // };
 
   const panelVariants = {
     hidden: { opacity: 0, y: 6 },
@@ -660,25 +712,25 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
   }
 
   // Variants for step transitions (slide from left/right + fade)
-  const stepVariants = {
-    enter: (direction: number) => ({
-      opacity: 0,
-      x: 20 * direction,   // small slide from the direction we came from
-      filter: 'blur(4px)',
-    }),
-    center: {
-      opacity: 1,
-      x: 0,
-      filter: 'blur(0px)',
-      transition: { x: { type: 'spring', stiffness: 380, damping: 30, mass: 0.6 }, opacity: { duration: 0.18 } },
-    },
-    exit: (direction: number) => ({
-      opacity: 0,
-      x: -20 * direction,  // slide out opposite way
-      filter: 'blur(4px)',
-      transition: { duration: 0.16 },
-    }),
-  };
+  // const stepVariants = {
+  //   enter: (direction: number) => ({
+  //     opacity: 0,
+  //     x: 20 * direction,   // small slide from the direction we came from
+  //     filter: 'blur(4px)',
+  //   }),
+  //   center: {
+  //     opacity: 1,
+  //     x: 0,
+  //     filter: 'blur(0px)',
+  //     transition: { x: { type: 'spring', stiffness: 380, damping: 30, mass: 0.6 }, opacity: { duration: 0.18 } },
+  //   },
+  //   exit: (direction: number) => ({
+  //     opacity: 0,
+  //     x: -20 * direction,  // slide out opposite way
+  //     filter: 'blur(4px)',
+  //     transition: { duration: 0.16 },
+  //   }),
+  // };
 
   const prevStep = usePrevious(step);
   const direction = prevStep == null ? 1 : step > prevStep ? 1 : -1;
