@@ -102,7 +102,11 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
 
   const handleContactHost = useCallback(async () => {
     try {
-      const res = await fetch('/api/users/current');
+      const res = await fetch('/api/users/current', {
+        credentials: 'include',
+        cache: 'no-store',
+      });
+
       if (!res.ok) {
         if (res.status === 401) {
           loginModal.onOpen();
@@ -316,7 +320,10 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
   useEffect(() => {
     (async () => {
       try {
-        const r = await fetch('/api/users/current');
+        const r = await fetch('/api/users/current', {
+           credentials: 'include',
+           cache: 'no-store',
+         });
         if (!r.ok) return;
         const me = await r.json();
         setIsOwner(Boolean(me?.id && me.id === host.id));
@@ -328,7 +335,10 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
     let alive = true;
     (async () => {
       try {
-        const res = await fetch(`/api/users/cover?userId=${encodeURIComponent(host.id)}`);
+        const res = await fetch(`/api/users/cover?userId=${encodeURIComponent(host.id)}`, {
+          credentials: 'include',
+          cache: 'no-store',
+        });
         if (!res.ok) return;
         const data = await res.json();
         if (alive) setCoverImageUrl(data?.coverImage ?? null);
@@ -367,7 +377,7 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
               <div className="absolute inset-0 bg-gradient-to-br from-neutral-900 via-neutral-700 to-neutral-500" />
             )}
 
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+            <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
             {isOwner && (
               <>
@@ -393,7 +403,7 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
 
 
           
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+          <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
           <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 z-20">
           </div>
