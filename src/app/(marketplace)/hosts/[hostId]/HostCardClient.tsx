@@ -43,6 +43,7 @@ interface HostCardClientProps {
   host: SafeUser;
   listings: SafeListing[];
   reviews: HostCardReview[];
+  currentUser?: SafeUser | null; // ← pass from server when possible
 }
 
 type TabKey = 'experiences' | 'reviews';
@@ -65,7 +66,7 @@ const formatPrice = (price: number) => {
   }
 };
 
-const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews }) => {
+const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews, currentUser }) => {
   const [activeTab, setActiveTab] = useState<TabKey>('experiences');
   const { getByValue } = useCountries();
 
@@ -318,18 +319,26 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
   const flagPath = (cc: string) => `/flags/${cc.toLowerCase()}.svg`;
 
   useEffect(() => {
-    (async () => {
-      try {
-        const r = await fetch('/api/users/current', {
-           credentials: 'include',
-           cache: 'no-store',
-         });
-        if (!r.ok) return;
-        const me = await r.json();
+     if (currentUser?.id) {
+       setIsOwner(String(currentUser.id) === String(host.id));
+     }
+  }, [currentUser?.id, host.id]);
+
+   useEffect(() => {
+    if (currentUser?.id) return; // already resolved via prop
+      (async () => {
+        try {
+          const r = await fetch('/api/users/current', {
+            credentials: 'include',
+            cache: 'no-store',
+          });
+          if (!r.ok) return;
+          const me = await r.json();
         setIsOwner(Boolean(me?.id && me.id === host.id));
-      } catch {}
-    })();
-  }, [host.id]);
+        setIsOwner(Boolean(me?.id && String(me.id) === String(host.id))); // normalize ids
+        } catch {}
+      })();
+  }, [host.id, currentUser?.id]);
 
   useEffect(() => {
     let alive = true;
@@ -377,7 +386,7 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
               <div className="absolute inset-0 bg-gradient-to-br from-neutral-900 via-neutral-700 to-neutral-500" />
             )}
 
-            <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
             {isOwner && (
               <>
@@ -403,7 +412,7 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
 
 
           
-          <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
           <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 z-20">
           </div>
