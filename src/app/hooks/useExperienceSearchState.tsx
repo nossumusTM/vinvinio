@@ -1,9 +1,9 @@
 import { create } from 'zustand';
-import { CountrySelectValue } from '@/app/components/inputs/CountrySelect';
+import type { CountrySelectValue } from '@/app/components/inputs/CountrySearchSelect';
 
 interface ExperienceSearchState {
   location?: CountrySelectValue;
-  setLocation: (value: CountrySelectValue) => void;
+  setLocation: (value: CountrySelectValue | undefined) => void;
 }
 
 const useExperienceSearchState = create<ExperienceSearchState>((set) => ({

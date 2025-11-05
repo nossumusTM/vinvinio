@@ -1,13 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import L from 'leaflet';
-import {
-  MapContainer,
-  Marker,
-  TileLayer,
-  useMap
-} from 'react-leaflet';
+import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -24,79 +19,94 @@ L.Icon.Default.mergeOptions({
 });
 
 interface MapProps {
-  center?: number[];
-  searchQuery?: string;
+  center?: [number, number];
   city?: string;
   country?: string;
 }
 
-// 🔄 Helper to recenter map after coordinates change
-// const RecenterMap = ({ coords }: { coords: number[] }) => {
-//   const map = useMap();
+const DEFAULT_CENTER: L.LatLngTuple = [41.8719, 12.5674];
 
-//   useEffect(() => {
-//     if (coords) {
-//       map.setView(coords as [number, number], 10);
-//     }
-//   }, [coords, map]);
-
-//   return null;
-// };
-
-// 1) UPDATE RecenterMap to also invalidate size before recentering
-const RecenterMap = ({ coords }: { coords: number[] }) => {
+const RecenterMap = ({ coords }: { coords: L.LatLngTuple }) => {
   const map = useMap();
 
   useEffect(() => {
-    if (!coords) return;
-    // allow modal/layout to settle on mobile, then fix size + center
-    const t = setTimeout(() => {
+    const timeout = window.setTimeout(() => {
       map.invalidateSize();
-      map.setView(coords as [number, number], map.getZoom() || 10, { animate: false });
+      map.setView(coords, map.getZoom() || 10, { animate: false });
     }, 80);
-    return () => clearTimeout(t);
+
+    return () => window.clearTimeout(timeout);
   }, [coords, map]);
 
   return null;
 };
 
-// 1) ADD this tiny helper inside SearchMap.tsx (near RecenterMap)
-const CaptureMapRef = ({ onReady }: { onReady: (m: L.Map) => void }) => {
+const CaptureMapRef = ({ onReady }: { onReady: (map: L.Map) => void }) => {
   const map = useMap();
-  useEffect(() => { onReady(map); }, [map, onReady]);
+  useEffect(() => {
+    onReady(map);
+  }, [map, onReady]);
   return null;
 };
 
 const Map: React.FC<MapProps> = ({ center, city, country }) => {
-  const [coordinates, setCoordinates] = useState<number[] | null>(null);
+  const [coordinates, setCoordinates] = useState<L.LatLngTuple>(
+    center ?? DEFAULT_CENTER,
+  );
   const [isClient, setIsClient] = useState(false);
   const mapRef = useRef<L.Map | null>(null);
-  const mapIdRef = useRef(`map-${Math.random().toString(36).substring(2, 9)}`);
+  const mapIdRef = useRef(`map-${Math.random().toString(36).slice(2, 9)}`);
+
+  const effectiveCenter = useMemo<L.LatLngTuple>(() => {
+    if (coordinates && coordinates.length === 2) {
+      return [coordinates[0], coordinates[1]];
+    }
+    return DEFAULT_CENTER;
+  }, [coordinates]);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
   useEffect(() => {
-    if (city && country) {
-      const fetchCoordinates = async () => {
-        try {
-          const fullQuery = `${city}, ${country}`;
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&accept-language=en&q=${encodeURIComponent(fullQuery)}`
-          );
-          const data = await res.json();
-          if (data?.length > 0) {
-            const { lat, lon } = data[0];
-            setCoordinates([parseFloat(lat), parseFloat(lon)]);
-          }
-        } catch (err) {
-          console.error('Failed to fetch coordinates:', err);
-        }
-      };
-      fetchCoordinates();
+    if (center && center.length === 2) {
+      setCoordinates([center[0], center[1]]);
     }
-  }, [city, country]);
+  }, [center?.[0], center?.[1]]);
+
+  useEffect(() => {
+    if (!city || !country || (center && center.length === 2)) {
+      return;
+    }
+
+    const controller = new AbortController();
+
+    const fetchCoordinates = async () => {
+      try {
+        const query = `${city}, ${country}`;
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&accept-language=en&q=${encodeURIComponent(query)}`,
+          { signal: controller.signal },
+        );
+        const data = (await response.json()) as Array<{ lat: string; lon: string }>;
+
+        if (Array.isArray(data) && data.length > 0) {
+          const { lat, lon } = data[0];
+          setCoordinates([Number.parseFloat(lat), Number.parseFloat(lon)]);
+        } else {
+          setCoordinates(DEFAULT_CENTER);
+        }
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          console.error('Failed to fetch coordinates:', error);
+        }
+      }
+    };
+
+    fetchCoordinates();
+
+    return () => controller.abort();
+  }, [center?.[0], center?.[1], city, country]);
 
   useEffect(() => {
     const onResize = () => mapRef.current?.invalidateSize();
@@ -106,37 +116,32 @@ const Map: React.FC<MapProps> = ({ center, city, country }) => {
 
   if (!isClient) return null;
 
-  const position = coordinates || center || [41.8719, 12.5674]; // Default to Italy
-
   return (
-    <div className="w-full rounded-lg overflow-hidden relative">
-    <div className="w-full h-[140px] sm:h-[260px] md:h-[360px] flex items-center justify-center">
-    <MapContainer
-      center={position as L.LatLngExpression}
-      zoom={10}
-      scrollWheelZoom={false}
-      style={{ height: '100%', width: '100%' }}
-      attributionControl={false}
-      key={mapIdRef.current}
-    >
-      <CaptureMapRef
-        onReady={(m) => {
-          mapRef.current = m;
-          setTimeout(() => {
-            m.invalidateSize();
-            m.setView(position as L.LatLngExpression, 10, { animate: false });
-          }, 80);
-        }}
-      />
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      {coordinates && <RecenterMap coords={coordinates} />}
-      <Marker position={(coordinates || position) as L.LatLngExpression} />
-    </MapContainer>
-  </div>
-</div>
+    <div className="relative h-full w-full">
+      <MapContainer
+        key={mapIdRef.current}
+        center={effectiveCenter as L.LatLngExpression}
+        zoom={10}
+        scrollWheelZoom={false}
+        className="h-full w-full"
+        attributionControl={false}
+      >
+        <CaptureMapRef
+          onReady={(mapInstance) => {
+            mapRef.current = mapInstance;
+            window.setTimeout(() => {
+              mapInstance.invalidateSize();
+              mapInstance.setView(effectiveCenter, 10, { animate: false });
+            }, 80);
+          }}
+        />
+        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <RecenterMap coords={effectiveCenter} />
+        <Marker position={effectiveCenter as L.LatLngExpression} />
+      </MapContainer>
+    </div>
   );
 };
 
 export default Map;
+

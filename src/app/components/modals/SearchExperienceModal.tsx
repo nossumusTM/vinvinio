@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import qs from 'query-string';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -8,6 +8,7 @@ import { formatISO } from 'date-fns';
 import { Range } from 'react-date-range';
 import { LuMapPin, LuUsers, LuCalendarDays } from 'react-icons/lu';
 import type { IconType } from 'react-icons';
+import clsx from 'clsx';
 
 import Heading from '../Heading';
 
@@ -15,8 +16,8 @@ import useSearchExperienceModal from '@/app/hooks/useSearchExperienceModal';
 import useExperienceSearchState from '@/app/hooks/useExperienceSearchState';
 
 import Modal from './Modal';
-import SearchCalendar from '../inputs/SaerchCalendar'
-import CountrySearchSelect, { CountrySelectValue } from '../inputs/CountrySearchSelect';
+import SearchCalendar from '../inputs/SearchCalendar';
+import CountrySearchSelect, { CountrySearchSelectHandle } from '../inputs/CountrySearchSelect';
 
 import Counter from '../inputs/Counter';
 import useTranslations from '@/app/hooks/useTranslations';
@@ -35,6 +36,7 @@ const SearchExperienceModal = () => {
 
   const [step, setStep] = useState(STEPS.LOCATION);
   const { location, setLocation } = useExperienceSearchState();
+  const [locationError, setLocationError] = useState(false);
   const [guestCount, setGuestCount] = useState(1);
   const [dateRange, setDateRange] = useState<Range>({
     startDate: new Date(),
@@ -42,9 +44,12 @@ const SearchExperienceModal = () => {
     key: 'selection',
   });
 
-  const SearchMap = useMemo(() => dynamic(() => import('../SearchMap'), {
-    ssr: false
-  }), [location]);
+  const searchInputRef = useRef<CountrySearchSelectHandle | null>(null);
+
+  const SearchMap = useMemo(
+    () => dynamic(() => import('../SearchMap'), { ssr: false }),
+    [],
+  );
 
   useEffect(() => {
     if (modal.isOpen) {
@@ -52,12 +57,25 @@ const SearchExperienceModal = () => {
     }
   }, [modal.isOpen]);
 
+  useEffect(() => {
+    if (!modal.isOpen) {
+      setLocationError(false);
+    }
+  }, [modal.isOpen]);
+
+  useEffect(() => {
+    if (location) {
+      setLocationError(false);
+    }
+  }, [location]);
+
   const onBack = useCallback(() => setStep((val) => val - 1), []);
   const onNext = useCallback(() => setStep((val) => val + 1), []);
 
   const onSubmit = useCallback(() => {
-
     if (step === STEPS.LOCATION && !location) {
+      setLocationError(true);
+      searchInputRef.current?.focus();
       return;
     }
 
@@ -66,43 +84,40 @@ const SearchExperienceModal = () => {
     }
 
     if (step !== STEPS.GUESTS) {
-      return onNext();
+      onNext();
+      return;
     }
 
-    let currentQuery = {};
-    if (params) currentQuery = qs.parse(params.toString());
-  
-    const updatedQuery: any = {
-      ...currentQuery,
-      locationValue: location?.value,
-      guestCount,
+    const currentQuery = params ? qs.parse(params.toString()) : {};
+    const updatedQuery: qs.StringifiableRecord = {
+      ...(currentQuery as qs.ParsedQuery<string>),
     };
-  
+
+    if (location?.value) {
+      updatedQuery.locationValue = location.value;
+    }
+
+    if (guestCount) {
+      updatedQuery.guestCount = guestCount;
+    }
+
     if (dateRange.startDate) {
       updatedQuery.startDate = formatISO(dateRange.startDate);
     }
-  
+
     if (dateRange.endDate) {
       updatedQuery.endDate = formatISO(dateRange.endDate);
     }
-  
-    // ✅ persist selected location in global store
-    setLocation(location as any);
-  
+
+    setLocation(location);
     modal.onClose();
     setStep(STEPS.LOCATION);
     router.push(qs.stringifyUrl({ url: '/', query: updatedQuery }, { skipNull: true }));
-  }, [step, modal, location, guestCount, dateRange, router, params, onNext, setLocation]);
-
-  // const actionLabel = useMemo(() => {
-  //   if (step === STEPS.GUESTS) return 'Search';
-  //   if (step === STEPS.LOCATION && !location) return 'Select a country';
-  //   return 'Next';
-  // }, [step, location]);
+  }, [dateRange.endDate, dateRange.startDate, guestCount, location, modal, onNext, params, router, setLocation, step]);
 
   const actionLabel = useMemo(() => {
     if (step === STEPS.GUESTS) return t('search');
-    if (step === STEPS.LOCATION && !location) return t('selectCountry');
+    if (step === STEPS.LOCATION && !location) return 'Choose a destination';
     if (step === STEPS.DATE && (!dateRange?.startDate || !dateRange?.endDate)) return t('selectDates');
     return t('next');
   }, [step, location, dateRange, t]);
@@ -112,21 +127,41 @@ const SearchExperienceModal = () => {
     [step, t]
   );
 
-  const StepBadge = ({ stepIndex, label, icon: Icon }: { stepIndex: STEPS; label: string; icon: IconType; }) => (
-    <div
-      className={`flex items-center gap-2 px-2 py-2 md:px-4 md:py-3 rounded-2xl transition-all duration-300 border ${
-        step === stepIndex ? 'bg-white/80 border-white/40 shadow-lg shadow-white/30 text-neutral-900' : 'bg-white/40 border-white/20 text-neutral-600'
-      }`}
-    >
-      <div className={`flex h-6 w-6 md:h-8 md:w-8 items-center justify-center md:rounded-xl rounded-md ${step === stepIndex ? 'bg-black text-white' : 'bg-white text-neutral-500'}`}>
-        <Icon className="h-4 w-4" />
+  const StepBadge = ({
+    stepIndex,
+    label,
+    icon: Icon,
+  }: {
+    stepIndex: STEPS;
+    label: string;
+    icon: IconType;
+  }) => {
+    const isActive = step === stepIndex;
+
+    return (
+      <div
+        className={clsx(
+          'flex items-center gap-2 rounded-2xl border px-2 py-2 transition-all duration-300 md:px-4 md:py-3',
+          isActive
+            ? 'bg-white/80 border-white/40 text-neutral-900 shadow-lg shadow-white/30'
+            : 'bg-white/40 border-white/20 text-neutral-600',
+        )}
+      >
+        <div
+          className={clsx(
+            'flex h-6 w-6 items-center justify-center rounded-md md:h-8 md:w-8 md:rounded-xl',
+            isActive ? 'bg-black text-white' : 'bg-white text-neutral-500',
+          )}
+        >
+          <Icon className="h-4 w-4" />
+        </div>
+        <div className="flex flex-col">
+          <span className="text-[10px] uppercase tracking-wide md:text-xs">Step {stepIndex + 1}</span>
+          <span className="text-[11px] font-semibold md:text-sm">{label}</span>
+        </div>
       </div>
-      <div className="flex flex-col">
-        <span className="text-[10px] md:text-xs uppercase tracking-wide">Step {stepIndex + 1}</span>
-        <span className="text-[11px] md:text-sm font-semibold">{label}</span>
-      </div>
-    </div>
-  );
+    );
+  };
 
   let bodyContent = (
     <div className="relative flex flex-col gap-8">
@@ -138,25 +173,27 @@ const SearchExperienceModal = () => {
         />
         <div className="flex flex-col gap-4">
           <CountrySearchSelect
+            ref={searchInputRef}
             value={location}
-            onChange={(value) => setLocation(value as CountrySelectValue)}
+            onChange={(value) => {
+              setLocation(value);
+              if (value) {
+                setLocationError(false);
+              }
+            }}
+            hasError={locationError}
+            onErrorCleared={() => setLocationError(false)}
           />
           <p className="text-xs text-neutral-500">
             Browse iconic cities or search for hidden gems across the globe.
           </p>
-          {/* <div className="hidden md:block rounded-2xl overflow-hidden border border-white/60">
-            <SearchMap city={location?.city} country={location?.label} center={location?.latlng} />
-          </div> */}
-          <div className="rounded-2xl overflow-hidden border border-white/60
-            h-[140px] sm:h-[260px] md:h-[260px] relative">
-            <div className="rounded-2xl overflow-hidden border border-white/60">
-              <SearchMap
-                key={`${modal.isOpen}-${location?.value ?? 'default'}`}  // force proper re-mount/center on open & change
-                city={location?.city ?? 'Rome'}
-                country={location?.label ?? 'Italy'}
-                center={location?.latlng ?? [41.9028, 12.4964]}          // fallback center so mobile always shows a point
-              />
-            </div>
+          <div className="relative h-[140px] overflow-hidden rounded-2xl border border-white/60 sm:h-[260px] md:h-[260px]">
+            <SearchMap
+              key={`${modal.isOpen}-${location?.value ?? 'default'}`}
+              city={location?.city ?? 'Rome'}
+              country={location?.label ?? 'Italy'}
+              center={location?.latlng ?? [41.9028, 12.4964]}
+            />
           </div>
         </div>
       </div>
@@ -178,10 +215,14 @@ const SearchExperienceModal = () => {
               subtitle="Choose the dates that best match your plans."
             />
             <div className="mt-4 rounded-2xl">
-              <SearchCalendar
-                value={dateRange}
-                onChange={(value) => setDateRange(value.selection)}
-              />
+              <div className="flex w-full justify-center">
+                <div className="w-full max-w-xs sm:max-w-md md:max-w-lg">
+                  <SearchCalendar
+                    value={dateRange}
+                    onChange={(value) => setDateRange(value.selection)}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -197,7 +238,6 @@ const SearchExperienceModal = () => {
   if (step === STEPS.GUESTS) {
     bodyContent = (
       <div className="space-y-6">
-        {/* <div className="rounded-3xl bg-gradient-to-br from-amber-200 via-white to-emerald-200 p-[1px]"> */}
         <div className="rounded-3xl p-[1px]">
           <div className="rounded-[26px] bg-white/80 backdrop-blur p-6 shadow-xl">
             <Heading
@@ -233,7 +273,7 @@ const SearchExperienceModal = () => {
       secondaryAction={step === STEPS.LOCATION ? undefined : onBack}
       title="Craft your search"
       body={bodyContent}
-      className='bg-transparent'
+      className="bg-transparent"
     />
   );
 };
