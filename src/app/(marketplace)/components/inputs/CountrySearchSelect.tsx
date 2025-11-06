@@ -13,6 +13,8 @@ import {
 import { LuMapPin, LuSparkles } from 'react-icons/lu';
 import clsx from 'clsx';
 
+import { motion, AnimatePresence } from 'framer-motion';
+import type { Variants } from 'framer-motion';
 import useCountries from '@/app/(marketplace)/hooks/useCountries';
 
 export type CountrySelectValue = {
@@ -41,6 +43,53 @@ type Suggestion = CountrySelectValue & {
 
 const TAGLINE = 'Activities to do · Experiences to live';
 
+// Rotating placeholder texts (first one is the default)
+const ROTATING_ITEMS = [
+  'Rome, Italy',
+  'Amsterdam, Netherlands',
+  'Baku, Azerbaijan',
+  'Paris, France',
+  'Istanbul, Türkiye',
+  'Tokyo, Japan',
+  'Barcelona, Spain',
+];
+
+const norm = (s: string) =>
+  s
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/türkiye|turkiye/g, 'turkey')
+    .trim();
+
+const extractCountryFromText = (text: string) => {
+  const parts = text.split(',');
+  // country is usually the last part (e.g., "Rome, Italy")
+  return norm(parts[parts.length - 1] || '');
+};
+
+const destionationVariants: Variants = {
+  hidden: { opacity: 0, y: -8, scale: 0.98 },
+  visible: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring', stiffness: 420, damping: 28, mass: 0.3 } },
+  exit: { opacity: 0, y: -6, scale: 0.98, transition: { type: 'tween', duration: 0.18, ease: 'easeInOut' } },
+};
+
+const dropdownVariants: Variants = {
+  hidden: { opacity: 0, y: -8, scale: 0.98 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { type: 'spring', stiffness: 420, damping: 28, mass: 0.3 },
+  },
+  exit: {
+    opacity: 0,
+    y: -6,
+    scale: 0.98,
+    transition: { type: 'tween', duration: 0.18, ease: 'easeInOut' },
+  },
+};
+
 const CountrySearchSelect = forwardRef<CountrySearchSelectHandle, CountrySelectProps>(
   ({ value, onChange, hasError = false, onErrorCleared }, ref) => {
     const { getAll, getPopularCities } = useCountries();
@@ -52,6 +101,7 @@ const CountrySearchSelect = forwardRef<CountrySearchSelectHandle, CountrySelectP
     const [query, setQuery] = useState('');
     const [isOpen, setIsOpen] = useState(false);
     const [highlightedIndex, setHighlightedIndex] = useState(0);
+    const [placeholderIndex, setPlaceholderIndex] = useState(0);
 
     const popularSuggestions = useMemo(() => {
       return getPopularCities().map((entry) => ({
@@ -61,6 +111,40 @@ const CountrySearchSelect = forwardRef<CountrySearchSelectHandle, CountrySelectP
     }, [getPopularCities]);
 
     const countrySuggestions = useMemo(() => getAll(), [getAll]);
+
+    // ✅ INSIDE the component, after countrySuggestions
+    const displayedFlagCode = useMemo(() => {
+      // 1) If user selected a value, lock to that country code
+      if (value?.value) {
+        // extract part after the last "-"
+        const parts = value.value.toLowerCase().split('-');
+        return parts[parts.length - 1]; // e.g. "milan-it" → "it"
+      }
+
+      // Helper: try find country code by country name
+      const findCodeByCountryName = (countryNameLower: string) => {
+        const match = countrySuggestions.find(
+          (c) => norm(c.label) === countryNameLower
+        );
+        return match?.value?.toLowerCase();
+      };
+
+      // 2) If user is typing, infer by country part of the query (after comma)
+      if (query.trim().length > 0) {
+        const countryLower = extractCountryFromText(query);
+        const byName = findCodeByCountryName(countryLower);
+        if (byName) return byName;
+      }
+
+      // 3) No input/selection → use rotating item’s country
+      const rotatingText = ROTATING_ITEMS[placeholderIndex];
+      const countryLower = extractCountryFromText(rotatingText);
+      const byName = findCodeByCountryName(countryLower);
+      if (byName) return byName;
+
+      // Fallback to a globe icon file if present
+      return 'globe';
+    }, [value?.value, query, placeholderIndex, countrySuggestions]);
 
     const combinedSuggestions = useMemo(() => {
       const dataset: Suggestion[] = [...popularSuggestions, ...countrySuggestions];
@@ -194,6 +278,14 @@ const CountrySearchSelect = forwardRef<CountrySearchSelectHandle, CountrySelectP
       active?.scrollIntoView({ block: 'nearest' });
     }, [highlightedIndex, isOpen]);
 
+     useEffect(() => {
+       if (query.trim().length > 0) return; // pause rotation while user types
+       const id = setInterval(() => {
+         setPlaceholderIndex((i) => (i + 1) % ROTATING_ITEMS.length);
+       }, 2200);
+      return () => clearInterval(id);
+    }, [query]);
+
     const borderClass = clsx(
       'transition ring-0 focus-within:ring-0 rounded-2xl border-2 bg-white/90 backdrop-blur shadow-sm hover:shadow-md',
       hasError
@@ -207,25 +299,69 @@ const CountrySearchSelect = forwardRef<CountrySearchSelectHandle, CountrySelectP
           Search destinations
         </label>
         <div className={borderClass}>
-          <div className="flex items-center gap-3 px-4 py-3">
-            <LuMapPin className="h-5 w-5 text-neutral-500" aria-hidden="true" />
-            <input
-              id="destination-search"
-              ref={inputRef}
-              value={query}
-              onChange={handleInputChange}
-              onFocus={() => {
-                setIsOpen(true);
-                setHighlightedIndex(0);
-              }}
-              onKeyDown={handleKeyDown}
-              placeholder="Search for a country or city"
-              className="w-full bg-transparent text-sm md:text-lg font-medium text-neutral-900 placeholder:text-neutral-400 focus:outline-none"
-              autoComplete="off"
-              inputMode="search"
-            />
+          <div className="relative flex items-center gap-3 px-4 py-3">
+            <div className="relative flex items-center gap-3 px-4 py-3">
+              {/* Animated flag instead of LuMapPin */}
+              <div className="aspect-square h-5 w-5 flex items-center justify-center">
+                <AnimatePresence mode="wait">
+                  <motion.img
+                    key={displayedFlagCode}
+                    src={`/flags/${displayedFlagCode}.svg`}
+                    alt=""
+                    aria-hidden="true"
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    variants={destionationVariants}
+                    className="mr-2 h-full w-full object-contain rounded-md"
+                  />
+                </AnimatePresence>
+              </div>
+
+              {/* The input */}
+              <input
+                id="destination-search"
+                ref={inputRef}
+                value={query}
+                onChange={handleInputChange}
+                onFocus={() => {
+                  setIsOpen(true);
+                  setHighlightedIndex(0);
+                }}
+                onClick={() => {
+                  setIsOpen(true);
+                  setHighlightedIndex(0);
+                }}
+                onKeyDown={handleKeyDown}
+                placeholder=""
+                className="w-full bg-transparent text-sm md:text-[18px] font-medium text-neutral-900 placeholder:text-neutral-400 focus:outline-none"
+                autoComplete="off"
+                inputMode="search"
+              />
+
+              {/* Stylized rotating placeholder (text only) when empty */}
+              {query.trim().length === 0 && (
+                <div className="pointer-events-none absolute inset-0 flex items-center">
+                  <div className="flex items-center translate-x-[32px]">
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={placeholderIndex}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        variants={dropdownVariants}
+                        className="flex items-center"
+                      >
+                        <span className="ml-2 text-sm md:text-[18px] font-medium text-neutral-400">
+                          {ROTATING_ITEMS[placeholderIndex]}
+                        </span>
+                      </motion.div>
+                    </AnimatePresence>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
 
         {hasError && (
           <p className="mt-2 text-sm font-medium text-rose-600">
@@ -233,7 +369,7 @@ const CountrySearchSelect = forwardRef<CountrySearchSelectHandle, CountrySelectP
           </p>
         )}
 
-        {isOpen && combinedSuggestions.length > 0 && (
+        {/* {isOpen && combinedSuggestions.length > 0 && (
           <ul
             ref={listboxRef}
             role="listbox"
@@ -283,7 +419,65 @@ const CountrySearchSelect = forwardRef<CountrySearchSelectHandle, CountrySelectP
               );
             })}
           </ul>
-        )}
+        )} */}
+        <AnimatePresence>
+          {isOpen && combinedSuggestions.length > 0 && (
+            <motion.ul
+              ref={listboxRef}
+              role="listbox"
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              variants={dropdownVariants}
+              className="absolute z-50 mt-2 max-h-72 w-full overflow-y-auto rounded-2xl border border-neutral-200 bg-white shadow-xl shadow-neutral-200/60 origin-top"
+            >
+              {combinedSuggestions.map((option, index) => {
+                const displayValue = formatDisplayValue(option);
+                const isHighlighted = index === highlightedIndex;
+                return (
+                  <li
+                    key={`${option.value}-${option.city ?? option.label}`}
+                    role="option"
+                    data-highlighted={isHighlighted ? 'true' : undefined}
+                    aria-selected={value?.value === option.value}
+                    className={clsx(
+                      'cursor-pointer px-4 py-3 transition-colors',
+                      isHighlighted ? 'bg-neutral-100' : 'hover:bg-neutral-50',
+                    )}
+                    onMouseDown={(event) => {
+                      event.preventDefault();
+                    }}
+                    onClick={() => handleSelect(option)}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div
+                        className={clsx(
+                          'mt-0.5 flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 bg-white',
+                          option.isPopular ? 'border-amber-300 bg-amber-50 text-amber-500' : 'text-neutral-500',
+                        )}
+                      >
+                        {option.isPopular ? (
+                          <LuSparkles className="h-4 w-4" aria-hidden="true" />
+                        ) : (
+                          <LuMapPin className="h-4 w-4" aria-hidden="true" />
+                        )}
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-semibold text-neutral-900">
+                          {displayValue}
+                        </span>
+                        <span className="text-xs text-neutral-500">
+                          {TAGLINE}
+                        </span>
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </motion.ul>
+          )}
+        </AnimatePresence>
+      </div>
       </div>
     );
   },

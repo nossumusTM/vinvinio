@@ -692,12 +692,10 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
 
     return (
     <Container className="py-10">
-      <div className="pl-5">
-      {/* <Heading title="Account" subtitle="" /> */}
-      </div>
+      <div className="pageadjust pl-5">
 
       {/* Avatar & name */}
-      <div className="pl-5 pr-5 pb-6 rounded-xl border-b-[1px]">
+      <div className="pl-5 pr-5 pb-6 rounded-xl shadow-md">
         {/* Divider */}
         <div className="flex items-center gap-4 mt-0 md:mt-4">
           <div
@@ -2320,6 +2318,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
           </div>
         </div>
       )}
+      </div>
 
     </Container>
   );  

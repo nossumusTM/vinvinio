@@ -10,6 +10,8 @@ import useMessenger from "@/app/(marketplace)/hooks/useMessager";
 import useCurrencyFormatter from '@/app/(marketplace)/hooks/useCurrencyFormatter';
 // add to imports at top of ReservationCard.tsx
 import { TbCalendarTime, TbClock, TbUserSquareRounded } from "react-icons/tb";
+import { FaPaperPlane } from "react-icons/fa";
+import Button from "../components/Button";
 
 interface ReservationCardProps {
     reservation: SafeReservation;
@@ -47,11 +49,11 @@ const ReservationCard: React.FC<ReservationCardProps> = ({ reservation, currentU
         />
       )}
   
-      <div className="p-4 flex flex-col gap-2">
+      <div className="px-4 pt-2 pb-24 flex flex-col gap-2 text-black ">
         <div className="pb-4 text-lg font-semibold">{reservation.listing.title}</div>
   
         {/* Reservation Meta — stacked on all breakpoints (match TripsClient) */}
-        <div className="pt-2 pb-4 w-full max-w-md p-4 rounded-xl md:mx-0 mx-auto">
+        <div className="pt-2 pb-2 w-full max-w-md p-4 rounded-xl md:mx-0 mx-auto">
           <div className="flex flex-col  gap-3">
 
             {/* Guests */}
@@ -126,59 +128,89 @@ const ReservationCard: React.FC<ReservationCardProps> = ({ reservation, currentU
           </div>
         </div>
 
-        <div className="flex flex-col items-center mt-4 mb-4">
-          <p className="text-xs font-medium text-neutral-700 mb-2">Booked by</p>
+        {/* Booked by — aligned with Guests / Date / Time */}
+        <div className="w-full rounded-2xl bg-white/90 backdrop-blur-md px-8 py-2.5">
+          <div className="flex items-center gap-3">
 
-          {/* Avatar clickable → open guest profile */}
-          <button
-            type="button"
-            onClick={() => guestId && window.open(`/hosts/${guestId}`, "_blank")}
-            className="rounded-full outline-none focus:ring-2 focus:ring-black/40 transition"
-          >
-            <Avatar src={guestImage} name={guestName} />
-          </button>
-
-          {/* Name clickable → open guest profile */}
-          <span
-            onClick={() => guestId && window.open(`/hosts/${guestId}`, "_blank")}
-            className="text-md font-semibold text-neutral-900 hover:underline cursor-pointer mt-2"
-          >
-            {guestName}
-          </span>
-
-          {/* Direct Message button */}
-          {guestName !== 'Guest' && (
+            {/* Avatar */}
             <button
-              onClick={() => {
-                if (currentUser?.id === guestId) return;
-                messenger.openChat({ id: guestId || '', name: guestName, image: guestImage });
-              }}
-              className="text-xs text-neutral-700 hover:bg-neutral-200 bg-neutral-100 p-3 font-semibold rounded-lg transition mt-2"
+              type="button"
+              onClick={() => guestId && window.open(`/hosts/${guestId}`, "_blank")}
+              className="shrink-0 rounded-full outline-none focus:ring-2 focus:ring-black/40 transition"
+              title="Open guest profile"
             >
-              <div className="flex flex-row gap-1 items-center">
-                {/* <BiPaperPlane size={12} /> */}
-                <p> Direct Message</p>
-              </div>
+              <Avatar src={guestImage} name={guestName} size={36} />
             </button>
-          )}
 
-          {/* Guest mode info stays the same */}
+            {/* Booked by + Name (stacked) */}
+            <div className="min-w-0">
+              <p className="text-[8px] uppercase tracking-wide text-neutral-500 leading-none">
+                Booked by
+              </p>
+              <button
+                onClick={() => guestId && window.open(`/hosts/${guestId}`, "_blank")}
+                className="text-[15px] font-semibold text-neutral-900 hover:underline truncate leading-tight"
+              >
+                {guestName}
+              </button>
+            </div>
+
+            {/* Message icon */}
+            {/* {guestName !== 'Guest' && (
+              <button
+                onClick={() => {
+                  if (currentUser?.id === guestId) return;
+                  messenger.openChat({
+                    id: guestId || '',
+                    name: guestName,
+                    image: guestImage || undefined,
+                  });
+                }}
+                disabled={currentUser?.id === guestId}
+                className="ml-auto h-10 w-10 aspect-square flex items-center justify-center rounded-xl bg-neutral-100 hover:bg-neutral-200 text-black transition disabled:opacity-80"
+                title="Message Guest"
+              >
+                <FaPaperPlane className="text-[20px]" />
+              </button>
+            )} */}
+          </div>
+
+          {/* Guest mode info */}
           {guestName === 'Guest' && (
-            <div className="text-sm text-neutral-600 text-center mt-2 px-10 flex flex-col justify-center items-center">
+            <p className="mt-2 text-xs text-neutral-600">
               Booked using guest mode
               {reservation.guestContact ? (
                 <>
-                  , contact: {' '}
-                  <span className="inline-block bg-green-100 text-green-700 font-semibold px-3 py-1 mt-2 rounded-md shadow-sm">
+                  , contact:{" "}
+                  <span className="inline-block bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded">
                     {reservation.guestContact}
                   </span>
                 </>
-              ) : (
-                '.'
-              )}
-            </div>
+              ) : '.'}
+            </p>
           )}
         </div>
+
+        <div className="absolute inset-x-0 bottom-0">
+          <div className="mt-auto flex px-6 justify-center mb-7">
+            <Button
+              label="Send a Message"
+              onClick={(e) => {
+                if (currentUser?.id === guestId) return;
+                messenger.openChat({
+                  id: guestId || '',
+                  name: guestName,
+                  image: guestImage || undefined,
+                });
+              }}
+              disabled={currentUser?.id === guestId}
+              outline
+              small
+            />
+          </div>
+          <hr />
+        </div>
+
       </div>
     </div>
   );

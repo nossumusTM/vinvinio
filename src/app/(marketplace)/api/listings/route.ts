@@ -312,22 +312,40 @@ export async function GET(request: Request) {
     return parsed.length > 0 ? parsed : undefined;
   };
 
+  // const formattedParams: IListingsParams = {
+  //   ...params,
+  //   roomCount: params.roomCount ? Number(params.roomCount) : undefined,
+  //   guestCount: params.guestCount ? Number(params.guestCount) : undefined,
+  //   bathroomCount: params.bathroomCount ? Number(params.bathroomCount) : undefined,
+  //   skip: params.skip ? Number(params.skip) : undefined,
+  //   take: params.take ? Number(params.take) : undefined,
+  //   category: Array.isArray(params.category) ? params.category[0] : params.category,
+  //   groupStyles: parseArrayParam(params.groupStyles),
+  //   duration: params.duration ? String(params.duration) : undefined,
+  //   environments: parseArrayParam(params.environments),
+  //   activityForms: parseArrayParam(params.activityForms),
+  //   seoKeywords: parseArrayParam(params.seoKeywords),
+  //   languages: parseArrayParam(params.languages),
+  //   statuses: parseArrayParam(params.statuses),
+  // };
+
   const formattedParams: IListingsParams = {
-    ...params,
-    roomCount: params.roomCount ? Number(params.roomCount) : undefined,
-    guestCount: params.guestCount ? Number(params.guestCount) : undefined,
-    bathroomCount: params.bathroomCount ? Number(params.bathroomCount) : undefined,
-    skip: params.skip ? Number(params.skip) : undefined,
-    take: params.take ? Number(params.take) : undefined,
-    category: Array.isArray(params.category) ? params.category[0] : params.category,
-    groupStyles: parseArrayParam(params.groupStyles),
-    duration: params.duration ? String(params.duration) : undefined,
-    environments: parseArrayParam(params.environments),
-    activityForms: parseArrayParam(params.activityForms),
-    seoKeywords: parseArrayParam(params.seoKeywords),
-    languages: parseArrayParam(params.languages),
-    statuses: parseArrayParam(params.statuses),
-  };
+     ...params,
+     roomCount: params.roomCount ? Number(params.roomCount) : undefined,
+     guestCount: params.guestCount ? Number(params.guestCount) : undefined,
+     bathroomCount: params.bathroomCount ? Number(params.bathroomCount) : undefined,
+     skip: params.skip ? Number(params.skip) : undefined,
+     take: params.take ? Number(params.take) : undefined,
+     category: Array.isArray(params.category) ? params.category[0] : params.category,
+     groupStyles: parseArrayParam(params.groupStyles),
+     duration: params.duration ? String(params.duration) : undefined,
+     environments: parseArrayParam(params.environments),
+     activityForms: parseArrayParam(params.activityForms),
+     seoKeywords: parseArrayParam(params.seoKeywords),
+     languages: parseArrayParam(params.languages),
+     statuses: parseArrayParam(params.statuses),
+    locationValue: params.locationValue ? String(params.locationValue) : undefined,
+   };
 
   try {
     const listings = await getListings(formattedParams);

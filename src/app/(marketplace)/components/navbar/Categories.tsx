@@ -546,22 +546,33 @@ const Categories = () => {
     }));
   }, []);
 
+  // const addKeyword = useCallback((value: string) => {
+  //   const keyword = value.trim();
+  //   if (!keyword) {
+  //     return;
+  //   }
+
+  //   setDraftFilters((prev) => {
+  //     if (prev.keywords.includes(keyword)) {
+  //       return prev;
+  //     }
+
+  //     return {
+  //       ...prev,
+  //       keywords: [...prev.keywords, keyword],
+  //     };
+  //   });
+  // }, []);
+
+  // in Categories.tsx (keep your addKeyword callback, but normalize)
   const addKeyword = useCallback((value: string) => {
-    const keyword = value.trim();
-    if (!keyword) {
-      return;
-    }
-
-    setDraftFilters((prev) => {
-      if (prev.keywords.includes(keyword)) {
-        return prev;
-      }
-
-      return {
-        ...prev,
-        keywords: [...prev.keywords, keyword],
-      };
-    });
+    const keyword = value.trim().toLowerCase();
+    if (!keyword) return;
+    setDraftFilters((prev) => (
+      prev.keywords.includes(keyword)
+        ? prev
+        : { ...prev, keywords: [...prev.keywords, keyword] }
+    ));
   }, []);
 
   const removeKeyword = useCallback((value: string) => {

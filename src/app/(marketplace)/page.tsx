@@ -71,15 +71,48 @@
 
 // export default Home;
 
-import getListings from '@/app/(marketplace)/actions/getListings';
-import getCurrentUser from '@/app/(marketplace)/actions/getCurrentUser';
-import HomeClient from '@/app/(marketplace)/components/HomeClient';
+// import getListings from '@/app/(marketplace)/actions/getListings';
+// import getCurrentUser from '@/app/(marketplace)/actions/getCurrentUser';
+// import HomeClient from '@/app/(marketplace)/components/HomeClient';
 
-const Home = async () => {
-  const initialListings = await getListings({ take: 12 });
-  const currentUser = await getCurrentUser();
+// const Home = async () => {
+//   const initialListings = await getListings({ take: 12 });
+//   const currentUser = await getCurrentUser();
 
-  return <HomeClient initialListings={initialListings} currentUser={currentUser} />;
-};
+//   return <HomeClient initialListings={initialListings} currentUser={currentUser} />;
+// };
 
-export default Home;
+// export default Home;
+
+  import getListings from '@/app/(marketplace)/actions/getListings';
+  import getCurrentUser from '@/app/(marketplace)/actions/getCurrentUser';
+  import HomeClient from '@/app/(marketplace)/components/HomeClient';
+
+  const parseArrayParam = (v?: string | string[]) =>
+    typeof v === 'string'
+      ? v.split(',').map(s => s.trim()).filter(Boolean)
+      : Array.isArray(v)
+        ? v.flatMap(item => String(item).split(',')).map(s => s.trim()).filter(Boolean)
+        : undefined;
+
+  export default async function Home({
+    searchParams,
+  }: {
+    searchParams: Record<string, string | string[] | undefined>;
+  }) {
+    const initialListings = await getListings({
+      take: 12,
+      category: typeof searchParams.category === 'string' ? searchParams.category : undefined,
+      duration: typeof searchParams.duration === 'string' ? searchParams.duration : undefined,
+      languages: parseArrayParam(searchParams.languages),
+      seoKeywords: parseArrayParam(searchParams.seoKeywords),
+      groupStyles: parseArrayParam(searchParams.groupStyles),
+      environments: parseArrayParam(searchParams.environments),
+      activityForms: parseArrayParam(searchParams.activityForms),
+      statuses: parseArrayParam(searchParams.statuses),
+      locationValue: typeof searchParams.locationValue === 'string' ? searchParams.locationValue : undefined,
+    });
+
+    const currentUser = await getCurrentUser();
+    return <HomeClient initialListings={initialListings} currentUser={currentUser} />;
+  }

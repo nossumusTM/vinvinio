@@ -46,7 +46,7 @@ const SearchExperience = () => {
           alt={location.label}
           width={16}
           height={12}
-          className="rounded-sm object-cover"
+          className="p-1 shadow-md rounded-md object-cover"
         />
         {location.city}, {location.label}
       </span>

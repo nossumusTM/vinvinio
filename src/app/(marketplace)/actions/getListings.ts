@@ -6,6 +6,7 @@ import { Prisma } from "@prisma/client";
 import { buildListingsWhereClause } from "./listingFilters";
 import type { IListingsParams } from "./listings.types";
 export type { IListingsParams } from "./listings.types";
+import { LANGUAGE_OPTIONS } from "@/app/(marketplace)/constants/locale"
 export const dynamic = 'force-dynamic';
 
 export default async function getListings(
@@ -13,6 +14,61 @@ export default async function getListings(
 ): Promise<SafeListing[]> {
   try {
     const { sort } = params;
+
+    const toKebab = (s: string) =>
+      s
+        .toLowerCase()
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    const dedupe = <T extends string>(arr: T[]) => Array.from(new Set(arr));
+    const toArrayStr = (v: string | string[] | undefined) =>
+      Array.isArray(v) ? v : (typeof v === 'string' ? [v] : []);
+
+    // keywords: accept "street food" and "street-food"
+    const seoArr = toArrayStr(params.seoKeywords).map(s => s.trim()).filter(Boolean);
+    const normalizedSeo =
+      seoArr.length ? dedupe<string>([...seoArr, ...seoArr.map(toKebab)]) : undefined;
+
+    // languages: lowercase and add base code (e.g., "pt-BR" -> ["pt-br","pt"])
+    const langArr = toArrayStr(params.languages).map(s => s.trim()).filter(Boolean);
+    const normalizedLangs =
+      langArr.length
+        ? dedupe<string>(
+            langArr.flatMap((l) => {
+              const lc = l.toLowerCase();
+              return lc.includes('-') ? [lc, lc.split('-')[0]] : [lc];
+            }),
+          )
+        : undefined;
+
+    const normalizedParams: IListingsParams = {
+      ...params,
+      seoKeywords: normalizedSeo,
+      languages: normalizedLangs,
+    };
+
+    const codeToNameLower = new Map(
+      LANGUAGE_OPTIONS.map((o) => [o.code.toLowerCase(), o.language.toLowerCase()])
+    );
+    // Turn requested languages (codes or names) into lowercased full names
+    const requestedLangNamesLower = (() => {
+      const raw = Array.isArray(params.languages)
+        ? params.languages
+        : (typeof params.languages === "string" ? [params.languages] : []);
+      const cleaned = raw.map((s) => s.trim().toLowerCase()).filter(Boolean);
+      const expanded = cleaned.flatMap((token) => {
+        // try exact code and its base (e.g., "en-gb" -> ["en-gb","en"])
+        const candidates = token.includes("-") ? [token, token.split("-")[0]] : [token];
+        const names = candidates
+          .map((c) => codeToNameLower.get(c))
+          .filter(Boolean) as string[];
+        // if none mapped, assume user passed a full name already (e.g., "english")
+        return names.length ? names : [token];
+      });
+      return Array.from(new Set(expanded));
+    })();
 
     const backfillMissingUpdatedAt = (
       collection: "Listing" | "User",
@@ -48,7 +104,12 @@ export default async function getListings(
       prisma.$runCommandRaw(backfillMissingUpdatedAt("User")),
     ]);
 
-    const query = buildListingsWhereClause(params);
+    // const query = buildListingsWhereClause(normalizedParams);
+    const query = buildListingsWhereClause({
+        ...normalizedParams,
+        languages: undefined,
+     });
+
 
     const listings = await prisma.listing.findMany({
       where: query,
@@ -63,8 +124,20 @@ export default async function getListings(
       take: params.take ?? 12,
     });
 
+    
+
+      const resultListings =
+      requestedLangNamesLower.length === 0
+        ? listings
+        : listings.filter((l) => {
+            const row = Array.isArray(l.languages)
+              ? l.languages.map((x) => String(x).toLowerCase())
+              : [];
+            return requestedLangNamesLower.some((reqName) => row.includes(reqName));
+          });
+
     const listingsWithSlug = await Promise.all(
-      listings.map((listing) => ensureListingSlug(listing))
+       resultListings.map((listing) => ensureListingSlug(listing))
     );
 
     const decoratedListings = listingsWithSlug.map((listing) => {

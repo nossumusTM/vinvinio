@@ -5,6 +5,7 @@ import axios from "axios";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from 'date-fns';
+import Button from "../components/Button";
 
 import { SafeReservation, SafeUser } from "@/app/(marketplace)/types";
 import { TbCalendarTime, TbUserScan, TbClock, TbUserSquareRounded, TbMessageDots } from "react-icons/tb";
@@ -12,7 +13,7 @@ import useMessenger from "@/app/(marketplace)/hooks/useMessager";
 import { CiPaperplane } from "react-icons/ci";
 import { TbMessage2Code } from "react-icons/tb";
 import { BiSolidPaperPlane } from "react-icons/bi";
-import { BiPaperPlane } from "react-icons/bi";
+import { FaPaperPlane } from "react-icons/fa";
 
 import Heading from "@/app/(marketplace)/components/Heading";
 import Container from "@/app/(marketplace)/components/Container";
@@ -287,7 +288,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
           return (
             <div
               key={reservation.id}
-              className="relative bg-white rounded-3xl shadow-md hover:shadow-lg transition duration-300 overflow-hidden"
+              className="relative bg-white rounded-3xl shadow-md hover:shadow-lg transition duration-300 overflow-hidden flex flex-col"
             >
               {/* ✅ Status Label with fallback */}
               {reservation.status === 'cancelled' ? (
@@ -319,7 +320,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
                 </div>
               )}
 
-              <div className="px-4 pt-2 flex flex-col gap-2 text-black">
+              <div className="px-4 pt-2 pb-6 flex flex-col gap-2 text-black flex-1">
 
                 <div className="p-4 text-lg font-semibold">{reservation.listing.title}</div>
                 
@@ -416,70 +417,82 @@ const TripsClient: React.FC<TripsClientProps> = ({
                 </div> */}
 
                 {/* <hr className="mt-3 mb-6 w-screen relative left-1/2 right-1/2 -translate-x-1/2 border-t border-neutral-200" /> */}
-                <div className="flex flex-col items-center mt-4">
-                  <p className="text-xs font-medium text-neutral-700">Hosted by</p>
-                  </div>
+                {/* Host row — aligned with Guests / Date / Time */}
+                <div className="w-full rounded-2xl bg-white/90 backdrop-blur-md px-8 py-0">
+                  <div className="flex items-center gap-3">
 
-                <div className="flex flex-col items-center gap-2">
-                  {/* Avatar (click → open host profile) */}
-                  <button
-                    type="button"
-                    onClick={() => window.open(`/hosts/${host?.id}`, "_blank")}
-                    className="rounded-full outline-none focus:ring-2 focus:ring-black/40 transition"
-                  >
-                    <Avatar src={hostImage} name={hostName} />
-                  </button>
+                    {/* Avatar */}
+                    <button
+                      type="button"
+                      onClick={() => window.open(`/hosts/${host?.id}`, "_blank")}
+                      className="shrink-0 rounded-full outline-none focus:ring-2 focus:ring-black/40 transition"
+                      title="Open host profile"
+                    >
+                      <Avatar src={hostImage} name={hostName} size={36} />
+                    </button>
 
-                  {/* Host Name (click → open host profile) */}
-                  <span
-                    onClick={() => window.open(`/hosts/${host?.id}`, "_blank")}
-                    className="text-md font-semibold text-neutral-900 hover:underline cursor-pointer"
-                  >
-                    {hostName}
-                  </span>
-
-                  {/* Direct Message Button */}
-                  <button
-                    onClick={() => {
-                      if (currentUser?.id === host?.id) return;
-
-                      messenger.openChat({
-                        id: host?.id ?? "",
-                        name: hostName,
-                        image: hostImage ?? undefined,
-                      });
-                    }}
-                    className="text-xs text-neutral-700 hover:bg-neutral-200 bg-neutral-100 px-3 py-2 font-semibold rounded-lg transition"
-                  >
-                    <div className="flex flex-row gap-1 items-center">
-                      <p>Direct Message</p>
+                    {/* Hosted by + Name (stacked) */}
+                    <div className="min-w-0">
+                      <p className="text-[8px] uppercase tracking-wide text-neutral-500 leading-none">
+                        Hosted by
+                      </p>
+                      <button
+                        onClick={() => window.open(`/hosts/${host?.id}`, "_blank")}
+                        className="text-[15px] font-semibold text-neutral-900 hover:underline truncate leading-tight"
+                      >
+                        {hostName}
+                      </button>
                     </div>
-                  </button>
+
+                    {/* Message button pinned to bottom-center of the card */}
+
+                  </div>
                 </div>
 
-                {new Date(reservation.startDate) > new Date(Date.now() + 24 * 60 * 60 * 1000) ? (
-                  <button
-                    onClick={() => openCancelModal(reservation.id)}
-                    disabled={deletingId === reservation.id}
-                    className="mb-6 mt-4 text-sm font-medium text-neutral-700 hover:underline hover:text-black transition disabled:opacity-50"
-                  >
-                    Need to cancel for some reason?
-                  </button>
-                ) : (
-                  <p className="mt-2 text-sm text-neutral-500 px-10 text-center">
-                    This booking is no longer subject to cancellation. Please review our{' '}
-                    <button
-                      onClick={() => {
-                        const footer = document.getElementById("vuoiaggio-footer");
-                        footer?.scrollIntoView({ behavior: "smooth" });
-                      }}
-                      className="text-blue-600 hover:underline font-medium"
-                    >
-                      cancellation policy
-                    </button>
-                    .
-                  </p>
-                )}
+                <div className="mt-auto pt-4">
+                 <div className="flex justify-center px-6 pb-4 pt-4">
+                   <Button
+                     label="Send a Message"
+                     onClick={(e) => {
+                       if (currentUser?.id === host?.id) return;
+                       messenger.openChat({
+                         id: host?.id ?? "",
+                         name: hostName,
+                         image: hostImage || undefined,
+                       });
+                     }}
+                     disabled={currentUser?.id === host?.id}
+                     outline
+                     small
+                   />
+                 </div>
+                  <hr className="my-4" />
+                  <div className="min-h-[88px] grid place-items-center px-6 text-center">
+                    {new Date(reservation.startDate) > new Date(Date.now() + 24 * 60 * 60 * 1000) ? (
+                      <button
+                        onClick={() => openCancelModal(reservation.id)}
+                        disabled={deletingId === reservation.id}
+                        className="text-sm font-medium text-neutral-700 hover:underline hover:text-black transition disabled:opacity-50"
+                      >
+                        Need to cancel for some reason?
+                      </button>
+                    ) : (
+                      <p className="text-sm text-neutral-500">
+                        This booking is no longer subject to cancellation. Please review our{' '}
+                        <button
+                          onClick={() => {
+                            const footer = document.getElementById("vuoiaggio-footer");
+                            footer?.scrollIntoView({ behavior: "smooth" });
+                          }}
+                          className="text-blue-600 hover:underline font-medium"
+                        >
+                          cancellation policy
+                        </button>
+                        .
+                      </p>
+                    )}
+                  </div>
+                </div>
 
               </div>
 

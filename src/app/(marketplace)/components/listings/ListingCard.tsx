@@ -713,7 +713,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
     return { type: 'image', src: '/placeholder.jpg' };
   }, [images, videos]);  
 
-  console.log('coverMedia', coverMedia);
+  // console.log('coverMedia', coverMedia);
 
   const goPrev = useCallback(() => {
     if (images.length > 0) {
