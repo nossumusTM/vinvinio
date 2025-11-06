@@ -10,12 +10,15 @@ import {
   useRef,
   useState,
 } from 'react';
-import { LuMapPin, LuSparkles } from 'react-icons/lu';
+import { LuMapPin, LuSparkles, LuX } from 'react-icons/lu';
 import clsx from 'clsx';
 
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import useCountries from '@/app/(marketplace)/hooks/useCountries';
+
+import { createPortal } from 'react-dom';
+import { useLayoutEffect } from 'react';
 
 export type CountrySelectValue = {
   flag: string;
@@ -46,7 +49,7 @@ const TAGLINE = 'Activities to do · Experiences to live';
 // Rotating placeholder texts (first one is the default)
 const ROTATING_ITEMS = [
   'Rome, Italy',
-  'Amsterdam, Netherlands',
+  'Hong Kong, China',
   'Baku, Azerbaijan',
   'Paris, France',
   'Istanbul, Türkiye',
@@ -102,6 +105,9 @@ const CountrySearchSelect = forwardRef<CountrySearchSelectHandle, CountrySelectP
     const [isOpen, setIsOpen] = useState(false);
     const [highlightedIndex, setHighlightedIndex] = useState(0);
     const [placeholderIndex, setPlaceholderIndex] = useState(0);
+
+    const [portalReady, setPortalReady] = useState(false);
+    const [dropdownRect, setDropdownRect] = useState<{ left: number; top: number; width: number; } | null>(null);
 
     const popularSuggestions = useMemo(() => {
       return getPopularCities().map((entry) => ({
@@ -185,6 +191,15 @@ const CountrySearchSelect = forwardRef<CountrySearchSelectHandle, CountrySelectP
       },
       [formatDisplayValue, onChange, onErrorCleared],
     );
+
+    const handleClear = () => {
+      setQuery('');
+      onChange(undefined);
+      setIsOpen(true); // keep dropdown open for a fresh pick (optional)
+      setHighlightedIndex(0);
+      requestAnimationFrame(() => inputRef.current?.focus());
+      if (hasError) onErrorCleared?.();
+    };
 
     useImperativeHandle(
       ref,
@@ -286,6 +301,27 @@ const CountrySearchSelect = forwardRef<CountrySearchSelectHandle, CountrySelectP
       return () => clearInterval(id);
     }, [query]);
 
+     useEffect(() => { setPortalReady(true); }, []);
+     
+      const updateDropdownPosition = useCallback(() => {
+        if (!wrapperRef.current) return;
+        const r = wrapperRef.current.getBoundingClientRect();
+        setDropdownRect({ left: r.left, top: r.bottom + 8, width: r.width });
+      }, []);
+      
+      useLayoutEffect(() => {
+        if (!isOpen) return;
+        updateDropdownPosition();
+        const onScroll = () => updateDropdownPosition();
+        const onResize = () => updateDropdownPosition();
+        window.addEventListener('scroll', onScroll, true);
+        window.addEventListener('resize', onResize);
+        return () => {
+          window.removeEventListener('scroll', onScroll, true);
+          window.removeEventListener('resize', onResize);
+        };
+      }, [isOpen, updateDropdownPosition]);
+
     const borderClass = clsx(
       'transition ring-0 focus-within:ring-0 rounded-2xl border-2 bg-white/90 backdrop-blur shadow-sm hover:shadow-md',
       hasError
@@ -294,74 +330,97 @@ const CountrySearchSelect = forwardRef<CountrySearchSelectHandle, CountrySelectP
     );
 
     return (
-      <div ref={wrapperRef} className="relative">
+      <div ref={wrapperRef} className="relative z-20">
         <label className="sr-only" htmlFor="destination-search">
           Search destinations
         </label>
         <div className={borderClass}>
-          <div className="relative flex items-center gap-3 px-4 py-3">
-            <div className="relative flex items-center gap-3 px-4 py-3">
-              {/* Animated flag instead of LuMapPin */}
-              <div className="aspect-square h-5 w-5 flex items-center justify-center">
-                <AnimatePresence mode="wait">
-                  <motion.img
-                    key={displayedFlagCode}
-                    src={`/flags/${displayedFlagCode}.svg`}
-                    alt=""
-                    aria-hidden="true"
-                    initial="hidden"
-                    animate="visible"
-                    exit="exit"
-                    variants={destionationVariants}
-                    className="mr-2 h-full w-full object-contain rounded-md"
-                  />
-                </AnimatePresence>
-              </div>
+          {/* INPUT ROW — single relative wrapper */}
+<div className="relative flex items-center gap-3 px-4 py-3">
+  {/* Flag */}
+  <div className="aspect-square h-5 w-5 flex items-center justify-center">
+    <AnimatePresence mode="wait">
+      <motion.img
+        key={displayedFlagCode}
+        src={`/flags/${displayedFlagCode}.svg`}
+        alt=""
+        aria-hidden="true"
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+        variants={destionationVariants}
+        className="mr-1.5 h-full w-full object-contain rounded-md"
+      />
+    </AnimatePresence>
+  </div>
 
-              {/* The input */}
-              <input
-                id="destination-search"
-                ref={inputRef}
-                value={query}
-                onChange={handleInputChange}
-                onFocus={() => {
-                  setIsOpen(true);
-                  setHighlightedIndex(0);
-                }}
-                onClick={() => {
-                  setIsOpen(true);
-                  setHighlightedIndex(0);
-                }}
-                onKeyDown={handleKeyDown}
-                placeholder=""
-                className="w-full bg-transparent text-sm md:text-[18px] font-medium text-neutral-900 placeholder:text-neutral-400 focus:outline-none"
-                autoComplete="off"
-                inputMode="search"
-              />
+  {/* Input */}
+  <input
+    id="destination-search"
+    ref={inputRef}
+    value={query}
+    onChange={handleInputChange}
+    onFocus={() => {
+      setIsOpen(true);
+      setHighlightedIndex(0);
+    }}
+    onClick={() => {
+      setIsOpen(true);
+      setHighlightedIndex(0);
+    }}
+    onKeyDown={handleKeyDown}
+    placeholder=""
+    className="w-full pt-0.5 pr-9 bg-transparent text-sm md:text-[18px] font-medium text-neutral-900 placeholder:text-neutral-400 focus:outline-none"
+    autoComplete="off"
+    inputMode="search"
+  />
 
-              {/* Stylized rotating placeholder (text only) when empty */}
-              {query.trim().length === 0 && (
-                <div className="pointer-events-none absolute inset-0 flex items-center">
-                  <div className="flex items-center translate-x-[32px]">
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={placeholderIndex}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                        variants={dropdownVariants}
-                        className="flex items-center"
-                      >
-                        <span className="ml-2 text-sm md:text-[18px] font-medium text-neutral-400">
-                          {ROTATING_ITEMS[placeholderIndex]}
-                        </span>
-                      </motion.div>
-                    </AnimatePresence>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+  {/* Clear (X) — perfectly centered on the right */}
+  <AnimatePresence>
+    {query.trim().length > 0 && (
+      <motion.button
+        type="button"
+        aria-label="Clear destination"
+        onClick={handleClear}
+        initial={{ opacity: 0, scale: 0.85 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.85 }}
+        transition={{ type: 'spring', stiffness: 520, damping: 32, mass: 0.28 }}
+        className="
+          absolute right-4 top-1/3.5 -translate-y-1/2
+          h-5 w-5 flex items-center justify-center
+          text-neutral-500 hover:text-neutral-800
+          active:scale-95 select-none
+        "
+      >
+        <LuX className="h-4 w-4" />
+      </motion.button>
+    )}
+  </AnimatePresence>
+
+  {/* Rotating placeholder (keeps clicks on input) */}
+  {query.trim().length === 0 && (
+    <div className="pointer-events-none absolute inset-0 flex items-center">
+      <div className="flex items-center translate-x-[32px]">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={placeholderIndex}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            variants={dropdownVariants}
+            className="flex items-center"
+          >
+            <span className="ml-4 text-sm md:text-[18px] font-medium text-neutral-400">
+              {ROTATING_ITEMS[placeholderIndex]}
+            </span>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    </div>
+  )}
+</div>
+
 
         {hasError && (
           <p className="mt-2 text-sm font-medium text-rose-600">
@@ -429,7 +488,7 @@ const CountrySearchSelect = forwardRef<CountrySearchSelectHandle, CountrySelectP
               animate="visible"
               exit="exit"
               variants={dropdownVariants}
-              className="absolute z-50 mt-2 max-h-72 w-full overflow-y-auto rounded-2xl border border-neutral-200 bg-white shadow-xl shadow-neutral-200/60 origin-top"
+              className="absolute z-[9999] mt-2 max-h-72 w-full overflow-y-auto rounded-2xl border border-neutral-200 bg-white shadow-xl shadow-neutral-200/60 origin-top"
             >
               {combinedSuggestions.map((option, index) => {
                 const displayValue = formatDisplayValue(option);

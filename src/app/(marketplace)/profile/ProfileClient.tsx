@@ -692,7 +692,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
 
     return (
     <Container className="py-10">
-      <div className="pageadjust pl-5">
+      <div className="pageadjust px-5">
 
       {/* Avatar & name */}
       <div className="pl-5 pr-5 pb-6 rounded-xl shadow-md">

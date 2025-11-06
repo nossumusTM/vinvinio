@@ -169,7 +169,7 @@ const SearchExperienceModal = () => {
           title="Where will your next story unfold?"
           subtitle="Choose a destination to unlock curated experiences."
         /> */}
-        <div className="flex flex-col gap-4">
+        <div className="relative z-30 flex flex-col gap-4">
           <CountrySearchSelect
             ref={searchInputRef}
             value={location}
@@ -185,7 +185,7 @@ const SearchExperienceModal = () => {
           <p className="text-xs text-neutral-500">
             Browse iconic cities or search for hidden gems across the globe.
           </p>
-          <div className="relative h-[140px] overflow-hidden rounded-2xl border border-white/60 sm:h-[260px] md:h-[260px]">
+          <div className="relative z-0 h-[140px] overflow-hidden rounded-2xl border border-white/60 sm:h-[260px] md:h-[260px]">
             <SearchMap
               key={`${modal.isOpen}-${location?.value ?? 'default'}`}
               city={location?.city ?? 'Rome'}
