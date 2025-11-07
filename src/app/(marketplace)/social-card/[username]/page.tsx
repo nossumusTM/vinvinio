@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 
 import prisma from '@/app/(marketplace)/libs/prismadb';
 import { hrefForListing } from '@/app/(marketplace)/libs/links';
+import { findUserIdByHandle } from '@/app/(marketplace)/libs/userHandles';
 import type {
   SocialCardVisitedPlace,
   SocialCardVisibility,
@@ -26,8 +27,6 @@ const DEFAULT_VISIBILITY: Record<string, boolean> = {
   hobbies: true,
   contacts: true,
 };
-
-const OBJECT_ID_RE = /^[0-9a-f]{24}$/i;
 
 const normalizeVisibility = (input: unknown): Record<string, boolean> => {
   const merged = { ...DEFAULT_VISIBILITY };
@@ -76,25 +75,22 @@ const SocialCardSharePage = async ({
 }: {
   params: { username: string };
 }) => {
-  const rawParam = decodeURIComponent(params.username ?? '').trim();
-  const sanitizedParam = rawParam.replace(/^@/, '');
+  let candidate = params.username ?? '';
 
-  if (!sanitizedParam) {
+  try {
+    candidate = decodeURIComponent(candidate);
+  } catch {
+    // keep the raw candidate if decoding fails
+  }
+
+  const userId = await findUserIdByHandle(candidate);
+
+  if (!userId) {
     notFound();
   }
 
-  const user = await prisma.user.findFirst({
-    where: {
-      OR: [
-        {
-          username: {
-            equals: sanitizedParam,
-            mode: 'insensitive',
-          },
-        },
-        ...(OBJECT_ID_RE.test(sanitizedParam) ? [{ id: sanitizedParam }] : []),
-      ],
-    },
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
     select: {
       id: true,
       username: true,

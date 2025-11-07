@@ -1,7 +1,7 @@
 import prisma from "@/app/(marketplace)/libs/prismadb";
 import { ensureListingSlug } from "@/app/(marketplace)/libs/ensureListingSlug";
 import { normalizePricingSnapshot } from "@/app/(marketplace)/libs/pricing";
-import { slugSegment } from "@/app/(marketplace)/libs/links";
+import { findUserIdByHandle } from "@/app/(marketplace)/libs/userHandles";
 import { SafeListing, SafeUser } from "@/app/(marketplace)/types";
 import { ListingStatus, Role } from "@prisma/client";
 
@@ -24,22 +24,23 @@ export interface HostCardData {
   reviews: HostCardReview[];
 }
 
-const OBJECT_ID_RE = /^[0-9a-f]{24}$/i;
-
 export default async function getHostCardData(identifier: string): Promise<HostCardData | null> {
   if (!identifier) return null;
 
-  const trimmed = identifier.trim();
-  const usernameCandidate = slugSegment(trimmed);
+  let candidate = identifier;
+  try {
+    candidate = decodeURIComponent(candidate);
+  } catch {
+    // ignore decode issues and continue with the original candidate
+  }
 
-  const host = await prisma.user.findFirst({
-    where: {
-      role: Role.host,
-      OR: [
-        ...(OBJECT_ID_RE.test(trimmed) ? [{ id: trimmed }] : []),
-        ...(usernameCandidate ? [{ username: usernameCandidate }] : []),
-      ],
-    },
+  const hostId = await findUserIdByHandle(candidate, { role: Role.host });
+  if (!hostId) {
+    return null;
+  }
+
+  const host = await prisma.user.findUnique({
+    where: { id: hostId },
     include: {
       listings: {
         where: { status: ListingStatus.approved },
@@ -56,7 +57,7 @@ export default async function getHostCardData(identifier: string): Promise<HostC
     },
   });
 
-  if (!host) {
+  if (!host || host.role !== Role.host) {
     return null;
   }
 
