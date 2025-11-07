@@ -375,14 +375,19 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   useEffect(() => {
     try {
       const parsedAddress = currentUser.address ? JSON.parse(currentUser.address) : {};
-  
+      const normalizedCountry =
+        parsedAddress && typeof parsedAddress === 'object' && 'country' in parsedAddress
+          ? (parsedAddress.country as CountrySelectValue | null)
+          : null;
+
       setFieldValues({
+        username: currentUser.username || '',
         name: currentUser.name || '',
         email: currentUser.email || '',
         phone: currentUser.phone || '',
         contact: currentUser.contact || '',
         legalName: currentUser.legalName || '',
-        country: parsedAddress.country || null,
+        country: normalizedCountry,
         street: parsedAddress.street || '',
         apt: parsedAddress.apt || '',
         city: parsedAddress.city || '',

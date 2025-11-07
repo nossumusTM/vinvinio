@@ -23,15 +23,14 @@ import Button from '@/app/(marketplace)/components/Button';
 
 import type { SafeListing, SafeUser } from '@/app/(marketplace)/types';
 
-import { ListingStatus } from '@prisma/client'; // adjust the path if different
-import type { $Enums } from '@prisma/client';
+type KnownListingStatus = Extract<SafeListing['status'], string>;
 
 interface MyListingsClientProps {
   listings: SafeListing[];
   currentUser: SafeUser;
 }
 
-const STATUS_STYLES = {
+const STATUS_STYLES: Record<KnownListingStatus, { label: string; badgeClass: string }> = {
   pending: {
     label: 'Pending review',
     badgeClass: 'bg-amber-100 text-amber-800 border border-amber-200',
@@ -56,7 +55,7 @@ const STATUS_STYLES = {
     label: 'Rejected',
     badgeClass: 'bg-rose-100 text-rose-800 border border-rose-200',
   },
-} as const satisfies Record<$Enums.ListingStatus, { label: string; badgeClass: string }>;
+};
 
 const TAB_ITEMS = [
   { key: 'approved',            label: 'Live experiences',        ping: 'bg-emerald-300', dot: 'bg-emerald-500' },

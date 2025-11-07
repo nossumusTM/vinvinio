@@ -100,24 +100,30 @@ const mapVisitedPlaces = (input: unknown): SocialCardVisitedPlace[] => {
     return [];
   }
 
-  return input
-    .map((entry) => {
-      if (!entry || typeof entry !== 'object') return null;
-      const countryCode = (entry as Record<string, unknown>).countryCode;
-      const countryName = (entry as Record<string, unknown>).countryName;
-      const city = (entry as Record<string, unknown>).city;
+  const places: SocialCardVisitedPlace[] = [];
 
-      if (typeof countryCode !== 'string' || typeof countryName !== 'string') {
-        return null;
-      }
+  input.forEach((entry) => {
+    if (!entry || typeof entry !== 'object') {
+      return;
+    }
 
-      return {
-        countryCode: countryCode.trim().toUpperCase(),
-        countryName: countryName.trim(),
-        city: typeof city === 'string' ? city.trim() : undefined,
-      } satisfies SocialCardVisitedPlace;
-    })
-    .filter((place): place is SocialCardVisitedPlace => Boolean(place?.countryCode && place?.countryName));
+    const record = entry as Record<string, unknown>;
+    const countryCode = record.countryCode;
+    const countryName = record.countryName;
+    const city = record.city;
+
+    if (typeof countryCode !== 'string' || typeof countryName !== 'string') {
+      return;
+    }
+
+    places.push({
+      countryCode: countryCode.trim().toUpperCase(),
+      countryName: countryName.trim(),
+      city: typeof city === 'string' ? city.trim() : null,
+    });
+  });
+
+  return places;
 };
 
 const mergeCardState = (payload: any): CardState => ({

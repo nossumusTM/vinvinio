@@ -3,7 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/(marketplace)/libs/prismadb";
 import getCurrentUser from "@/app/(marketplace)/actions/getCurrentUser";
 import { ensureListingSlug } from "@/app/(marketplace)/libs/ensureListingSlug";
-import { Prisma, ListingStatus } from "@prisma/client";
+import { Prisma } from "@prisma/client";
+
+type ModerationStatus = 'pending' | 'revision' | 'awaiting_reapproval';
 
 export async function GET(request: NextRequest) {
   const currentUser = await getCurrentUser();
@@ -18,9 +20,9 @@ export async function GET(request: NextRequest) {
     const categoryParam = searchParams.get('category')?.trim() || '';
 
     const buildWhere = (
-      status: ListingStatus
+      status: ModerationStatus
     ): Prisma.ListingWhereInput => {
-      const where: Prisma.ListingWhereInput = { status };
+      const where: Prisma.ListingWhereInput = { status: status as any };
       const andConditions: Prisma.ListingWhereInput[] = [];
 
       if (locationParam) {
@@ -61,7 +63,7 @@ export async function GET(request: NextRequest) {
       return where;
     };
 
-    const statuses: ListingStatus[] = ['pending', 'revision', 'awaiting_reapproval'];
+    const statuses: ModerationStatus[] = ['pending', 'revision', 'awaiting_reapproval'];
 
     const listingsByStatus = await Promise.all(
       statuses.map((status) =>

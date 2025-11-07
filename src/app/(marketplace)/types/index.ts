@@ -146,7 +146,7 @@ export type SafeUser = Simplify<
 
 /** Accept whatever your schema currently has for these fields */
 type Pricingish = Listing extends { pricingType: infer P } ? P | null : string | null;
-type Statusish  = Listing extends { status: infer S } ? S : string;
+type Statusish  = (Listing extends { status: infer S } ? S : string) | 'awaiting_reapproval';
 
 export type SafeListing = Simplify<
   Omit<Listing, "createdAt" | "updatedAt"> & {
