@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 
 import prisma from '@/app/(marketplace)/libs/prismadb';
-import { hrefForListing, slugSegment } from '@/app/(marketplace)/libs/links';
+import { hrefForListing } from '@/app/(marketplace)/libs/links';
 import type {
   SocialCardVisitedPlace,
   SocialCardVisibility,
@@ -77,22 +77,22 @@ const SocialCardSharePage = async ({
   params: { username: string };
 }) => {
   const rawParam = decodeURIComponent(params.username ?? '').trim();
+  const sanitizedParam = rawParam.replace(/^@/, '');
 
-  if (!rawParam) {
-    notFound();
-  }
-
-  const usernameCandidate = slugSegment(rawParam);
-
-  if (!usernameCandidate && !OBJECT_ID_RE.test(rawParam)) {
+  if (!sanitizedParam) {
     notFound();
   }
 
   const user = await prisma.user.findFirst({
     where: {
       OR: [
-        ...(usernameCandidate ? [{ username: usernameCandidate }] : []),
-        ...(OBJECT_ID_RE.test(rawParam) ? [{ id: rawParam }] : []),
+        {
+          username: {
+            equals: sanitizedParam,
+            mode: 'insensitive',
+          },
+        },
+        ...(OBJECT_ID_RE.test(sanitizedParam) ? [{ id: sanitizedParam }] : []),
       ],
     },
     select: {

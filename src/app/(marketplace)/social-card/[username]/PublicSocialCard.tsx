@@ -63,6 +63,22 @@ const formatDate = (value?: string | null) => {
 
 const ratingLabel = (rating: number) => `${rating.toFixed(1)} / 5`;
 
+const ratingBadgeClasses = (rating: number) => {
+  if (rating >= 4.5) {
+    return 'bg-emerald-100 text-emerald-700';
+  }
+
+  if (rating >= 3.5) {
+    return 'bg-sky-100 text-sky-700';
+  }
+
+  if (rating >= 2.5) {
+    return 'bg-yellow-100 text-yellow-700';
+  }
+
+  return 'bg-orange-100 text-orange-700';
+};
+
 type TabKey = 'bookings' | 'reviews';
 
 const PublicSocialCard: React.FC<PublicSocialCardProps> = ({
@@ -189,45 +205,49 @@ const PublicSocialCard: React.FC<PublicSocialCardProps> = ({
           </div>
         </div>
 
-        <div className="space-y-8 px-6 py-10 sm:px-10">
-          <section className="space-y-4">
-            {visibility.contacts && (
-              <div>
-                <h3 className="text-sm font-semibold uppercase tracking-[0.25em] text-neutral-500">Preferred contacts</h3>
-                <ul className="mt-2 space-y-1 text-sm text-neutral-700">
-                  {contactDisplay.map((contact) => (
-                    <li key={contact}>{contact}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {(visibility.countries || visibility.cities) && (
-              <div className="space-y-3">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.25em] text-neutral-500">Visited destinations</h3>
-                {renderVisitedPlaces()}
-              </div>
-            )}
-
-            {visibility.hobbies && (
-              <div className="space-y-3">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.25em] text-neutral-500">Hobbies & interests</h3>
-                {hobbies.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {hobbies.map((hobby) => (
-                      <span
-                        key={hobby}
-                        className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold text-neutral-700"
-                      >
-                        {hobby}
-                      </span>
+        <div className="space-y-10 px-6 py-10 sm:px-10">
+          <section>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {visibility.contacts && (
+                <div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-5 py-4">
+                  <p className="text-xs uppercase tracking-widest text-neutral-500">Preferred contacts</p>
+                  <ul className="mt-2 space-y-1 text-sm text-neutral-700">
+                    {contactDisplay.map((contact) => (
+                      <li key={contact}>{contact}</li>
                     ))}
+                  </ul>
+                </div>
+              )}
+
+              {(visibility.countries || visibility.cities) && (
+                <div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-5 py-4">
+                  <p className="text-xs uppercase tracking-widest text-neutral-500">Visited destinations</p>
+                  <div className="mt-2">
+                    {renderVisitedPlaces()}
                   </div>
-                ) : (
-                  <p className="text-sm text-neutral-500">No hobbies shared yet.</p>
-                )}
-              </div>
-            )}
+                </div>
+              )}
+
+              {visibility.hobbies && (
+                <div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-5 py-4">
+                  <p className="text-xs uppercase tracking-widest text-neutral-500">Hobbies & interests</p>
+                  {hobbies.length > 0 ? (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {hobbies.map((hobby) => (
+                        <span
+                          key={hobby}
+                          className="rounded-full bg-neutral-200 px-3 py-1 text-xs font-semibold text-neutral-700"
+                        >
+                          {hobby}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-sm text-neutral-500">No hobbies shared yet.</p>
+                  )}
+                </div>
+              )}
+            </div>
           </section>
 
           <section className="space-y-6">
@@ -271,7 +291,7 @@ const PublicSocialCard: React.FC<PublicSocialCardProps> = ({
             </div>
 
             {activeTab === 'bookings' ? (
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="flex flex-col gap-4">
                 {bookings.length === 0 ? (
                   <div className="col-span-full rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 p-6 text-center text-sm text-neutral-500">
                     No bookings recorded yet.
@@ -281,7 +301,7 @@ const PublicSocialCard: React.FC<PublicSocialCardProps> = ({
                     <Link
                       key={booking.id}
                       href={booking.listingHref}
-                      className="group flex flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm transition hover:shadow-lg"
+                      className="group flex w-full flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm transition hover:shadow-lg"
                     >
                       <div className="relative aspect-[4/3] w-full bg-neutral-100">
                         {booking.coverImage ? (
@@ -329,7 +349,12 @@ const PublicSocialCard: React.FC<PublicSocialCardProps> = ({
                     >
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <div className="flex items-center gap-3 text-sm font-semibold text-neutral-800">
-                          <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+                          <span
+                            className={clsx(
+                              'rounded-full px-3 py-1 text-xs font-semibold',
+                              ratingBadgeClasses(review.rating),
+                            )}
+                          >
                             {ratingLabel(review.rating)}
                           </span>
                           <span>{review.listingTitle}</span>

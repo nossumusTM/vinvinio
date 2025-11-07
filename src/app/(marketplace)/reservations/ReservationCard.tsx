@@ -138,7 +138,7 @@ const ReservationCard: React.FC<ReservationCardProps> = ({ reservation, currentU
               onClick={() => {
                 const profileSlug = reservation.user?.username || guestId;
                 if (!profileSlug) return;
-                window.open(`/social-card/${profileSlug}`, "_blank");
+                window.open(`/social-card/${encodeURIComponent(profileSlug)}`, "_blank");
               }}
               className="shrink-0 rounded-full outline-none focus:ring-2 focus:ring-black/40 transition"
               title="Open guest profile"
@@ -155,7 +155,7 @@ const ReservationCard: React.FC<ReservationCardProps> = ({ reservation, currentU
                 onClick={() => {
                   const profileSlug = reservation.user?.username || guestId;
                   if (!profileSlug) return;
-                  window.open(`/social-card/${profileSlug}`, "_blank");
+                  window.open(`/social-card/${encodeURIComponent(profileSlug)}`, "_blank");
                 }}
                 className="text-[15px] font-semibold text-neutral-900 hover:underline truncate leading-tight"
               >
