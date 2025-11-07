@@ -97,30 +97,37 @@ const PublicSocialCard: React.FC<PublicSocialCardProps> = ({
   }, [user.displayedName]);
 
   const renderVisitedPlaces = () => {
-    if (visitedPlaces.length === 0) {
-      return <p className="text-sm text-neutral-500">Destinations not added yet.</p>;
+    const withCities = visitedPlaces.filter(
+      (place): place is SocialCardVisitedPlace & { city: string } =>
+        typeof place.city === 'string' && place.city.trim().length > 0,
+    );
+
+    if (withCities.length === 0) {
+      return <p className="text-sm text-white/70">Destinations not added yet.</p>;
     }
 
     return (
-      <div className="flex flex-wrap gap-3">
-        {visitedPlaces.map((place) => (
-          <span
-            key={`${place.countryCode}-${place.city ?? 'city'}`}
-            className="inline-flex items-center gap-2 rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold text-neutral-700"
-          >
-            <span className="flex h-4 w-6 items-center justify-center overflow-hidden rounded-sm bg-white shadow">
-              <Image
-                src={`/images/flags/${place.countryCode.toLowerCase()}.svg`}
-                alt={place.countryName}
-                width={24}
-                height={16}
-              />
+      <div className="flex flex-wrap gap-2">
+        {withCities.map((place) => {
+          const city = place.city.trim();
+
+          return (
+            <span
+              key={`${place.countryCode}-${city}`}
+              className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white"
+            >
+              <span className="flex h-4 w-6 items-center justify-center overflow-hidden rounded-sm bg-white/30">
+                <Image
+                  src={`/images/flags/${place.countryCode.toLowerCase()}.svg`}
+                  alt={city}
+                  width={24}
+                  height={16}
+                />
+              </span>
+              <span>{city}</span>
             </span>
-            <span>
-              {place.city ? `${place.city}, ${place.countryName}` : place.countryName}
-            </span>
-          </span>
-        ))}
+          );
+        })}
       </div>
     );
   };
@@ -169,7 +176,7 @@ const PublicSocialCard: React.FC<PublicSocialCardProps> = ({
               <p className="whitespace-pre-line text-base leading-relaxed text-white/90">{user.bio}</p>
             )}
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {visibility.email && (
                 <div className="rounded-2xl bg-white/10 px-4 py-3">
                   <p className="text-xs uppercase tracking-widest text-white/60">Email</p>
@@ -201,17 +208,11 @@ const PublicSocialCard: React.FC<PublicSocialCardProps> = ({
                   </span>
                 </div>
               )}
-            </div>
-          </div>
-        </div>
 
-        <div className="space-y-10 px-6 py-10 sm:px-10">
-          <section>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {visibility.contacts && (
-                <div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-5 py-4">
-                  <p className="text-xs uppercase tracking-widest text-neutral-500">Preferred contacts</p>
-                  <ul className="mt-2 space-y-1 text-sm text-neutral-700">
+                <div className="rounded-2xl bg-white/10 px-4 py-3">
+                  <p className="text-xs uppercase tracking-widest text-white/60">Preferred contacts</p>
+                  <ul className="mt-2 space-y-1 text-sm text-white/90">
                     {contactDisplay.map((contact) => (
                       <li key={contact}>{contact}</li>
                     ))}
@@ -220,36 +221,36 @@ const PublicSocialCard: React.FC<PublicSocialCardProps> = ({
               )}
 
               {(visibility.countries || visibility.cities) && (
-                <div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-5 py-4">
-                  <p className="text-xs uppercase tracking-widest text-neutral-500">Visited destinations</p>
-                  <div className="mt-2">
-                    {renderVisitedPlaces()}
-                  </div>
+                <div className="rounded-2xl bg-white/10 px-4 py-3">
+                  <p className="text-xs uppercase tracking-widest text-white/60">Visited destinations</p>
+                  <div className="mt-2">{renderVisitedPlaces()}</div>
                 </div>
               )}
 
               {visibility.hobbies && (
-                <div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-5 py-4">
-                  <p className="text-xs uppercase tracking-widest text-neutral-500">Hobbies & interests</p>
+                <div className="rounded-2xl bg-white/10 px-4 py-3">
+                  <p className="text-xs uppercase tracking-widest text-white/60">Hobbies &amp; interests</p>
                   {hobbies.length > 0 ? (
                     <div className="mt-2 flex flex-wrap gap-2">
                       {hobbies.map((hobby) => (
                         <span
                           key={hobby}
-                          className="rounded-full bg-neutral-200 px-3 py-1 text-xs font-semibold text-neutral-700"
+                          className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white"
                         >
                           {hobby}
                         </span>
                       ))}
                     </div>
                   ) : (
-                    <p className="mt-2 text-sm text-neutral-500">No hobbies shared yet.</p>
+                    <p className="mt-2 text-sm text-white/70">No hobbies shared yet.</p>
                   )}
                 </div>
               )}
             </div>
-          </section>
+          </div>
+        </div>
 
+        <div className="space-y-10 px-6 py-10 sm:px-10">
           <section className="space-y-6">
             <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
               <div className="flex w-full rounded-full border border-neutral-200 bg-neutral-50 p-1 sm:w-auto">

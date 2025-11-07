@@ -716,7 +716,7 @@ const SocialCardClient: React.FC<SocialCardClientProps> = ({ currentUser }) => {
           </div>
         </div>
 
-        <aside className="h-fit rounded-3xl border border-neutral-200 bg-white shadow-lg p-6 space-y-6">
+        <aside className="h-fit rounded-3xl border border-neutral-200 bg-white shadow-lg p-6 space-y-6 lg:sticky lg:top-32 lg:self-start">
           <div className="space-y-1">
             <Heading title="Visibility settings" subtitle="Decide what your social card reveals." />
             <div className="flex items-center justify-between rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3">

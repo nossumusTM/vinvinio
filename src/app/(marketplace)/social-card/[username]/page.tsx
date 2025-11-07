@@ -157,41 +157,60 @@ const SocialCardSharePage = async ({
   const [reservations, reviews] = await Promise.all([
     prisma.reservation.findMany({
       where: { userId: user.id },
-      include: {
-        listing: {
-          select: {
-            id: true,
-            title: true,
-            slug: true,
-            category: true,
-            primaryCategory: true,
-            imageSrc: true,
-          },
-        },
+      select: {
+        id: true,
+        listingId: true,
+        startDate: true,
+        endDate: true,
+        createdAt: true,
       },
       orderBy: { startDate: 'desc' },
     }),
     prisma.review.findMany({
       where: { userId: user.id },
-      include: {
-        listing: {
-          select: {
-            id: true,
-            title: true,
-            slug: true,
-            category: true,
-            primaryCategory: true,
-          },
-        },
+      select: {
+        id: true,
+        rating: true,
+        comment: true,
+        createdAt: true,
+        listingId: true,
       },
       orderBy: { createdAt: 'desc' },
     }),
   ]);
 
+  const listingIds = new Set<string>();
+  reservations.forEach((reservation) => {
+    if (typeof reservation.listingId === 'string' && reservation.listingId.length > 0) {
+      listingIds.add(reservation.listingId);
+    }
+  });
+  reviews.forEach((review) => {
+    if (typeof review.listingId === 'string' && review.listingId.length > 0) {
+      listingIds.add(review.listingId);
+    }
+  });
+
+  const listingRecords = listingIds.size
+    ? await prisma.listing.findMany({
+        where: { id: { in: Array.from(listingIds) } },
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          category: true,
+          primaryCategory: true,
+          imageSrc: true,
+        },
+      })
+    : [];
+
+  const listingsById = new Map(listingRecords.map((listing) => [listing.id, listing]));
+
   const bookings: BookingSummary[] = reservations.map((reservation) => {
-    const listing = reservation.listing;
+    const listing = listingsById.get(reservation.listingId);
     const listingHref = listing ? hrefForListing(listing) : '#';
-    const coverImage = Array.isArray(listing?.imageSrc) ? listing?.imageSrc[0] : null;
+    const coverImage = listing && Array.isArray(listing.imageSrc) && listing.imageSrc.length > 0 ? listing.imageSrc[0] : null;
 
     return {
       id: reservation.id,
@@ -205,7 +224,7 @@ const SocialCardSharePage = async ({
   });
 
   const reviewSummaries: ReviewSummary[] = reviews.map((review) => {
-    const listing = review.listing;
+    const listing = listingsById.get(review.listingId);
     const listingHref = listing ? hrefForListing(listing) : '#';
 
     return {
