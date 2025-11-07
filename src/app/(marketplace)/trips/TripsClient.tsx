@@ -424,7 +424,11 @@ const TripsClient: React.FC<TripsClientProps> = ({
                     {/* Avatar */}
                     <button
                       type="button"
-                      onClick={() => window.open(`/hosts/${host?.id}`, "_blank")}
+                      onClick={() => {
+                        const profileSlug = host?.username || host?.id;
+                        if (!profileSlug) return;
+                        window.open(`/hosts/${profileSlug}`, "_blank");
+                      }}
                       className="shrink-0 rounded-full outline-none focus:ring-2 focus:ring-black/40 transition"
                       title="Open host profile"
                     >
@@ -437,7 +441,11 @@ const TripsClient: React.FC<TripsClientProps> = ({
                         Hosted by
                       </p>
                       <button
-                        onClick={() => window.open(`/hosts/${host?.id}`, "_blank")}
+                        onClick={() => {
+                          const profileSlug = host?.username || host?.id;
+                          if (!profileSlug) return;
+                          window.open(`/hosts/${profileSlug}`, "_blank");
+                        }}
                         className="text-[15px] font-semibold text-neutral-900 hover:underline truncate leading-tight"
                       >
                         {hostName}

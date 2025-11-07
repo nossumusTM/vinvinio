@@ -1,6 +1,7 @@
 import prisma from "@/app/(marketplace)/libs/prismadb";
 import { ensureListingSlug } from "@/app/(marketplace)/libs/ensureListingSlug";
 import { normalizePricingSnapshot } from "@/app/(marketplace)/libs/pricing";
+import { slugSegment } from "@/app/(marketplace)/libs/links";
 import { SafeListing, SafeUser } from "@/app/(marketplace)/types";
 import { ListingStatus, Role } from "@prisma/client";
 
@@ -23,11 +24,22 @@ export interface HostCardData {
   reviews: HostCardReview[];
 }
 
-export default async function getHostCardData(hostId: string): Promise<HostCardData | null> {
-  if (!hostId) return null;
+const OBJECT_ID_RE = /^[0-9a-f]{24}$/i;
 
-  const host = await prisma.user.findUnique({
-    where: { id: hostId, role: Role.host },
+export default async function getHostCardData(identifier: string): Promise<HostCardData | null> {
+  if (!identifier) return null;
+
+  const trimmed = identifier.trim();
+  const usernameCandidate = slugSegment(trimmed);
+
+  const host = await prisma.user.findFirst({
+    where: {
+      role: Role.host,
+      OR: [
+        ...(OBJECT_ID_RE.test(trimmed) ? [{ id: trimmed }] : []),
+        ...(usernameCandidate ? [{ username: usernameCandidate }] : []),
+      ],
+    },
     include: {
       listings: {
         where: { status: ListingStatus.approved },
@@ -50,6 +62,7 @@ export default async function getHostCardData(hostId: string): Promise<HostCardD
 
   const safeHost: SafeUser = {
     id: host.id,
+    username: host.username ?? null,
     name: host.name ?? null,
     email: host.email ?? null,
     hostName: host.hostName ?? null,

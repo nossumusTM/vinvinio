@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 export default async function BecomeAPartnerPage() {
   const currentUser = await getCurrentUser();
 
-  if (!currentUser) {
+  if (!currentUser || currentUser.isSuspended) {
     redirect('/');
   }
 

@@ -48,23 +48,50 @@ const PlatformCard: React.FC<PlatformCardProps> = ({
   };
 
   const currentData = dataMap[view];
-  console.log(`📊 [${view.toUpperCase()} DATA]`, currentData);
 
-  const latest = currentData[currentData.length - 1] || {
-    revenue: 0,
-    platformFee: 0,
-    bookingCount: 0,
+  const parseEntryDate = (value: string) => {
+    const normalized = value.includes('T') ? value : `${value}T00:00:00`;
+    const parsed = new Date(normalized);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
   };
 
-  const totals = [...daily, ...monthly, ...yearly].reduce(
-    (acc, cur) => {
-      acc.revenue += cur.revenue;
-      acc.platformFee += cur.platformFee;
-      acc.bookingCount += cur.bookingCount;
-      return acc;
-    },
-    { revenue: 0, platformFee: 0, bookingCount: 0 }
+  const now = new Date();
+  const twentyFourHoursAgo = now.getTime() - 24 * 60 * 60 * 1000;
+
+  const lastTwentyFourHourEntries = daily.filter((entry) => {
+    const entryDate = parseEntryDate(entry.date);
+    if (!entryDate) {
+      return false;
+    }
+    const timestamp = entryDate.getTime();
+    return timestamp <= now.getTime() && timestamp >= twentyFourHoursAgo;
+  });
+
+  const bookingsLast24Hours = lastTwentyFourHourEntries.reduce(
+    (acc, entry) => acc + (Number(entry.bookingCount) || 0),
+    0
   );
+
+  const profitLast24Hours = lastTwentyFourHourEntries.reduce(
+    (acc, entry) => acc + (Number(entry.platformFee) || 0),
+    0
+  );
+
+  const summaryLabel =
+    view === 'daily'
+      ? 'A.T.V'
+      : view === 'monthly'
+      ? 'M.R.V'
+      : view === 'yearly'
+      ? 'Y.R.V'
+      : 'A.T.V';
+
+  const summaryValue =
+    view === 'all'
+      ? totalRevenue
+      : view === 'daily'
+      ? totalRevenue
+      : currentData.reduce((acc, cur) => acc + (Number(cur.revenue) || 0), 0);
 
   return (
     <Card className="w-full bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-all">
@@ -79,36 +106,22 @@ const PlatformCard: React.FC<PlatformCardProps> = ({
 
     <div className="mb-3 md:mb-0 flex flex-wrap sm:flex-row sm:justify-baseline gap-6 md:pt-2 pt-2">
       <div className="flex flex-col items-center">
-        <p className="text-sm text-black bg-gradient-to-br from-gray-100 to-gray-200 p-3 font-semibold rounded-xl mb-2 select-none">D.B.C</p>
-        <p className="text-lg font-semibold text-black">
-          {daily?.[daily.length - 1]?.bookingCount || 0}
+        <p className="text-sm text-black bg-gradient-to-br from-gray-100 to-gray-200 p-3 font-semibold rounded-xl mb-2 select-none">
+          D.B.C (24h)
         </p>
+        <p className="text-lg font-semibold text-black">{bookingsLast24Hours}</p>
       </div>
 
       <div className="flex flex-col items-center">
-        <p className="text-sm text-white bg-gradient-to-br from-[#08e2ff] to-[#3F00FF] font-semibold p-3 rounded-xl mb-2 select-none">D.P.V</p>
-        <p className="text-lg font-semibold text-black">
-          {formatConverted(
-            daily.find((d) => new Date(d.date).toDateString() === new Date().toDateString())?.platformFee || 0
-          )}
-        </p>
+        <p className="text-sm text-white bg-black shadow-lg font-semibold p-3 rounded-xl mb-2 select-none">D.P.V (24h)</p>
+        <p className="text-lg font-semibold text-black">{formatConverted(profitLast24Hours)}</p>
       </div>
 
       <div className="flex flex-col items-center">
-      <p className="text-sm text-black bg-gradient-to-br from-gray-100 to-gray-200 p-3 font-semibold rounded-xl mb-2 select-none">
-        {view === 'daily'
-            ? 'A.T.V'
-            : view === 'monthly'
-            ? 'M.R.V'
-            : view === 'yearly'
-            ? 'Y.R.V'
-            : 'A.T.V'}
+        <p className="text-sm text-black bg-gradient-to-br from-gray-100 to-gray-200 p-3 font-semibold rounded-xl mb-2 select-none">
+          {summaryLabel}
         </p>
-        <p className="text-lg font-semibold text-black">
-            {formatConverted(view === 'all'
-        ? totalRevenue
-        : currentData.reduce((acc, cur) => acc + cur.revenue, 0))}
-        </p>
+        <p className="text-lg font-semibold text-black">{formatConverted(summaryValue)}</p>
       </div>
     </div>
 

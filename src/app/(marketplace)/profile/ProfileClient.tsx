@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import { SafeUser } from "@/app/(marketplace)/types";
 import Container from "@/app/(marketplace)/components/Container";
 import Heading from "@/app/(marketplace)/components/Heading";
@@ -25,6 +25,7 @@ import { FiInfo } from "react-icons/fi";
 import FAQ from "../components/FAQ";
 import toast from "react-hot-toast";
 import useCurrencyFormatter from '@/app/(marketplace)/hooks/useCurrencyFormatter';
+import { slugSegment } from '@/app/(marketplace)/libs/links';
 export const dynamic = 'force-dynamic';
 
 interface ProfileClientProps {
@@ -53,6 +54,12 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   referralBookings,
 }) => {
   const { formatConverted } = useCurrencyFormatter();
+  const suspensionDate = useMemo(() => {
+    const raw = currentUser?.suspendedAt;
+    if (!raw) return null;
+    const parsed = raw instanceof Date ? raw : new Date(raw);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }, [currentUser?.suspendedAt]);
   const { totalCount, totalAmount } = referralBookings;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [profileImage, setProfileImage] = useState(currentUser.image || '');
@@ -86,6 +93,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [fieldValues, setFieldValues] = useState<{
+    username: string;
     name: string;
     email: string;
     phone: string;
@@ -98,6 +106,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
     state: string;
     zip: string;
   }>({
+    username: currentUser?.username || '',
     name: currentUser?.name || '',
     email: currentUser?.email || '',
     phone: currentUser?.phone || '',
@@ -536,7 +545,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   
       if (key === 'address') {
         const { country, street, apt, city, state, zip } = fieldValues;
-  
+
         payload = {
           address: JSON.stringify({
             country,
@@ -547,6 +556,9 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
             zip
           }),
         };
+      } else if (key === 'username') {
+        const sanitized = slugSegment(fieldValues.username || '').toLowerCase();
+        payload = { username: sanitized };
       } else {
         payload = {
           [key]: fieldValues[key as keyof typeof fieldValues]
@@ -735,6 +747,16 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                 <p className="text-md font-semibold">{currentUser?.email || ""}</p>
               </div> */}
               <div className="pt-5 md:pt-1 text-normal">
+                {currentUser?.isSuspended && (
+                  <span className="mb-2 inline-flex items-center gap-2 rounded-full bg-red-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-red-700 shadow-sm">
+                    Account suspended
+                    {suspensionDate && (
+                      <span className="text-[10px] font-medium lowercase text-red-600/80">
+                        since {suspensionDate.toLocaleDateString()}
+                      </span>
+                    )}
+                  </span>
+                )}
                 <p className="md:text-2xl font-semibold">
                   {currentUser?.legalName || currentUser?.name || "Unnamed"}
                 </p>
@@ -849,7 +871,8 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
 
                 <div className="space-y-6">
                 {[
-                  { label: 'Username', key: 'name' },
+                  { label: 'Username', key: 'username' },
+                  { label: 'Full name', key: 'name' },
                   { label: 'Email address', key: 'email' },
                   { label: 'Phone number', key: 'phone' },
                   { label: 'Preferred contact method', key: 'contact' },

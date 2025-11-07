@@ -43,7 +43,11 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
 
   const messenger = useMessenger();
 
-  const hostCardHref = currentUser?.id ? `/hosts/${currentUser.id}` : '/';
+  const hostCardHref = currentUser?.username
+    ? `/hosts/${currentUser.username}`
+    : currentUser?.id
+    ? `/hosts/${currentUser.id}`
+    : '/';
 
   const toggleOpen = useCallback(() => {
     setIsOpen((value) => !value);

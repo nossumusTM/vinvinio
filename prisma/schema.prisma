@@ -23,6 +23,7 @@ enum ListingStatus {
   rejected
   revision
   inactive
+  awaiting_reapproval
 }
 
 enum ReservationStatus {
@@ -55,6 +56,7 @@ model User {
   role              Role               @default(customer)
   referenceId       String?
   favoriteIds       String[]           @db.ObjectId
+  username          String?            @unique
   accounts          Account[]
   listings          Listing[]
   reservations      Reservation[]
@@ -84,6 +86,13 @@ model User {
   hobbies          String[] @default([])
   preferredContacts String[] @default([])
   identityVerified Boolean  @default(false)
+  phoneVerified    Boolean  @default(false)
+
+  isSuspended      Boolean  @default(false)
+  suspendedAt      DateTime?
+  socialCardVisibility Json?
+  socialCardIsPublic  Boolean @default(true)
+  visitedPlaces       Json?
 
   resetTokens PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
