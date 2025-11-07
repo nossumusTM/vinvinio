@@ -675,6 +675,11 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
         value: locationDisplay,
         span: true,
       },
+            {
+        label: 'Category',
+        value:  formattedCategories,
+        span: false,
+      },
       {
         label: 'Guest capacity',
         value: listing.guestCount ? `${listing.guestCount} guests` : '',
@@ -701,12 +706,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
       {
         label: 'Meeting point',
         value: listing.meetingPoint || '',
-        span: true,
-      },
-      {
-        label: 'Host notes',
-        value: listing.hostDescription || '',
-        span: true,
+        span: false,
       },
       {
         label: 'Location description',
@@ -714,10 +714,15 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
         span: true,
       },
       {
-        label: timelineLabel,
-        value: timelineValue,
-        span: false,
+        label: 'Host notes',
+        value: listing.hostDescription || '',
+        span: true,
       },
+      // {
+      //   label: timelineLabel,
+      //   value: timelineValue,
+      //   span: false,
+      // },
     ];
 
     const filteredDetailRows = detailRows.filter((row) => {
@@ -829,11 +834,9 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
             <span>
               {timelineLabel}: {timelineValue}
             </span>
-            <span>
-              Category: {formattedCategories.length > 0 ? formattedCategories.join(', ') : '—'}
-            </span>
+
             {statusFilter === 'revision' && <span>Last update: {updatedAt}</span>}
-            {locationTypesDisplay && <span>Types: {locationTypesDisplay}</span>}
+            {/* {locationTypesDisplay && <span>Types: {locationTypesDisplay}</span>} */}
           </div>
           <div className="flex flex-wrap gap-3">
             <button
@@ -969,7 +972,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
           </div>
         </div>
 
-        <div className="h-[65vh] space-y-6 overflow-y-auto pr-2 pb-1 md:h-[75vh]">
+        <div className="h-[65vh] space-y-6 overflow-y-auto pr-0 pb-1 md:h-[100vh]">
           {isFetchingListings ? (
             <div className="rounded-3xl border border-dashed border-neutral-200 bg-white/70 p-10 text-center text-sm text-neutral-500">
               Loading listings...
@@ -1056,10 +1059,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
             Cancel Reservation
           </button>
         </div>
-      </aside>
-    </div>
 
-    <div className="grid grid-cols-1 lg:grid-cols-2 px-5 md:px-60 gap-10 mt-10  pt-16">
       {/* Host Lookup */}
       <div className="bg-white p-6 rounded-xl shadow-lg space-y-4">
         <h2 className="text-lg font-bold text-black">Host Analytics Lookup</h2>
@@ -1114,7 +1114,11 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
           </div>
         )}
       </div>
+
+      </aside>
     </div>
+
+    
 
     {showConfirmPopup && (
       <ConfirmPopup
