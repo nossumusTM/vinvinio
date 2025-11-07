@@ -75,6 +75,25 @@ import type { Listing, Reservation, User } from "@prisma/client";
 /** Utility to make intersections read nicely in IDEs */
 type Simplify<T> = { [K in keyof T]: T[K] } & {};
 
+export type SocialCardVisibility = {
+  image?: boolean;
+  name?: boolean;
+  email?: boolean;
+  phone?: boolean;
+  bio?: boolean;
+  countries?: boolean;
+  cities?: boolean;
+  profession?: boolean;
+  hobbies?: boolean;
+  contacts?: boolean;
+};
+
+export type SocialCardVisitedPlace = {
+  city?: string | null;
+  countryCode: string;
+  countryName: string;
+};
+
 /* ------------------------- SafeUser (relaxed) ------------------------- */
 
 type SafeUserStrict = Omit<
@@ -101,8 +120,16 @@ type SafeUserStrict = Omit<
 
   identityVerified: boolean;
 
+  phoneVerified: boolean;
+
   referenceId: string | null;
   favoriteIds: string[];
+
+  isSuspended: boolean;
+  suspendedAt: Date | string | null;
+  socialCardVisibility: SocialCardVisibility | null;
+  socialCardIsPublic: boolean;
+  visitedPlaces: SocialCardVisitedPlace[] | null;
 };
 
 /** 

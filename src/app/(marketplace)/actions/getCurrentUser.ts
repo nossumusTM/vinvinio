@@ -78,7 +78,11 @@ export const dynamic = 'force-dynamic';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import prisma from "@/app/(marketplace)/libs/prismadb";
-import { SafeUser } from "@/app/(marketplace)/types";
+import {
+  SafeUser,
+  SocialCardVisitedPlace,
+  SocialCardVisibility,
+} from "@/app/(marketplace)/types";
 
 export async function getSession() {
   return await getServerSession(authOptions);
@@ -111,6 +115,12 @@ export default async function getCurrentUser(): Promise<SafeUser | null> {
         hobbies: true,
         preferredContacts: true,
         identityVerified: true,
+        phoneVerified: true,
+        isSuspended: true,
+        suspendedAt: true,
+        socialCardVisibility: true,
+        socialCardIsPublic: true,
+        visitedPlaces: true,
         createdAt: true,
         updatedAt: true,
         emailVerified: true,
@@ -136,6 +146,17 @@ export default async function getCurrentUser(): Promise<SafeUser | null> {
       hobbies: Array.isArray(user.hobbies) ? user.hobbies : [],
       preferredContacts: Array.isArray(user.preferredContacts) ? user.preferredContacts : [],
       identityVerified: typeof user.identityVerified === 'boolean' ? user.identityVerified : false,
+      phoneVerified: typeof user.phoneVerified === 'boolean' ? user.phoneVerified : false,
+      isSuspended: Boolean(user.isSuspended),
+      suspendedAt: user.suspendedAt ? user.suspendedAt.toISOString() : null,
+      socialCardVisibility:
+        user.socialCardVisibility && typeof user.socialCardVisibility === 'object'
+          ? (user.socialCardVisibility as SocialCardVisibility)
+          : null,
+      socialCardIsPublic: typeof user.socialCardIsPublic === 'boolean' ? user.socialCardIsPublic : true,
+      visitedPlaces: Array.isArray(user.visitedPlaces)
+        ? (user.visitedPlaces as SocialCardVisitedPlace[])
+        : null,
     };
   } catch (error) {
     console.error("getCurrentUser error:", error);

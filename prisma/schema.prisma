@@ -84,6 +84,13 @@ model User {
   hobbies          String[] @default([])
   preferredContacts String[] @default([])
   identityVerified Boolean  @default(false)
+  phoneVerified    Boolean  @default(false)
+
+  isSuspended      Boolean  @default(false)
+  suspendedAt      DateTime?
+  socialCardVisibility Json?
+  socialCardIsPublic  Boolean @default(true)
+  visitedPlaces       Json?
 
   resetTokens PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
