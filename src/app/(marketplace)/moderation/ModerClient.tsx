@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { toast } from 'react-hot-toast';
 import { SafeUser } from '@/app/(marketplace)/types';
 import { useRouter } from 'next/navigation';
@@ -175,87 +175,6 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
 
   const closeLightbox = () => setLightboxOpen(false);
 
-  const refreshListingsWithFilters = useCallback(() => {
-    fetchListings(filters);
-  }, [fetchListings, filters]);
-
-  const handleModeratorDeactivate = useCallback(async () => {
-    const listingId = moderListingId.trim();
-
-    if (!listingId) {
-      toast.error('Please provide a listing ID.');
-      return;
-    }
-
-    setIsDeactivatingListing(true);
-
-    try {
-      const response = await axios.post('/api/moderation/listings/deactivate', {
-        listingId,
-      });
-
-      const alreadyInactive = Boolean(response.data?.alreadyInactive);
-
-      if (alreadyInactive) {
-        toast('Listing is already inactive.');
-      } else {
-        toast.success('Listing has been set to inactive.');
-      }
-
-      setModerListingId('');
-      refreshListingsWithFilters();
-    } catch (error) {
-      const message = axios.isAxiosError(error)
-        ? typeof error.response?.data === 'string'
-          ? error.response?.data
-          : (error.response?.data as { error?: string })?.error || 'Failed to deactivate listing.'
-        : 'Failed to deactivate listing.';
-      toast.error(message);
-    } finally {
-      setIsDeactivatingListing(false);
-      setShowListingDeactivateConfirm(false);
-    }
-  }, [moderListingId, refreshListingsWithFilters]);
-
-  const handleSuspendAccount = useCallback(async () => {
-    const userId = moderSuspendUserId.trim();
-
-    if (!userId) {
-      toast.error('Please provide a user ID.');
-      return;
-    }
-
-    setIsSuspendingUser(true);
-
-    try {
-      await axios.post('/api/moderation/users/suspend', {
-        userId,
-        suspend: true,
-      });
-
-      toast.success('Account suspended successfully.');
-      setModerSuspendUserId('');
-    } catch (error) {
-      const message = axios.isAxiosError(error)
-        ? typeof error.response?.data === 'string'
-          ? error.response?.data
-          : (error.response?.data as { error?: string })?.error || 'Failed to suspend account.'
-        : 'Failed to suspend account.';
-      toast.error(message);
-    } finally {
-      setIsSuspendingUser(false);
-      setShowSuspendConfirmPopup(false);
-    }
-  }, [moderSuspendUserId]);
-
-  const regionNames = useMemo(() => {
-    try {
-      return new Intl.DisplayNames(['en'], { type: 'region' });
-    } catch {
-      return undefined;
-    }
-  }, []);
-
   const fetchListings = useCallback(
     async (criteria: { location?: string; category?: string } = {}) => {
       setIsFetchingListings(true);
@@ -350,6 +269,87 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
     []
   );
 
+  const refreshListingsWithFilters = useCallback(() => {
+    fetchListings(filters);
+  }, [fetchListings, filters]);
+
+  const handleModeratorDeactivate = useCallback(async () => {
+    const listingId = moderListingId.trim();
+
+    if (!listingId) {
+      toast.error('Please provide a listing ID.');
+      return;
+    }
+
+    setIsDeactivatingListing(true);
+
+    try {
+      const response = await axios.post('/api/moderation/listings/deactivate', {
+        listingId,
+      });
+
+      const alreadyInactive = Boolean(response.data?.alreadyInactive);
+
+      if (alreadyInactive) {
+        toast('Listing is already inactive.');
+      } else {
+        toast.success('Listing has been set to inactive.');
+      }
+
+      setModerListingId('');
+      refreshListingsWithFilters();
+    } catch (error) {
+      const message = axios.isAxiosError(error)
+        ? typeof error.response?.data === 'string'
+          ? error.response?.data
+          : (error.response?.data as { error?: string })?.error || 'Failed to deactivate listing.'
+        : 'Failed to deactivate listing.';
+      toast.error(message);
+    } finally {
+      setIsDeactivatingListing(false);
+      setShowListingDeactivateConfirm(false);
+    }
+  }, [moderListingId, refreshListingsWithFilters]);
+
+  const handleSuspendAccount = useCallback(async () => {
+    const userId = moderSuspendUserId.trim();
+
+    if (!userId) {
+      toast.error('Please provide a user ID.');
+      return;
+    }
+
+    setIsSuspendingUser(true);
+
+    try {
+      await axios.post('/api/moderation/users/suspend', {
+        userId,
+        suspend: true,
+      });
+
+      toast.success('Account suspended successfully.');
+      setModerSuspendUserId('');
+    } catch (error) {
+      const message = axios.isAxiosError(error)
+        ? typeof error.response?.data === 'string'
+          ? error.response?.data
+          : (error.response?.data as { error?: string })?.error || 'Failed to suspend account.'
+        : 'Failed to suspend account.';
+      toast.error(message);
+    } finally {
+      setIsSuspendingUser(false);
+      setShowSuspendConfirmPopup(false);
+    }
+  }, [moderSuspendUserId]);
+
+  const regionNames = useMemo(() => {
+    try {
+      return new Intl.DisplayNames(['en'], { type: 'region' });
+    } catch {
+      return undefined;
+    }
+  }, []);
+
   const applyFilters = useCallback(
     (next: Partial<{ location: string; category: string }>) => {
       setFilters((prev) => {
@@ -362,8 +362,9 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
   );
 
   const resetFilters = useCallback(() => {
-    setFilters({ location: '', category: '' });
-    fetchListings();
+    const cleared = { location: '', category: '' };
+    setFilters(cleared);
+    fetchListings(cleared);
   }, [fetchListings]);
 
   const parseLocationValue = useCallback(
