@@ -795,22 +795,6 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
         <div className="flex flex-col gap-6 px-6 py-6">
           <div className="space-y-3">
             <h2 className="text-2xl font-semibold text-neutral-900">{listing.title}</h2>
-            <div className="flex flex-wrap gap-2">
-              {formattedCategories.length > 0 ? (
-                formattedCategories.map((category) => (
-                  <span
-                    key={`${listing.id}-${category}`}
-                    className="inline-flex items-center rounded-full bg-neutral-900/5 px-3 py-1 text-xs font-semibold text-neutral-700 ring-1 ring-neutral-200"
-                  >
-                    {category}
-                  </span>
-                ))
-              ) : (
-                <span className="inline-flex items-center rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-500">
-                  No category tagged
-                </span>
-              )}
-            </div>
           </div>
 
           {listing.description && (
@@ -841,8 +825,13 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
         </div>
 
         <div className="flex flex-col gap-4 border-t border-neutral-100 bg-neutral-50 px-6 py-5 md:flex-row md:items-center md:justify-between">
-          <div className="flex flex-wrap gap-3 text-xs text-neutral-500">
-            <span>Submitted: {submittedAt}</span>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-neutral-500">
+            <span>
+              {timelineLabel}: {timelineValue}
+            </span>
+            <span>
+              Category: {formattedCategories.length > 0 ? formattedCategories.join(', ') : '—'}
+            </span>
             {statusFilter === 'revision' && <span>Last update: {updatedAt}</span>}
             {locationTypesDisplay && <span>Types: {locationTypesDisplay}</span>}
           </div>
@@ -980,7 +969,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
           </div>
         </div>
 
-        <div className="max-h-[80vh] space-y-6 overflow-y-auto pr-2 pb-1">
+        <div className="h-[65vh] space-y-6 overflow-y-auto pr-2 pb-1 md:h-[75vh]">
           {isFetchingListings ? (
             <div className="rounded-3xl border border-dashed border-neutral-200 bg-white/70 p-10 text-center text-sm text-neutral-500">
               Loading listings...
