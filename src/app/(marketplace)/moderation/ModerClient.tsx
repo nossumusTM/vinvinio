@@ -11,7 +11,47 @@ import ConfirmPopup from '../components/ConfirmPopup';
 import { AxiosError } from 'axios';
 import useCurrencyFormatter from '@/app/(marketplace)/hooks/useCurrencyFormatter';
 import Slider from 'react-slick';
+import Lightbox from 'yet-another-react-lightbox';
+import 'yet-another-react-lightbox/styles.css';
 import clsx from 'clsx';
+
+type SliderArrowProps = {
+  className?: string;
+  onClick?: () => void;
+  direction: 'next' | 'prev';
+};
+
+const SliderArrow = ({ className, onClick, direction }: SliderArrowProps) => {
+  const isDisabled = className?.includes('slick-disabled');
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={direction === 'next' ? 'Next slide' : 'Previous slide'}
+      disabled={isDisabled}
+      className={clsx(
+        'absolute top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/90 p-2 text-neutral-800 shadow-md transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-black/10',
+        direction === 'next' ? 'right-4' : 'left-4',
+        isDisabled && 'cursor-not-allowed opacity-50'
+      )}
+    >
+      <svg
+        viewBox="0 0 24 24"
+        className="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        {direction === 'next' ? <path d="M9 6l6 6-6 6" /> : <path d="M15 6l-6 6 6 6" />}
+      </svg>
+      <span className="sr-only">{direction === 'next' ? 'Next slide' : 'Previous slide'}</span>
+    </button>
+  );
+};
 
 const MEDIA_SLIDER_SETTINGS = {
   dots: true,
@@ -19,9 +59,11 @@ const MEDIA_SLIDER_SETTINGS = {
   speed: 450,
   slidesToShow: 1,
   slidesToScroll: 1,
-  arrows: false,
+  arrows: true,
   adaptiveHeight: true,
   autoplay: false,
+  nextArrow: <SliderArrow direction="next" />,
+  prevArrow: <SliderArrow direction="prev" />,
 };
 
 const toTitleCase = (value: string) =>
@@ -114,6 +156,19 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
   const [allLocations, setAllLocations] = useState<string[]>([]);
   const [allCategories, setAllCategories] = useState<string[]>([]);
   const [isFetchingListings, setIsFetchingListings] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxSlides, setLightboxSlides] = useState<{ src: string }[]>([]);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  const openLightbox = (slides: string[], startIndex: number) => {
+    if (!Array.isArray(slides) || slides.length === 0) return;
+
+    setLightboxSlides(slides.map((src) => ({ src })));
+    setLightboxIndex(Math.max(0, Math.min(startIndex, slides.length - 1)));
+    setLightboxOpen(true);
+  };
+
+  const closeLightbox = () => setLightboxOpen(false);
 
   const regionNames = useMemo(() => {
     try {
@@ -576,6 +631,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
     const media = Array.isArray(listing.imageSrc)
       ? listing.imageSrc.filter((src): src is string => typeof src === 'string' && src.trim().length > 0)
       : [];
+    const imageSlides = media.filter((src) => !/\.(mp4|webm|mov)$/i.test(src));
 
     const locationDisplay = formatListingLocation(listing);
     const categories = Array.from(
@@ -614,6 +670,11 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
     const timelineValue = statusFilter === 'revision' ? updatedAt : submittedAt;
 
     const detailRows = [
+      {
+        label: 'Location',
+        value: locationDisplay,
+        span: true,
+      },
       {
         label: 'Guest capacity',
         value: listing.guestCount ? `${listing.guestCount} guests` : '',
@@ -669,91 +730,94 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
     return (
       <article
         key={listing.id}
-        className="overflow-hidden rounded-3xl bg-white shadow-lg ring-1 ring-neutral-200/70"
+        className="flex flex-col overflow-hidden rounded-3xl bg-white shadow-lg ring-1 ring-neutral-200/70"
       >
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,420px)_1fr] lg:items-start">
-          <div className="relative mx-auto w-full max-w-[420px] overflow-hidden rounded-3xl bg-neutral-100">
-            <div className="relative">
-              {media.length > 0 ? (
-                <Slider {...MEDIA_SLIDER_SETTINGS}>
-                  {media.map((src, index) => {
-                    const isVideo = /\.(mp4|webm|mov)$/i.test(src);
-                    return (
-                      <div key={`${listing.id}-${index}`} className="relative aspect-[4/3] w-full">
-                        {isVideo ? (
-                          <video
-                            src={src}
-                            controls
-                            className="h-full w-full rounded-3xl object-cover"
-                          />
-                        ) : (
-                          <Image
-                            src={src}
-                            alt={`${listing.title}-${index}`}
-                            fill
-                            className="rounded-3xl object-cover"
-                            sizes="(min-width: 1024px) 420px, 100vw"
-                            unoptimized
-                          />
-                        )}
-                      </div>
-                    );
-                  })}
-                </Slider>
-              ) : (
-                <div className="flex aspect-[4/3] items-center justify-center rounded-3xl bg-neutral-100 text-sm text-neutral-500">
-                  No media provided
-                </div>
+        <div className="relative w-full overflow-hidden bg-neutral-100">
+          {media.length > 0 ? (
+            <Slider {...MEDIA_SLIDER_SETTINGS} className="w-full">
+              {media.map((src, index) => {
+                const isVideo = /\.(mp4|webm|mov)$/i.test(src);
+                const imageIndex = imageSlides.indexOf(src);
+                return (
+                  <div key={`${listing.id}-${index}`} className="relative aspect-[4/3] w-full">
+                    {isVideo ? (
+                      <video
+                        src={src}
+                        controls
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (imageIndex !== -1) {
+                            openLightbox(imageSlides, imageIndex);
+                          }
+                        }}
+                        className="relative block h-full w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-black/10"
+                      >
+                        <Image
+                          src={src}
+                          alt={`${listing.title}-${index}`}
+                          fill
+                          className="object-cover"
+                          sizes="(min-width: 768px) 704px, 100vw"
+                          unoptimized
+                        />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </Slider>
+          ) : (
+            <div className="flex aspect-[4/3] w-full items-center justify-center bg-neutral-100 text-sm text-neutral-500">
+              No media provided
+            </div>
+          )}
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-10 bg-gradient-to-b from-black/70 via-black/25 to-transparent px-6 py-5 text-white">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-white/60">Submitted by</p>
+            <p className="text-sm font-semibold">{listing.user.name}</p>
+            <p className="text-xs text-white/75">{listing.user.email}</p>
+          </div>
+          <div className="pointer-events-none absolute bottom-4 left-4 z-10">
+            <span
+              className={clsx(
+                'inline-flex items-center rounded-full px-4 py-1 text-xs font-semibold uppercase tracking-wide shadow-md backdrop-blur',
+                badgeMeta.badgeClass
               )}
-            </div>
-            <div className="pointer-events-none absolute inset-x-0 top-0 z-10 bg-gradient-to-b from-black/70 via-black/25 to-transparent px-6 py-5 text-white">
-              <p className="text-[11px] uppercase tracking-[0.2em] text-white/60">Submitted by</p>
-              <p className="text-sm font-semibold">{listing.user.name}</p>
-              <p className="text-xs text-white/75">{listing.user.email}</p>
-            </div>
-            <div className="pointer-events-none absolute bottom-4 left-4 z-10">
-              <span
-                className={clsx(
-                  'inline-flex items-center rounded-full px-4 py-1 text-xs font-semibold uppercase tracking-wide shadow-md backdrop-blur',
-                  badgeMeta.badgeClass
-                )}
-              >
-                {badgeMeta.label}
-              </span>
+            >
+              {badgeMeta.label}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-6 px-6 py-6">
+          <div className="space-y-3">
+            <h2 className="text-2xl font-semibold text-neutral-900">{listing.title}</h2>
+            <div className="flex flex-wrap gap-2">
+              {formattedCategories.length > 0 ? (
+                formattedCategories.map((category) => (
+                  <span
+                    key={`${listing.id}-${category}`}
+                    className="inline-flex items-center rounded-full bg-neutral-900/5 px-3 py-1 text-xs font-semibold text-neutral-700 ring-1 ring-neutral-200"
+                  >
+                    {category}
+                  </span>
+                ))
+              ) : (
+                <span className="inline-flex items-center rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-500">
+                  No category tagged
+                </span>
+              )}
             </div>
           </div>
 
-          <div className="flex flex-col gap-6 px-2 pb-8 lg:px-0 lg:pb-10">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-              <div className="space-y-2">
-                <h2 className="text-2xl font-semibold text-neutral-900">{listing.title}</h2>
-                {locationDisplay && (
-                  <p className="flex flex-wrap items-center gap-2 text-sm text-neutral-500">
-                    <span className="font-medium text-neutral-600">Location:</span>
-                    <span>{locationDisplay}</span>
-                  </p>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {formattedCategories.length > 0 ? (
-                  formattedCategories.map((category) => (
-                    <span
-                      key={`${listing.id}-${category}`}
-                      className="inline-flex items-center rounded-full bg-neutral-900/5 px-3 py-1 text-xs font-semibold text-neutral-700 ring-1 ring-neutral-200"
-                    >
-                      {category}
-                    </span>
-                  ))
-                ) : (
-                  <span className="inline-flex items-center rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-500">
-                    No category tagged
-                  </span>
-                )}
-              </div>
-            </div>
-
+          {listing.description && (
             <p className="text-sm leading-relaxed text-neutral-600">{listing.description}</p>
+          )}
 
+          {filteredDetailRows.length > 0 && (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {filteredDetailRows.map((row) => (
                 <div
@@ -768,11 +832,11 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
                 </div>
               ))}
             </div>
+          )}
 
-            <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 px-5 py-4 text-sm leading-relaxed text-neutral-600">
-              <p className="text-sm font-semibold text-neutral-900">{noteMeta.noteTitle}</p>
-              <p className="mt-2">{noteMeta.noteBody}</p>
-            </div>
+          <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 px-5 py-4 text-sm leading-relaxed text-neutral-600">
+            <p className="text-sm font-semibold text-neutral-900">{noteMeta.noteTitle}</p>
+            <p className="mt-2">{noteMeta.noteBody}</p>
           </div>
         </div>
 
@@ -870,7 +934,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
               disabled={!hasActiveFilters}
               className="h-[42px] rounded-full border border-neutral-300 px-4 text-sm font-semibold text-neutral-600 transition hover:border-neutral-400 hover:text-neutral-900 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Reset filters
+              Reset
             </button>
           </div>
 
@@ -916,7 +980,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="max-h-[80vh] space-y-6 overflow-y-auto pr-2 pb-1">
           {isFetchingListings ? (
             <div className="rounded-3xl border border-dashed border-neutral-200 bg-white/70 p-10 text-center text-sm text-neutral-500">
               Loading listings...
@@ -1098,6 +1162,14 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
         cancelLabel="Cancel"
       />
     )}
+
+    <Lightbox
+      open={lightboxOpen}
+      close={closeLightbox}
+      slides={lightboxSlides}
+      index={lightboxIndex}
+      controller={{ closeOnBackdropClick: true }}
+    />
     </>
   );
 };
