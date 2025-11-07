@@ -112,12 +112,12 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
     }, [user?.id]);
 
     const handleHostNavigate = useCallback(() => {
-        const profileSlug = user?.username || user?.id;
-        if (!profileSlug) {
+        const profileHandle = user?.username;
+        if (!profileHandle) {
             return;
         }
-        router.push(`/hosts/${profileSlug}`);
-    }, [router, user?.id, user?.username]);
+        router.push(`/hosts/${encodeURIComponent(profileHandle)}`);
+    }, [router, user?.username]);
 
     return (
         <div className="col-span-4 flex flex-col gap-8">

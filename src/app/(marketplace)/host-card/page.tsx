@@ -10,8 +10,12 @@ const HostSelfCardPage = async () => {
     redirect('/');
   }
 
-  const profileSlug = currentUser.username ?? currentUser.id;
-  redirect(`/hosts/${profileSlug}`);
+  const username = currentUser.username;
+  if (!username) {
+    redirect('/profile');
+  }
+
+  redirect(`/hosts/${encodeURIComponent(username)}`);
 };
 
 export default HostSelfCardPage;
