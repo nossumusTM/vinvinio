@@ -6,11 +6,15 @@ const OBJECT_ID_RE = /^[0-9a-f]{24}$/i;
 
 const normalizedFieldExpression = (field: string): Record<string, unknown> => ({
   $toLower: {
-    $regexReplace: {
-      input: { $ifNull: [`$${field}`, ''] },
-      regex: '[^A-Za-z0-9]',
-      replacement: '',
-      options: 'g',
+    $reduce: {
+      input: {
+        $regexFindAll: {
+          input: { $ifNull: [`$${field}`, ''] },
+          regex: '[A-Za-z0-9]',
+        },
+      },
+      initialValue: '',
+      in: { $concat: ['$$value', '$$this.match'] },
     },
   },
 });
