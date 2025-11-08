@@ -52,6 +52,9 @@ const TripsClient: React.FC<TripsClientProps> = ({
 
   const messenger = useMessenger();
 
+  const profileButtonClasses =
+    'group flex w-full items-center gap-3 rounded-full text-left outline-none transition focus-visible:ring-2 focus-visible:ring-black/40';
+
   const makeNavigationHandler = useCallback(
     (path: string | null | undefined) =>
       (event?: MouseEvent<HTMLElement>) => {
@@ -450,7 +453,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
                       type="button"
                       onClick={handleHostNavigation}
                       onAuxClick={handleHostNavigation}
-                      className="group flex w-full items-center gap-3 rounded-full text-left outline-none transition focus-visible:ring-2 focus-visible:ring-black/40"
+                      className={profileButtonClasses}
                       title="Open host profile"
                     >
                       <span className="shrink-0 rounded-full bg-white/80 p-0.5">

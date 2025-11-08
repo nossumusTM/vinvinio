@@ -62,6 +62,9 @@ const ReservationCard: React.FC<ReservationCardProps> = ({ reservation, currentU
     [router, guestProfilePath]
   );
 
+  const guestProfileButtonClasses =
+    'group flex w-full items-center gap-3 rounded-full text-left outline-none transition focus-visible:ring-2 focus-visible:ring-black/40';
+
   return (
     <div className="relative bg-white rounded-3xl shadow-md hover:shadow-lg transition duration-300 overflow-hidden">
       {Array.isArray(reservation.listing?.imageSrc) && reservation.listing.imageSrc.length > 0 && (
@@ -160,7 +163,7 @@ const ReservationCard: React.FC<ReservationCardProps> = ({ reservation, currentU
               type="button"
               onClick={handleGuestNavigation}
               onAuxClick={handleGuestNavigation}
-              className="group flex w-full items-center gap-3 rounded-full text-left outline-none transition focus-visible:ring-2 focus-visible:ring-black/40"
+              className={guestProfileButtonClasses}
               title="Open guest profile"
             >
               <span className="shrink-0 rounded-full bg-white/80 p-0.5">
