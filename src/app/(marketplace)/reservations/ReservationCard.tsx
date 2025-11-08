@@ -13,7 +13,6 @@ import { FaPaperPlane } from "react-icons/fa";
 import Button from "../components/Button";
 import { profilePathForUser } from "@/app/(marketplace)/utils/profilePath";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 
 interface ReservationCardProps {
     reservation: SafeReservation;
@@ -42,17 +41,16 @@ const ReservationCard: React.FC<ReservationCardProps> = ({ reservation, currentU
 
   const guestProfilePath = profilePathForUser(reservation.user);
   const handleGuestNavigation = useCallback(
-    (event?: MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => {
+    (event?: MouseEvent<HTMLButtonElement>) => {
       if (!guestProfilePath) {
         return;
       }
 
-      if (event?.metaKey || event?.ctrlKey || event?.shiftKey || event?.button === 1) {
-        // Let the browser handle new tab/window shortcuts when using router.push fallback.
+      if (event?.metaKey || event?.ctrlKey) {
+        window.open(guestProfilePath, '_blank', 'noopener,noreferrer');
         return;
       }
 
-      event?.preventDefault();
       router.push(guestProfilePath);
     },
     [router, guestProfilePath]
@@ -155,14 +153,14 @@ const ReservationCard: React.FC<ReservationCardProps> = ({ reservation, currentU
 
             {/* Avatar */}
             {guestProfilePath ? (
-              <Link
-                href={guestProfilePath}
+              <button
+                type="button"
                 onClick={handleGuestNavigation}
                 className="shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-black/40 transition"
                 title="Open guest profile"
               >
                 <Avatar src={guestImage} name={guestName} size={36} />
-              </Link>
+              </button>
             ) : (
               <div className="shrink-0 rounded-full">
                 <Avatar src={guestImage} name={guestName} size={36} />
@@ -175,13 +173,13 @@ const ReservationCard: React.FC<ReservationCardProps> = ({ reservation, currentU
                 Booked by
               </p>
               {guestProfilePath ? (
-                <Link
-                  href={guestProfilePath}
+                <button
+                  type="button"
                   onClick={handleGuestNavigation}
                   className="text-left text-[15px] font-semibold text-neutral-900 hover:underline focus-visible:underline outline-none truncate leading-tight"
                 >
                   {guestName}
-                </Link>
+                </button>
               ) : (
                 <span className="text-[15px] font-semibold text-neutral-900 truncate leading-tight">
                   {guestName}
