@@ -1,12 +1,10 @@
 'use client';
 
 import Image from "next/image";
-import Link from "next/link";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { format } from 'date-fns';
 import Avatar from "../components/Avatar";
 import { SafeReservation, SafeUser } from "@/app/(marketplace)/types";
-import { BiPaperPlane } from "react-icons/bi";
 import useMessenger from "@/app/(marketplace)/hooks/useMessager";
 import useCurrencyFormatter from '@/app/(marketplace)/hooks/useCurrencyFormatter';
 // add to imports at top of ReservationCard.tsx
@@ -14,6 +12,7 @@ import { TbCalendarTime, TbClock, TbUserSquareRounded } from "react-icons/tb";
 import { FaPaperPlane } from "react-icons/fa";
 import Button from "../components/Button";
 import { profilePathForUser } from "@/app/(marketplace)/utils/profilePath";
+import { useRouter } from "next/navigation";
 
 interface ReservationCardProps {
     reservation: SafeReservation;
@@ -24,6 +23,7 @@ interface ReservationCardProps {
   }  
 
 const ReservationCard: React.FC<ReservationCardProps> = ({ reservation, currentUser, guestName, guestImage, guestId }) => {
+  const router = useRouter();
   const messenger = useMessenger();
   const { formatConverted } = useCurrencyFormatter();
 
@@ -40,6 +40,11 @@ const ReservationCard: React.FC<ReservationCardProps> = ({ reservation, currentU
   }, [reservation]);
 
   const guestProfilePath = profilePathForUser(reservation.user);
+  const handleGuestNavigation = useCallback(() => {
+    if (guestProfilePath) {
+      router.push(guestProfilePath);
+    }
+  }, [router, guestProfilePath]);
 
   return (
     <div className="relative bg-white rounded-3xl shadow-md hover:shadow-lg transition duration-300 overflow-hidden">
@@ -138,13 +143,14 @@ const ReservationCard: React.FC<ReservationCardProps> = ({ reservation, currentU
 
             {/* Avatar */}
             {guestProfilePath ? (
-              <Link
-                href={guestProfilePath}
+              <button
+                type="button"
+                onClick={handleGuestNavigation}
                 className="shrink-0 rounded-full outline-none focus:ring-2 focus:ring-black/40 transition"
                 title="Open guest profile"
               >
                 <Avatar src={guestImage} name={guestName} size={36} />
-              </Link>
+              </button>
             ) : (
               <div className="shrink-0 rounded-full">
                 <Avatar src={guestImage} name={guestName} size={36} />
@@ -157,12 +163,13 @@ const ReservationCard: React.FC<ReservationCardProps> = ({ reservation, currentU
                 Booked by
               </p>
               {guestProfilePath ? (
-                <Link
-                  href={guestProfilePath}
-                  className="text-[15px] font-semibold text-neutral-900 hover:underline truncate leading-tight"
+                <button
+                  type="button"
+                  onClick={handleGuestNavigation}
+                  className="text-left text-[15px] font-semibold text-neutral-900 hover:underline focus-visible:underline outline-none truncate leading-tight"
                 >
                   {guestName}
-                </Link>
+                </button>
               ) : (
                 <span className="text-[15px] font-semibold text-neutral-900 truncate leading-tight">
                   {guestName}

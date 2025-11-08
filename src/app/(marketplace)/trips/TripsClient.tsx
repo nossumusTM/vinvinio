@@ -14,7 +14,6 @@ import { CiPaperplane } from "react-icons/ci";
 import { TbMessage2Code } from "react-icons/tb";
 import { BiSolidPaperPlane } from "react-icons/bi";
 import { FaPaperPlane } from "react-icons/fa";
-import Link from "next/link";
 import { profilePathForUser } from "@/app/(marketplace)/utils/profilePath";
 
 import Heading from "@/app/(marketplace)/components/Heading";
@@ -52,6 +51,15 @@ const TripsClient: React.FC<TripsClientProps> = ({
 
 
   const messenger = useMessenger();
+
+  const makeNavigationHandler = useCallback(
+    (path: string | null | undefined) => () => {
+      if (path) {
+        router.push(path);
+      }
+    },
+    [router]
+  );
 
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
@@ -287,6 +295,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
           const hostName = host?.name ?? 'Unknown';
           const hostImage = host?.image ?? '';
           const hostProfilePath = profilePathForUser(host);
+          const handleHostNavigation = makeNavigationHandler(hostProfilePath);
 
           return (
             <div
@@ -426,13 +435,14 @@ const TripsClient: React.FC<TripsClientProps> = ({
 
                     {/* Avatar */}
                     {hostProfilePath ? (
-                      <Link
-                        href={hostProfilePath}
+                      <button
+                        type="button"
+                        onClick={handleHostNavigation}
                         className="shrink-0 rounded-full outline-none focus:ring-2 focus:ring-black/40 transition"
                         title="Open host profile"
                       >
                         <Avatar src={hostImage} name={hostName} size={36} />
-                      </Link>
+                      </button>
                     ) : (
                       <div className="shrink-0 rounded-full">
                         <Avatar src={hostImage} name={hostName} size={36} />
@@ -445,12 +455,13 @@ const TripsClient: React.FC<TripsClientProps> = ({
                         Hosted by
                       </p>
                       {hostProfilePath ? (
-                        <Link
-                          href={hostProfilePath}
-                          className="text-[15px] font-semibold text-neutral-900 hover:underline truncate leading-tight"
+                        <button
+                          type="button"
+                          onClick={handleHostNavigation}
+                          className="text-left text-[15px] font-semibold text-neutral-900 hover:underline focus-visible:underline outline-none truncate leading-tight"
                         >
                           {hostName}
-                        </Link>
+                        </button>
                       ) : (
                         <span className="text-[15px] font-semibold text-neutral-900 truncate leading-tight">
                           {hostName}
