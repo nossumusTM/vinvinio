@@ -1,6 +1,7 @@
 'use client';
 
 import Image from "next/image";
+import Link from "next/link";
 import { useMemo } from "react";
 import { format } from 'date-fns';
 import Avatar from "../components/Avatar";
@@ -136,32 +137,37 @@ const ReservationCard: React.FC<ReservationCardProps> = ({ reservation, currentU
           <div className="flex items-center gap-3">
 
             {/* Avatar */}
-            <button
-              type="button"
-              onClick={() => {
-                if (guestProfilePath == null) return;
-                window.open(guestProfilePath, "_blank");
-              }}
-              className="shrink-0 rounded-full outline-none focus:ring-2 focus:ring-black/40 transition"
-              title="Open guest profile"
-            >
-              <Avatar src={guestImage} name={guestName} size={36} />
-            </button>
+            {guestProfilePath ? (
+              <Link
+                href={guestProfilePath}
+                className="shrink-0 rounded-full outline-none focus:ring-2 focus:ring-black/40 transition"
+                title="Open guest profile"
+              >
+                <Avatar src={guestImage} name={guestName} size={36} />
+              </Link>
+            ) : (
+              <div className="shrink-0 rounded-full">
+                <Avatar src={guestImage} name={guestName} size={36} />
+              </div>
+            )}
 
             {/* Booked by + Name (stacked) */}
             <div className="min-w-0">
               <p className="text-[8px] uppercase tracking-wide text-neutral-500 leading-none">
                 Booked by
               </p>
-              <button
-                onClick={() => {
-                  if (guestProfilePath == null) return;
-                  window.open(guestProfilePath, "_blank");
-                }}
-                className="text-[15px] font-semibold text-neutral-900 hover:underline truncate leading-tight"
-              >
-                {guestName}
-              </button>
+              {guestProfilePath ? (
+                <Link
+                  href={guestProfilePath}
+                  className="text-[15px] font-semibold text-neutral-900 hover:underline truncate leading-tight"
+                >
+                  {guestName}
+                </Link>
+              ) : (
+                <span className="text-[15px] font-semibold text-neutral-900 truncate leading-tight">
+                  {guestName}
+                </span>
+              )}
             </div>
 
             {/* Message icon */}

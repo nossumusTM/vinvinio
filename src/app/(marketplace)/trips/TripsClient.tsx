@@ -14,6 +14,7 @@ import { CiPaperplane } from "react-icons/ci";
 import { TbMessage2Code } from "react-icons/tb";
 import { BiSolidPaperPlane } from "react-icons/bi";
 import { FaPaperPlane } from "react-icons/fa";
+import Link from "next/link";
 import { profilePathForUser } from "@/app/(marketplace)/utils/profilePath";
 
 import Heading from "@/app/(marketplace)/components/Heading";
@@ -424,32 +425,37 @@ const TripsClient: React.FC<TripsClientProps> = ({
                   <div className="flex items-center gap-3">
 
                     {/* Avatar */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (hostProfilePath == null) return;
-                        window.open(hostProfilePath, "_blank");
-                      }}
-                      className="shrink-0 rounded-full outline-none focus:ring-2 focus:ring-black/40 transition"
-                      title="Open host profile"
-                    >
-                      <Avatar src={hostImage} name={hostName} size={36} />
-                    </button>
+                    {hostProfilePath ? (
+                      <Link
+                        href={hostProfilePath}
+                        className="shrink-0 rounded-full outline-none focus:ring-2 focus:ring-black/40 transition"
+                        title="Open host profile"
+                      >
+                        <Avatar src={hostImage} name={hostName} size={36} />
+                      </Link>
+                    ) : (
+                      <div className="shrink-0 rounded-full">
+                        <Avatar src={hostImage} name={hostName} size={36} />
+                      </div>
+                    )}
 
                     {/* Hosted by + Name (stacked) */}
                     <div className="min-w-0">
                       <p className="text-[8px] uppercase tracking-wide text-neutral-500 leading-none">
                         Hosted by
                       </p>
-                      <button
-                        onClick={() => {
-                          if (hostProfilePath == null) return;
-                          window.open(hostProfilePath, "_blank");
-                        }}
-                        className="text-[15px] font-semibold text-neutral-900 hover:underline truncate leading-tight"
-                      >
-                        {hostName}
-                      </button>
+                      {hostProfilePath ? (
+                        <Link
+                          href={hostProfilePath}
+                          className="text-[15px] font-semibold text-neutral-900 hover:underline truncate leading-tight"
+                        >
+                          {hostName}
+                        </Link>
+                      ) : (
+                        <span className="text-[15px] font-semibold text-neutral-900 truncate leading-tight">
+                          {hostName}
+                        </span>
+                      )}
                     </div>
 
                     {/* Message button pinned to bottom-center of the card */}
