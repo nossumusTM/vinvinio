@@ -285,10 +285,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
           const host = reservation.listing?.user;
           const hostName = host?.name ?? 'Unknown';
           const hostImage = host?.image ?? '';
-          const hostProfilePath = profilePathForUser(
-            host,
-            host?.hostName ?? host?.name ?? null,
-          );
+          const hostProfilePath = profilePathForUser(host);
 
           return (
             <div

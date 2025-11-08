@@ -5,13 +5,24 @@ export type ProfiledUser = {
   role?: string | null;
 };
 
-const firstNonEmpty = (...values: Array<string | null | undefined>) => {
-  for (const value of values) {
-    if (typeof value === 'string' && value.trim().length > 0) {
-      return value;
-    }
+const normaliseHandle = (value?: string | null): string | null => {
+  if (typeof value !== 'string') {
+    return null;
   }
-  return null;
+
+  const trimmed = value.trim();
+  if (trimmed.length === 0) {
+    return null;
+  }
+
+  // Allow only URL-friendly handle characters so display names like
+  // "LVN MMDV" or "John Doe" are ignored.
+  const handlePattern = /^[a-zA-Z0-9._-]+$/;
+  if (!handlePattern.test(trimmed)) {
+    return null;
+  }
+
+  return trimmed;
 };
 
 export const profilePathForUser = (
@@ -19,12 +30,9 @@ export const profilePathForUser = (
   fallbackHandle?: string | null | undefined,
   roleHint?: string | null,
 ): string | null => {
-  const handle = firstNonEmpty(
-    user?.username,
-    fallbackHandle,
-    user?.hostName,
-    user?.name,
-  );
+  const primaryHandle = normaliseHandle(user?.username);
+  const fallback = normaliseHandle(fallbackHandle);
+  const handle = primaryHandle ?? fallback;
 
   if (handle == null) {
     return null;

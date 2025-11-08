@@ -44,11 +44,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
 
   const messenger = useMessenger();
 
-  const profileHref =
-    profilePathForUser(
-      currentUser,
-      currentUser?.legalName ?? currentUser?.name ?? null,
-    ) ?? '/profile';
+  const profileHref = profilePathForUser(currentUser) ?? '/profile';
 
   const toggleOpen = useCallback(() => {
     setIsOpen((value) => !value);
