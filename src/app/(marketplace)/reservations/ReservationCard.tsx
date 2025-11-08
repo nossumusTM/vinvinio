@@ -41,8 +41,14 @@ const ReservationCard: React.FC<ReservationCardProps> = ({ reservation, currentU
 
   const guestProfilePath = profilePathForUser(reservation.user);
   const handleGuestNavigation = useCallback(
-    (event?: MouseEvent<HTMLButtonElement>) => {
+    (event?: MouseEvent<HTMLElement>) => {
       if (!guestProfilePath) {
+        return;
+      }
+
+      if (event?.button === 1) {
+        event.preventDefault();
+        window.open(guestProfilePath, '_blank', 'noopener,noreferrer');
         return;
       }
 
@@ -149,65 +155,43 @@ const ReservationCard: React.FC<ReservationCardProps> = ({ reservation, currentU
 
         {/* Booked by — aligned with Guests / Date / Time */}
         <div className="w-full rounded-2xl bg-white/90 backdrop-blur-md px-8 py-2.5">
-          <div className="flex items-center gap-3">
-
-            {/* Avatar */}
-            {guestProfilePath ? (
-              <button
-                type="button"
-                onClick={handleGuestNavigation}
-                className="shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-black/40 transition"
-                title="Open guest profile"
-              >
+          {guestProfilePath ? (
+            <button
+              type="button"
+              onClick={handleGuestNavigation}
+              onAuxClick={handleGuestNavigation}
+              className="group flex w-full items-center gap-3 rounded-full text-left outline-none transition focus-visible:ring-2 focus-visible:ring-black/40"
+              title="Open guest profile"
+            >
+              <span className="shrink-0 rounded-full bg-white/80 p-0.5">
                 <Avatar src={guestImage} name={guestName} size={36} />
-              </button>
-            ) : (
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[8px] uppercase tracking-wide text-neutral-500 leading-none">
+                  Booked by
+                </span>
+                <span className="truncate text-[15px] font-semibold text-neutral-900 leading-tight group-hover:underline group-focus-visible:underline">
+                  {guestName}
+                </span>
+              </span>
+            </button>
+          ) : (
+            <div className="flex items-center gap-3">
               <div className="shrink-0 rounded-full">
                 <Avatar src={guestImage} name={guestName} size={36} />
               </div>
-            )}
-
-            {/* Booked by + Name (stacked) */}
-            <div className="min-w-0">
-              <p className="text-[8px] uppercase tracking-wide text-neutral-500 leading-none">
-                Booked by
-              </p>
-              {guestProfilePath ? (
-                <button
-                  type="button"
-                  onClick={handleGuestNavigation}
-                  className="text-left text-[15px] font-semibold text-neutral-900 hover:underline focus-visible:underline outline-none truncate leading-tight"
-                >
-                  {guestName}
-                </button>
-              ) : (
+              <div className="min-w-0">
+                <p className="text-[8px] uppercase tracking-wide text-neutral-500 leading-none">
+                  Booked by
+                </p>
                 <span className="text-[15px] font-semibold text-neutral-900 truncate leading-tight">
                   {guestName}
                 </span>
-              )}
+              </div>
             </div>
-
-            {/* Message icon */}
-            {/* {guestName !== 'Guest' && (
-              <button
-                onClick={() => {
-                  if (currentUser?.id === guestId) return;
-                  messenger.openChat({
-                    id: guestId || '',
-                    name: guestName,
-                    image: guestImage || undefined,
-                  });
-                }}
-                disabled={currentUser?.id === guestId}
-                className="ml-auto h-10 w-10 aspect-square flex items-center justify-center rounded-xl bg-neutral-100 hover:bg-neutral-200 text-black transition disabled:opacity-80"
-                title="Message Guest"
-              >
-                <FaPaperPlane className="text-[20px]" />
-              </button>
-            )} */}
-          </div>
-
-          {/* Guest mode info */}
+          )}
+        </div>
+        {/* Guest mode info */}
           {guestName === 'Guest' && (
             <p className="mt-2 text-xs text-neutral-600">
               Booked using guest mode

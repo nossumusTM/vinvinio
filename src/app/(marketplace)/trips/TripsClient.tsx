@@ -54,8 +54,14 @@ const TripsClient: React.FC<TripsClientProps> = ({
 
   const makeNavigationHandler = useCallback(
     (path: string | null | undefined) =>
-      (event?: MouseEvent<HTMLButtonElement>) => {
+      (event?: MouseEvent<HTMLElement>) => {
         if (!path) {
+          return;
+        }
+
+        if (event?.button === 1) {
+          event.preventDefault();
+          window.open(path, '_blank', 'noopener,noreferrer');
           return;
         }
 
@@ -439,49 +445,42 @@ const TripsClient: React.FC<TripsClientProps> = ({
                 {/* <hr className="mt-3 mb-6 w-screen relative left-1/2 right-1/2 -translate-x-1/2 border-t border-neutral-200" /> */}
                 {/* Host row — aligned with Guests / Date / Time */}
                 <div className="w-full rounded-2xl bg-white/90 backdrop-blur-md px-8 py-0">
-                  <div className="flex items-center gap-3">
-
-                    {/* Avatar */}
-                    {hostProfilePath ? (
-                      <button
-                        type="button"
-                        onClick={handleHostNavigation}
-                        className="shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-black/40 transition"
-                        title="Open host profile"
-                      >
+                  {hostProfilePath ? (
+                    <button
+                      type="button"
+                      onClick={handleHostNavigation}
+                      onAuxClick={handleHostNavigation}
+                      className="group flex w-full items-center gap-3 rounded-full text-left outline-none transition focus-visible:ring-2 focus-visible:ring-black/40"
+                      title="Open host profile"
+                    >
+                      <span className="shrink-0 rounded-full bg-white/80 p-0.5">
                         <Avatar src={hostImage} name={hostName} size={36} />
-                      </button>
-                    ) : (
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block text-[8px] uppercase tracking-wide text-neutral-500 leading-none">
+                          Hosted by
+                        </span>
+                        <span className="truncate text-[15px] font-semibold text-neutral-900 leading-tight group-hover:underline group-focus-visible:underline">
+                          {hostName}
+                        </span>
+                      </span>
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-3">
                       <div className="shrink-0 rounded-full">
                         <Avatar src={hostImage} name={hostName} size={36} />
                       </div>
-                    )}
-
-                    {/* Hosted by + Name (stacked) */}
-                    <div className="min-w-0">
-                      <p className="text-[8px] uppercase tracking-wide text-neutral-500 leading-none">
-                        Hosted by
-                      </p>
-                      {hostProfilePath ? (
-                        <button
-                          type="button"
-                          onClick={handleHostNavigation}
-                          className="text-left text-[15px] font-semibold text-neutral-900 hover:underline focus-visible:underline outline-none truncate leading-tight"
-                        >
-                          {hostName}
-                        </button>
-                      ) : (
+                      <div className="min-w-0">
+                        <p className="text-[8px] uppercase tracking-wide text-neutral-500 leading-none">
+                          Hosted by
+                        </p>
                         <span className="text-[15px] font-semibold text-neutral-900 truncate leading-tight">
                           {hostName}
                         </span>
-                      )}
+                      </div>
                     </div>
-
-                    {/* Message button pinned to bottom-center of the card */}
-
-                  </div>
+                  )}
                 </div>
-
                 <div className="mt-auto pt-4">
                  <div className="flex justify-center px-6 pb-4 pt-4">
                    <Button
