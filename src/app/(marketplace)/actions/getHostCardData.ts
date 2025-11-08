@@ -94,6 +94,26 @@ export default async function getHostCardData(identifier: string): Promise<HostC
     })
   );
 
+  const reviewRecords = await prisma.review.findMany({
+    where: {
+      listing: {
+        userId: hostId,
+      },
+    },
+    include: {
+      user: true,
+      listing: {
+        select: {
+          id: true,
+          title: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+
   const listings: SafeListing[] = listingsWithSlug.map((listing) => {
     const pricingSnapshot = normalizePricingSnapshot(listing.customPricing, listing.price);
 
@@ -121,18 +141,19 @@ export default async function getHostCardData(identifier: string): Promise<HostC
     return safeListing;
   });
 
-  const reviews: HostCardReview[] = listingsWithSlug.flatMap((listing) => {
-    return listing.reviews.map((review) => ({
-      id: review.id,
-      rating: review.rating,
-      comment: review.comment,
-      createdAt: review.createdAt.toISOString(),
-      listingId: listing.id,
-      listingTitle: listing.title,
-      reviewerName: review.userName ?? review.user?.name ?? "Guest",
-      reviewerImage: review.user?.image ?? null,
-    }));
-  });
+  const reviews: HostCardReview[] = reviewRecords.map((review) => ({
+    id: review.id,
+    rating: review.rating,
+    comment: review.comment,
+    createdAt: review.createdAt.toISOString(),
+    listingId: review.listingId,
+    listingTitle:
+      review.listing?.title ??
+      listingsWithSlug.find((listing) => listing.id === review.listingId)?.title ??
+      'Experience',
+    reviewerName: review.userName ?? review.user?.name ?? 'Guest',
+    reviewerImage: review.user?.image ?? null,
+  }));
 
   return {
     host: safeHost,

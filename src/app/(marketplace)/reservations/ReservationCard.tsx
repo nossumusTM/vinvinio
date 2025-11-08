@@ -12,6 +12,7 @@ import useCurrencyFormatter from '@/app/(marketplace)/hooks/useCurrencyFormatter
 import { TbCalendarTime, TbClock, TbUserSquareRounded } from "react-icons/tb";
 import { FaPaperPlane } from "react-icons/fa";
 import Button from "../components/Button";
+import { profilePathForUser } from "@/app/(marketplace)/utils/profilePath";
 
 interface ReservationCardProps {
     reservation: SafeReservation;
@@ -36,6 +37,8 @@ const ReservationCard: React.FC<ReservationCardProps> = ({ reservation, currentU
     const hour12 = hour % 12 === 0 ? 12 : hour % 12;
     return `${format(start, 'PP')} at ${hour12}:${minute} ${period}`;
   }, [reservation]);
+
+  const guestProfilePath = profilePathForUser(reservation.user, guestId);
 
   return (
     <div className="relative bg-white rounded-3xl shadow-md hover:shadow-lg transition duration-300 overflow-hidden">
@@ -136,9 +139,8 @@ const ReservationCard: React.FC<ReservationCardProps> = ({ reservation, currentU
             <button
               type="button"
               onClick={() => {
-                const profileSlug = reservation.user?.username || guestId;
-                if (!profileSlug) return;
-                window.open(`/social-card/${encodeURIComponent(profileSlug)}`, "_blank");
+                if (guestProfilePath == null) return;
+                window.open(guestProfilePath, "_blank");
               }}
               className="shrink-0 rounded-full outline-none focus:ring-2 focus:ring-black/40 transition"
               title="Open guest profile"
@@ -153,9 +155,8 @@ const ReservationCard: React.FC<ReservationCardProps> = ({ reservation, currentU
               </p>
               <button
                 onClick={() => {
-                  const profileSlug = reservation.user?.username || guestId;
-                  if (!profileSlug) return;
-                  window.open(`/social-card/${encodeURIComponent(profileSlug)}`, "_blank");
+                  if (guestProfilePath == null) return;
+                  window.open(guestProfilePath, "_blank");
                 }}
                 className="text-[15px] font-semibold text-neutral-900 hover:underline truncate leading-tight"
               >

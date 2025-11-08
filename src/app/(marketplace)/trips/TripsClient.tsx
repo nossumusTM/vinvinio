@@ -14,6 +14,7 @@ import { CiPaperplane } from "react-icons/ci";
 import { TbMessage2Code } from "react-icons/tb";
 import { BiSolidPaperPlane } from "react-icons/bi";
 import { FaPaperPlane } from "react-icons/fa";
+import { profilePathForUser } from "@/app/(marketplace)/utils/profilePath";
 
 import Heading from "@/app/(marketplace)/components/Heading";
 import Container from "@/app/(marketplace)/components/Container";
@@ -281,9 +282,10 @@ const TripsClient: React.FC<TripsClientProps> = ({
       />
       <div className="mt-6 grid grid-cols-1 gap-10 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4">
         {loadedReservations.map((reservation) => {
-          const host = reservation.listing?.user ?? {};
+          const host = reservation.listing?.user;
           const hostName = host?.name ?? 'Unknown';
-          const hostImage = host?.image ?? '';         
+          const hostImage = host?.image ?? '';
+          const hostProfilePath = profilePathForUser(host, host?.id);
 
           return (
             <div
@@ -425,9 +427,8 @@ const TripsClient: React.FC<TripsClientProps> = ({
                     <button
                       type="button"
                       onClick={() => {
-                        const profileHandle = host?.username;
-                        if (!profileHandle) return;
-                        window.open(`/hosts/${encodeURIComponent(profileHandle)}`, "_blank");
+                        if (hostProfilePath == null) return;
+                        window.open(hostProfilePath, "_blank");
                       }}
                       className="shrink-0 rounded-full outline-none focus:ring-2 focus:ring-black/40 transition"
                       title="Open host profile"
@@ -442,9 +443,8 @@ const TripsClient: React.FC<TripsClientProps> = ({
                       </p>
                       <button
                         onClick={() => {
-                          const profileHandle = host?.username;
-                          if (!profileHandle) return;
-                          window.open(`/hosts/${encodeURIComponent(profileHandle)}`, "_blank");
+                          if (hostProfilePath == null) return;
+                          window.open(hostProfilePath, "_blank");
                         }}
                         className="text-[15px] font-semibold text-neutral-900 hover:underline truncate leading-tight"
                       >

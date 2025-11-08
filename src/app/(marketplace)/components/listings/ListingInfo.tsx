@@ -14,6 +14,7 @@ import Button from "../Button";
 
 import useCountries from "@/app/(marketplace)/hooks/useCountries";
 import { SafeUser } from "@/app/(marketplace)/types";
+import { profilePathForUser } from "@/app/(marketplace)/utils/profilePath";
 
 import Avatar from "../Avatar";
 import ListingCategory from "./ListingCategory";
@@ -112,12 +113,12 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
     }, [user?.id]);
 
     const handleHostNavigate = useCallback(() => {
-        const profileHandle = user?.username;
-        if (!profileHandle) {
+        const profilePath = profilePathForUser(user, user?.id);
+        if (profilePath == null) {
             return;
         }
-        router.push(`/hosts/${encodeURIComponent(profileHandle)}`);
-    }, [router, user?.username]);
+        router.push(profilePath);
+    }, [router, user, user?.id]);
 
     return (
         <div className="col-span-4 flex flex-col gap-8">
