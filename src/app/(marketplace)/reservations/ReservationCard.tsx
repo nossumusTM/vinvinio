@@ -1,15 +1,13 @@
 'use client';
 
 import Image from "next/image";
-import { MouseEvent, useCallback, useMemo } from "react";
+import { MouseEvent, useCallback } from "react";
 import { format } from 'date-fns';
 import Avatar from "../components/Avatar";
 import { SafeReservation, SafeUser } from "@/app/(marketplace)/types";
 import useMessenger from "@/app/(marketplace)/hooks/useMessager";
 import useCurrencyFormatter from '@/app/(marketplace)/hooks/useCurrencyFormatter';
-// add to imports at top of ReservationCard.tsx
 import { TbCalendarTime, TbClock, TbUserSquareRounded } from "react-icons/tb";
-import { FaPaperPlane } from "react-icons/fa";
 import Button from "../components/Button";
 import { profilePathForUser } from "@/app/(marketplace)/utils/profilePath";
 import { useRouter } from "next/navigation";
@@ -26,18 +24,6 @@ const ReservationCard: React.FC<ReservationCardProps> = ({ reservation, currentU
   const router = useRouter();
   const messenger = useMessenger();
   const { formatConverted } = useCurrencyFormatter();
-
-  const reservationDate = useMemo(() => {
-    const start = new Date(reservation.startDate);
-    const time24 = reservation.time;
-    if (!time24) return format(start, 'PP');
-    const [hourStr, minuteStr] = time24.split(':');
-    const hour = parseInt(hourStr, 10);
-    const minute = minuteStr.padStart(2, '0');
-    const period = hour >= 12 ? 'PM' : 'AM';
-    const hour12 = hour % 12 === 0 ? 12 : hour % 12;
-    return `${format(start, 'PP')} at ${hour12}:${minute} ${period}`;
-  }, [reservation]);
 
   const guestProfilePath = profilePathForUser(reservation.user);
   const handleGuestNavigation = useCallback(
@@ -200,7 +186,7 @@ const ReservationCard: React.FC<ReservationCardProps> = ({ reservation, currentU
             Booked using guest mode
             {reservation.guestContact ? (
               <>
-                , contact:{' '}
+                {', contact: '}
                 <span className="inline-block bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded">
                   {reservation.guestContact}
                 </span>
