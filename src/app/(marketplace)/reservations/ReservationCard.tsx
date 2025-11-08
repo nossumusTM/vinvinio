@@ -195,19 +195,21 @@ const ReservationCard: React.FC<ReservationCardProps> = ({ reservation, currentU
           )}
         </div>
         {/* Guest mode info */}
-          {guestName === 'Guest' && (
-            <p className="mt-2 text-xs text-neutral-600">
-              Booked using guest mode
-              {reservation.guestContact ? (
-                <>
-                  , contact:{" "}
-                  <span className="inline-block bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded">
-                    {reservation.guestContact}
-                  </span>
-                </>
-              ) : '.'}
-            </p>
-          )}
+        {guestName === 'Guest' && (
+          <p className="mt-2 text-xs text-neutral-600">
+            Booked using guest mode
+            {reservation.guestContact ? (
+              <>
+                , contact:{' '}
+                <span className="inline-block bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded">
+                  {reservation.guestContact}
+                </span>
+              </>
+            ) : (
+              '.'
+            )}
+          </p>
+        )}
         </div>
 
         <div className="absolute inset-x-0 bottom-0">
