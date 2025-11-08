@@ -1,26 +1,38 @@
 export type ProfiledUser = {
   username?: string | null;
+  hostName?: string | null;
+  name?: string | null;
   role?: string | null;
-  id?: string | null;
+};
+
+const firstNonEmpty = (...values: Array<string | null | undefined>) => {
+  for (const value of values) {
+    if (typeof value === 'string' && value.trim().length > 0) {
+      return value;
+    }
+  }
+  return null;
 };
 
 export const profilePathForUser = (
   user: ProfiledUser | null | undefined,
   fallbackHandle?: string | null | undefined,
+  roleHint?: string | null,
 ): string | null => {
-  if (user == null && fallbackHandle == null) {
-    return null;
-  }
+  const handle = firstNonEmpty(
+    user?.username,
+    fallbackHandle,
+    user?.hostName,
+    user?.name,
+  );
 
-  const handle = user?.username ?? fallbackHandle ?? user?.id ?? null;
   if (handle == null) {
     return null;
   }
 
   const encoded = encodeURIComponent(handle);
-  return user?.role === 'host'
-    ? `/hosts/${encoded}`
-    : `/social-card/${encoded}`;
+  const role = user?.role ?? roleHint;
+  return role === 'host' ? `/hosts/${encoded}` : `/social-card/${encoded}`;
 };
 
 export const isHostUser = (user: ProfiledUser | null | undefined): boolean => {

@@ -113,12 +113,15 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
     }, [user?.id]);
 
     const handleHostNavigate = useCallback(() => {
-        const profilePath = profilePathForUser(user, user?.id);
+        const profilePath = profilePathForUser(
+            user,
+            user?.hostName ?? user?.name ?? null,
+        );
         if (profilePath == null) {
             return;
         }
         router.push(profilePath);
-    }, [router, user, user?.id]);
+    }, [router, user, user?.hostName, user?.name]);
 
     return (
         <div className="col-span-4 flex flex-col gap-8">

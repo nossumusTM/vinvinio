@@ -38,7 +38,10 @@ const ReservationCard: React.FC<ReservationCardProps> = ({ reservation, currentU
     return `${format(start, 'PP')} at ${hour12}:${minute} ${period}`;
   }, [reservation]);
 
-  const guestProfilePath = profilePathForUser(reservation.user, guestId);
+  const guestProfilePath = profilePathForUser(
+    reservation.user,
+    reservation.user?.legalName ?? reservation.user?.name ?? null,
+  );
 
   return (
     <div className="relative bg-white rounded-3xl shadow-md hover:shadow-lg transition duration-300 overflow-hidden">
