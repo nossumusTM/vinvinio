@@ -57,16 +57,25 @@ export default async function getReservations(params: IReservationParams) {
       reservations.map(async (reservation: any) => {
         const listingWithSlug = await ensureListingSlug(reservation.listing);
 
+        const safeGuest = reservation.user
+          ? {
+              ...reservation.user,
+              username: reservation.user.username ?? null,
+            }
+          : null;
+
         return {
           ...reservation,
           startDate: reservation.startDate.toISOString(),
           endDate: reservation.endDate.toISOString(),
+          user: safeGuest,
           listing: {
             ...listingWithSlug,
             createdAt: listingWithSlug.createdAt.toISOString(),
             user: {
               ...listingWithSlug.user,
               createdAt: listingWithSlug.user.createdAt.toISOString(),
+              username: listingWithSlug.user.username ?? null,
             },
           },
         };
