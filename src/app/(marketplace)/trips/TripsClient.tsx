@@ -2,7 +2,7 @@
 
 import { toast } from "react-hot-toast";
 import axios from "axios";
-import { useCallback, useEffect, useState } from "react";
+import { MouseEvent, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from 'date-fns';
 import Button from "../components/Button";
@@ -15,6 +15,7 @@ import { TbMessage2Code } from "react-icons/tb";
 import { BiSolidPaperPlane } from "react-icons/bi";
 import { FaPaperPlane } from "react-icons/fa";
 import { profilePathForUser } from "@/app/(marketplace)/utils/profilePath";
+import Link from "next/link";
 
 import Heading from "@/app/(marketplace)/components/Heading";
 import Container from "@/app/(marketplace)/components/Container";
@@ -53,11 +54,19 @@ const TripsClient: React.FC<TripsClientProps> = ({
   const messenger = useMessenger();
 
   const makeNavigationHandler = useCallback(
-    (path: string | null | undefined) => () => {
-      if (path) {
+    (path: string | null | undefined) =>
+      (event?: MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => {
+        if (!path) {
+          return;
+        }
+
+        if (event?.metaKey || event?.ctrlKey || event?.shiftKey || event?.button === 1) {
+          return;
+        }
+
+        event?.preventDefault();
         router.push(path);
-      }
-    },
+      },
     [router]
   );
 
@@ -435,14 +444,14 @@ const TripsClient: React.FC<TripsClientProps> = ({
 
                     {/* Avatar */}
                     {hostProfilePath ? (
-                      <button
-                        type="button"
+                      <Link
+                        href={hostProfilePath}
                         onClick={handleHostNavigation}
-                        className="shrink-0 rounded-full outline-none focus:ring-2 focus:ring-black/40 transition"
+                        className="shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-black/40 transition"
                         title="Open host profile"
                       >
                         <Avatar src={hostImage} name={hostName} size={36} />
-                      </button>
+                      </Link>
                     ) : (
                       <div className="shrink-0 rounded-full">
                         <Avatar src={hostImage} name={hostName} size={36} />
@@ -455,13 +464,13 @@ const TripsClient: React.FC<TripsClientProps> = ({
                         Hosted by
                       </p>
                       {hostProfilePath ? (
-                        <button
-                          type="button"
+                        <Link
+                          href={hostProfilePath}
                           onClick={handleHostNavigation}
                           className="text-left text-[15px] font-semibold text-neutral-900 hover:underline focus-visible:underline outline-none truncate leading-tight"
                         >
                           {hostName}
-                        </button>
+                        </Link>
                       ) : (
                         <span className="text-[15px] font-semibold text-neutral-900 truncate leading-tight">
                           {hostName}
