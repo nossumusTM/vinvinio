@@ -1,7 +1,7 @@
 // pages/page.tsx (Home with Load More)
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Container from "@/app/(marketplace)/components/Container";
 import ListingCard from "@/app/(marketplace)/components/listings/ListingCard";
 import EmptyState from "@/app/(marketplace)/components/EmptyState";
@@ -46,8 +46,7 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
   const searchParams = useSearchParams();
 
   const [isMobile, setIsMobile] = useState(false);
-  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
-  const [hasAttemptedGeoDetection, setHasAttemptedGeoDetection] = useState(false);
+  const detectionInFlightRef = useRef(false);
 
   const {
     detection,
@@ -78,7 +77,7 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
 
   useEffect(() => {
     if (geoAccepted || geoDismissed) return;
-    if (detection || isDetectingLocation || hasAttemptedGeoDetection) return;
+    if (detection || detectionInFlightRef.current) return;
 
     let cancelled = false;
     const controller = new AbortController();
@@ -91,8 +90,7 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
       }
 
       try {
-        setHasAttemptedGeoDetection(true);
-        setIsDetectingLocation(true);
+        detectionInFlightRef.current = true;
         const res = await fetch('https://ipapi.co/json/', { signal: controller.signal });
         if (!res.ok) {
           throw new Error('Failed to detect location');
@@ -123,16 +121,14 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
           console.warn('Geo detection failed', error);
         }
       } finally {
-        if (!cancelled) {
-          setIsDetectingLocation(false);
-          if (!suggestionApplied) {
-            const fallbackSuggestion = buildBrowserLocaleSuggestion();
-            if (process.env.NODE_ENV !== 'production') {
-              console.log('[geo] using browser fallback suggestion', fallbackSuggestion);
-            }
-            if (fallbackSuggestion) {
-              setDetection(fallbackSuggestion);
-            }
+        detectionInFlightRef.current = false;
+        if (!cancelled && !suggestionApplied) {
+          const fallbackSuggestion = buildBrowserLocaleSuggestion();
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('[geo] using browser fallback suggestion', fallbackSuggestion);
+          }
+          if (fallbackSuggestion) {
+            setDetection(fallbackSuggestion);
           }
         }
       }
@@ -142,9 +138,10 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
 
     return () => {
       cancelled = true;
+      detectionInFlightRef.current = false;
       controller.abort();
     };
-  }, [detection, geoAccepted, geoDismissed, hasAttemptedGeoDetection, isDetectingLocation, setDetection]);
+  }, [detection, geoAccepted, geoDismissed, setDetection]);
 
   useEffect(() => {
     if (!detection) return;
