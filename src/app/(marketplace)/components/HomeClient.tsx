@@ -30,7 +30,18 @@ interface HomeProps {
 
 const INITIAL_SKELETON_COUNT = 12;
 const LOAD_MORE_SKELETON_COUNT = 4;
-const GEOLOCATION_EXPERIMENT_ENABLED = process.env.NEXT_PUBLIC_GEOLOCATION_EXPERIMENT === 'true';
+const isExperimentEnabled = (value: string | undefined) => {
+  if (value === undefined) {
+    return true;
+  }
+
+  const normalized = value.trim().toLowerCase();
+  return ['1', 'true', 'on', 'yes'].includes(normalized);
+};
+
+const GEOLOCATION_EXPERIMENT_ENABLED = isExperimentEnabled(
+  process.env.NEXT_PUBLIC_GEOLOCATION_EXPERIMENT,
+);
 
 const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
   const [listings, setListings] = useState<any[] | null>(null);
