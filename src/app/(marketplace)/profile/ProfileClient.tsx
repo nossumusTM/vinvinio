@@ -877,11 +877,11 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                 <div className="space-y-6">
                 {[
                   { label: 'Username', key: 'username' },
-                  { label: 'Full name', key: 'name' },
+                  { label: 'Legal name', key: 'legalName' },
+                  // { label: 'Full name', key: 'name' },
                   { label: 'Email address', key: 'email' },
                   { label: 'Phone number', key: 'phone' },
                   { label: 'Preferred contact method', key: 'contact' },
-                  { label: 'Legal name', key: 'legalName' },
                   { label: 'Address', key: 'address' },
                 ].map(({ label, key }) => (
                   <div key={key} className="flex justify-between items-start">

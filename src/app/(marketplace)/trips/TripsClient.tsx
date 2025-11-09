@@ -14,7 +14,7 @@ import { CiPaperplane } from "react-icons/ci";
 import { TbMessage2Code } from "react-icons/tb";
 import { BiSolidPaperPlane } from "react-icons/bi";
 import { FaPaperPlane } from "react-icons/fa";
-import { profilePathForUser } from "@/app/(marketplace)/utils/profilePath";
+// import { profilePathForUser } from "@/app/(marketplace)/utils/profilePath";
 
 import Heading from "@/app/(marketplace)/components/Heading";
 import Container from "@/app/(marketplace)/components/Container";
@@ -308,10 +308,27 @@ const TripsClient: React.FC<TripsClientProps> = ({
       />
       <div className="mt-6 grid grid-cols-1 gap-10 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4">
         {loadedReservations.map((reservation) => {
+
           const host = reservation.listing?.user;
-          const hostName = host?.name ?? 'Unknown';
+          const hostNameClean = host?.username?.trim() || null;
+          const hostName = hostNameClean ?? 'Unknown';
           const hostImage = host?.image ?? '';
-          const hostProfilePath = profilePathForUser(host);
+          const hostId = host?.id ?? null;
+
+          // prefer @username; otherwise slugify name; finally fall back to id
+          const slugify = (s: string) =>
+            s.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+          const handle =
+            (typeof host?.username === 'string' && host.username.trim())
+              ? host.username.trim()
+              : (hostNameClean ? slugify(hostNameClean) : (hostId ?? ''));
+
+          const hostProfilePath =
+            host?.role === 'host'
+              ? (handle ? `/hosts/${encodeURIComponent(handle)}` : null)
+              : (handle ? `/social-card/${encodeURIComponent(handle)}` : null);
+
           const handleHostNavigation = makeNavigationHandler(hostProfilePath);
 
           return (

@@ -46,6 +46,16 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
 
   const profileHref = profilePathForUser(currentUser) ?? '/profile';
 
+  const slugify = (s: string) =>
+    s.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+  const hostHandle =
+    currentUser?.username ??
+    (currentUser?.name ? slugify(currentUser.name) : currentUser?.id ?? '');
+
+  const hostCardHref = hostHandle ? `/hosts/${encodeURIComponent(hostHandle)}` : '/hosts';
+
+
   const toggleOpen = useCallback(() => {
     setIsOpen((value) => !value);
   }, []);
@@ -434,7 +444,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                       onClick={() => {
                         setIsOpen(false);
                       }}
-                      href={profileHref}
+                      href={hostCardHref}
                     />
                     {(userRole === 'host') && (
                         <>

@@ -6,6 +6,9 @@ import { useMemo, useState } from 'react';
 import clsx from 'clsx';
 
 import type { SocialCardVisitedPlace } from '@/app/(marketplace)/types';
+import useMessenger from '@/app/(marketplace)/hooks/useMessager';
+
+import Heading from '../../components/Heading';
 
 export type BookingSummary = {
   id: string;
@@ -92,6 +95,15 @@ const PublicSocialCard: React.FC<PublicSocialCardProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<TabKey>('bookings');
 
+  const messenger = useMessenger();
+  const handleDirectMessage = () => {
+    messenger.openChat({
+      id: user.id,
+      name: user.displayedName,
+      image: user.image ?? '',
+    });
+  };
+
   const initials = useMemo(() => {
     return user.displayedName.trim().charAt(0).toUpperCase() || 'U';
   }, [user.displayedName]);
@@ -114,7 +126,7 @@ const PublicSocialCard: React.FC<PublicSocialCardProps> = ({
           return (
             <span
               key={`${place.countryCode}-${city}`}
-              className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white"
+              className="inline-flex items-center gap-2 rounded-full bg-black/5 px-3 py-1 text-xs font-medium text-black"
             >
               <span className="flex h-4 w-6 items-center justify-center overflow-hidden rounded-sm bg-white/30">
                 <Image
@@ -133,11 +145,23 @@ const PublicSocialCard: React.FC<PublicSocialCardProps> = ({
   };
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
-      <div className="rounded-3xl border border-neutral-200 bg-white shadow-xl">
+    <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6 lg:px-8">
+      <div className="rounded-3xl bg-white shadow-xl">
         <div className="relative overflow-hidden rounded-3xl">
-          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500 via-blue-500 to-indigo-600 opacity-90" />
-          <div className="relative space-y-6 p-10 text-white">
+          <div className="absolute inset-0 bg-white backdrop-blur-sm shadow-md hover:shadow-lg transition z-0" />
+
+            {/* ⬇️ Add button here (top-right of the card) */}
+            <button
+              type="button"
+              onClick={handleDirectMessage}
+              className="absolute top-3 right-3 z-20 px-4 py-2 rounded-full bg-white text-neutral-900 shadow-md border border-neutral-200 tracking-[0.14em] text-[11px] sm:text-xs font-semibold hover:shadow-lg transition"
+              title="Direct Message"
+            >
+              DIRECT MESSAGE
+            </button>
+          <div className="absolute inset-0 bg-white backdrop-blur-sm shadow-md hover:shadow-lg transition" />
+          <div className="relative space-y-6 px-10 py-0 md:py-4 text-black">
+            
             {user.isSuspended && (
               <span className="inline-flex items-center rounded-full bg-white/20 px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-white">
                 Suspended account
@@ -166,26 +190,26 @@ const PublicSocialCard: React.FC<PublicSocialCardProps> = ({
                     <p className="text-3xl font-semibold tracking-tight">{user.displayedName}</p>
                   )}
                   {visibility.profession && user.profession && (
-                    <p className="text-sm text-white/80">{user.profession}</p>
+                    <p className="text-sm text-black/80">{user.profession}</p>
                   )}
                 </div>
               </div>
             )}
 
             {visibility.bio && user.bio && (
-              <p className="whitespace-pre-line text-base leading-relaxed text-white/90">{user.bio}</p>
+              <p className="whitespace-pre-line text-base leading-relaxed text-black/90">{user.bio}</p>
             )}
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {visibility.email && (
-                <div className="rounded-2xl bg-white/10 px-4 py-3">
-                  <p className="text-xs uppercase tracking-widest text-white/60">Email</p>
-                  <p className="break-words font-medium">{user.email ?? 'Not provided'}</p>
+                <div className="rounded-2xl bg-neutral-100 px-4 py-3">
+                  <p className="text-xs uppercase tracking-widest text-black/60">Email</p>
+                  <p className="break-words font-medium text-sm">{user.email ?? 'Not provided'}</p>
                   <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold">
                     <span
                       className={clsx('inline-flex h-2.5 w-2.5 rounded-full', {
-                        'bg-emerald-300': user.emailVerified,
-                        'bg-white/40': !user.emailVerified,
+                        'bg-green-300': user.emailVerified,
+                        'bg-black/40': !user.emailVerified,
                       })}
                     />
                     {user.emailVerified ? 'Verified' : 'Not verified'}
@@ -194,14 +218,14 @@ const PublicSocialCard: React.FC<PublicSocialCardProps> = ({
               )}
 
               {visibility.phone && (
-                <div className="rounded-2xl bg-white/10 px-4 py-3">
-                  <p className="text-xs uppercase tracking-widest text-white/60">Phone</p>
-                  <p className="break-words font-medium">{user.phone ?? 'Not provided'}</p>
+                <div className="rounded-2xl bg-neutral-100 px-4 py-3">
+                  <p className="text-xs uppercase tracking-widest text-black/60">Phone</p>
+                  <p className="break-words font-medium text-sm">{user.phone ?? 'Not provided'}</p>
                   <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold">
                     <span
                       className={clsx('inline-flex h-2.5 w-2.5 rounded-full', {
-                        'bg-emerald-300': user.phoneVerified,
-                        'bg-white/40': !user.phoneVerified,
+                        'bg-green-300': user.phoneVerified,
+                        'bg-black/40': !user.phoneVerified,
                       })}
                     />
                     {user.phoneVerified ? 'Verified' : 'Not verified'}
@@ -210,9 +234,9 @@ const PublicSocialCard: React.FC<PublicSocialCardProps> = ({
               )}
 
               {visibility.contacts && (
-                <div className="rounded-2xl bg-white/10 px-4 py-3">
-                  <p className="text-xs uppercase tracking-widest text-white/60">Preferred contacts</p>
-                  <ul className="mt-2 space-y-1 text-sm text-white/90">
+                <div className="rounded-2xl bg-neutral-100 px-4 py-3">
+                  <p className="text-xs uppercase tracking-widest text-black/60">Preferred contacts</p>
+                  <ul className="mt-2 space-y-1 text-sm text-black/90">
                     {contactDisplay.map((contact) => (
                       <li key={contact}>{contact}</li>
                     ))}
@@ -221,21 +245,21 @@ const PublicSocialCard: React.FC<PublicSocialCardProps> = ({
               )}
 
               {(visibility.countries || visibility.cities) && (
-                <div className="rounded-2xl bg-white/10 px-4 py-3">
-                  <p className="text-xs uppercase tracking-widest text-white/60">Visited destinations</p>
+                <div className="rounded-2xl bg-neutral-100 px-4 py-3">
+                  <p className="text-xs uppercase tracking-widest text-black/60">Visited destinations</p>
                   <div className="mt-2">{renderVisitedPlaces()}</div>
                 </div>
               )}
 
               {visibility.hobbies && (
-                <div className="rounded-2xl bg-white/10 px-4 py-3">
-                  <p className="text-xs uppercase tracking-widest text-white/60">Hobbies &amp; interests</p>
+                <div className="rounded-2xl bg-neutral-100 px-4 py-3 sm:col-span-2 lg:col-span-2">
+                  <p className="text-xs uppercase tracking-widest text-black/60">Hobbies &amp; interests</p>
                   {hobbies.length > 0 ? (
                     <div className="mt-2 flex flex-wrap gap-2">
                       {hobbies.map((hobby) => (
                         <span
                           key={hobby}
-                          className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white"
+                          className="rounded-full bg-black/5 px-3 py-1 text-xs font-semibold text-black"
                         >
                           {hobby}
                         </span>
@@ -251,9 +275,12 @@ const PublicSocialCard: React.FC<PublicSocialCardProps> = ({
         </div>
 
         <div className="space-y-10 px-6 py-10 sm:px-10">
-          <section className="space-y-6">
+          <section className="">
+            <div className="flex justify-center">
+            </div>
             <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
-              <div className="flex w-full rounded-full border border-neutral-200 bg-neutral-50 p-1 sm:w-auto">
+
+              {/* <div className="flex w-full rounded-full border border-neutral-200 bg-neutral-50 p-1 sm:w-auto">
                 {(['bookings', 'reviews'] as TabKey[]).map((tab) => {
                   const isActive = activeTab === tab;
                   const label = tab === 'bookings'
@@ -288,10 +315,10 @@ const PublicSocialCard: React.FC<PublicSocialCardProps> = ({
                     </button>
                   );
                 })}
-              </div>
+              </div> */}
             </div>
 
-            {activeTab === 'bookings' ? (
+            {/* {activeTab === 'bookings' ? (
               <div className="flex flex-col gap-4">
                 {bookings.length === 0 ? (
                   <div className="col-span-full rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 p-6 text-center text-sm text-neutral-500">
@@ -369,7 +396,49 @@ const PublicSocialCard: React.FC<PublicSocialCardProps> = ({
                   ))
                 )}
               </div>
-            )}
+            )} */}
+
+            <div className="flex justify-center w-full pb-6">
+              <Heading
+                title="Just me, telling how it really was."
+                subtitle=""
+                center
+              />
+            </div>
+
+            <div className="space-y-4">
+              {reviews.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 p-6 text-center text-sm text-neutral-500">
+                  No reviews left on the platform yet.
+                </div>
+              ) : (
+                reviews.map((review) => (
+                  <Link
+                    key={review.id}
+                    href={review.listingHref}
+                    className="block rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm transition hover:shadow-lg"
+                  >
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-center gap-3 text-sm font-semibold text-neutral-800">
+                        <span
+                          className={clsx(
+                            'rounded-full px-3 py-1 text-xs font-semibold',
+                            ratingBadgeClasses(review.rating),
+                          )}
+                        >
+                          {ratingLabel(review.rating)}
+                        </span>
+                        <span>{review.listingTitle}</span>
+                      </div>
+                      <span className="text-xs uppercase tracking-[0.2em] text-neutral-400">
+                        {formatDate(review.createdAt)}
+                      </span>
+                    </div>
+                    <p className="mt-3 text-sm leading-relaxed text-neutral-600">{review.comment}</p>
+                  </Link>
+                ))
+              )}
+            </div>
           </section>
         </div>
       </div>
