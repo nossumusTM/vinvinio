@@ -51,6 +51,13 @@ const LocationConsentModal = () => {
     decline: state.decline,
   }));
 
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('[geo] consent modal state', {
+      hasDetection: !!detection,
+      isOpen,
+    });
+  }
+
   if (!detection) {
     return null;
   }
