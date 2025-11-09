@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createWithEqualityFn } from 'zustand/traditional';
+import { createJSONStorage, persist } from 'zustand/middleware';
 
 import type { GeoLocaleSuggestion } from '@/app/(marketplace)/utils/geoLocale';
 
@@ -21,7 +21,43 @@ type GeoLocationExperimentState = {
   reset: () => void;
 };
 
-const useGeoLocationExperiment = create<GeoLocationExperimentState>()(
+const createSafeStorage = () => {
+  const memory = new Map<string, string>();
+
+  const memoryStorage: Storage = {
+    get length() {
+      return memory.size;
+    },
+    clear: () => {
+      memory.clear();
+    },
+    getItem: (key: string) => memory.get(key) ?? null,
+    key: (index: number) => Array.from(memory.keys())[index] ?? null,
+    removeItem: (key: string) => {
+      memory.delete(key);
+    },
+    setItem: (key: string, value: string) => {
+      memory.set(key, value);
+    },
+  };
+
+  return createJSONStorage<GeoLocationExperimentState>(() => {
+    if (typeof window === 'undefined') {
+      return memoryStorage;
+    }
+
+    try {
+      return window.localStorage;
+    } catch (error) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('Geo location experiment persistence disabled', error);
+      }
+      return memoryStorage;
+    }
+  });
+};
+
+const useGeoLocationExperiment = createWithEqualityFn<GeoLocationExperimentState>()(
   persist(
     (set) => ({
       detection: undefined,
@@ -65,6 +101,7 @@ const useGeoLocationExperiment = create<GeoLocationExperimentState>()(
     }),
     {
       name: 'geo-location-experiment',
+      storage: createSafeStorage(),
       partialize: (state) => ({
         detection: state.detection,
         hasPrompted: state.hasPrompted,
