@@ -2,7 +2,6 @@
 
 import { useMemo, useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import NextImage from 'next/image';
 import { FiCamera } from 'react-icons/fi';
 // import cropImage from '@/app/(marketplace)/utils/cropImage';
 import axios from 'axios';
@@ -11,7 +10,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { SafeListing, SafeUser } from "@/app/(marketplace)/types";
 import useCountries from "@/app/(marketplace)/hooks/useCountries";
 import Avatar from "@/app/(marketplace)/components/Avatar";
-import Heading from "@/app/(marketplace)/components/Heading";
 import { HostCardReview } from "@/app/(marketplace)/actions/getHostCardData";
 import Link from "next/link";
 import { twMerge } from 'tailwind-merge';
@@ -19,7 +17,6 @@ import { FaCheckCircle } from 'react-icons/fa';
 import { HiOutlineShieldExclamation } from 'react-icons/hi';
 import { HiOutlineChatBubbleOvalLeft } from "react-icons/hi2";
 import { BiSolidPaperPlane } from "react-icons/bi";
-import Modal from '../../components/modals/Modal';
 
 import Cropper from 'react-easy-crop';
 import getCroppedImg from '@/app/(marketplace)/utils/cropImage';
@@ -97,7 +94,7 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
 
   // local optimistic previews (optional)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [coverPreview, setCoverPreview]   = useState<string | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
 
 
 
@@ -241,7 +238,7 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
 
     // 2) optimistic local preview
     if (cropTarget === 'avatar') setAvatarPreview(croppedDataUrl);
-    if (cropTarget === 'cover')  setCoverPreview(croppedDataUrl);
+    if (cropTarget === 'cover') setCoverPreview(croppedDataUrl);
 
     setIsCropping(false);
     setUploadedImage(null);
@@ -334,7 +331,6 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
           });
           if (!r.ok) return;
           const me = await r.json();
-        setIsOwner(Boolean(me?.id && me.id === host.id));
         setIsOwner(Boolean(me?.id && String(me.id) === String(host.id))); // normalize ids
         } catch {}
       })();
@@ -367,24 +363,26 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
         <div className="relative h-56 sm:h-64 md:h-72">
 
           {coverPreview ? (
-              <NextImage
-                src={coverPreview}
-                alt={`Cover for ${host.name ?? host.hostName ?? 'host'}`}
-                fill
-                className="object-cover"
-                priority
-              />
-            ) : coverImage ? (
-              <NextImage
-                src={coverImage}
-                alt={`Cover for ${host.name ?? host.hostName ?? 'host'}`}
-                fill
-                className="object-cover"
-                priority
-              />
-            ) : (
-              <div className="absolute inset-0 bg-gradient-to-br from-neutral-900 via-neutral-700 to-neutral-500" />
-            )}
+            <Image
+              src={coverPreview}
+              alt={`Cover for ${host.name ?? host.hostName ?? 'host'}`}
+              fill
+              className="object-cover"
+              sizes="100vw"
+              priority
+            />
+          ) : coverImage ? (
+            <Image
+              src={coverImage}
+              alt={`Cover for ${host.name ?? host.hostName ?? 'host'}`}
+              fill
+              className="object-cover"
+              sizes="100vw"
+              priority
+            />
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-br from-neutral-900 via-neutral-700 to-neutral-500" />
+          )}
 
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
@@ -546,7 +544,7 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                             title={lang}
                           >
                             {/* 20x20 circle flag */}
-                            <NextImage
+                            <Image
                               src={flagSrc(code)}
                               alt={lang}
                               width={14}
@@ -654,11 +652,12 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                         >
                         <div className="relative h-48">
                           {listing.imageSrc?.[0] ? (
-                            <NextImage
+                            <Image
                               src={listing.imageSrc?.[0] as string}
                               alt={listing.title}
                               fill
                               className="object-cover transition duration-300 group-hover:scale-105"
+                              sizes="(min-width: 768px) 50vw, 100vw"
                             />
                           ) : (
                             <div className="absolute inset-0 bg-gradient-to-br from-neutral-800 via-neutral-600 to-neutral-500" />
@@ -682,7 +681,7 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                               return (
                                 <div className="flex items-center gap-2 text-neutral-500 text-xs">
                                   {countryCode && (
-                                    <NextImage
+                                    <Image
                                       src={flagPath(countryCode)}
                                       alt={countryName}
                                       width={14}
