@@ -207,21 +207,26 @@ const inferCityFromTimeZone = () => {
 
 export const buildBrowserLocaleSuggestion = (): GeoLocaleSuggestion | undefined => {
   const locale = getLocaleFromNavigator();
-  if (!locale) {
-    return undefined;
-  }
-
-  const language = locale.split(/[-_]/)[0]?.toLowerCase() as LanguageCode | undefined;
+  const language = locale?.split(/[-_]/)[0]?.toLowerCase() as LanguageCode | undefined;
   const languageOption =
     (language ? LANGUAGE_OPTIONS.find((option) => option.code === language) : undefined) ??
     DEFAULT_LANGUAGE;
+
   const regionFromLocale = inferRegionFromLocale(locale)?.toUpperCase();
-  const region = (regionFromLocale ?? languageOption.region)?.toUpperCase();
+  const resolvedRegion = (regionFromLocale ?? languageOption.region)?.toUpperCase();
+
+  if (!resolvedRegion) {
+    return undefined;
+  }
+
+  const localeForNames = locale ?? languageOption.locale;
+  const inferredCountryName =
+    inferCountryName(localeForNames, resolvedRegion) ?? inferCountryName('en-US', resolvedRegion);
 
   const response: GeoLocationResponse = {
     city: inferCityFromTimeZone(),
-    country_name: inferCountryName(locale, region),
-    country_code: region,
+    country_name: inferredCountryName ?? languageOption.language,
+    country_code: resolvedRegion,
     languages: language ?? languageOption.code,
     currency: languageOption.defaultCurrency,
   };

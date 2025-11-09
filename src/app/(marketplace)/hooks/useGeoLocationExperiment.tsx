@@ -1,3 +1,5 @@
+'use client';
+
 import { createWithEqualityFn } from 'zustand/traditional';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
