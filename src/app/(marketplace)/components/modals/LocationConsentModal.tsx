@@ -9,11 +9,6 @@ import {
   LANGUAGE_OPTIONS,
   getCurrencyOption,
 } from '@/app/(marketplace)/constants/locale';
-import { isGeolocationExperimentEnabled } from '@/app/(marketplace)/utils/geolocationExperiment';
-
-const isExperimentEnabled = isGeolocationExperimentEnabled(
-  process.env.NEXT_PUBLIC_GEOLOCATION_EXPERIMENT,
-);
 
 const LocalePreview: React.FC<{
   languageCode?: string;
@@ -56,7 +51,7 @@ const LocationConsentModal = () => {
     decline: state.decline,
   }));
 
-  if (!isExperimentEnabled || !detection) {
+  if (!detection) {
     return null;
   }
 

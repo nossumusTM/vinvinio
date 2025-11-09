@@ -26,7 +26,6 @@ import {
   type GeoLocationResponse,
 } from '@/app/(marketplace)/utils/geoLocale';
 import { LANGUAGE_OPTIONS } from '@/app/(marketplace)/constants/locale';
-import { isGeolocationExperimentEnabled } from '@/app/(marketplace)/utils/geolocationExperiment';
 
 interface HomeProps {
   initialListings: any[];
@@ -35,10 +34,6 @@ interface HomeProps {
 
 const INITIAL_SKELETON_COUNT = 12;
 const LOAD_MORE_SKELETON_COUNT = 4;
-
-const GEOLOCATION_EXPERIMENT_ENABLED = isGeolocationExperimentEnabled(
-  process.env.NEXT_PUBLIC_GEOLOCATION_EXPERIMENT,
-);
 
 const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
   const [listings, setListings] = useState<any[] | null>(null);
@@ -81,10 +76,7 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
   const setCurrency = useLocaleSettings((state) => state.setCurrency);
   const setSearchLocation = useExperienceSearchState((state) => state.setLocation);
 
-  const locationModal = GEOLOCATION_EXPERIMENT_ENABLED ? <LocationConsentModal /> : null;
-
   useEffect(() => {
-    if (!GEOLOCATION_EXPERIMENT_ENABLED) return;
     if (geoAccepted || geoDismissed) return;
     if (detection || isDetectingLocation || hasAttemptedGeoDetection) return;
 
@@ -139,7 +131,6 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
   }, [detection, geoAccepted, geoDismissed, hasAttemptedGeoDetection, isDetectingLocation, setDetection]);
 
   useEffect(() => {
-    if (!GEOLOCATION_EXPERIMENT_ENABLED) return;
     if (!detection) return;
     if (geoAccepted || geoDismissed) return;
     if (geoHasPrompted) return;
@@ -148,7 +139,6 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
   }, [detection, geoAccepted, geoDismissed, geoHasPrompted, openGeoModal]);
 
   useEffect(() => {
-    if (!GEOLOCATION_EXPERIMENT_ENABLED) return;
     if (!geoAccepted || !detection) return;
     if (geoApplied) return;
 
@@ -337,7 +327,7 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
   if (!listings && !isFiltering) {
     return (
       <ClientOnly>
-        {locationModal}
+        <LocationConsentModal />
         <Container>
           <div className="relative z-30">
             <div className="absolute left-1/2 transform -translate-x-1/2 z-[9999]">
@@ -365,7 +355,7 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
 
     return (
       <ClientOnly>
-        {locationModal}
+        <LocationConsentModal />
         <Container>
         <div className="relative z-30">
           <div className="absolute left-1/2 transform -translate-x-1/2 z-[9999]">
