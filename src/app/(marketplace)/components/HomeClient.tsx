@@ -22,6 +22,7 @@ import useExperienceSearchState from '@/app/(marketplace)/hooks/useExperienceSea
 import LocationConsentModal from '@/app/(marketplace)/components/modals/LocationConsentModal';
 import { buildGeoLocaleSuggestion, type GeoLocationResponse } from '@/app/(marketplace)/utils/geoLocale';
 import { LANGUAGE_OPTIONS } from '@/app/(marketplace)/constants/locale';
+import { isGeolocationExperimentEnabled } from '@/app/(marketplace)/utils/geolocationExperiment';
 
 interface HomeProps {
   initialListings: any[];
@@ -30,16 +31,8 @@ interface HomeProps {
 
 const INITIAL_SKELETON_COUNT = 12;
 const LOAD_MORE_SKELETON_COUNT = 4;
-const isExperimentEnabled = (value: string | undefined) => {
-  if (value === undefined) {
-    return true;
-  }
 
-  const normalized = value.trim().toLowerCase();
-  return ['1', 'true', 'on', 'yes'].includes(normalized);
-};
-
-const GEOLOCATION_EXPERIMENT_ENABLED = isExperimentEnabled(
+const GEOLOCATION_EXPERIMENT_ENABLED = isGeolocationExperimentEnabled(
   process.env.NEXT_PUBLIC_GEOLOCATION_EXPERIMENT,
 );
 
