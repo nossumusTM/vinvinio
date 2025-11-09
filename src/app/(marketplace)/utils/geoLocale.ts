@@ -125,3 +125,106 @@ export const buildGeoLocaleSuggestion = (
     locationValue: deriveLocationValue(response.city, response.country_code),
   };
 };
+
+const getLocaleFromNavigator = () => {
+  if (typeof window === 'undefined') {
+    return undefined;
+  }
+
+  const { navigator } = window;
+  if (!navigator) {
+    return undefined;
+  }
+
+  return navigator.languages?.[0] ?? navigator.language;
+};
+
+const inferRegionFromLocale = (locale: string | undefined) => {
+  if (!locale) {
+    return undefined;
+  }
+
+  try {
+    if (typeof (Intl as any).Locale === 'function') {
+      const intlLocale = new (Intl as any).Locale(locale);
+      const maximized = intlLocale.maximize?.() ?? intlLocale;
+      return maximized.region ?? undefined;
+    }
+  } catch (error) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('Failed to parse locale region', error);
+    }
+  }
+
+  const parts = locale.split(/[-_]/);
+  return parts[1]?.toUpperCase();
+};
+
+const inferCountryName = (locale: string | undefined, region: string | undefined) => {
+  if (!region) {
+    return undefined;
+  }
+
+  if (typeof Intl.DisplayNames === 'undefined') {
+    return undefined;
+  }
+
+  try {
+    const displayNames = new Intl.DisplayNames(locale ? [locale] : ['en'], { type: 'region' });
+    return displayNames.of(region);
+  } catch (error) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('Failed to resolve country name from region', error);
+    }
+    return undefined;
+  }
+};
+
+const inferCityFromTimeZone = () => {
+  if (typeof Intl === 'undefined') {
+    return undefined;
+  }
+
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (!tz) {
+      return undefined;
+    }
+
+    const segments = tz.split('/');
+    if (segments.length < 2) {
+      return undefined;
+    }
+
+    return segments[segments.length - 1]?.replace(/_/g, ' ');
+  } catch (error) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('Failed to infer city from timezone', error);
+    }
+    return undefined;
+  }
+};
+
+export const buildBrowserLocaleSuggestion = (): GeoLocaleSuggestion | undefined => {
+  const locale = getLocaleFromNavigator();
+  if (!locale) {
+    return undefined;
+  }
+
+  const language = locale.split(/[-_]/)[0]?.toLowerCase() as LanguageCode | undefined;
+  const languageOption =
+    (language ? LANGUAGE_OPTIONS.find((option) => option.code === language) : undefined) ??
+    DEFAULT_LANGUAGE;
+  const regionFromLocale = inferRegionFromLocale(locale)?.toUpperCase();
+  const region = (regionFromLocale ?? languageOption.region)?.toUpperCase();
+
+  const response: GeoLocationResponse = {
+    city: inferCityFromTimeZone(),
+    country_name: inferCountryName(locale, region),
+    country_code: region,
+    languages: language ?? languageOption.code,
+    currency: languageOption.defaultCurrency,
+  };
+
+  return buildGeoLocaleSuggestion(response);
+};

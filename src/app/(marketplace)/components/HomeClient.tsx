@@ -20,7 +20,11 @@ import useGeoLocationExperiment from '@/app/(marketplace)/hooks/useGeoLocationEx
 import useLocaleSettings from '@/app/(marketplace)/hooks/useLocaleSettings';
 import useExperienceSearchState from '@/app/(marketplace)/hooks/useExperienceSearchState';
 import LocationConsentModal from '@/app/(marketplace)/components/modals/LocationConsentModal';
-import { buildGeoLocaleSuggestion, type GeoLocationResponse } from '@/app/(marketplace)/utils/geoLocale';
+import {
+  buildBrowserLocaleSuggestion,
+  buildGeoLocaleSuggestion,
+  type GeoLocationResponse,
+} from '@/app/(marketplace)/utils/geoLocale';
 import { LANGUAGE_OPTIONS } from '@/app/(marketplace)/constants/locale';
 import { isGeolocationExperimentEnabled } from '@/app/(marketplace)/utils/geolocationExperiment';
 
@@ -88,6 +92,8 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
     const controller = new AbortController();
 
     const fetchDetection = async () => {
+      let suggestionApplied = false;
+
       try {
         setHasAttemptedGeoDetection(true);
         setIsDetectingLocation(true);
@@ -101,6 +107,7 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
 
         const suggestion = buildGeoLocaleSuggestion(payload);
         setDetection(suggestion);
+        suggestionApplied = true;
       } catch (error) {
         const err = error as Error;
         if (err?.name === 'AbortError') {
@@ -113,6 +120,12 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
       } finally {
         if (!cancelled) {
           setIsDetectingLocation(false);
+          if (!suggestionApplied) {
+            const fallbackSuggestion = buildBrowserLocaleSuggestion();
+            if (fallbackSuggestion) {
+              setDetection(fallbackSuggestion);
+            }
+          }
         }
       }
     };
