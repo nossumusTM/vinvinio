@@ -14,6 +14,18 @@ import toast from "react-hot-toast";
 import qs from 'query-string';
 import { motion } from 'framer-motion';
 import ListingCardSkeleton from "@/app/(marketplace)/components/listings/ListingCardSkeleton";
+import { shallow } from 'zustand/shallow';
+
+import useGeoLocationExperiment from '@/app/(marketplace)/hooks/useGeoLocationExperiment';
+import useLocaleSettings from '@/app/(marketplace)/hooks/useLocaleSettings';
+import useExperienceSearchState from '@/app/(marketplace)/hooks/useExperienceSearchState';
+import LocationConsentModal from '@/app/(marketplace)/components/modals/LocationConsentModal';
+import {
+  buildBrowserLocaleSuggestion,
+  buildGeoLocaleSuggestion,
+  type GeoLocationResponse,
+} from '@/app/(marketplace)/utils/geoLocale';
+import { LANGUAGE_OPTIONS } from '@/app/(marketplace)/constants/locale';
 
 interface HomeProps {
   initialListings: any[];
@@ -34,6 +46,150 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
   const searchParams = useSearchParams();
 
   const [isMobile, setIsMobile] = useState(false);
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+  const [hasAttemptedGeoDetection, setHasAttemptedGeoDetection] = useState(false);
+
+  const {
+    detection,
+    setDetection,
+    accepted: geoAccepted,
+    dismissed: geoDismissed,
+    openModal: openGeoModal,
+    hasPrompted: geoHasPrompted,
+    markApplied,
+    applied: geoApplied,
+  } = useGeoLocationExperiment(
+    (state) => ({
+      detection: state.detection,
+      setDetection: state.setDetection,
+      accepted: state.accepted,
+      dismissed: state.dismissed,
+      openModal: state.openModal,
+      hasPrompted: state.hasPrompted,
+      markApplied: state.markApplied,
+      applied: state.applied,
+    }),
+    shallow,
+  );
+
+  const setLanguage = useLocaleSettings((state) => state.setLanguage);
+  const setCurrency = useLocaleSettings((state) => state.setCurrency);
+  const setSearchLocation = useExperienceSearchState((state) => state.setLocation);
+
+  useEffect(() => {
+    if (geoAccepted || geoDismissed) return;
+    if (detection || isDetectingLocation || hasAttemptedGeoDetection) return;
+
+    let cancelled = false;
+    const controller = new AbortController();
+
+    const fetchDetection = async () => {
+      let suggestionApplied = false;
+
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[geo] starting detection');
+      }
+
+      try {
+        setHasAttemptedGeoDetection(true);
+        setIsDetectingLocation(true);
+        const res = await fetch('https://ipapi.co/json/', { signal: controller.signal });
+        if (!res.ok) {
+          throw new Error('Failed to detect location');
+        }
+
+        const payload: GeoLocationResponse = await res.json();
+        if (cancelled) return;
+
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('[geo] ip detection payload', payload);
+        }
+
+        const suggestion = buildGeoLocaleSuggestion(payload);
+
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('[geo] ip detection suggestion', suggestion);
+        }
+
+        setDetection(suggestion);
+        suggestionApplied = true;
+      } catch (error) {
+        const err = error as Error;
+        if (err?.name === 'AbortError') {
+          return;
+        }
+
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('Geo detection failed', error);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsDetectingLocation(false);
+          if (!suggestionApplied) {
+            const fallbackSuggestion = buildBrowserLocaleSuggestion();
+            if (process.env.NODE_ENV !== 'production') {
+              console.log('[geo] using browser fallback suggestion', fallbackSuggestion);
+            }
+            if (fallbackSuggestion) {
+              setDetection(fallbackSuggestion);
+            }
+          }
+        }
+      }
+    };
+
+    fetchDetection();
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [detection, geoAccepted, geoDismissed, hasAttemptedGeoDetection, isDetectingLocation, setDetection]);
+
+  useEffect(() => {
+    if (!detection) return;
+    if (geoAccepted || geoDismissed) return;
+    if (geoHasPrompted) return;
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[geo] opening consent modal with detection', detection);
+    }
+
+    openGeoModal();
+  }, [detection, geoAccepted, geoDismissed, geoHasPrompted, openGeoModal]);
+
+  useEffect(() => {
+    if (!geoAccepted || !detection) return;
+    if (geoApplied) return;
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[geo] applying detection', detection);
+    }
+
+    const languageOption = LANGUAGE_OPTIONS.find((option) => option.code === detection.languageCode) ?? LANGUAGE_OPTIONS[0];
+    setLanguage(languageOption.code);
+
+    const currencyCode = detection.currencyCode ?? languageOption.defaultCurrency;
+    setCurrency(currencyCode);
+
+    if (detection.locationValue) {
+      const lat = detection.latitude ?? 0;
+      const lng = detection.longitude ?? 0;
+
+      const latlng: [number, number] = [lat, lng];
+
+      setSearchLocation({
+        value: detection.locationValue,
+        label: detection.country ?? detection.countryCode ?? languageOption.region,
+        region: detection.region ?? detection.countryCode ?? languageOption.region,
+        flag: '',
+        latlng,
+        city: detection.city,
+      });
+    }
+
+    markApplied();
+  }, [geoAccepted, detection, geoApplied, setLanguage, setCurrency, setSearchLocation, markApplied]);
 
   useEffect(() => {
     const mq = window.matchMedia?.('(max-width: 767px)');
@@ -195,6 +351,7 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
   if (!listings && !isFiltering) {
     return (
       <ClientOnly>
+        <LocationConsentModal />
         <Container>
           <div className="relative z-30">
             <div className="absolute left-1/2 transform -translate-x-1/2 z-[9999]">
@@ -220,9 +377,10 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
 
   if (listings && listings.length === 0) return <EmptyState showReset />;
 
-  return (
-    <ClientOnly>
-      <Container>
+    return (
+      <ClientOnly>
+        <LocationConsentModal />
+        <Container>
         <div className="relative z-30">
           <div className="absolute left-1/2 transform -translate-x-1/2 z-[9999]">
             <ListingFilter gridSize={gridSize} onGridChange={handleGridChange} />

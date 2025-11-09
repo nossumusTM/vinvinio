@@ -39,6 +39,8 @@ const SearchExperience = () => {
       ? location.value.split('-').pop()?.toLowerCase()
       : location.value.toLowerCase();
 
+    const locationText = location.city ? `${location.city}, ${location.label}` : location.label;
+
     return (
       <span className="flex items-center gap-1.5 ml-0.5 whitespace-nowrap">
         <Image
@@ -48,7 +50,7 @@ const SearchExperience = () => {
           height={12}
           className="p-1 shadow-md rounded-md object-cover"
         />
-        {location.city}, {location.label}
+        {locationText}
       </span>
     );
   }, [location]);
