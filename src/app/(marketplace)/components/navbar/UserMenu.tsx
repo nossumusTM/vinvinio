@@ -11,6 +11,7 @@ import useLoginModal from "@/app/(marketplace)/hooks/useLoginModal";
 import usePromoteModal from '@/app/(marketplace)/hooks/usePromoteModal';
 import useRegisterModal from "@/app/(marketplace)/hooks/useRegisterModal";
 import { SafeUser } from "@/app/(marketplace)/types";
+import { profilePathForUser } from "@/app/(marketplace)/utils/profilePath";
 import { motion, AnimatePresence } from 'framer-motion';
 
 import LocaleButton from "./LocaleButton";
@@ -43,7 +44,17 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
 
   const messenger = useMessenger();
 
-  const hostCardHref = currentUser?.id ? `/hosts/${currentUser.id}` : '/';
+  const profileHref = profilePathForUser(currentUser) ?? '/profile';
+
+  const slugify = (s: string) =>
+    s.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+  const hostHandle =
+    currentUser?.username ??
+    (currentUser?.name ? slugify(currentUser.name) : currentUser?.id ?? '');
+
+  const hostCardHref = hostHandle ? `/hosts/${encodeURIComponent(hostHandle)}` : '/hosts';
+
 
   const toggleOpen = useCallback(() => {
     setIsOpen((value) => !value);

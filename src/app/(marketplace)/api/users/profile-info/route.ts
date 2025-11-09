@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import getCurrentUser from "@/app/(marketplace)/actions/getCurrentUser";
 import prisma from "@/app/(marketplace)/libs/prismadb";
+import { slugSegment } from "@/app/(marketplace)/libs/links";
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
@@ -30,6 +31,7 @@ export async function PUT(req: Request) {
   const body = await req.json();
 
   const {
+    username,
     name,
     email,
     phone,
@@ -39,9 +41,12 @@ export async function PUT(req: Request) {
   } = body;
 
   try {
+    const sanitizedUsername = typeof username === 'string' ? slugSegment(username).toLowerCase() : undefined;
+
     const updatedUser = await prisma.user.update({
       where: { id: currentUser.id },
       data: {
+        ...(sanitizedUsername !== undefined ? { username: sanitizedUsername } : {}),
         name,
         email,
         phone,

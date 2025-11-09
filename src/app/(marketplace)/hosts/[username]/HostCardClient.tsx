@@ -99,8 +99,6 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [coverPreview, setCoverPreview]   = useState<string | null>(null);
 
-
-
   const handleContactHost = useCallback(async () => {
     try {
       const res = await fetch('/api/users/current', {
@@ -476,7 +474,7 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
 
                 <div className="text-white drop-shadow-lg">
                   <p className="text-2xl font-semibold flex items-center gap-2">
-                    {host.hostName || host.name || 'Host'}
+                    {host.username || host.name || 'Host'}
                   </p>
                   {host.legalName && (
                     <p className="text-sm text-white/80">{host.legalName}</p>

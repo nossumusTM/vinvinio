@@ -5,15 +5,15 @@ import HostCardClient from "./HostCardClient";
 
 interface HostCardPageProps {
   params: {
-    hostId: string;
+    username: string;
   };
 }
 
 export const dynamic = 'force-dynamic';
 
 const HostCardPage = async ({ params }: HostCardPageProps) => {
-  const hostId = params.hostId;
-  const data = await getHostCardData(hostId);
+  const identifier = params.username;
+  const data = await getHostCardData(identifier);
 
   if (!data) {
     return (

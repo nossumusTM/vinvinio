@@ -1,6 +1,12 @@
 import { PRICING_MODES_SET, PricingMode } from '../../libs/pricing';
 
-export type ListingStatus = 'pending' | 'approved' | 'rejected' | 'revision' | 'inactive';
+export type ListingStatus =
+  | 'pending'
+  | 'approved'
+  | 'rejected'
+  | 'revision'
+  | 'inactive'
+  | 'awaiting_reapproval';
 
 export class ListingValidationError extends Error {
   status: number;

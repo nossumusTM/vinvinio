@@ -23,15 +23,14 @@ import Button from '@/app/(marketplace)/components/Button';
 
 import type { SafeListing, SafeUser } from '@/app/(marketplace)/types';
 
-import { ListingStatus } from '@prisma/client'; // adjust the path if different
-import type { $Enums } from '@prisma/client';
+type KnownListingStatus = Extract<SafeListing['status'], string>;
 
 interface MyListingsClientProps {
   listings: SafeListing[];
   currentUser: SafeUser;
 }
 
-const STATUS_STYLES = {
+const STATUS_STYLES: Record<KnownListingStatus, { label: string; badgeClass: string }> = {
   pending: {
     label: 'Pending review',
     badgeClass: 'bg-amber-100 text-amber-800 border border-amber-200',
@@ -44,6 +43,10 @@ const STATUS_STYLES = {
     label: 'Approved',
     badgeClass: 'bg-emerald-100 text-emerald-800 border border-emerald-200',
   },
+  awaiting_reapproval: {
+    label: 'Awaiting re-approval',
+    badgeClass: 'bg-purple-100 text-purple-800 border border-purple-200',
+  },
   inactive: {
     label: 'Inactive',
     badgeClass: 'bg-neutral-100 text-neutral-700 border border-neutral-200',
@@ -52,20 +55,21 @@ const STATUS_STYLES = {
     label: 'Rejected',
     badgeClass: 'bg-rose-100 text-rose-800 border border-rose-200',
   },
-} as const satisfies Record<$Enums.ListingStatus, { label: string; badgeClass: string }>;
+};
 
 const TAB_ITEMS = [
-  { key: 'approved', label: 'Live experiences',       ping: 'bg-emerald-300', dot: 'bg-emerald-500' },
-  { key: 'pending',  label: 'Awaiting review',         ping: 'bg-amber-300',  dot: 'bg-amber-500'  },
-  { key: 'revision', label: 'Awaiting re-approval',    ping: 'bg-orange-400', dot: 'bg-orange-600' },
-  { key: 'inactive', label: 'Inactive experiences',    ping: 'bg-neutral-300',dot: 'bg-neutral-500'},
+  { key: 'approved',            label: 'Live experiences',        ping: 'bg-emerald-300', dot: 'bg-emerald-500' },
+  { key: 'pending',             label: 'Awaiting review',         ping: 'bg-amber-300',  dot: 'bg-amber-500'  },
+  { key: 'revision',            label: 'Revision requests',       ping: 'bg-blue-400',   dot: 'bg-blue-600'   },
+  { key: 'awaiting_reapproval', label: 'Awaiting re-approval',    ping: 'bg-purple-400', dot: 'bg-purple-600' },
+  { key: 'inactive',            label: 'Inactive experiences',    ping: 'bg-neutral-300',dot: 'bg-neutral-500'},
 ] as const;
 
 const MyListingsClient: React.FC<MyListingsClientProps> = ({ listings, currentUser }) => {
   const router = useRouter();
   const [processingId, setProcessingId] = useState<string | null>(null);
 
-  const [tab, setTab] = useState<'pending' | 'revision' | 'approved' | 'inactive'>('approved');
+  const [tab, setTab] = useState<'pending' | 'revision' | 'approved' | 'inactive' | 'awaiting_reapproval'>('approved');
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -93,18 +97,20 @@ const parseLocation = (value?: string | null) => {
   return countryCode && countryName ? { city, countryCode, countryName } : null;
 };
 
- const grouped = useMemo(() => {
+const grouped = useMemo(() => {
   const pending = listings.filter((l) => l.status === 'pending');
   const revision = listings.filter((l) => l.status === 'revision');
+  const awaitingReapproval = listings.filter((l) => l.status === 'awaiting_reapproval');
   const approved = listings.filter((l) => l.status === 'approved');
   const inactive = listings.filter((l) => l.status === 'inactive');
-  return { pending, revision, approved, inactive };
+  return { pending, revision, awaiting_reapproval: awaitingReapproval, approved, inactive };
 }, [listings]);
 
 const filtered = useMemo(() => {
   const byTab: Record<typeof tab, SafeListing[]> = {
     pending: grouped.pending,
     revision: grouped.revision,
+    awaiting_reapproval: grouped.awaiting_reapproval,
     approved: grouped.approved,
     inactive: grouped.inactive,
   };
@@ -149,7 +155,7 @@ const tabVariants = {
     setProcessingId(listing.id);
     try {
       await axios.post(`/api/listings/${listing.id}/activate`);
-      toast.success('Listing activated', {
+      toast.success('Activation request sent to moderation', {
         iconTheme: {
           primary: '#2200ffff',
           secondary: '#fff',
@@ -203,6 +209,8 @@ const tabVariants = {
           return { label: 'Deactivated on', value: listing.updatedAt };
         case 'revision':
           return { label: 'Last submitted', value: listing.updatedAt };
+        case 'awaiting_reapproval':
+          return { label: 'Activation requested on', value: listing.updatedAt };
         default:
           return { label: 'Submitted on', value: listing.createdAt };
       }
@@ -362,6 +370,14 @@ const tabVariants = {
                     onClick={() => handleActivate(listing)}
                     disabled={processingId === listing.id}
                   />
+                </div>
+              )}
+
+              {listing.status === 'awaiting_reapproval' && (
+                <div className="sm:w-full">
+                  <div className="rounded-2xl border border-purple-100 bg-purple-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-purple-700 shadow-inner">
+                    Pending moderator approval
+                  </div>
                 </div>
               )}
 

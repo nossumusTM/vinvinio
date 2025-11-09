@@ -18,6 +18,10 @@ export async function POST(
     return new NextResponse('Unauthorized', { status: 403 });
   }
 
+  if (currentUser.isSuspended) {
+    return new NextResponse('Suspended accounts cannot activate listings', { status: 403 });
+  }
+
   const listingId = params?.listingId;
 
   if (!listingId || typeof listingId !== 'string') {
@@ -38,7 +42,7 @@ export async function POST(
 
   const updatedListing = await prisma.listing.update({
     where: { id: listingId },
-    data: { status: 'approved' },
+    data: { status: 'awaiting_reapproval' },
     include: { user: true },
   });
 

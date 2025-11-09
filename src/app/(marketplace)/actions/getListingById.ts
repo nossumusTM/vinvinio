@@ -109,6 +109,7 @@ export default async function getListingById(params: IParams) {
         email: u.email,
         image: u.image,
         role: u.role,
+        username: u.username ?? null,
         createdAt: u.createdAt.toISOString(),
         updatedAt: u.updatedAt.toISOString(),
         emailVerified: u.emailVerified ? u.emailVerified.toISOString() : null,

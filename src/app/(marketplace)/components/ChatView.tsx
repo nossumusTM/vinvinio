@@ -7,6 +7,7 @@ import data from '@emoji-mart/data';
 import ConfirmPopup from './ConfirmPopup';
 import Avatar from './Avatar';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 
 type Message = {
   id: string;
@@ -19,7 +20,7 @@ type Message = {
 
 interface ChatViewProps {
   currentUserId: string;
-  recipient: { id: string; name: string; image?: string };
+  recipient: { id: string; name: string; image?: string; role?: string }; // + role?
   onBack: () => void;
 }
 
@@ -34,7 +35,25 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
   const [hasSentGreeting, setHasSentGreeting] = useState(false);
   const greetingTriggeredRef = useRef(false);
 
+  const router = useRouter();
   const CUSTOMER_SERVICE_ID = '67ef2895f045b7ff3d0cf6fc';
+  const isOperator = recipient.id === CUSTOMER_SERVICE_ID;
+  const recipientNameClean = recipient?.name?.trim() || null;
+
+  const recipientProfilePath =
+    !isOperator && recipient?.role === 'host'
+      ? (recipientNameClean ? `/hosts/${encodeURIComponent(recipientNameClean)}` : null)
+      : !isOperator
+      ? (recipient?.id ? `/social-card/${encodeURIComponent(recipient.id)}` :
+        recipientNameClean ? `/social-card/${encodeURIComponent(recipientNameClean)}` : null)
+      : null;
+
+  const handleRecipientNav = (e?: React.MouseEvent<HTMLElement>) => {
+    if (!recipientProfilePath) return;
+    if (e?.button === 1) { e.preventDefault(); window.open(recipientProfilePath, '_blank', 'noopener,noreferrer'); return; }
+    if (e?.metaKey || e?.ctrlKey) { window.open(recipientProfilePath, '_blank', 'noopener,noreferrer'); return; }
+    router.push(recipientProfilePath);
+  };
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -57,7 +76,7 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
     if (force || isNearBottom) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  };  
+  };
 
   // Poll server for new messages
   // useEffect(() => {
@@ -510,7 +529,20 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
               >
                 <Avatar src={recipient.image} name={recipient.name} size={40} />
               </motion.div>
-            <h4 className="font-semibold text-lg">{recipient.name}</h4>
+
+                {recipientProfilePath ? (
+                  <button
+                    type="button"
+                    onClick={handleRecipientNav}
+                    onAuxClick={handleRecipientNav}
+                    className="font-semibold text-lg underline-offset-2 hover:underline"
+                  >
+                    {recipient.name}
+                  </button>
+                ) : (
+                  <h4 className="font-semibold text-lg">{recipient.name}</h4>
+                )}
+
         </div>
         <button
         onClick={() => setShowConfirm(true)}

@@ -75,6 +75,25 @@ import type { Listing, Reservation, User } from "@prisma/client";
 /** Utility to make intersections read nicely in IDEs */
 type Simplify<T> = { [K in keyof T]: T[K] } & {};
 
+export type SocialCardVisibility = {
+  image?: boolean;
+  name?: boolean;
+  email?: boolean;
+  phone?: boolean;
+  bio?: boolean;
+  countries?: boolean;
+  cities?: boolean;
+  profession?: boolean;
+  hobbies?: boolean;
+  contacts?: boolean;
+};
+
+export type SocialCardVisitedPlace = {
+  city?: string | null;
+  countryCode: string;
+  countryName: string;
+};
+
 /* ------------------------- SafeUser (relaxed) ------------------------- */
 
 type SafeUserStrict = Omit<
@@ -90,6 +109,7 @@ type SafeUserStrict = Omit<
   legalName: string | null;
   address: string | null;
   hostName: string | null;
+  username: string | null;
   bio: string | null;
   profession: string | null;
 
@@ -101,8 +121,16 @@ type SafeUserStrict = Omit<
 
   identityVerified: boolean;
 
-  referenceId: string | null;
-  favoriteIds: string[];
+  phoneVerified: boolean;
+
+    referenceId: string | null;
+    favoriteIds: string[];
+
+  isSuspended: boolean;
+  suspendedAt: Date | string | null;
+  socialCardVisibility: SocialCardVisibility | null;
+  socialCardIsPublic: boolean;
+  visitedPlaces: SocialCardVisitedPlace[] | null;
 };
 
 /** 
@@ -118,7 +146,7 @@ export type SafeUser = Simplify<
 
 /** Accept whatever your schema currently has for these fields */
 type Pricingish = Listing extends { pricingType: infer P } ? P | null : string | null;
-type Statusish  = Listing extends { status: infer S } ? S : string;
+type Statusish  = (Listing extends { status: infer S } ? S : string) | 'awaiting_reapproval';
 
 export type SafeListing = Simplify<
   Omit<Listing, "createdAt" | "updatedAt"> & {

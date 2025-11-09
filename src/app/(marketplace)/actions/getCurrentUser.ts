@@ -78,7 +78,11 @@ export const dynamic = 'force-dynamic';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import prisma from "@/app/(marketplace)/libs/prismadb";
-import { SafeUser } from "@/app/(marketplace)/types";
+import {
+  SafeUser,
+  SocialCardVisitedPlace,
+  SocialCardVisibility,
+} from "@/app/(marketplace)/types";
 
 export async function getSession() {
   return await getServerSession(authOptions);
@@ -100,6 +104,7 @@ export default async function getCurrentUser(): Promise<SafeUser | null> {
         role: true,
         referenceId: true,
         favoriteIds: true,
+        username: true,
         phone: true,
         contact: true,
         legalName: true,
@@ -111,6 +116,12 @@ export default async function getCurrentUser(): Promise<SafeUser | null> {
         hobbies: true,
         preferredContacts: true,
         identityVerified: true,
+        phoneVerified: true,
+        isSuspended: true,
+        suspendedAt: true,
+        socialCardVisibility: true,
+        socialCardIsPublic: true,
+        visitedPlaces: true,
         createdAt: true,
         updatedAt: true,
         emailVerified: true,
@@ -129,6 +140,7 @@ export default async function getCurrentUser(): Promise<SafeUser | null> {
       legalName: user.legalName ?? null,
       address: user.address ?? null,
       hostName: user.hostName || null,
+      username: user.username ?? null,
       bio: user.bio ?? null,
       visitedCountries: Array.isArray(user.visitedCountries) ? user.visitedCountries : [],
       visitedCities: Array.isArray(user.visitedCities) ? user.visitedCities : [],
@@ -136,6 +148,17 @@ export default async function getCurrentUser(): Promise<SafeUser | null> {
       hobbies: Array.isArray(user.hobbies) ? user.hobbies : [],
       preferredContacts: Array.isArray(user.preferredContacts) ? user.preferredContacts : [],
       identityVerified: typeof user.identityVerified === 'boolean' ? user.identityVerified : false,
+      phoneVerified: typeof user.phoneVerified === 'boolean' ? user.phoneVerified : false,
+      isSuspended: Boolean(user.isSuspended),
+      suspendedAt: user.suspendedAt ? user.suspendedAt.toISOString() : null,
+      socialCardVisibility:
+        user.socialCardVisibility && typeof user.socialCardVisibility === 'object'
+          ? (user.socialCardVisibility as SocialCardVisibility)
+          : null,
+      socialCardIsPublic: typeof user.socialCardIsPublic === 'boolean' ? user.socialCardIsPublic : true,
+      visitedPlaces: Array.isArray(user.visitedPlaces)
+        ? (user.visitedPlaces as SocialCardVisitedPlace[])
+        : null,
     };
   } catch (error) {
     console.error("getCurrentUser error:", error);

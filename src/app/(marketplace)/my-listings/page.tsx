@@ -16,7 +16,7 @@ const MyListingsPage = async () => {
 
   const listings = await getListings({
     userId: currentUser.id,
-    statuses: ['pending', 'revision', 'approved', 'inactive'],
+    statuses: ['pending', 'revision', 'awaiting_reapproval', 'approved', 'inactive'],
     take: 100,
   });
 

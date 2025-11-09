@@ -1,6 +1,7 @@
 import prisma from "@/app/(marketplace)/libs/prismadb";
 import { ensureListingSlug } from "@/app/(marketplace)/libs/ensureListingSlug";
 import { normalizePricingSnapshot } from "@/app/(marketplace)/libs/pricing";
+import { findUserIdByHandle } from "@/app/(marketplace)/libs/userHandles";
 import { SafeListing, SafeUser } from "@/app/(marketplace)/types";
 import { ListingStatus, Role } from "@prisma/client";
 
@@ -23,11 +24,23 @@ export interface HostCardData {
   reviews: HostCardReview[];
 }
 
-export default async function getHostCardData(hostId: string): Promise<HostCardData | null> {
-  if (!hostId) return null;
+export default async function getHostCardData(identifier: string): Promise<HostCardData | null> {
+  if (!identifier) return null;
+
+  let candidate = identifier;
+  try {
+    candidate = decodeURIComponent(candidate);
+  } catch {
+    // ignore decode issues and continue with the original candidate
+  }
+
+  const hostId = await findUserIdByHandle(candidate, { role: Role.host });
+  if (!hostId) {
+    return null;
+  }
 
   const host = await prisma.user.findUnique({
-    where: { id: hostId, role: Role.host },
+    where: { id: hostId },
     include: {
       listings: {
         where: { status: ListingStatus.approved },
@@ -44,12 +57,13 @@ export default async function getHostCardData(hostId: string): Promise<HostCardD
     },
   });
 
-  if (!host) {
+  if (!host || host.role !== Role.host) {
     return null;
   }
 
   const safeHost: SafeUser = {
     id: host.id,
+    username: host.username ?? null,
     name: host.name ?? null,
     email: host.email ?? null,
     hostName: host.hostName ?? null,
@@ -80,6 +94,26 @@ export default async function getHostCardData(hostId: string): Promise<HostCardD
     })
   );
 
+  const reviewRecords = await prisma.review.findMany({
+    where: {
+      listing: {
+        userId: hostId,
+      },
+    },
+    include: {
+      user: true,
+      listing: {
+        select: {
+          id: true,
+          title: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+
   const listings: SafeListing[] = listingsWithSlug.map((listing) => {
     const pricingSnapshot = normalizePricingSnapshot(listing.customPricing, listing.price);
 
@@ -107,18 +141,19 @@ export default async function getHostCardData(hostId: string): Promise<HostCardD
     return safeListing;
   });
 
-  const reviews: HostCardReview[] = listingsWithSlug.flatMap((listing) => {
-    return listing.reviews.map((review) => ({
-      id: review.id,
-      rating: review.rating,
-      comment: review.comment,
-      createdAt: review.createdAt.toISOString(),
-      listingId: listing.id,
-      listingTitle: listing.title,
-      reviewerName: review.userName ?? review.user?.name ?? "Guest",
-      reviewerImage: review.user?.image ?? null,
-    }));
-  });
+  const reviews: HostCardReview[] = reviewRecords.map((review) => ({
+    id: review.id,
+    rating: review.rating,
+    comment: review.comment,
+    createdAt: review.createdAt.toISOString(),
+    listingId: review.listingId,
+    listingTitle:
+      review.listing?.title ??
+      listingsWithSlug.find((listing) => listing.id === review.listingId)?.title ??
+      'Experience',
+    reviewerName: review.userName ?? review.user?.name ?? 'Guest',
+    reviewerImage: review.user?.image ?? null,
+  }));
 
   return {
     host: safeHost,
