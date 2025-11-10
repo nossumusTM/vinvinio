@@ -575,7 +575,7 @@ const handleSubmit = async () => {
     <div className="flex flex-col lg:flex-row max-w-screen-xl mx-auto px-4 py-4 gap-10">
 
       {/* LEFT SECTION */}
-      <div className="w-full lg:w-2/3 bg-white rounded-2xl shadow-md p-6 space-y-6">
+      <div className="order-2 lg:order-1 w-full lg:w-2/3 bg-white rounded-2xl shadow-md p-6 space-y-6">
       <div className='flex flex-row gap-2'>
         <button
             onClick={() => router.push(listingBackLink)}
@@ -807,7 +807,7 @@ const handleSubmit = async () => {
       </div>
 
       {/* RIGHT SECTION */}
-      <div className="w-full lg:w-1/3">
+      <div className="order-1 lg:order-2 w-full lg:w-1/3">
         <div className="md:sticky md:top-32">
           <div className="bg-white rounded-2xl shadow-md p-6 space-y-7">
       {listingData && (
@@ -873,14 +873,14 @@ const handleSubmit = async () => {
             {/* Avatar on the left */}
               <Avatar
                 src={listingData.user?.image}
-                name={listingData.user?.name}
+                name={listingData.user?.username}
               />
 
               {/* Text block on the right, stacked vertically */}
               <div className="flex flex-col">
                 <p className="text-neutral-600 text-sm text-left">Guided by</p>
                 <p className="text-neutral-700 text-lg font-bold text-left">
-                  {listingData.user?.name || 'Anonymous'}
+                  {listingData.user?.username || 'Anonymous'}
                 </p>
               </div>
             </div>

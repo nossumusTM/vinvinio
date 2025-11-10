@@ -810,9 +810,9 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                   )}
                 </div> */}
                 <div className="flex flex-col md:flex-row md:items-center md:gap-3">
-                  <p className="text-xs md:text-md font-semibold">{currentUser?.email || ""}</p>
+                  {/* <p className="text-sm md:text-lg font-normal">{currentUser?.email || ""}</p> */}
 
-                  <div className="mt-2 md:mt-0">
+                  {/* <div className="mt-2 md:mt-0">
                     {currentUser?.emailVerified ? (
                       <span className="text-xs font-semibold text-green-700 bg-green-100 border border-green-400 px-2 py-0.5 rounded-xl">
                         Verified
@@ -852,7 +852,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                         )}
                       </button>
                     )}
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>

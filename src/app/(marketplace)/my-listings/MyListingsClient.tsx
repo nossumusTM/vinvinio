@@ -30,7 +30,14 @@ interface MyListingsClientProps {
   currentUser: SafeUser;
 }
 
-const STATUS_STYLES: Record<KnownListingStatus, { label: string; badgeClass: string }> = {
+type StatusStylesMap =
+  Record<KnownListingStatus, { label: string; badgeClass: string }> & {
+    awaiting_reapproval: { label: string; badgeClass: string };
+};
+
+type TabKey = KnownListingStatus | 'awaiting_reapproval';
+
+const STATUS_STYLES: Record<TabKey, { label: string; badgeClass: string }> = {
   pending: {
     label: 'Pending review',
     badgeClass: 'bg-amber-100 text-amber-800 border border-amber-200',
@@ -63,14 +70,16 @@ const TAB_ITEMS = [
   { key: 'revision',            label: 'Revision requests',       ping: 'bg-blue-400',   dot: 'bg-blue-600'   },
   { key: 'awaiting_reapproval', label: 'Awaiting re-approval',    ping: 'bg-purple-400', dot: 'bg-purple-600' },
   { key: 'inactive',            label: 'Inactive experiences',    ping: 'bg-neutral-300',dot: 'bg-neutral-500'},
-] as const;
+] as const satisfies readonly { key: TabKey; label: string; ping: string; dot: string }[];
 
 const MyListingsClient: React.FC<MyListingsClientProps> = ({ listings, currentUser }) => {
   const router = useRouter();
   const [processingId, setProcessingId] = useState<string | null>(null);
 
-  const [tab, setTab] = useState<'pending' | 'revision' | 'approved' | 'inactive' | 'awaiting_reapproval'>('approved');
+  // const [tab, setTab] = useState<'pending' | 'revision' | 'approved' | 'inactive' | 'awaiting_reapproval'>('approved');
 
+  const [tab, setTab] = useState<TabKey>('approved');
+  
   const [showPassword, setShowPassword] = useState(false);
 
   const regionNames = useMemo(
@@ -97,22 +106,33 @@ const parseLocation = (value?: string | null) => {
   return countryCode && countryName ? { city, countryCode, countryName } : null;
 };
 
+// const grouped = useMemo(() => {
+//   const pending = listings.filter((l) => l.status === 'pending');
+//   const revision = listings.filter((l) => l.status === 'revision');
+//   const awaitingReapproval = listings.filter(l => (l.status as TabKey) === 'awaiting_reapproval');
+//   const approved = listings.filter((l) => l.status === 'approved');
+//   const inactive = listings.filter((l) => l.status === 'inactive');
+//   return { pending, revision, awaiting_reapproval: awaitingReapproval, approved, inactive };
+// }, [listings]);
+
 const grouped = useMemo(() => {
-  const pending = listings.filter((l) => l.status === 'pending');
-  const revision = listings.filter((l) => l.status === 'revision');
-  const awaitingReapproval = listings.filter((l) => l.status === 'awaiting_reapproval');
-  const approved = listings.filter((l) => l.status === 'approved');
-  const inactive = listings.filter((l) => l.status === 'inactive');
-  return { pending, revision, awaiting_reapproval: awaitingReapproval, approved, inactive };
+  const pending = listings.filter(l => l.status === 'pending');
+  const revision = listings.filter(l => l.status === 'revision');
+  const awaitingReapproval = listings.filter(l => (l.status as TabKey) === 'awaiting_reapproval'); // if it exists
+  const approved = listings.filter(l => l.status === 'approved');
+  const inactive = listings.filter(l => l.status === 'inactive');
+  const rejected = listings.filter(l => l.status === 'rejected');
+  return { pending, revision, awaiting_reapproval: awaitingReapproval, approved, inactive, rejected };
 }, [listings]);
 
 const filtered = useMemo(() => {
-  const byTab: Record<typeof tab, SafeListing[]> = {
+  const byTab: Record<TabKey, SafeListing[]> = {
     pending: grouped.pending,
     revision: grouped.revision,
     awaiting_reapproval: grouped.awaiting_reapproval,
     approved: grouped.approved,
     inactive: grouped.inactive,
+    rejected: grouped.rejected,
   };
   return byTab[tab] ?? [];
 }, [grouped, tab]);
@@ -202,6 +222,9 @@ const tabVariants = {
     })();
 
     const timestampMeta = (() => {
+      if (tab === 'awaiting_reapproval') {
+        return { label: 'Activation requested on', value: listing.updatedAt };
+      }
       switch (listing.status) {
         case 'approved':
           return { label: 'Approved on', value: listing.updatedAt };
@@ -209,8 +232,6 @@ const tabVariants = {
           return { label: 'Deactivated on', value: listing.updatedAt };
         case 'revision':
           return { label: 'Last submitted', value: listing.updatedAt };
-        case 'awaiting_reapproval':
-          return { label: 'Activation requested on', value: listing.updatedAt };
         default:
           return { label: 'Submitted on', value: listing.createdAt };
       }
@@ -373,7 +394,7 @@ const tabVariants = {
                 </div>
               )}
 
-              {listing.status === 'awaiting_reapproval' && (
+              {tab === 'awaiting_reapproval' && (
                 <div className="sm:w-full">
                   <div className="rounded-2xl border border-purple-100 bg-purple-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-purple-700 shadow-inner">
                     Pending moderator approval

@@ -42,6 +42,7 @@ interface ListingInfoProps {
     imageSrc: string[]; // ✅ Add this
     experienceHour?: number;
     hostName?: string;
+    username?: string;
     hostDescription?: string;
     languages?: string[];
     meetingPoint?: string;
@@ -64,6 +65,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
     experienceHour,
     hostDescription,
     hostName,
+    username,
     languages,
     meetingPoint,
     locationType,
@@ -134,15 +136,15 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                     "
                     >
                     {/* <div className="w-full rounded-2xl p-8 rounded-xl flex items-center gap-3 justify-between items-center"> */}
-                    <div className="w-full rounded-2xl p-8 rounded-xl flex items-center gap-3 justify-center items-center">
-                    <Avatar src={user?.image} name={user?.name} size={65}/>
+                    <div className="w-full rounded-2xl p-8 rounded-xl flex items-center gap-3 justify-baseline">
+                    <Avatar src={user?.image} name={user?.username} size={65}/>
                     <div className="mt-2 flex text-md md:text-lg flex-col justify-start font-normal items-center">
                         <button
                             type="button"
                             onClick={handleHostNavigate}
-                            className="px-3 py-1 rounded-full font-semibold bg-neutral-100 hover:bg-neutral-200 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300"
+                            className="px-4 py-1 rounded-full font-semibold bg-neutral-100 hover:bg-neutral-200 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300"
                         >
-                        {user?.name || 'Host'}
+                        {user?.username || 'Host'}
                         </button>
 
                     {averageRating !== null && (
@@ -201,7 +203,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                 <div className="p-5 flex flex-col gap-4 text-left pt-5">
                 {/* Guest Count */}
                 <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 shrink-0 aspect-square bg-neutral-100 rounded-full flex items-center justify-center">
+                      <div className="w-12 h-12 shrink-0 aspect-square shadow-md rounded-full flex items-center justify-center">
                         <RiUserHeartFill size={20} className="text-neutral-600 mt-1" />
                     </div>
 
@@ -210,7 +212,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                         Up to {guestCount} guest{guestCount > 1 ? 's' : ''}
                     </p>
                     <p className="text-sm text-neutral-600">
-                        {hostName} can welcome a group of up to {guestCount} {guestCount === 1 ? 'guest' : 'guests'}.
+                        <span className="underline">{user.username}</span> can welcome a group of up to {guestCount} {guestCount === 1 ? 'guest' : 'guests'}.
                     </p>
                     </div>
                 </div>
@@ -218,7 +220,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                 {/* Languages */}
                 {Array.isArray(languages) && languages.length > 0 && (
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 shrink-0 aspect-square bg-neutral-100 rounded-full flex items-center justify-center">
+                      <div className="w-12 h-12 shrink-0 aspect-square shadow-md rounded-full flex items-center justify-center">
                         <BsTranslate size={20} className="text-neutral-600 mt-1" />
                     </div>
                     <div>
@@ -226,7 +228,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                         {languages.join(', ')}
                         </p>
                         <p className="text-sm text-neutral-600">
-                        {hostName} offers these languages to make your experience comfortable.
+                         Offers these languages to make your experience comfortable.
                         </p>
                     </div>
                     </div>
@@ -235,7 +237,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                 {/* Experience Duration */}
                 {experienceHour && (
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 shrink-0 aspect-square bg-neutral-100 rounded-full flex items-center justify-center">
+                      <div className="w-12 h-12 shrink-0 aspect-square shadow-md rounded-full flex items-center justify-center">
                         <GiExtraTime size={20} className="text-neutral-600 mt-1" />
                     </div>
                     <div>

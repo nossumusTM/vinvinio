@@ -303,7 +303,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
       <Container className="py-10">
       <div className="pageadjust px-5 space-y-6">
       <Heading
-        title="Appointments"
+        title="Activities"
         subtitle="Tracing your steps — behind and ahead"
       />
       <div className="mt-6 grid grid-cols-1 gap-10 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4">
@@ -480,7 +480,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
                         <span className="block text-[8px] uppercase tracking-wide text-neutral-500 leading-none">
                           Hosted by
                         </span>
-                        <span className="truncate text-[15px] font-semibold text-neutral-900 leading-tight group-hover:underline group-focus-visible:underline">
+                        <span className="truncate text-[15px] font-semibold text-neutral-900 leading-tight group-hover:border-b border-neutral-800 transition group-focus-visible:border-b">
                           {hostName}
                         </span>
                       </span>

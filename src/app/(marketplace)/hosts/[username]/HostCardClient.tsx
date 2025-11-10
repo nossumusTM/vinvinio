@@ -5,6 +5,7 @@ import Image from 'next/image';
 import NextImage from 'next/image';
 import { FiCamera } from 'react-icons/fi';
 import { BiUpload } from "react-icons/bi";
+import clsx from 'clsx';
 
 // import cropImage from '@/app/(marketplace)/utils/cropImage';
 import axios from 'axios';
@@ -102,6 +103,24 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
   // local optimistic previews (optional)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [coverPreview, setCoverPreview]   = useState<string | null>(null);
+
+  const ratingLabel = (rating: number) => `${rating.toFixed(1)} / 5`;
+
+  const ratingBadgeClasses = (rating: number) => {
+    if (rating >= 4.5) {
+      return 'bg-emerald-100 text-emerald-700';
+    }
+
+    if (rating >= 3.5) {
+      return 'bg-sky-100 text-sky-700';
+    }
+
+    if (rating >= 2.5) {
+      return 'bg-yellow-100 text-yellow-700';
+    }
+
+    return 'bg-orange-100 text-orange-700';
+  };
 
   const handleContactHost = useCallback(async () => {
     try {
@@ -470,19 +489,20 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                   )}
 
                   <div className="absolute -top-2 -right-20">
-                    {host.identityVerified ? (
-                    <span className="items-center gap-1 rounded-full shadow-md backdrop-blur-sm text-green-300 px-2.5 py-2 text-[10px] font-semibold">
-                        ID VERIFIED
-                      </span>
-                    ) : (
-                      <span className="items-center gap-1 rounded-full shadow-md backdrop-blur-sm text-orange-400 px-2 py-2 text-[10px] font-semibold">
-                        {/* <GiBoltShield className="h-5 w-5" /> */}IN REVIEW
-                      </span>
-                    )}
+                    
                   </div>
                 </div>
 
                 <div className="text-white drop-shadow-lg">
+                  {host.identityVerified ? (
+                    <span className="w-fit items-center gap-1 rounded-full shadow-md backdrop-blur-sm text-emerald-400 px-2.5 py-2 text-[10px] font-bold">
+                        ✓ ID VERIFIED
+                      </span>
+                    ) : (
+                      <div className="w-fit items-center gap-1 shadow-md rounded-full backdrop-blur-sm text-orange-400 px-2.5 py-2 text-[10px] font-bold">
+                        <span>• ID IN REVIEW</span>
+                      </div>
+                    )}
                   <p className="ml-1 text-2xl font-semibold flex items-center gap-2">
                     {host.username || host.name || 'Host'}
                   </p>
@@ -506,7 +526,7 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
 
                 <div className="flex flex-col gap-1 md:gap-2 w-full items-start md:items-end text-left md:text-right">
                 {reviews.length > 0 && (
-                      <span className="px-1 md:px-0 flex items-center gap-1 text-white/90">
+                      <span className="mr-2 px-1 md:px-0 flex items-center gap-1 text-white/90">
                         {/* partial-fill star */}
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                           <defs>
@@ -528,6 +548,7 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                         </span>
                       </span>
                     )}
+
 
                 {spokenLanguages.length > 0 ? (
                   <div className="flex items-center gap-2 p-2 shadow-xl rounded-xl">
@@ -750,10 +771,23 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                             </div>
 
                           {/* stars */}
-                          <div className="flex gap-1">
-                            {[1,2,3,4,5].map((i) => (
-                              <span key={i} className={`text-lg ${i <= review.rating ? 'text-[#2200ffff]' : 'text-neutral-300'}`}>★</span>
-                            ))}
+                          <div className="flex flex-col text-center gap-1">
+                            {reviews.length > 0 && (
+                              <span
+                                className={clsx(
+                                  'rounded-full px-3 py-1 text-xs font-semibold',
+                                  ratingBadgeClasses(averageRating),
+                                )}
+                              >
+                                {ratingLabel(averageRating)}
+                              </span>
+                            )}
+                            
+                            <div className="flex gap-1">
+                              {[1,2,3,4,5].map((i) => (
+                                <span key={i} className={`text-lg ${i <= review.rating ? 'text-black' : 'text-neutral-300'}`}>★</span>
+                              ))}
+                            </div>
                           </div>
                         </div>
 

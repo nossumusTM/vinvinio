@@ -9,6 +9,7 @@ interface ModalProps {
   isOpen?: boolean;
   onClose: () => void;
   onSubmit: () => void;
+  closeOnSubmit?: boolean;
   title?: string;
   body?: React.ReactElement;
   footer?: React.ReactElement;
@@ -31,11 +32,14 @@ const Modal: React.FC<ModalProps> = ({
   disabled,
   secondaryAction,
   secondaryActionLabel,
+  closeOnSubmit = true,
   className,
   submitOnEnter = true,
 }) => {
   const [showModal, setShowModal] = useState(isOpen);
   const modalRef = useRef<HTMLDivElement>(null);
+
+  const [exitIntent, setExitIntent] = useState<'close' | 'submit' | null>(null);
 
   useEffect(() => {
     setShowModal(isOpen);
@@ -45,7 +49,7 @@ const Modal: React.FC<ModalProps> = ({
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
       if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
-        onClose();
+        handleClose();
       }
     };
 
@@ -60,17 +64,21 @@ const Modal: React.FC<ModalProps> = ({
 
   const handleClose = useCallback(() => {
     if (disabled) return;
-
+    setExitIntent('close');
     setShowModal(false);
-    setTimeout(() => {
-      onClose();
-    }, 300);
-  }, [onClose, disabled]);
+  }, [disabled]);
 
-  const handleSubmit = useCallback(() => {
+   const handleSubmit = useCallback(() => {
     if (disabled) return;
-    onSubmit();
-  }, [onSubmit, disabled]);
+    if (!closeOnSubmit) {
+      // intermediate step: DON'T close, just run submit
+      onSubmit();
+      return;
+    }
+    // final step: animate out, then submit
+    setExitIntent('submit');
+    setShowModal(false);
+  }, [disabled, closeOnSubmit, onSubmit]);
 
   const handleSecondaryAction = useCallback(() => {
     if (disabled || !secondaryAction) return;
@@ -98,7 +106,9 @@ const Modal: React.FC<ModalProps> = ({
     };
   }, [isOpen, handleSubmit, submitOnEnter]);
 
-  if (!isOpen) return null;
+  // if (!isOpen) return null;
+
+  if (!isOpen && !showModal) return null;
 
   return (
     <div
@@ -132,18 +142,39 @@ const Modal: React.FC<ModalProps> = ({
           md:h-full
         "
       >
-        <AnimatePresence>
+        <AnimatePresence
+          initial={false}
+          onExitComplete={() => {
+            if (exitIntent === 'submit') {
+              // hide overlay in parent, then run submit logic
+              onClose();
+              onSubmit();
+            } else if (exitIntent === 'close') {
+              onClose();
+            }
+            // reset
+            setExitIntent(null);
+          }}>
           {showModal && (
             <motion.div
-              key="modal-fade"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="h-full"
-            >
-              <div
+                key="modal-overlay"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="h-full"
+                onMouseDown={(e) => {
+                  if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+                    handleClose(); // animated close on outside click
+                  }
+                }}
+              >
+              <motion.div
                 ref={modalRef}
+                initial={{ scale: 0.96, y: 8, opacity: 0 }}
+                animate={{ scale: 1, y: 0, opacity: 1 }}
+                exit={{ scale: 0.96, y: 8, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 420, damping: 32, mass: 0.55 }}
                 className="
                   h-full
                   lg:h-auto
@@ -155,11 +186,14 @@ const Modal: React.FC<ModalProps> = ({
                   flex 
                   flex-col 
                   w-full 
-                  bg-white 
+                  bg-white
                   outline-none 
                   focus:outline-none
+                  will-change-transform
                 "
               >
+               {/* bg-gradient-to-br from-rose-100 via-white to-sky-100 */}
+
                 {/* Header */}
                 <div
                   className="
@@ -212,7 +246,7 @@ const Modal: React.FC<ModalProps> = ({
                   </div>
                   {footer}
                 </div>
-              </div>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>

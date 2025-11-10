@@ -11,6 +11,8 @@ import useTranslations from '@/app/(marketplace)/hooks/useTranslations';
 
 import { getCurrencyOption } from '@/app/(marketplace)/constants/locale';
 
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
+
 import {
   LANGUAGE_OPTIONS,
   CURRENCY_OPTIONS,
@@ -41,6 +43,12 @@ const LocaleModal = () => {
     [activeTab, t]
   );
 
+  const tabVariants: Variants = {
+    initial: { opacity: 0, y: 8 }, 
+    enter:   { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.25 } },
+    exit:    { opacity: 0, y: -8, filter: 'blur(6px)', transition: { duration: 0.2 } },
+  };
+
   const handleLanguageSelect = (option: LanguageOption) => {
     setLanguage(option.code);
   };
@@ -60,7 +68,7 @@ const LocaleModal = () => {
         className={clsx(
           'flex items-center gap-3 rounded-2xl border px-4 py-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-black/30',
           isSelected
-            ? 'border-black/60 bg-black text-white shadow-lg'
+            ? 'bg-black text-white shadow-lg'
             : 'border-black/10 bg-white/90 backdrop-blur'
         )}
       >
@@ -126,7 +134,7 @@ const LocaleModal = () => {
           type="button"
           onClick={() => setActiveTab('language')}
           className={clsx(
-            'rounded-full px-6 py-2 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-black/30',
+            'rounded-full px-6 py-2 text-sm font-semibold transition',
             activeTab === 'language'
               ? 'bg-black text-white shadow-lg'
               : 'bg-white/80 text-neutral-700 ring-1 ring-black/10'
@@ -138,7 +146,7 @@ const LocaleModal = () => {
           type="button"
           onClick={() => setActiveTab('currency')}
           className={clsx(
-            'rounded-full px-6 py-2 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-black/30',
+            'rounded-full px-6 py-2 text-sm font-semibold transition',
             activeTab === 'currency'
               ? 'bg-black text-white shadow-lg'
               : 'bg-white/80 text-neutral-700 ring-1 ring-black/10'
@@ -151,7 +159,13 @@ const LocaleModal = () => {
       <div className="rounded-3xl bg-gradient-to-br from-white via-white to-slate-100 p-1">
         <div className="rounded-[26px] bg-white/90 p-6 shadow-inner">
           <div className="mb-4 flex items-center justify-between">
-            <div>
+            <motion.div
+                key={`${activeTab}-header`}
+                variants={tabVariants}
+                initial="initial"
+                animate="enter"
+                exit="exit"
+              >
               <p className="text-xs uppercase tracking-[0.3em] text-neutral-400">{activeLabel}</p>
               <h3 className="mt-1 text-lg font-semibold text-neutral-900">
                 {language} / {languageRegion}
@@ -159,13 +173,22 @@ const LocaleModal = () => {
               <p className="text-xs text-neutral-500">
                 {currencyRegion} · {curOpt.symbol}
               </p>
-            </div>
+             </motion.div>
           </div>
-          <div className="grid max-h-[210px] grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              variants={tabVariants}
+              initial="initial"
+              animate="enter"
+              exit="exit"
+              className="pt-2 grid max-h-[220px] grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2"
+            >
             {activeTab === 'language'
               ? LANGUAGE_OPTIONS.map(renderLanguageOption)
               : CURRENCY_OPTIONS.map(renderCurrencyOption)}
-          </div>
+                </motion.div>
+          </AnimatePresence>
         </div>
       </div>
     </div>

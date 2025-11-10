@@ -412,7 +412,7 @@ const ReservationCard: React.FC<ReservationCardProps> = ({
                 <span className="block text-[8px] uppercase tracking-wide text-neutral-500 leading-none">
                   Booked by
                 </span>
-                <span className="truncate text-[15px] font-semibold text-neutral-900 leading-tight group-hover:underline group-focus-visible:underline">
+                <span className="truncate text-[15px] font-semibold text-neutral-900 leading-tight group-hover:border-b border-neutral-800 transition group-focus-visible:border-b">
                   {usernameLabel}
                 </span>
               </span>

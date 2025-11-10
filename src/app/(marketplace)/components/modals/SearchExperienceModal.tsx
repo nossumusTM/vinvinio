@@ -21,6 +21,7 @@ import CountrySearchSelect, { CountrySearchSelectHandle } from '../inputs/Countr
 
 import Counter from '../inputs/Counter';
 import useTranslations from '@/app/(marketplace)/hooks/useTranslations';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 
 enum STEPS {
   LOCATION = 0,
@@ -45,6 +46,13 @@ const SearchExperienceModal = () => {
   });
 
   const searchInputRef = useRef<CountrySearchSelectHandle | null>(null);
+  const [dir, setDir] = useState<1 | -1>(1);
+
+  const STEP_VARIANTS: Variants = {
+    initial: (d: 1 | -1) => ({ opacity: 0, x: d > 0 ? 40 : -40, scale: 0.98 }),
+    animate: { opacity: 1, x: 0, scale: 1, transition: { type: 'spring', stiffness: 420, damping: 32, mass: 0.4 } },
+    exit:    (d: 1 | -1) => ({ opacity: 0, x: d > 0 ? -40 : 40, scale: 0.98, transition: { duration: 0.18 } }),
+  };
 
   const SearchMap = useMemo(
     () => dynamic(() => import('../SearchMap'), { ssr: false }),
@@ -69,8 +77,14 @@ const SearchExperienceModal = () => {
     }
   }, [location]);
 
-  const onBack = useCallback(() => setStep((val) => val - 1), []);
-  const onNext = useCallback(() => setStep((val) => val + 1), []);
+  const onBack = useCallback(() => {
+    setDir(-1);
+    setStep((val) => val - 1);
+  }, []);
+  const onNext = useCallback(() => {
+    setDir(1);
+    setStep((val) => val + 1);
+  }, []);
 
   const onSubmit = useCallback(() => {
     if (step === STEPS.LOCATION && !location) {
@@ -108,7 +122,7 @@ const SearchExperienceModal = () => {
     }
 
     setLocation(location);
-    modal.onClose();
+    // modal.onClose();
     setStep(STEPS.LOCATION);
     router.push(qs.stringifyUrl({ url: '/', query: updatedQuery }, { skipNull: true }));
   }, [dateRange.endDate, dateRange.startDate, guestCount, location, modal, onNext, params, router, setLocation, step]);
@@ -141,8 +155,8 @@ const SearchExperienceModal = () => {
         className={clsx(
           'flex items-center gap-2 rounded-2xl border px-2 py-2 transition-all duration-300 md:px-4 md:py-3',
           isActive
-            ? 'bg-white/80 border-white/40 text-neutral-900 shadow-lg shadow-white/30'
-            : 'bg-white/40 border-white/20 text-neutral-600',
+            ? 'bg-white/80 border-white/40 text-neutral-900 shadow-md'
+            : 'bg-white/40 border-white/20 text-neutral-600 shadow-sm',
         )}
       >
         <div
@@ -163,7 +177,7 @@ const SearchExperienceModal = () => {
 
   let bodyContent = (
     <div className="relative flex flex-col gap-8">
-      <div className="absolute inset-0 -z-10 bg-gradient-to-br from-rose-200 via-white to-sky-200 rounded-3xl opacity-80 blur-xl" />
+      <div className="absolute inset-0 -z-10 rounded-3xl opacity-80 blur-xl" />
       <div className="flex flex-col gap-6 rounded-3xl bg-white/70 backdrop-blur p-6 shadow-xl h-fit">
         {/* <Heading
           title="Where will your next story unfold?"
@@ -270,8 +284,24 @@ const SearchExperienceModal = () => {
       secondaryActionLabel={secondaryActionLabel}
       secondaryAction={step === STEPS.LOCATION ? undefined : onBack}
       title="Craft your search"
-      body={bodyContent}
       className="bg-transparent"
+      closeOnSubmit={step === STEPS.GUESTS}
+      body={
+        <div className="relative">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={step}
+              custom={dir}
+              variants={STEP_VARIANTS}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            >
+              {bodyContent}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      }
     />
   );
 };

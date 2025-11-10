@@ -374,7 +374,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                         }}
                         className="text-md text-white bg-black hover:bg-neutral-800 p-4 rounded-xl transition font-normal mt-1"
                         >
-                        Text @{listing.user?.name?.split(' ')[0] ?? 'Host'}
+                        Text @{listing.user?.username?.split(' ')[0] ?? 'Host'}
                     </button>
 
                     <div className="grid grid-cols-1 md:grid-cols-7 md:gap-10 mt-6 relative">

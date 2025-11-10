@@ -54,7 +54,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
 
   const hostHandle =
     currentUser?.username ??
-    (currentUser?.name ? slugify(currentUser.name) : currentUser?.id ?? '');
+    (currentUser?.username ? slugify(currentUser.username) : currentUser?.id ?? '');
 
   const hostCardHref = hostHandle ? `/hosts/${encodeURIComponent(hostHandle)}` : '/hosts';
 
@@ -334,7 +334,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
 
                 {userRole === 'customer' && (
                   <>
-                    <MenuItem label="Appointments" onClick={() => {
+                    <MenuItem label="Activities" onClick={() => {
                         setIsOpen(false);
                       }}
                       href="/trips"
@@ -378,7 +378,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                         }} />
                     </div>
                     
-                    <MenuItem label="Appointments" 
+                    <MenuItem label="Activities" 
                       onClick={() => {
                         setIsOpen(false);
                       }}
@@ -417,7 +417,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                       }}
                     />
                     <hr className="my-2" />
-                    <MenuItem label="Appointments"
+                    <MenuItem label="Activities"
                       onClick={() => {
                         setIsOpen(false);
                       }}
@@ -430,20 +430,20 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                       href="/favorites"
                     />
                           <hr className="my-2" />
-                    <MenuItem label="Bookings"
+                    <MenuItem label="Reservations"
                       onClick={() => {
                         setIsOpen(false);
                       }}
                       href="/reservations"
                     />
-                    <MenuItem label="My listings"
+                    <MenuItem label="Manage listings"
                       onClick={() => {
                         setIsOpen(false);
                       }}
                       href="/my-listings"
                     />
                     <MenuItem
-                      label="Host Card"
+                      label="Host ID Card"
                       onClick={() => {
                         setIsOpen(false);
                       }}
@@ -472,7 +472,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                     }} /> */}
                     <hr className="my-2" />
                     </div>
-                    <MenuItem label="Appointments" 
+                    <MenuItem label="Activities" 
                       onClick={() => {
                         setIsOpen(false);
                       }}
