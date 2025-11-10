@@ -4,6 +4,8 @@ import { useMemo, useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import NextImage from 'next/image';
 import { FiCamera } from 'react-icons/fi';
+import { BiUpload } from "react-icons/bi";
+
 // import cropImage from '@/app/(marketplace)/utils/cropImage';
 import axios from 'axios';
 
@@ -17,6 +19,7 @@ import Link from "next/link";
 import { twMerge } from 'tailwind-merge';
 import { FaCheckCircle } from 'react-icons/fa';
 import { HiOutlineShieldExclamation } from 'react-icons/hi';
+import { GiBoltShield } from "react-icons/gi";
 import { HiOutlineChatBubbleOvalLeft } from "react-icons/hi2";
 import { BiSolidPaperPlane } from "react-icons/bi";
 import Modal from '../../components/modals/Modal';
@@ -79,6 +82,7 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
+  const [coverLoaded, setCoverLoaded] = useState(false);
 
   const coverInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -139,14 +143,13 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
   }, [host?.id, host?.name, host?.hostName, host?.image, loginModal, messenger]);
 
   const coverImage = useMemo(() => {
-    // 1) fetched from API
+    // 1) If user has uploaded a cover in profile
     if (coverImageUrl) return coverImageUrl;
-    // 2) host object (if you already hydrate it elsewhere)
     if ((host as any).coverImage) return (host as any).coverImage as string;
-    // 3) fallback to first listing’s first image
-    const first = listings.find(l => Array.isArray(l.imageSrc) && l.imageSrc[0]);
-    return first?.imageSrc?.[0] ?? null;
-  }, [coverImageUrl, host, listings]);
+
+    // 2) Otherwise return null → triggers gray animated background placeholder
+    return null;
+  }, [coverImageUrl, host]);
 
   const pickCover  = () => coverInputRef.current?.click();
 
@@ -363,26 +366,33 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
 
       <div className="rounded-3xl overflow-hidden shadow-xl border border-neutral-200 bg-white">
         <div className="relative h-56 sm:h-64 md:h-72">
-
           {coverPreview ? (
-              <NextImage
-                src={coverPreview}
-                alt={`Cover for ${host.name ?? host.hostName ?? 'host'}`}
-                fill
-                className="object-cover"
-                priority
-              />
-            ) : coverImage ? (
-              <NextImage
-                src={coverImage}
-                alt={`Cover for ${host.name ?? host.hostName ?? 'host'}`}
-                fill
-                className="object-cover"
-                priority
-              />
-            ) : (
-              <div className="absolute inset-0 bg-gradient-to-br from-neutral-900 via-neutral-700 to-neutral-500" />
-            )}
+            <NextImage
+              src={coverPreview}
+              alt={`Cover for ${host.name ?? host.hostName ?? 'host'}`}
+              fill
+              placeholder="blur"
+              blurDataURL="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" // 1x1 transparent
+              className={`object-cover transition-[filter,opacity,transform] duration-500 ease-out
+                        ${coverLoaded ? 'blur-0 opacity-100 scale-100' : 'blur-md opacity-80 scale-[1.02]'}`}
+              onLoadingComplete={() => setCoverLoaded(true)}
+              priority
+            />
+          ) : coverImage ? (
+            <NextImage
+              src={coverImage}
+              alt={`Cover for ${host.name ?? host.hostName ?? 'host'}`}
+              fill
+              placeholder="blur"
+              blurDataURL="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+              className={`object-cover transition-[filter,opacity,transform] duration-500 ease-out
+                        ${coverLoaded ? 'blur-0 opacity-100 scale-100' : 'blur-md opacity-80 scale-[1.02]'}`}
+              onLoadingComplete={() => setCoverLoaded(true)}
+              priority
+            />
+          ) : (
+            <div className="absolute inset-0 bg-neutral-200" />
+          )}
 
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
@@ -395,7 +405,7 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                   className="absolute aspect-square top-3 right-3 z-30 inline-flex items-center gap-2 rounded-full shadow-md text-white px-3 py-1.5 text-xs font-semibold hover:shadow-lg transition"
                   title=""
                 >
-                  <FiCamera className="h-4 w-4" />
+                  <BiUpload className="font-semibold h-5 w-5" />
                   {uploadingCover ? 'Uploading…' : ''}
                 </button>
                 {/* <input
@@ -459,25 +469,25 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                     <Avatar src={host.image} name={host.name ?? host.hostName ?? 'Host'} size={92} />
                   )}
 
-                  <div className="absolute -top-2 -right-2">
+                  <div className="absolute -top-2 -right-20">
                     {host.identityVerified ? (
-                      <span className="aspect-square inline-flex items-center gap-1 rounded-full shadow-md backdrop-blur-sm text-[#2200ff] px-2.5 py-2.5 text-xs font-semibold">
-                        <FaCheckCircle className="h-5 w-5" />
+                    <span className="items-center gap-1 rounded-full shadow-md backdrop-blur-sm text-green-300 px-2.5 py-2 text-[10px] font-semibold">
+                        ID VERIFIED
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 rounded-full shadow-md backdrop-blur-sm text-yellow-500 px-2.5 py-2.5 text-xs font-semibold">
-                        <HiOutlineShieldExclamation className="h-5 w-5" />
+                      <span className="items-center gap-1 rounded-full shadow-md backdrop-blur-sm text-orange-400 px-2 py-2 text-[10px] font-semibold">
+                        {/* <GiBoltShield className="h-5 w-5" /> */}IN REVIEW
                       </span>
                     )}
                   </div>
                 </div>
 
                 <div className="text-white drop-shadow-lg">
-                  <p className="text-2xl font-semibold flex items-center gap-2">
+                  <p className="ml-1 text-2xl font-semibold flex items-center gap-2">
                     {host.username || host.name || 'Host'}
                   </p>
                   {host.legalName && (
-                    <p className="text-sm text-white/80">{host.legalName}</p>
+                    <p className="ml-1 text-sm text-white/80">{host.legalName}</p>
                   )}
                   {primaryLocation && (
                     <p className="text-sm text-white/80 flex flex-row gap-1">
@@ -656,6 +666,8 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                               src={listing.imageSrc?.[0] as string}
                               alt={listing.title}
                               fill
+                              loading="lazy"
+                              decoding="async"
                               className="object-cover transition duration-300 group-hover:scale-105"
                             />
                           ) : (

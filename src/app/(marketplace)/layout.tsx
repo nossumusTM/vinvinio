@@ -73,7 +73,7 @@ export default async function RootLayout({
           <RegisterModal />
           <ForgetPasswordModal />
           <SearchExperienceModal />
-          <LocaleModal />
+          {/* <LocaleModal /> */}
           {/* <SearchModal /> */}
           <RentModal />
           <PromoteModal currentUser={currentUser} />
@@ -99,6 +99,10 @@ export default async function RootLayout({
           </SessionProviderWrapper>
           </GateShell>
         </PageReadyProvider>
+
+        <ClientOnly>
+          <LocaleModal />
+        </ClientOnly>
         </>
 
         

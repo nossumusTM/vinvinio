@@ -338,7 +338,7 @@ const CountrySearchSelect = forwardRef<CountrySearchSelectHandle, CountrySelectP
           {/* INPUT ROW — single relative wrapper */}
 <div className="relative flex items-center gap-3 px-4 py-3">
   {/* Flag */}
-  <div className="aspect-square h-5 w-5 flex items-center justify-center">
+  <div className="h-4 w-6 items-center justify-center">
     <AnimatePresence mode="wait">
       <motion.img
         key={displayedFlagCode}
@@ -349,7 +349,7 @@ const CountrySearchSelect = forwardRef<CountrySearchSelectHandle, CountrySelectP
         animate="visible"
         exit="exit"
         variants={destionationVariants}
-        className="mr-1.5 h-full w-full object-contain rounded-md"
+        className="mr-1.5 h-4 w-6 object-cover rounded"
       />
     </AnimatePresence>
   </div>

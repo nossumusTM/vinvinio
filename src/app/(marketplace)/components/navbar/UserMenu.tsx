@@ -3,6 +3,9 @@
 import { useCallback, useState, useRef, useEffect } from "react";
 import { AiOutlineMenu } from "react-icons/ai";
 import { FaHandshake } from "react-icons/fa";
+import { FcBusinessContact } from "react-icons/fc";
+import { MdOutlineBusinessCenter } from "react-icons/md";
+
 import { signOut } from "next-auth/react";
 import useMessenger from "@/app/(marketplace)/hooks/useMessager";
 import { useRouter } from 'next/navigation';
@@ -254,7 +257,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
       animate={{ scale: 1 }}
       exit={{ scale: 0 }}
       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-      className="absolute -top-1 -right-1 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center bg-[#2200ffff]"
+      className="absolute -top-1 -right-1 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center bg-black"
       // style={{
       //   background: 'linear-gradient(135deg, #3604ff, #04aaff, #3604ff',
       // }}
@@ -406,7 +409,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                   <>
                     <MenuItem
                       label="Become a Partner"
-                      icon={<FaHandshake />}
+                      icon={<MdOutlineBusinessCenter size={24} />}
                       className="font-semibold text-neutral-900"
                       onClick={() => {
                         setIsOpen(false);

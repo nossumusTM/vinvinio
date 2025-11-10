@@ -1,7 +1,7 @@
 // pages/page.tsx (Home with Load More)
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Container from "@/app/(marketplace)/components/Container";
 import ListingCard from "@/app/(marketplace)/components/listings/ListingCard";
 import EmptyState from "@/app/(marketplace)/components/EmptyState";
@@ -14,6 +14,19 @@ import toast from "react-hot-toast";
 import qs from 'query-string';
 import { motion } from 'framer-motion';
 import ListingCardSkeleton from "@/app/(marketplace)/components/listings/ListingCardSkeleton";
+
+import { shallow } from 'zustand/shallow';
+
+import useGeoLocationExperiment from '@/app/(marketplace)/hooks/useGeoLocationExperiment';
+import useLocaleSettings from '@/app/(marketplace)/hooks/useLocaleSettings';
+import useExperienceSearchState from '@/app/(marketplace)/hooks/useExperienceSearchState';
+import LocationConsentModal from '@/app/(marketplace)/components/modals/LocationConsentModal';
+import {
+  buildBrowserLocaleSuggestion,
+  buildGeoLocaleSuggestion,
+  type GeoLocationResponse,
+} from '@/app/(marketplace)/utils/geoLocale';
+import { LANGUAGE_OPTIONS } from '@/app/(marketplace)/constants/locale';
 
 interface HomeProps {
   initialListings: any[];
@@ -34,6 +47,158 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
   const searchParams = useSearchParams();
 
   const [isMobile, setIsMobile] = useState(false);
+  const detectionInFlightRef = useRef(false);
+
+  const {
+    detection,
+    setDetection,
+    accepted: geoAccepted,
+    dismissed: geoDismissed,
+    openModal: openGeoModal,
+    hasPrompted: geoHasPrompted,
+    markApplied,
+    applied: geoApplied,
+  } = useGeoLocationExperiment(
+    (state) => ({
+      detection: state.detection,
+      setDetection: state.setDetection,
+      accepted: state.accepted,
+      dismissed: state.dismissed,
+      openModal: state.openModal,
+      hasPrompted: state.hasPrompted,
+      markApplied: state.markApplied,
+      applied: state.applied,
+    }),
+    shallow,
+  );
+
+  const setLanguage = useLocaleSettings((state) => state.setLanguage);
+  const setCurrency = useLocaleSettings((state) => state.setCurrency);
+  const setSearchLocation = useExperienceSearchState((state) => state.setLocation);
+
+  useEffect(() => {
+    if (geoAccepted || geoDismissed) return;
+    if (detection || detectionInFlightRef.current) return;
+
+    let cancelled = false;
+    const controller = new AbortController();
+
+    const fetchDetection = async () => {
+      let suggestionApplied = false;
+
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[geo] starting detection');
+      }
+
+      try {
+        detectionInFlightRef.current = true;
+        const res = await fetch('https://ipapi.co/json/', { signal: controller.signal });
+        if (!res.ok) {
+          throw new Error('Failed to detect location');
+        }
+
+        const payload: GeoLocationResponse = await res.json();
+
+        if (!payload.ip) {
+          try {
+            const ipRes = await fetch('https://api.ipify.org?format=json', { signal: controller.signal });
+            if (ipRes.ok) {
+              const { ip } = await ipRes.json() as { ip?: string };
+              if (ip) payload.ip = ip;
+            }
+          } catch {/* ignore */}
+        }
+        
+        if (cancelled) return;
+
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('[geo] ip detection payload', payload);
+        }
+
+        const suggestion = buildGeoLocaleSuggestion(payload);
+
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('[geo] ip detection suggestion', suggestion);
+        }
+
+        setDetection(suggestion);
+        suggestionApplied = true;
+      } catch (error) {
+        const err = error as Error;
+        if (err?.name === 'AbortError') {
+          return;
+        }
+
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('Geo detection failed', error);
+        }
+      } finally {
+        detectionInFlightRef.current = false;
+        if (!cancelled && !suggestionApplied) {
+          const fallbackSuggestion = buildBrowserLocaleSuggestion();
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('[geo] using browser fallback suggestion', fallbackSuggestion);
+          }
+          if (fallbackSuggestion) {
+            setDetection(fallbackSuggestion);
+          }
+        }
+      }
+    };
+
+    fetchDetection();
+
+    return () => {
+      cancelled = true;
+      detectionInFlightRef.current = false;
+      controller.abort();
+    };
+  }, [detection, geoAccepted, geoDismissed, setDetection]);
+
+  useEffect(() => {
+    if (!detection) return;
+    if (geoAccepted || geoDismissed) return;
+    if (geoHasPrompted) return;
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[geo] opening consent modal with detection', detection);
+    }
+
+    openGeoModal();
+  }, [detection, geoAccepted, geoDismissed, geoHasPrompted, openGeoModal]);
+
+  useEffect(() => {
+    if (!geoAccepted || !detection) return;
+    if (geoApplied) return;
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[geo] applying detection', detection);
+    }
+
+    const languageOption = LANGUAGE_OPTIONS.find((option) => option.code === detection.languageCode) ?? LANGUAGE_OPTIONS[0];
+    setLanguage(languageOption.code);
+
+    const currencyCode = detection.currencyCode ?? languageOption.defaultCurrency;
+    setCurrency(currencyCode);
+
+    if (detection.locationValue) {
+      const lat = detection.latitude ?? 0;
+      const lng = detection.longitude ?? 0;
+
+      const latlng: [number, number] = [lat, lng];
+
+      setSearchLocation({
+        value: detection.locationValue,
+        label: detection.country ?? detection.countryCode ?? languageOption.region,
+        region: detection.region ?? detection.countryCode ?? languageOption.region,
+        flag: '',
+        latlng,
+        city: detection.city,
+      });
+    }
+
+    markApplied();
+  }, [geoAccepted, detection, geoApplied, setLanguage, setCurrency, setSearchLocation, markApplied]);
 
   useEffect(() => {
     const mq = window.matchMedia?.('(max-width: 767px)');
@@ -195,6 +360,7 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
   if (!listings && !isFiltering) {
     return (
       <ClientOnly>
+        <LocationConsentModal />
         <Container>
           <div className="relative z-30">
             <div className="absolute left-1/2 transform -translate-x-1/2 z-[9999]">
@@ -222,6 +388,7 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
 
   return (
     <ClientOnly>
+      <LocationConsentModal />
       <Container>
         <div className="relative z-30">
           <div className="absolute left-1/2 transform -translate-x-1/2 z-[9999]">

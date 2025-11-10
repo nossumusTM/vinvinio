@@ -7,7 +7,7 @@ export default function FullScreenLoader() {
   const { ready } = usePageReady();
   if (ready) return null;
   return (
-    <div className="fixed inset-0 z-[9999] grid place-items-center bg-white backdrop-blur-sm">
+    <div className="fixed inset-0 z-[9999] grid place-items-center bg-transparent backdrop-blur-sm">
       <Loader />
     </div>
   );

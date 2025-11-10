@@ -25,6 +25,8 @@ const Avatar: React.FC<AvatarProps> = ({ src, name = 'U', size = 40 }) => {
       alt={name || 'Avatar'}
       width={size}
       height={size}
+      loading="lazy"
+      decoding="async"
       className="rounded-full object-cover shadow-md"
     />
   ) : (

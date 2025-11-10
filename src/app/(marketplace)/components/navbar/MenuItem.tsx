@@ -37,7 +37,7 @@ const MenuItem: React.FC<MenuItemProps> = ({
 
   const badge =
     badgeCount && badgeCount > 0 ? (
-      <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#2200ffff] text-[10px] text-white">
+      <span className="flex h-4 w-4 items-center justify-center rounded-full bg-black text-[10px] text-white">
         {badgeCount > 99 ? '99+' : badgeCount}
       </span>
     ) : null;
