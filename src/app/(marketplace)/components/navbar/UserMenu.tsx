@@ -2,6 +2,8 @@
 
 import { useCallback, useState, useRef, useEffect } from "react";
 import { AiOutlineMenu, AiOutlineBell } from "react-icons/ai";
+import { RiNotification3Line } from "react-icons/ri";
+import { BiMessageSquareDots } from "react-icons/bi";
 import { FaHandshake } from "react-icons/fa";
 import { FcBusinessContact } from "react-icons/fc";
 import { MdOutlineBusinessCenter } from "react-icons/md";
@@ -402,13 +404,8 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                 {(userRole === 'customer' || userRole === 'promoter' || userRole === 'host' || userRole === 'moder') && (
                   <>
                     <MenuItem
-                      label="Notifications"
-                      icon={<AiOutlineBell size={18} />}
-                      badgeCount={notificationFreshCount > 0 ? notificationFreshCount : undefined}
-                      onClick={handleNotificationsOpen}
-                    />
-                    <MenuItem
                       label="Messenger"
+                      icon={<BiMessageSquareDots size={18} />}
                       onClick={() => {
                         setIsOpen(false);
                         if (messenger.isOpen) {
@@ -418,6 +415,13 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                         }
                       }}
                       badgeCount={messenger.unreadCount > 0 ? messenger.unreadCount : undefined}
+                    />
+
+                    <MenuItem
+                      label="Notifications"
+                      icon={<RiNotification3Line size={18} />}
+                      badgeCount={notificationFreshCount > 0 ? notificationFreshCount : undefined}
+                      onClick={handleNotificationsOpen}
                     />
 
                     <hr className="my-2" />

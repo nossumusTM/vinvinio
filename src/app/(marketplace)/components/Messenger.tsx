@@ -30,7 +30,7 @@ const Messenger = ({ currentUser }: MessengerProps) => {
   // if (!isOpen || !currentUser?.id) return null;
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode='wait' initial={false}>
       {isOpen && currentUser?.id && (
         <motion.div
           key="messenger"

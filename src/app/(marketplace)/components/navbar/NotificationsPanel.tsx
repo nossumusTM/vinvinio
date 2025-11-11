@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, type Variants } from 'framer-motion';
 import {
   AiOutlineBell,
   AiOutlineCalendar,
@@ -131,31 +131,27 @@ const fallbackMeta: NotificationMeta = {
   icon: (className) => <AiOutlineBell className={className} />,
 };
 
-const backdropVariants = {
-  hidden: { opacity: 0 },
+const backdropVariants: Variants = {
+  hidden:  { opacity: 0 },
   visible: { opacity: 1 },
-  exit: { opacity: 0 },
-};
+  exit:    { opacity: 0 },
+} as const;
 
-const panelVariants = {
-  hidden: { x: '100%', opacity: 0 },
-  visible: { x: 0, opacity: 1, transition: { type: 'spring', stiffness: 260, damping: 30 } },
-  exit: { x: '100%', opacity: 0, transition: { duration: 0.2 } },
-};
+const panelVariants: Variants = {
+  hidden:  { x: '100%', opacity: 0 },
+  visible: { x: 0, opacity: 1, transition: { type: 'spring' as const, stiffness: 260, damping: 30 } },
+  exit:    { x: '100%', opacity: 0, transition: { duration: 0.2 } },
+} as const;
 
-const listVariants = {
+const listVariants: Variants = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.08, delayChildren: 0.08 } },
-};
+} as const;
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 16 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { type: 'spring', stiffness: 320, damping: 28 },
-  },
-};
+const itemVariants: Variants = {
+  hidden:  { opacity: 0, y: 16 },
+  visible: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 320, damping: 28 } },
+} as const;
 
 const loadingSkeletons = Array.from({ length: 4 }, (_, index) => index);
 
@@ -228,6 +224,21 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isOpen, onClose
     },
     [onClose, router],
   );
+
+  const dismissNotification = useCallback(async (id: string) => {
+    // Optimistic remove
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+
+    // Try to persist (adjust endpoint/method to your API)
+    try {
+      await fetch(`/api/notifications/${id}/dismiss`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch {
+      // no-op (you can re-fetch on failure if desired)
+    }
+  }, []);
 
   const handleNotificationClick = useCallback(
     (notification: NotificationItem) => {
@@ -338,6 +349,7 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isOpen, onClose
     }
 
     return (
+      <AnimatePresence mode="popLayout">
       <motion.div
         variants={listVariants}
         initial="hidden"
@@ -358,14 +370,30 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isOpen, onClose
 
           return (
             <motion.button
-              type="button"
-              key={notification.id}
-              variants={itemVariants}
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.99 }}
-              onClick={() => handleNotificationClick(notification)}
-              className="group flex w-full flex-col rounded-2xl border border-neutral-100 bg-white p-4 text-left shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-200"
-            >
+                layout
+                type="button"
+                key={notification.id}
+                variants={itemVariants}
+                initial="hidden"
+                animate="visible"
+                exit={{ opacity: 0, scale: 0.85, y: -6, transition: { duration: 0.18 } }}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.99 }}
+                onClick={() => handleNotificationClick(notification)}
+                className="group relative flex w-full flex-col rounded-2xl border border-neutral-100 bg-white p-4 text-left shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-200"
+              >
+              {/* close (dismiss) button */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  dismissNotification(notification.id);
+                }}
+                className="absolute right-2 top-2 rounded-full p-1.5 text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition"
+                aria-label="Dismiss notification"
+              >
+                <AiOutlineClose className="h-4 w-4" />
+              </button>
               <div className="flex gap-3">
                 <div
                   className={clsx(
@@ -409,6 +437,7 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isOpen, onClose
           );
         })}
       </motion.div>
+      </AnimatePresence>
     );
   }, [error, handleNotificationClick, isLoading, notifications]);
 
@@ -426,14 +455,32 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isOpen, onClose
             onClick={onClose}
           />
 
-          <motion.aside
-            key="notifications-panel"
-            className="fixed right-0 top-0 z-[101] flex h-screen w-full max-w-md flex-col rounded-l-3xl bg-white shadow-2xl"
-            variants={panelVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-          >
+          <div
+  onClick={onClose}
+  className="
+    fixed inset-0 z-[100]
+    h-screen w-screen
+    flex items-start justify-end
+    p-3
+    bg-black/30
+  "
+>
+            <motion.aside
+              onClick={(e) => e.stopPropagation()}
+              key="notifications-panel"
+              className="
+                pointer-events-auto
+                h-full w-full max-w-md
+                rounded-2xl
+                bg-white shadow-2xl
+                flex flex-col overflow-hidden
+              "
+              variants={panelVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              transition={{ duration: 0.25, ease: 'easeInOut', type: 'tween' }}
+            >
             <header className="border-b border-neutral-100 px-6 py-5">
               <div className="flex items-center justify-between">
                 <div>
@@ -455,6 +502,7 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isOpen, onClose
               {content}
             </div>
           </motion.aside>
+</div>
         </>
       )}
     </AnimatePresence>

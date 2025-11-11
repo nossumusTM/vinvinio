@@ -198,7 +198,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
             .then(() => {
                 toast.success('Listing reserved!', {
                     iconTheme: {
-                        primary: '#2200ffff',
+                        primary: '#000',
                         secondary: '#fff',
                     }
                 });
