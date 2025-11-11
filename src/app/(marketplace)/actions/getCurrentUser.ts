@@ -1,79 +1,3 @@
-// import { getServerSession } from "next-auth/next";
-// import { authOptions } from "@/pages/api/auth/[...nextauth]";
-// import prisma from "@/app/libs/prismadb";
-
-// export async function getSession() {
-//   return await getServerSession(authOptions);
-// }
-
-// export default async function getCurrentUser() {
-//   try {
-//     const session = await getSession();
-
-//     if (!session?.user?.email) {
-//       return null;
-//     }
-
-//     const currentUser = await prisma.user.findUnique({
-//       where: {
-//         email: session.user.email as string,
-//       },
-//     });
-
-//     if (!currentUser) {
-//       return null;
-//     }
-
-//     return {
-//       ...currentUser,
-//       createdAt: currentUser.createdAt.toISOString(),
-//       updatedAt: currentUser.updatedAt.toISOString(),
-//       emailVerified: currentUser.emailVerified?.toISOString() || null,
-//       hashedPassword: currentUser.hashedPassword, // ✅ ensure this is returned
-//     };
-//   } catch (error: any) {
-//     return null;
-//   }
-// }
-
-// import { getServerSession } from "next-auth/next";
-// import { authOptions } from "@/pages/api/auth/[...nextauth]";
-// import prisma from "@/app/libs/prismadb";
-
-// export async function getSession() {
-//   return await getServerSession(authOptions);
-// }
-
-// export default async function getCurrentUser() {
-//   try {
-//     const session = await getSession();
-
-//     if (!session?.user?.email) {
-//       return null;
-//     }
-
-//     const user = await prisma.user.findUnique({
-//       where: {
-//         email: session.user.email as string,
-//       },
-//     });
-
-//     if (!user) return null;
-
-//     // return {
-//     //   ...user,
-//     //   createdAt: user.createdAt.toISOString(),
-//     //   updatedAt: user.updatedAt.toISOString(),
-//     //   emailVerified: user.emailVerified?.toISOString() || null,
-//     //   hashedPassword: undefined, // 🚫 never expose this in client components
-//     // };
-//     return user; // Don't convert to JSON here, return full object for server-side use
-//   } catch (error) {
-//     console.error("getCurrentUser error:", error);
-//     return null;
-//   }
-// }
-
 export const dynamic = 'force-dynamic';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
@@ -150,7 +74,7 @@ export default async function getCurrentUser(): Promise<SafeUser | null> {
       identityVerified: typeof user.identityVerified === 'boolean' ? user.identityVerified : false,
       phoneVerified: typeof user.phoneVerified === 'boolean' ? user.phoneVerified : false,
       isSuspended: Boolean(user.isSuspended),
-      suspendedAt: user.suspendedAt ? user.suspendedAt.toISOString() : null,
+      suspendedAt: user.suspendedAt ?? null,
       socialCardVisibility:
         user.socialCardVisibility && typeof user.socialCardVisibility === 'object'
           ? (user.socialCardVisibility as SocialCardVisibility)
