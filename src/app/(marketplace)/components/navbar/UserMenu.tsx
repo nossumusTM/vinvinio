@@ -1,7 +1,9 @@
 'use client';
 
 import { useCallback, useState, useRef, useEffect } from "react";
-import { AiOutlineMenu } from "react-icons/ai";
+import { AiOutlineMenu, AiOutlineBell } from "react-icons/ai";
+import { RiNotification3Line } from "react-icons/ri";
+import { BiMessageSquareDots } from "react-icons/bi";
 import { FaHandshake } from "react-icons/fa";
 import { FcBusinessContact } from "react-icons/fc";
 import { MdOutlineBusinessCenter } from "react-icons/md";
@@ -21,6 +23,9 @@ import LocaleButton from "./LocaleButton";
 
 import MenuItem from "./MenuItem";
 import Avatar from "../Avatar";
+import NotificationsPanel, {
+  type NotificationItem,
+} from "./NotificationsPanel";
 
 interface UserMenuProps {
   currentUser?: SafeUser | null;
@@ -42,6 +47,8 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
   const router = useRouter();
 
   const [isOpen, setIsOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notificationFreshCount, setNotificationFreshCount] = useState(0);
   const menuRef = useRef<HTMLDivElement>(null);
   // const [unreadCount, setUnreadCount] = useState(0);
 
@@ -58,10 +65,37 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
 
   const hostCardHref = hostHandle ? `/hosts/${encodeURIComponent(hostHandle)}` : '/hosts';
 
+  const notificationsLastSeenKey = currentUser?.id
+    ? `notifications:last-seen:${currentUser.id}`
+    : null;
+
+  const markNotificationsSeen = useCallback(() => {
+    if (!notificationsLastSeenKey || typeof window === 'undefined') {
+      return;
+    }
+
+    try {
+      window.localStorage.setItem(notificationsLastSeenKey, new Date().toISOString());
+      setNotificationFreshCount(0);
+    } catch (error) {
+      console.error('❌ Failed to persist notifications last seen:', error);
+    }
+  }, [notificationsLastSeenKey]);
+
 
   const toggleOpen = useCallback(() => {
     setIsOpen((value) => !value);
   }, []);
+
+  const handleNotificationsOpen = useCallback(() => {
+    setIsOpen(false);
+    setNotificationsOpen(true);
+  }, []);
+
+  const handleNotificationsClose = useCallback(() => {
+    setNotificationsOpen(false);
+    markNotificationsSeen();
+  }, [markNotificationsSeen]);
 
   const onRent = useCallback(() => {
     if (!currentUser) {
@@ -159,6 +193,80 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
     const interval = setInterval(checkUnreadCount, 5000);
     return () => clearInterval(interval);
   }, [currentUser?.id]);  
+
+  useEffect(() => {
+    if (!currentUser?.id) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadSummary = async () => {
+      try {
+        const response = await fetch('/api/notifications?limit=20', {
+          credentials: 'include',
+        });
+
+        if (cancelled) {
+          return;
+        }
+
+        if (response.status === 401) {
+          setNotificationFreshCount(0);
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch notifications summary');
+        }
+
+        const data = (await response.json()) as NotificationItem[];
+
+        if (!Array.isArray(data) || typeof window === 'undefined') {
+          setNotificationFreshCount(0);
+          return;
+        }
+
+        const lastSeenIso = notificationsLastSeenKey
+          ? window.localStorage.getItem(notificationsLastSeenKey)
+          : null;
+        const lastSeenTimestamp = lastSeenIso ? new Date(lastSeenIso).getTime() : 0;
+
+        const freshCount = data.reduce((count, item) => {
+          if (!item?.createdAt) {
+            return count;
+          }
+
+          const createdAt = new Date(item.createdAt).getTime();
+          if (!Number.isFinite(createdAt)) {
+            return count;
+          }
+
+          return !lastSeenTimestamp || createdAt > lastSeenTimestamp ? count + 1 : count;
+        }, 0);
+
+        setNotificationFreshCount(freshCount);
+      } catch (error) {
+        if (!cancelled) {
+          console.error('❌ Failed to fetch notifications summary:', error);
+        }
+      }
+    };
+
+    loadSummary();
+    const interval = window.setInterval(loadSummary, 60_000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [currentUser?.id, notificationsLastSeenKey]);
+
+  useEffect(() => {
+    if (notificationsOpen) {
+      markNotificationsSeen();
+    }
+  }, [notificationsOpen, markNotificationsSeen]);
 
   const userRole = currentUser?.role;
   const initials = currentUser?.name?.[0]?.toUpperCase() || 'V';
@@ -297,6 +405,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                   <>
                     <MenuItem
                       label="Messenger"
+                      icon={<BiMessageSquareDots size={18} />}
                       onClick={() => {
                         setIsOpen(false);
                         if (messenger.isOpen) {
@@ -306,6 +415,13 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                         }
                       }}
                       badgeCount={messenger.unreadCount > 0 ? messenger.unreadCount : undefined}
+                    />
+
+                    <MenuItem
+                      label="Notifications"
+                      icon={<RiNotification3Line size={18} />}
+                      badgeCount={notificationFreshCount > 0 ? notificationFreshCount : undefined}
+                      onClick={handleNotificationsOpen}
                     />
 
                     <hr className="my-2" />
@@ -536,6 +652,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
           </motion.div>
         )}
       </AnimatePresence>
+      <NotificationsPanel isOpen={notificationsOpen} onClose={handleNotificationsClose} />
     </div>
   );
 };

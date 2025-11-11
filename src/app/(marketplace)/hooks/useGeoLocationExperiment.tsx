@@ -43,20 +43,35 @@ const createSafeStorage = () => {
     },
   };
 
-  return createJSONStorage<GeoLocationExperimentState>(() => {
+//   return createJSONStorage<GeoLocationExperimentState>(() => {
+//     if (typeof window === 'undefined') {
+//       return memoryStorage;
+//     }
+
+//     try {
+//       return window.localStorage;
+//     } catch (error) {
+//       if (process.env.NODE_ENV !== 'production') {
+//         console.warn('Geo location experiment persistence disabled', error);
+//       }
+//       return memoryStorage;
+//     }
+//   });
+
+return createJSONStorage<Partial<GeoLocationExperimentState>>(() => {
     if (typeof window === 'undefined') {
-      return memoryStorage;
+        return memoryStorage;
     }
 
     try {
-      return window.localStorage;
+        return window.localStorage;
     } catch (error) {
-      if (process.env.NODE_ENV !== 'production') {
+        if (process.env.NODE_ENV !== 'production') {
         console.warn('Geo location experiment persistence disabled', error);
-      }
-      return memoryStorage;
+        }
+        return memoryStorage;
     }
-  });
+    });
 };
 
 const useGeoLocationExperiment = createWithEqualityFn<GeoLocationExperimentState>()(
