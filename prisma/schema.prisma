@@ -289,6 +289,18 @@ model RemovedConversation {
   removedUser User @relation("Removed", fields: [removedId], references: [id])
 }
 
+model NotificationDismissal {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String   @db.ObjectId
+  notificationId String
+  dismissedAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, notificationId])
+  @@map("NotificationDismissal")
+}
+
 model Earning {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId // ✅ MongoDB ObjectId
   userId    String   @db.ObjectId // ✅ Must match User.id type

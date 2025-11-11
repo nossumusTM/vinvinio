@@ -428,7 +428,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
 
                     <hr />
 
-                    <div className="pl-6 mt-10">
+                    <div id="reviews" className="pl-6 mt-10">
                         <h1 className="md:text-2xl text-sm font-semibold">Stories from the Guestbook</h1>
                         </div>
 
