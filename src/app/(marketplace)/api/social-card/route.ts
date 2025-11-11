@@ -39,9 +39,7 @@ const normalizeVisibility = (input: unknown): SocialCardVisibility => {
 };
 
 const normalizeVisitedPlaces = (input: unknown): SocialCardVisitedPlace[] => {
-  if (!Array.isArray(input)) {
-    return [];
-  }
+  if (!Array.isArray(input)) return [];
 
   const seen = new Set<string>();
 
@@ -49,17 +47,19 @@ const normalizeVisitedPlaces = (input: unknown): SocialCardVisitedPlace[] => {
     .map((entry) => {
       if (!entry || typeof entry !== 'object') return null;
 
-      const countryCodeRaw = (entry as Record<string, unknown>).countryCode;
-      const countryNameRaw = (entry as Record<string, unknown>).countryName;
-      const cityRaw = (entry as Record<string, unknown>).city;
+      const rec = entry as Record<string, unknown>;
+      const ccRaw = rec.countryCode;
+      const cnRaw = rec.countryName;
+      const cityRaw = rec.city;
 
-      if (typeof countryCodeRaw !== 'string' || typeof countryNameRaw !== 'string') {
-        return null;
-      }
+      if (typeof ccRaw !== 'string' || typeof cnRaw !== 'string') return null;
 
-      const countryCode = countryCodeRaw.trim().toUpperCase();
-      const countryName = countryNameRaw.trim();
-      const city = typeof cityRaw === 'string' ? cityRaw.trim() : undefined;
+      const countryCode = ccRaw.trim().toUpperCase();
+      const countryName = cnRaw.trim();
+      const city =
+        typeof cityRaw === 'string' && cityRaw.trim().length > 0
+          ? cityRaw.trim()
+          : null; // allow null per type
 
       if (!countryCode || !countryName) return null;
 
@@ -70,11 +70,12 @@ const normalizeVisitedPlaces = (input: unknown): SocialCardVisitedPlace[] => {
       return {
         countryCode,
         countryName,
-        city: city && city.length > 0 ? city : undefined,
-      } satisfies SocialCardVisitedPlace;
+        city, // string | null
+      } as SocialCardVisitedPlace;
     })
-    .filter((place): place is SocialCardVisitedPlace => Boolean(place));
+    .filter((p): p is SocialCardVisitedPlace => p !== null);
 };
+
 
 export async function GET() {
   const currentUser = await getCurrentUser();
