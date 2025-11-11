@@ -8,14 +8,17 @@ import {
   AiOutlineCalendar,
   AiOutlineCheckCircle,
   AiOutlineCloseCircle,
+  AiOutlineClose,
   AiOutlineStop,
   AiOutlineUpload,
 } from 'react-icons/ai';
 import { BiMessageDetail } from 'react-icons/bi';
 import { BsStarFill } from 'react-icons/bs';
 import { formatDistanceToNow } from 'date-fns';
+import { useRouter } from 'next/navigation';
 
 import Avatar from '../Avatar';
+import useMessenger from '@/app/(marketplace)/hooks/useMessager';
 
 type Actor = {
   id: string;
@@ -157,6 +160,8 @@ const itemVariants = {
 const loadingSkeletons = Array.from({ length: 4 }, (_, index) => index);
 
 const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isOpen, onClose }) => {
+  const router = useRouter();
+  const messenger = useMessenger();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -214,6 +219,90 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isOpen, onClose
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
+  const closeAndNavigate = useCallback(
+    (href?: string | null) => {
+      if (href) {
+        router.push(href);
+      }
+      onClose();
+    },
+    [onClose, router],
+  );
+
+  const handleNotificationClick = useCallback(
+    (notification: NotificationItem) => {
+      const context = notification.context ?? {};
+      const listingId = typeof context.listingId === 'string' ? context.listingId : null;
+      const reservationId = typeof context.reservationId === 'string' ? context.reservationId : null;
+
+      switch (notification.type) {
+        case 'booking_received': {
+          closeAndNavigate('/reservations');
+          return;
+        }
+        case 'booking_confirmed': {
+          closeAndNavigate('/trips');
+          return;
+        }
+        case 'booking_cancelled': {
+          const description = notification.description.toLowerCase();
+          if (description.includes('cancelled their booking')) {
+            closeAndNavigate('/reservations');
+          } else if (description.includes('confirmed the cancellation')) {
+            closeAndNavigate('/trips');
+          } else if (reservationId) {
+            closeAndNavigate(`/reservations?reservationId=${reservationId}`);
+          } else {
+            closeAndNavigate('/reservations');
+          }
+          return;
+        }
+        case 'listing_approved': {
+          closeAndNavigate(listingId ? `/listings/${listingId}` : '/my-listings');
+          return;
+        }
+        case 'listing_rejected': {
+          closeAndNavigate('/my-listings?tab=rejected');
+          return;
+        }
+        case 'listing_deactivated': {
+          closeAndNavigate('/my-listings?tab=inactive');
+          return;
+        }
+        case 'listing_submitted': {
+          closeAndNavigate('/my-listings?tab=pending');
+          return;
+        }
+        case 'listing_revision_requested': {
+          closeAndNavigate('/my-listings?tab=revision');
+          return;
+        }
+        case 'message_received': {
+          const actor = notification.actor;
+          if (actor?.id) {
+            messenger.openChat({
+              id: actor.id,
+              name: actor.name ?? actor.username ?? 'Vuola user',
+              image: actor.image ?? undefined,
+            });
+          } else {
+            messenger.openList();
+          }
+          onClose();
+          return;
+        }
+        case 'review_received': {
+          closeAndNavigate(listingId ? `/listings/${listingId}#reviews` : '/listings');
+          return;
+        }
+        default: {
+          closeAndNavigate('/profile');
+        }
+      }
+    },
+    [closeAndNavigate, messenger, onClose],
+  );
+
   const content = useMemo(() => {
     if (isLoading) {
       return (
@@ -268,11 +357,14 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isOpen, onClose
           }
 
           return (
-            <motion.article
+            <motion.button
+              type="button"
               key={notification.id}
               variants={itemVariants}
               whileHover={{ y: -2 }}
-              className="group rounded-2xl border border-neutral-100 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
+              whileTap={{ scale: 0.99 }}
+              onClick={() => handleNotificationClick(notification)}
+              className="group flex w-full flex-col rounded-2xl border border-neutral-100 bg-white p-4 text-left shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-200"
             >
               <div className="flex gap-3">
                 <div
@@ -313,12 +405,12 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isOpen, onClose
                   )}
                 </div>
               </div>
-            </motion.article>
+            </motion.button>
           );
         })}
       </motion.div>
     );
-  }, [error, isLoading, notifications]);
+  }, [error, handleNotificationClick, isLoading, notifications]);
 
   return (
     <AnimatePresence>
@@ -326,7 +418,7 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isOpen, onClose
         <>
           <motion.div
             key="notifications-backdrop"
-            className="fixed inset-0 z-[100] bg-black/30"
+            className="fixed inset-0 z-[100] h-screen w-screen bg-black/30"
             variants={backdropVariants}
             initial="hidden"
             animate="visible"
@@ -336,7 +428,7 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isOpen, onClose
 
           <motion.aside
             key="notifications-panel"
-            className="fixed inset-y-0 right-0 z-[101] flex w-full max-w-md flex-col bg-white shadow-2xl"
+            className="fixed right-0 top-0 z-[101] flex h-screen w-full max-w-md flex-col rounded-l-3xl bg-white shadow-2xl"
             variants={panelVariants}
             initial="hidden"
             animate="visible"
@@ -354,12 +446,12 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isOpen, onClose
                   className="rounded-full border border-neutral-200 p-2 text-neutral-500 transition hover:text-neutral-900"
                   aria-label="Close notifications"
                 >
-                  <AiOutlineCloseCircle className="h-4 w-4" />
+                  <AiOutlineClose className="h-4 w-4" />
                 </button>
               </div>
             </header>
 
-            <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
+            <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6 pr-7">
               {content}
             </div>
           </motion.aside>

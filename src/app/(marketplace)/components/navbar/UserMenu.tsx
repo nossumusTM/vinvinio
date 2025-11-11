@@ -63,6 +63,23 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
 
   const hostCardHref = hostHandle ? `/hosts/${encodeURIComponent(hostHandle)}` : '/hosts';
 
+  const notificationsLastSeenKey = currentUser?.id
+    ? `notifications:last-seen:${currentUser.id}`
+    : null;
+
+  const markNotificationsSeen = useCallback(() => {
+    if (!notificationsLastSeenKey || typeof window === 'undefined') {
+      return;
+    }
+
+    try {
+      window.localStorage.setItem(notificationsLastSeenKey, new Date().toISOString());
+      setNotificationFreshCount(0);
+    } catch (error) {
+      console.error('❌ Failed to persist notifications last seen:', error);
+    }
+  }, [notificationsLastSeenKey]);
+
 
   const toggleOpen = useCallback(() => {
     setIsOpen((value) => !value);
@@ -174,23 +191,6 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
     const interval = setInterval(checkUnreadCount, 5000);
     return () => clearInterval(interval);
   }, [currentUser?.id]);  
-
-  const notificationsLastSeenKey = currentUser?.id
-    ? `notifications:last-seen:${currentUser.id}`
-    : null;
-
-  const markNotificationsSeen = useCallback(() => {
-    if (!notificationsLastSeenKey || typeof window === 'undefined') {
-      return;
-    }
-
-    try {
-      window.localStorage.setItem(notificationsLastSeenKey, new Date().toISOString());
-      setNotificationFreshCount(0);
-    } catch (error) {
-      console.error('❌ Failed to persist notifications last seen:', error);
-    }
-  }, [notificationsLastSeenKey]);
 
   useEffect(() => {
     if (!currentUser?.id) {
