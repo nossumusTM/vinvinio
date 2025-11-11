@@ -60,7 +60,7 @@ const Messenger = ({ currentUser }: MessengerProps) => {
               {/* Header */}
               <div className="messenger-header flex justify-between items-center p-3 border-b cursor-move">
                 <p className="font-medium text-xl pl-2">Messenger</p>
-                <button className="pr-2" onClick={closeMessenger}>✕</button>
+                <button className="rounded-full border text-xs border-neutral-200 aspect-square px-3 py-1 text-neutral-500 transition hover:text-neutral-900" onClick={closeMessenger}>✕</button>
               </div>
   
               {/* Content */}
