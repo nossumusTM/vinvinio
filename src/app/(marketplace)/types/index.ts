@@ -123,8 +123,10 @@ type SafeUserStrict = Omit<
 
   phoneVerified: boolean;
 
-    referenceId: string | null;
-    favoriteIds: string[];
+  passwordUpdatedAt: string | null;
+
+  referenceId: string | null;
+  favoriteIds: string[];
 
   isSuspended: boolean;
   suspendedAt: Date | string | null;
