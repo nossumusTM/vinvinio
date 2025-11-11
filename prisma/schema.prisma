@@ -96,6 +96,7 @@ model User {
 
   resetTokens PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
+  notificationDismissals NotificationDismissal[]
 
   @@map("User")
 }
