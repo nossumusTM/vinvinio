@@ -35,25 +35,29 @@ export async function GET(request: NextRequest) {
       }
 
       if (categoryParam) {
-        const variations = Array.from(
-          new Set([
-            categoryParam,
-            categoryParam.toLowerCase(),
-            categoryParam.toUpperCase(),
-            categoryParam.replace(/\s+/g, '_'),
-            categoryParam.replace(/\s+/g, '_').toLowerCase(),
-            categoryParam.replace(/\s+/g, '_').toUpperCase(),
-          ])
-        );
+  const variations = Array.from(
+    new Set([
+      categoryParam,
+      categoryParam.toLowerCase(),
+      categoryParam.toUpperCase(),
+      categoryParam.replace(/\s+/g, '_'),
+      categoryParam.replace(/\s+/g, '_').toLowerCase(),
+      categoryParam.replace(/\s+/g, '_').toUpperCase(),
+    ])
+  );
 
-        andConditions.push({
-          OR: [
-            ...variations.map((value) => ({ category: { has: value } })),
-            ...variations.map((value) => ({
-              primaryCategory: { equals: value, mode: 'insensitive' },
-            })),
-          ],
-        });
+  // Help TS by typing each piece as ListingWhereInput
+  const categoryOrs: Prisma.ListingWhereInput[] = variations.map((value) => ({
+    category: { has: value },
+  }));
+
+  const primaryOrs: Prisma.ListingWhereInput[] = variations.map((value) => ({
+    primaryCategory: { equals: value, mode: Prisma.QueryMode.insensitive },
+  }));
+
+  andConditions.push({
+    OR: [...categoryOrs, ...primaryOrs],
+  });
       }
 
       if (andConditions.length > 0) {
