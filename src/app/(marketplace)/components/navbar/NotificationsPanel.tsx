@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
 import { AnimatePresence, motion } from 'framer-motion';
+import type { Variants } from 'framer-motion';
 import {
   AiOutlineBell,
   AiOutlineCalendar,
@@ -137,24 +138,36 @@ const backdropVariants = {
   exit: { opacity: 0 },
 };
 
-const panelVariants = {
+const panelVariants: Variants = {
   hidden: { x: '100%', opacity: 0 },
-  visible: { x: 0, opacity: 1, transition: { type: 'spring', stiffness: 260, damping: 30 } },
+  visible: {
+    x: 0,
+    opacity: 1,
+    transition: { type: 'spring' as const, stiffness: 260, damping: 30 },
+  },
   exit: { x: '100%', opacity: 0, transition: { duration: 0.2 } },
+};
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { type: 'spring' as const, stiffness: 320, damping: 28 },
+  },
+  dismiss: (seed: number) => ({
+    opacity: 0,
+    scale: 0.85 - (seed % 3) * 0.02,
+    rotate: (seed % 2 ? -1 : 1) * 2,
+    y: -6,
+    filter: 'blur(2px)',
+    transition: { duration: 0.2, ease: [0.2, 0.7, 0.2, 1] as const },
+  }),
 };
 
 const listVariants = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.08, delayChildren: 0.08 } },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 16 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { type: 'spring', stiffness: 320, damping: 28 },
-  },
 };
 
 const loadingSkeletons = Array.from({ length: 4 }, (_, index) => index);
@@ -372,13 +385,9 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isOpen, onClose
     }
 
     return (
-      <motion.div
-        variants={listVariants}
-        initial="hidden"
-        animate="visible"
-        className="flex flex-col gap-4"
-      >
-        {notifications.map((notification) => {
+      <motion.div variants={listVariants} initial="hidden" animate="visible" className="flex flex-col gap-4">
+        <AnimatePresence mode="popLayout">
+        {notifications.map((notification, idx) => {
           const meta = notificationMeta[notification.type] ?? fallbackMeta;
           const actorName = notification.actor?.name ?? notification.actor?.username ?? 'Vuola user';
           const actorHandle = notification.actor?.username;
@@ -394,15 +403,20 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isOpen, onClose
           return (
             <motion.div
               key={notification.id}
+              layout
+              custom={idx}                     // feeds the seed into variants.dismiss
               variants={itemVariants}
+              initial="hidden"
+              animate="visible"
+              exit="dismiss"
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.99 }}
               role="button"
               tabIndex={0}
               onClick={() => handleNotificationClick(notification)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
                   handleNotificationClick(notification);
                 }
               }}
@@ -467,6 +481,7 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isOpen, onClose
             </motion.div>
           );
         })}
+        </AnimatePresence>
       </motion.div>
     );
   }, [error, handleDismissNotification, handleNotificationClick, isLoading, notifications, pendingDismissals]);
@@ -477,7 +492,7 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isOpen, onClose
         <>
           <motion.div
             key="notifications-backdrop"
-            className="fixed inset-0 z-[100] h-screen w-screen bg-black/30"
+            className=" fixed inset-0 z-[100] h-screen flex items-start p-3 pointer-events-auto outline-none focus:outline-none bg-black/30 w-full "
             variants={backdropVariants}
             initial="hidden"
             animate="visible"
@@ -487,11 +502,13 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isOpen, onClose
 
           <motion.aside
             key="notifications-panel"
-            className="fixed right-0 top-0 z-[101] flex h-screen w-full max-w-md flex-col rounded-l-3xl bg-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+            className="fixed right-0 top-0 z-[101] m-[8px] flex h-[calc(100dvh-16px)] w-full max-w-md flex-col rounded-3xl bg-white shadow-2xl"
             variants={panelVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
+            transition={{ duration: 0.25, ease: 'easeInOut', type: 'tween' }}
           >
             <header className="border-b border-neutral-100 px-6 py-5">
               <div className="flex items-center justify-between">
