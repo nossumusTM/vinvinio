@@ -4,7 +4,7 @@ import prisma from '@/app/(marketplace)/libs/prismadb';
 
 const OBJECT_ID_RE = /^[0-9a-f]{24}$/i;
 
-const normalizedFieldExpression = (field: string): Record<string, unknown> => ({
+const normalizedFieldExpression = (field: string): Prisma.InputJsonObject => ({
   $toLower: {
     $reduce: {
       input: {
@@ -108,15 +108,9 @@ export const findUserIdByHandle = async (
     return null;
   }
 
-  const pipeline: Record<string, unknown>[] = [
+  const pipeline: Prisma.InputJsonValue[] = [
     ...(options.role
-      ? [
-          {
-            $match: {
-              role: options.role,
-            },
-          },
-        ]
+      ? [{ $match: { role: options.role } } as Prisma.InputJsonObject]
       : []),
     {
       $project: {
@@ -126,7 +120,7 @@ export const findUserIdByHandle = async (
         normalizedName: normalizedFieldExpression('name'),
         normalizedHostName: normalizedFieldExpression('hostName'),
       },
-    },
+    } as Prisma.InputJsonObject,
     {
       $match: {
         $expr: {
@@ -138,13 +132,17 @@ export const findUserIdByHandle = async (
           ],
         },
       },
-    },
-    { $limit: 1 },
+    } as Prisma.InputJsonObject,
+    { $limit: 1 } as Prisma.InputJsonObject,
   ];
 
-  const [fallback] = (await prisma.user.aggregateRaw({
+  type AggDoc = { _id?: unknown };
+
+  const raw = (await prisma.user.aggregateRaw({
     pipeline,
-  })) as Array<{ _id?: unknown }>;
+  })) as unknown as AggDoc[];
+
+  const [fallback] = Array.isArray(raw) ? raw : [];
 
   const fallbackId = extractIdFromAggregate(fallback?._id);
 
