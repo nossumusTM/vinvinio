@@ -21,7 +21,7 @@ import { RiSecurePaymentLine } from "react-icons/ri";
 import ConfirmPopup from "../components/ConfirmPopup";
 import EarningsCard from "../components/EarnigsCard";
 import { Switch } from '@headlessui/react';
-import { FiInfo } from "react-icons/fi";
+import { FiInfo, FiMail, FiPhone } from "react-icons/fi";
 import FAQ from "../components/FAQ";
 import toast from "react-hot-toast";
 import useCurrencyFormatter from '@/app/(marketplace)/hooks/useCurrencyFormatter';
@@ -75,6 +75,121 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   const [verifying, setVerifying] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
+  const [phoneVerificationLoading, setPhoneVerificationLoading] = useState(false);
+  const [emailVerificationRequested, setEmailVerificationRequested] = useState(false);
+  const [phoneVerificationRequested, setPhoneVerificationRequested] = useState(false);
+
+  const [viewRole, setViewRole] = useState<'customer' | 'host' | 'promoter' | 'moder'>(currentUser.role);
+
+  useEffect(() => {
+    if (currentUser.role !== 'host') {
+      setViewRole(currentUser.role);
+    }
+  }, [currentUser.role]);
+
+  const pageVariants = useMemo(
+    () => ({
+      hidden: { opacity: 0 },
+      visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
+    }),
+    []
+  );
+
+  const cardVariants = useMemo(
+    () => ({
+      hidden: { opacity: 0, y: 18 },
+      visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] } },
+    }),
+    []
+  );
+
+  const sectionVariants = useMemo(
+    () => ({
+      hidden: { opacity: 0, y: 22 },
+      visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] } },
+      exit: { opacity: 0, y: -14, transition: { duration: 0.25 } },
+    }),
+    []
+  );
+
+  const canToggleRole = currentUser.role === 'host';
+  const isHostView = viewRole === 'host';
+  const modeLabel = isHostView ? 'Host Mode' : 'Guest Mode';
+  const modeGradient = isHostView
+    ? 'from-indigo-500 via-sky-500 to-blue-500'
+    : 'from-amber-400 via-orange-500 to-rose-500';
+  const modeDescription = isHostView
+    ? 'Manage listings, payouts and analytics without losing guest-facing data.'
+    : 'Preview the marketplace as a guest while we keep your host workspace untouched.';
+
+  const lastPasswordUpdateDate = useMemo(
+    () => (currentUser.passwordUpdatedAt ? new Date(currentUser.passwordUpdatedAt) : null),
+    [currentUser.passwordUpdatedAt]
+  );
+
+  const handleRoleToggle = (nextIsHost: boolean) => {
+    if (!canToggleRole) return;
+
+    setViewRole((prev) => {
+      const target = nextIsHost ? 'host' : 'customer';
+      if (prev === target) {
+        return prev;
+      }
+
+      toast.success(`Switched to ${target === 'host' ? 'Host' : 'Guest'} mode`, {
+        iconTheme: {
+          primary: '#2200ffff',
+          secondary: '#fff',
+        },
+      });
+
+      return target;
+    });
+  };
+
+  const handleEmailVerificationRequest = async () => {
+    if (verifying || emailVerificationRequested) return;
+
+    setVerifying(true);
+    try {
+      await axios.post('/api/users/request-email-verification');
+      setEmailVerificationRequested(true);
+      toast.success('Verification email sent!', {
+        iconTheme: {
+          primary: '#2200ffff',
+          secondary: '#fff',
+        },
+      });
+    } catch (err) {
+      console.error('Failed to send verification email:', err);
+      toast.error('Failed to send verification email.');
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const handlePhoneVerificationRequest = async () => {
+    if (phoneVerificationLoading || phoneVerificationRequested) return;
+
+    setPhoneVerificationLoading(true);
+    try {
+      const response = await axios.post('/api/users/request-phone-verification');
+      if (response.status === 200) {
+        setPhoneVerificationRequested(true);
+        toast.success('We\'ll text you shortly to verify your phone.', {
+          iconTheme: {
+            primary: '#2200ffff',
+            secondary: '#fff',
+          },
+        });
+      }
+    } catch (error) {
+      console.error('Failed to request phone verification:', error);
+      toast.error('Could not start phone verification right now.');
+    } finally {
+      setPhoneVerificationLoading(false);
+    }
+  };
 
   const [earnings, setEarnings] = useState<{
     daily: EarningsEntry[];
@@ -709,641 +824,706 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
 
     return (
     <Container className="py-10">
-      <div className="pageadjust px-5">
-
-      {/* Avatar & name */}
-      <div className="pl-5 pr-5 pb-6 rounded-xl shadow-md">
-        {/* Divider */}
-        <div className="flex items-center gap-4 mt-0 md:mt-4">
-          <div
-            className="relative group cursor-pointer"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            {profileImage ? (
-              <Image
-                src={profileImage}
-                alt="User"
-                width={80}
-                height={80}
-                className="rounded-full mt-2 md:mt-0 object-cover shadow-xl hover:shadow-2xl transition"
-              />
-            ) : (
-              <div className={twMerge(
-                "w-[100px] h-[100px] rounded-full flex items-center justify-center text-white font-medium text-5xl bg-black",
-              )}
-              // style={{
-              //   background: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
-              // }}
-              >
-                {initials}
-              </div>
-            )}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="hidden"
-            />
-          </div>
-
-          {/* <div className="pt-1 text-normal">
-                <p className="text-2xl font-semibold">{currentUser?.legalName || currentUser?.name || "Unnamed"}</p>
-                <p className="text-md font-semibold">{currentUser?.email || ""}</p>
-              </div> */}
-              <div className="pt-5 md:pt-1 text-normal">
-                {currentUser?.isSuspended && (
-                  <span className="mb-2 inline-flex items-center gap-2 rounded-full bg-red-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-red-700 shadow-sm">
-                    Account suspended
-                    {suspensionDate && (
-                      <span className="text-[10px] font-medium lowercase text-red-600/80">
-                        since {suspensionDate.toLocaleDateString()}
-                      </span>
-                    )}
-                  </span>
-                )}
-                <p className="md:text-2xl font-semibold">
-                  {currentUser?.legalName || currentUser?.name || "Unnamed"}
-                </p>
-
-                {/* <div className="flex items-center gap-3">
-                  <p className="text-md font-semibold">{currentUser?.email || ""}</p>
-
-                  {currentUser?.emailVerified ? (
-                    <span className="text-xs font-semibold text-green-700 bg-green-100 border border-green-400 px-2 py-0.5 rounded-xl">
-                      Verified
-                    </span>
-                  ) : (
-                    <button
-                      onClick={async () => {
-                        if (verifying) return;
-
-                        setVerifying(true);
-                        try {
-                          await axios.post("/api/users/request-email-verification");
-                          toast.success('Verification email sent!', {
-                            iconTheme: {
-                              primary: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #6adcff, #ffffff)',
-                              secondary: '#fff',
-                            }
-                          });
-                        } catch (err: any) {
-                          toast.error("Failed to send verification email.");
-                        } finally {
-                          setVerifying(false);
-                        }
-                      }}
-                      disabled={verifying}
-                      className={`text-sm font-medium border px-3 py-1.5 rounded-xl transition 
-                        ${verifying ? 'bg-neutral-200 text-neutral-500 pointer-events-none' : 'text-blue-600 hover:bg-neutral-100'}
-                      `}
+      <motion.div
+        className="pageadjust px-5 space-y-8"
+        initial="hidden"
+        animate="visible"
+        variants={pageVariants}
+      >
+        <motion.div
+          variants={cardVariants}
+          className="rounded-3xl border border-neutral-200 bg-white/70 backdrop-blur-sm px-5 py-6 shadow-lg md:px-8"
+        >
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-stretch">
+            <div className="flex flex-1 flex-col gap-4">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex items-start gap-4">
+                  {canToggleRole ? (
+                    <Switch.Group
+                      as="div"
+                      className="flex h-full min-w-[7.5rem] flex-col justify-between gap-2"
                     >
-                      {verifying ? (
-                        <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                          <span>Sending...</span>
-                        </div>
-                      ) : (
-                        'Verify Email'
-                      )}
-                    </button>
-                  )}
-                </div> */}
-                <div className="flex flex-col md:flex-row md:items-center md:gap-3">
-                  {/* <p className="text-sm md:text-lg font-normal">{currentUser?.email || ""}</p> */}
-
-                  {/* <div className="mt-2 md:mt-0">
-                    {currentUser?.emailVerified ? (
-                      <span className="text-xs font-semibold text-green-700 bg-green-100 border border-green-400 px-2 py-0.5 rounded-xl">
-                        Verified
-                      </span>
-                    ) : (
-                      <button
-                        onClick={async () => {
-                          if (verifying) return;
-
-                          setVerifying(true);
-                          try {
-                            await axios.post("/api/users/request-email-verification");
-                            toast.success('Verification email sent!', {
-                              iconTheme: {
-                                primary: '#2200ffff',
-                                secondary: '#fff',
-                              }
-                            });
-                          } catch (err: any) {
-                            toast.error("Failed to send verification email.");
-                          } finally {
-                            setVerifying(false);
-                          }
-                        }}
-                        disabled={verifying}
-                        className={`text-xs font-medium border px-3 py-1.5 rounded-xl transition 
-                          ${verifying ? 'bg-neutral-200 text-neutral-500 pointer-events-none' : 'text-blue-600 hover:bg-neutral-100'}
-                        `}
-                      >
-                        {verifying ? (
-                          <div className="flex items-center gap-2">
-                            <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                            <span>Sending...</span>
-                          </div>
-                        ) : (
-                          'Verify Email'
+                      <div className="flex flex-col gap-1">
+                        <Switch.Label className="text-[10px] font-semibold uppercase tracking-[0.28em] text-neutral-500">
+                          Role View
+                        </Switch.Label>
+                        <Switch.Description className="text-[11px] text-neutral-500">
+                          {isHostView ? 'Hosting tools active' : 'Guest preview active'}
+                        </Switch.Description>
+                      </div>
+                      <Switch
+                        checked={isHostView}
+                        onChange={handleRoleToggle}
+                        className={twMerge(
+                          'relative inline-flex h-12 w-32 items-center justify-between rounded-2xl border border-black/10 px-3 text-[11px] font-semibold uppercase tracking-wide transition focus:outline-none focus:ring-2 focus:ring-black/60',
+                          isHostView
+                            ? 'bg-gradient-to-r from-indigo-500 via-sky-500 to-blue-500 text-white shadow-lg'
+                            : 'bg-neutral-100 text-neutral-600 shadow-sm'
                         )}
-                      </button>
+                      >
+                        <span className="sr-only">Toggle between host and guest modes</span>
+                        <span className="pointer-events-none flex w-full items-center justify-between">
+                          <span>Guest</span>
+                          <span>Host</span>
+                        </span>
+                        <motion.span
+                          layout
+                          transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+                          className={twMerge(
+                            'pointer-events-none absolute left-1 top-1 flex h-10 w-[4.25rem] items-center justify-center rounded-xl bg-white text-xs font-semibold uppercase tracking-wide text-neutral-900 shadow-lg',
+                            isHostView ? 'text-neutral-900' : 'text-neutral-900'
+                          )}
+                          animate={{ x: isHostView ? 52 : 0 }}
+                        >
+                          {isHostView ? 'Host' : 'Guest'}
+                        </motion.span>
+                      </Switch>
+                      <p className="text-[10px] text-neutral-400">
+                        Your host workspace stays exactly as you left it.
+                      </p>
+                    </Switch.Group>
+                  ) : (
+                    <span className="hidden h-14 w-16 shrink-0 items-center justify-center rounded-2xl border border-neutral-200 bg-neutral-100 text-xs font-semibold uppercase tracking-wide text-neutral-600 sm:flex">
+                      {viewRole}
+                    </span>
+                  )}
+                  <div
+                    className="relative cursor-pointer overflow-hidden rounded-full border-4 border-white/80 shadow-xl transition hover:shadow-2xl"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {profileImage ? (
+                      <Image
+                        src={profileImage}
+                        alt="User"
+                        width={96}
+                        height={96}
+                        className="h-24 w-24 object-cover"
+                      />
+                    ) : (
+                      <div
+                        className={twMerge(
+                          'flex h-24 w-24 items-center justify-center rounded-full bg-black text-4xl font-semibold text-white'
+                        )}
+                      >
+                        {initials}
+                      </div>
                     )}
-                  </div> */}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                  </div>
+                </div>
+                <div className="flex-1 space-y-3">
+                  {currentUser?.isSuspended && (
+                    <span className="inline-flex items-center gap-2 rounded-full bg-red-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-red-700 shadow-sm">
+                      Account suspended
+                      {suspensionDate && (
+                        <span className="text-[10px] font-medium lowercase text-red-600/80">
+                          since {suspensionDate.toLocaleDateString()}
+                        </span>
+                      )}
+                    </span>
+                  )}
+                  <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <p className="text-xl font-semibold text-neutral-900 md:text-2xl">
+                        {currentUser?.legalName || currentUser?.name || 'Unnamed'}
+                      </p>
+                      <span className="inline-flex items-center rounded-full bg-neutral-900/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-neutral-700">
+                        {modeLabel}
+                      </span>
+                    </div>
+                    <p className="text-xs text-neutral-500 sm:text-sm">
+                      {currentUser.username
+                        ? `@${currentUser.username}`
+                        : 'Complete your profile to share more about you'}
+                    </p>
+                  </div>
+                  <div className="grid gap-2 text-sm text-neutral-600 sm:text-base">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <FiMail className="text-black" size={16} />
+                      <span className="truncate text-sm font-medium text-neutral-800 sm:text-base">
+                        {currentUser?.email || 'Email not provided'}
+                      </span>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${
+                          currentUser?.emailVerified ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                        }`}
+                      >
+                        {currentUser?.emailVerified ? 'Verified' : 'Unverified'}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <FiPhone className="text-black" size={16} />
+                      <span className="truncate text-sm font-medium text-neutral-800 sm:text-base">
+                        {currentUser?.phone || 'Phone not added'}
+                      </span>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${
+                          currentUser?.phoneVerified ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                        }`}
+                      >
+                        {currentUser?.phoneVerified ? 'Verified' : 'Unverified'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-  
-          {activeSection === 'personal-info' && (
-            <>
-            <div className="mt-8 pt-0 md:pt-5 w-full flex flex-col lg:flex-row items-start gap-10">
-              <div className="w-full lg:w-1/2 bg-white rounded-xl shadow-md hover:shadow-lg p-6">
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => setActiveSection(null)}
-                      className="text-sm text-black bg-transparent hover:bg-neutral-100 rounded-full py-1 px-2 transition py-1 px-2 transition"
-                    >
-                      ←
-                    </button>
-                    <h2 className="text-md md:text-lg font-bold">Personal Area</h2>
-                  </div>
+            <motion.div
+              variants={cardVariants}
+              className={`relative flex w-full overflow-hidden rounded-2xl border border-white/30 bg-gradient-to-br ${modeGradient} text-white shadow-md lg:max-w-sm`}
+            >
+              <div className="relative z-10 flex h-full w-full flex-col justify-between gap-4 p-6">
+                <div className="flex items-center justify-between text-xs uppercase tracking-wide text-white/80">
+                  <span className="rounded-full bg-white/20 px-3 py-1 font-semibold text-white">
+                    {modeLabel}
+                  </span>
+                  <span className="text-white/70">{isHostView ? 'Full control' : 'Guest preview'}</span>
                 </div>
+                <p className="text-base font-semibold leading-relaxed md:text-lg">
+                  {modeDescription}
+                </p>
+                <p className="text-xs text-white/80">
+                  {canToggleRole
+                    ? 'Switch roles anytime. We keep your host setup intact.'
+                    : `You are exploring Vuola as a ${modeLabel.toLowerCase()}.`}
+                </p>
+              </div>
+              <motion.svg
+                className="absolute -right-8 -top-8 h-32 w-32 text-white/30"
+                viewBox="0 0 100 100"
+                initial={{ rotate: -8, scale: 0.9, opacity: 0 }}
+                animate={{ rotate: 0, scale: 1, opacity: 1 }}
+                transition={{ duration: 0.8, ease: 'easeOut' }}
+              >
+                <defs>
+                  <linearGradient id="modeGlow" x1="0" x2="1" y1="0" y2="1">
+                    <stop offset="0%" stopColor="#ffffff" stopOpacity="0.6" />
+                    <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                <motion.circle
+                  cx="50"
+                  cy="50"
+                  r="32"
+                  fill="none"
+                  stroke="url(#modeGlow)"
+                  strokeWidth="8"
+                  strokeDasharray="120"
+                  animate={{ strokeDashoffset: [120, 0, 120] }}
+                  transition={{ repeat: Infinity, duration: 6, ease: 'easeInOut' }}
+                />
+                <motion.circle
+                  cx="50"
+                  cy="50"
+                  r="18"
+                  fill="url(#modeGlow)"
+                  animate={{ opacity: [0.4, 0.9, 0.4], scale: [0.9, 1.05, 0.9] }}
+                  transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
+                />
+              </motion.svg>
+            </motion.div>
+          </div>
+        </motion.div>
+  
+      <AnimatePresence mode="wait">
+        {activeSection === 'personal-info' && (
+          <motion.section
+            key="personal-info"
+            variants={sectionVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="mt-8 flex w-full flex-col gap-10 pt-0 md:pt-5 lg:flex-row"
+          >
+            <motion.div
+              variants={cardVariants}
+              className="w-full rounded-2xl bg-white p-6 shadow-md transition hover:shadow-lg lg:w-1/2"
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setActiveSection(null)}
+                    className="rounded-full px-2 py-1 text-xs text-black transition hover:bg-neutral-100 md:text-sm"
+                  >
+                    ←
+                  </button>
+                  <h2 className="text-base font-bold md:text-lg">Personal Area</h2>
+                </div>
+              </div>
 
-                <div className="space-y-6">
+              <div className="space-y-6">
                 {[
                   { label: 'Username', key: 'username' },
                   { label: 'Legal name', key: 'legalName' },
-                  // { label: 'Full name', key: 'name' },
                   { label: 'Email address', key: 'email' },
                   { label: 'Phone number', key: 'phone' },
                   { label: 'Preferred contact method', key: 'contact' },
                   { label: 'Address', key: 'address' },
                 ].map(({ label, key }) => (
-                  <div key={key} className="flex justify-between items-start">
+                  <div key={key} className="flex items-start justify-between gap-4">
                     <div className="flex-1">
-                      <p className="text-sm text-neutral-500">{label}</p>
+                      <p className="text-xs uppercase tracking-wide text-neutral-500 md:text-sm">{label}</p>
 
-                      <AnimatePresence>
-                      {editingField === key ? (
-                        key === 'address' ? (
-                          <>
-                            <div className="space-y-4 pt-4">
+                      <AnimatePresence mode="wait">
+                        {editingField === key ? (
+                          key === 'address' ? (
+                            <>
                               <motion.div
-                                  key="address-edit"
-                                  initial={{ opacity: 0, y: -8 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  exit={{ opacity: 0, y: -8 }}
-                                  transition={{ duration: 0.25 }}
-                                  className="space-y-4 pt-4"
-                                >
-                              {/* CountrySelect */}
-                              <CountrySelect
-                                value={fieldValues.country ?? undefined}
-                                onChange={(val) =>
-                                  setFieldValues((prev) => ({
-                                    ...prev,
-                                    country: val,
-                                  }))
-                                }
-                              />
-
-                              {/* Address fields */}
-                              <div className="relative w-full px-1">
-                                <input
-                                  type="text"
-                                  id="street"
-                                  placeholder=" "
-                                  value={fieldValues.street}
-                                  onChange={(e) =>
-                                    setFieldValues((prev) => ({ ...prev, street: e.target.value }))
+                                key="address-edit"
+                                initial={{ opacity: 0, y: -8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -8 }}
+                                transition={{ duration: 0.25 }}
+                                className="space-y-4 pt-4"
+                              >
+                                <CountrySelect
+                                  value={fieldValues.country ?? undefined}
+                                  onChange={(val) =>
+                                    setFieldValues((prev) => ({
+                                      ...prev,
+                                      country: val,
+                                    }))
                                   }
-                                  className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
                                 />
-                                <label
-                                  htmlFor="street"
-                                  className={`
-                                    absolute left-4 top-3 text-base text-neutral-500 transition-all
-                                    duration-200 ease-in-out
-                                    peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-neutral-400
-                                    peer-focus:top-2 peer-focus:text-sm peer-focus:text-black
-                                    ${fieldValues.street ? 'top-2 text-sm text-black' : ''}
-                                  `}
-                                >
-                                  Street address
-                                </label>
-                              </div>
 
-                              {/* Apt */}
-                              <div className="relative w-full px-1">
-                                <input
-                                  type="text"
-                                  id="apt"
-                                  placeholder=" "
-                                  value={fieldValues.apt}
-                                  onChange={(e) =>
-                                    setFieldValues((prev) => ({ ...prev, apt: e.target.value }))
-                                  }
-                                  className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
-                                />
-                                <label
-                                  htmlFor="apt"
-                                  className={`
-                                    absolute left-4 top-3 text-base text-neutral-500 transition-all
-                                    duration-200 ease-in-out
-                                    peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-neutral-400
-                                    peer-focus:top-2 peer-focus:text-sm peer-focus:text-black
-                                    ${fieldValues.apt ? 'top-2 text-sm text-black' : ''}
-                                  `}
-                                >
-                                  Apt, suite, etc. (optional)
-                                </label>
-                              </div>
+                                <div className="relative w-full px-1">
+                                  <input
+                                    type="text"
+                                    id="street"
+                                    placeholder=" "
+                                    value={fieldValues.street}
+                                    onChange={(e) =>
+                                      setFieldValues((prev) => ({ ...prev, street: e.target.value }))
+                                    }
+                                    className="peer w-full rounded-xl border border-neutral-300 px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
+                                  />
+                                  <label
+                                    htmlFor="street"
+                                    className={`absolute left-4 top-3 text-base text-neutral-500 transition-all duration-200 ease-in-out peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-neutral-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-black ${
+                                      fieldValues.street ? 'top-2 text-sm text-black' : ''
+                                    }`}
+                                  >
+                                    Street address
+                                  </label>
+                                </div>
 
-                              {/* City */}
-                              <div className="relative w-full px-1">
-                                <input
-                                  type="text"
-                                  id="city"
-                                  placeholder=" "
-                                  value={fieldValues.city}
-                                  onChange={(e) =>
-                                    setFieldValues((prev) => ({ ...prev, city: e.target.value }))
-                                  }
-                                  className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
-                                />
-                                <label
-                                  htmlFor="city"
-                                  className={`
-                                    absolute left-4 top-3 text-base text-neutral-500 transition-all
-                                    duration-200 ease-in-out
-                                    peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-neutral-400
-                                    peer-focus:top-2 peer-focus:text-sm peer-focus:text-black
-                                    ${fieldValues.city ? 'top-2 text-sm text-black' : ''}
-                                  `}
-                                >
-                                  City
-                                </label>
-                              </div>
+                                <div className="relative w-full px-1">
+                                  <input
+                                    type="text"
+                                    id="apt"
+                                    placeholder=" "
+                                    value={fieldValues.apt}
+                                    onChange={(e) =>
+                                      setFieldValues((prev) => ({ ...prev, apt: e.target.value }))
+                                    }
+                                    className="peer w-full rounded-xl border border-neutral-300 px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
+                                  />
+                                  <label
+                                    htmlFor="apt"
+                                    className={`absolute left-4 top-3 text-base text-neutral-500 transition-all duration-200 ease-in-out peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-neutral-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-black ${
+                                      fieldValues.apt ? 'top-2 text-sm text-black' : ''
+                                    }`}
+                                  >
+                                    Apt, suite, etc. (optional)
+                                  </label>
+                                </div>
 
-                              {/* State */}
-                              <div className="relative w-full px-1">
-                                <input
-                                  type="text"
-                                  id="state"
-                                  placeholder=" "
-                                  value={fieldValues.state}
-                                  onChange={(e) =>
-                                    setFieldValues((prev) => ({ ...prev, state: e.target.value }))
-                                  }
-                                  className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
-                                />
-                                <label
-                                  htmlFor="state"
-                                  className={`
-                                    absolute left-4 top-3 text-base text-neutral-500 transition-all
-                                    duration-200 ease-in-out
-                                    peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-neutral-400
-                                    peer-focus:top-2 peer-focus:text-sm peer-focus:text-black
-                                    ${fieldValues.state ? 'top-2 text-sm text-black' : ''}
-                                  `}
-                                >
-                                  State / Province
-                                </label>
-                              </div>
+                                <div className="relative w-full px-1">
+                                  <input
+                                    type="text"
+                                    id="city"
+                                    placeholder=" "
+                                    value={fieldValues.city}
+                                    onChange={(e) =>
+                                      setFieldValues((prev) => ({ ...prev, city: e.target.value }))
+                                    }
+                                    className="peer w-full rounded-xl border border-neutral-300 px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
+                                  />
+                                  <label
+                                    htmlFor="city"
+                                    className={`absolute left-4 top-3 text-base text-neutral-500 transition-all duration-200 ease-in-out peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-neutral-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-black ${
+                                      fieldValues.city ? 'top-2 text-sm text-black' : ''
+                                    }`}
+                                  >
+                                    City
+                                  </label>
+                                </div>
 
-                              {/* ZIP */}
-                              <div className="relative w-full px-1">
-                                <input
-                                  type="text"
-                                  id="zip"
-                                  placeholder=" "
-                                  value={fieldValues.zip}
-                                  onChange={(e) =>
-                                    setFieldValues((prev) => ({ ...prev, zip: e.target.value }))
-                                  }
-                                  className="peer w-full border border-neutral-300 rounded-xl px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
-                                />
-                                <label
-                                  htmlFor="zip"
-                                  className={`
-                                    absolute left-4 top-3 text-base text-neutral-500 transition-all
-                                    duration-200 ease-in-out
-                                    peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-neutral-400
-                                    peer-focus:top-2 peer-focus:text-sm peer-focus:text-black
-                                    ${fieldValues.zip ? 'top-2 text-sm text-black' : ''}
-                                  `}
-                                >
-                                  ZIP Code
-                                </label>
-                              </div>
+                                <div className="relative w-full px-1">
+                                  <input
+                                    type="text"
+                                    id="state"
+                                    placeholder=" "
+                                    value={fieldValues.state}
+                                    onChange={(e) =>
+                                      setFieldValues((prev) => ({ ...prev, state: e.target.value }))
+                                    }
+                                    className="peer w-full rounded-xl border border-neutral-300 px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
+                                  />
+                                  <label
+                                    htmlFor="state"
+                                    className={`absolute left-4 top-3 text-base text-neutral-500 transition-all duration-200 ease-in-out peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-neutral-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-black ${
+                                      fieldValues.state ? 'top-2 text-sm text-black' : ''
+                                    }`}
+                                  >
+                                    State / Province
+                                  </label>
+                                </div>
 
+                                <div className="relative w-full px-1">
+                                  <input
+                                    type="text"
+                                    id="zip"
+                                    placeholder=" "
+                                    value={fieldValues.zip}
+                                    onChange={(e) =>
+                                      setFieldValues((prev) => ({ ...prev, zip: e.target.value }))
+                                    }
+                                    className="peer w-full rounded-xl border border-neutral-300 px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
+                                  />
+                                  <label
+                                    htmlFor="zip"
+                                    className={`absolute left-4 top-3 text-base text-neutral-500 transition-all duration-200 ease-in-out peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-neutral-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-black ${
+                                      fieldValues.zip ? 'top-2 text-sm text-black' : ''
+                                    }`}
+                                  >
+                                    ZIP Code
+                                  </label>
+                                </div>
+                              </motion.div>
 
-                              <button
+                              <motion.button
+                                whileTap={{ scale: 0.97 }}
                                 onClick={() => handleSaveField(key)}
-                                className="w-full text-sm text-white bg-black hover:bg-neutral-800 px-4 py-4 rounded-xl transition"
+                                className="w-full rounded-xl bg-black px-4 py-3 text-sm font-medium text-white transition hover:bg-neutral-800"
                               >
                                 Save
-                              </button>
-                              </motion.div>
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                          <motion.div
-                            key="address-edit"
-                            initial={{ opacity: 0, y: -8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -8 }}
-                            transition={{ duration: 0.25 }}
-                            className="space-y-4 pt-4"
-                          >
-                            <input
-                              type="text"
-                              className="mt-2 text-base border rounded-xl p-4 w-full"
-                              value={
-                                typeof fieldValues[key as keyof typeof fieldValues] === 'string'
-                                  ? (fieldValues[key as keyof typeof fieldValues] as string)
-                                  : ''
-                              }
-                              onChange={(e) =>
-                                setFieldValues((prev) => ({
-                                  ...prev,
-                                  [key]: e.target.value,
-                                }))
-                              }
-                            />
-                            <button
-                              onClick={() => handleSaveField(key)}
-                              className="mt-3 text-sm text-white bg-black hover:bg-neutral-800 px-4 py-2 rounded-xl transition"
-                            >
-                              Apply
-                            </button>
-                            </motion.div>
-                          </>
-                        )
-                      ) : (
-                        <motion.div
-                          key="address-edit"
-                          initial={{ opacity: 0, y: -8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -8 }}
-                          transition={{ duration: 0.25 }}
-                          className="space-y-4 pt-4"
-                        >
-                        <div className="text-lg font-medium break-words">
-                          {key === 'address' ? (
-                            fieldValues.country || fieldValues.street || fieldValues.city || fieldValues.state || fieldValues.zip ? (
-                              <div className="text-md text-neutral-800 space-y-1">
-                                {fieldValues.country && (
-                                  <div className="flex items-center gap-2">
-                                    <Image
-                                      src={`/flags/${fieldValues.country.value?.split('-').pop()?.toLowerCase()}.svg`}
-                                      alt={fieldValues.country.label}
-                                      width={24}
-                                      height={16}
-                                      className="rounded-full object-cover"
-                                    />
-                                    <span>{fieldValues.country.city ? `${fieldValues.country.city}, ` : ''}{fieldValues.country.label}</span>
-                                  </div>
-                                )}
-                                {fieldValues.street && <div>{fieldValues.street}</div>}
-                                {fieldValues.apt && <div>{fieldValues.apt}</div>}
-                                {/* {fieldValues.city && <div>{fieldValues.city}</div>} */}
-                                {fieldValues.state && <div>{fieldValues.state}</div>}
-                                {fieldValues.zip && <div>{fieldValues.zip}</div>}
-                              </div>
-                            ) : (
-                              <p className="text-md text-neutral-800">Not provided</p>
-                            )
+                              </motion.button>
+                            </>
                           ) : (
-                            <p className="text-md text-neutral-800">
+                            <motion.div
+                              key={`${key}-edit`}
+                              initial={{ opacity: 0, y: -8 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -8 }}
+                              transition={{ duration: 0.25 }}
+                              className="space-y-4 pt-4"
+                            >
+                              <input
+                                type="text"
+                                value={fieldValues[key as keyof typeof fieldValues] as string}
+                                onChange={(e) =>
+                                  setFieldValues((prev) => ({
+                                    ...prev,
+                                    [key]: e.target.value,
+                                  }))
+                                }
+                                className="w-full border-b border-neutral-300 px-2 py-2 text-sm focus:border-black focus:outline-none md:text-base"
+                              />
+                              <motion.button
+                                whileTap={{ scale: 0.97 }}
+                                onClick={() => handleSaveField(key)}
+                                className="rounded-xl bg-black px-4 py-3 text-sm font-medium text-white transition hover:bg-neutral-800"
+                              >
+                                Save
+                              </motion.button>
+                            </motion.div>
+                          )
+                        ) : key === 'email' ? (
+                          <div className="space-y-2 pt-1">
+                            <p className="text-sm text-neutral-800 md:text-base">
+                              {fieldValues.email?.trim() || 'Not provided'}
+                            </p>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span
+                                className={`rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${
+                                  currentUser?.emailVerified
+                                    ? 'bg-emerald-100 text-emerald-700'
+                                    : 'bg-amber-100 text-amber-700'
+                                }`}
+                              >
+                                {currentUser?.emailVerified ? 'Verified' : 'Unverified'}
+                              </span>
+                              {!currentUser?.emailVerified && fieldValues.email?.trim() && (
+                                <motion.button
+                                  type="button"
+                                  whileTap={{ scale: 0.97 }}
+                                  onClick={handleEmailVerificationRequest}
+                                  disabled={verifying || emailVerificationRequested}
+                                  className={`rounded-full border border-neutral-900/20 px-3 py-1 text-[12px] font-medium text-neutral-800 transition hover:bg-neutral-900/5 ${
+                                    verifying ? 'pointer-events-none opacity-60' : ''
+                                  }`}
+                                >
+                                  {verifying
+                                    ? 'Sending…'
+                                    : emailVerificationRequested
+                                    ? 'Check your inbox'
+                                    : 'Verify email'}
+                                </motion.button>
+                              )}
+                            </div>
+                          </div>
+                        ) : key === 'phone' ? (
+                          <div className="space-y-2 pt-1">
+                            <p className="text-sm text-neutral-800 md:text-base">
+                              {fieldValues.phone?.trim() || 'Not provided'}
+                            </p>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span
+                                className={`rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${
+                                  currentUser?.phoneVerified
+                                    ? 'bg-emerald-100 text-emerald-700'
+                                    : 'bg-amber-100 text-amber-700'
+                                }`}
+                              >
+                                {currentUser?.phoneVerified ? 'Verified' : 'Unverified'}
+                              </span>
+                              {!currentUser?.phoneVerified && fieldValues.phone?.trim() && (
+                                <motion.button
+                                  type="button"
+                                  whileTap={{ scale: 0.97 }}
+                                  onClick={handlePhoneVerificationRequest}
+                                  disabled={phoneVerificationLoading || phoneVerificationRequested}
+                                  className={`rounded-full border border-neutral-900/20 px-3 py-1 text-[12px] font-medium text-neutral-800 transition hover:bg-neutral-900/5 ${
+                                    phoneVerificationLoading ? 'pointer-events-none opacity-60' : ''
+                                  }`}
+                                >
+                                  {phoneVerificationLoading
+                                    ? 'Sending…'
+                                    : phoneVerificationRequested
+                                    ? 'Request sent'
+                                    : 'Verify phone'}
+                                </motion.button>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-neutral-800 md:text-base">
                             {typeof fieldValues[key as keyof typeof fieldValues] === 'string' &&
                             (fieldValues[key as keyof typeof fieldValues] as string).trim()
                               ? (fieldValues[key as keyof typeof fieldValues] as string)
                               : 'Not provided'}
                           </p>
-                          )}
-                        </div>
-                        </motion.div>
-                      )}
+                        )}
                       </AnimatePresence>
                     </div>
-                    <button
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
                       onClick={() => setEditingField(editingField === key ? null : key)}
-                      className="text-sm text-black border-b border-black hover:opacity-80 ml-2 whitespace-nowrap"
+                      className="whitespace-nowrap text-xs text-black underline-offset-2 transition hover:underline md:text-sm"
                     >
                       {key === 'address'
-                        ? (
-                            fieldValues.street ||
-                            fieldValues.apt ||
-                            fieldValues.city ||
-                            fieldValues.state ||
-                            fieldValues.zip ||
-                            fieldValues.country
-                          )
+                        ? fieldValues.street ||
+                          fieldValues.apt ||
+                          fieldValues.city ||
+                          fieldValues.state ||
+                          fieldValues.zip ||
+                          fieldValues.country
                           ? editingField === key
                             ? 'Cancel'
                             : 'Edit'
                           : 'Add'
                         : fieldValues[key as keyof typeof fieldValues]
-                          ? editingField === key
-                            ? 'Cancel'
-                            : 'Edit'
-                          : 'Add'}
-
-                    </button>
+                        ? editingField === key
+                          ? 'Cancel'
+                          : 'Edit'
+                        : 'Add'}
+                    </motion.button>
                   </div>
                 ))}
+              </div>
+            </motion.div>
 
-                <hr className="my-2"/>
+            <motion.div
+              variants={cardVariants}
+              className="w-full rounded-2xl bg-white p-6 shadow-md transition hover:shadow-lg lg:w-1/2 lg:sticky lg:top-36"
+            >
+              <FAQ items={personalInfoFAQ} />
+            </motion.div>
+          </motion.section>
+        )}
+      </AnimatePresence>
 
-                <div className="flex items-center justify-between mt-6">
-                  {/* Left: Label and Icon */}
-                  <div className="flex items-center gap-2 justify-start">
-                    <div
-                      className="relative flex flex-row justify-center items-center"
-                      onMouseEnter={() => setShowTooltip(true)}
-                      onMouseLeave={() => setShowTooltip(false)}
+      <AnimatePresence mode="wait">
+        {activeSection === 'login-security' && (
+          <motion.section
+            key="login-security"
+            variants={sectionVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="mt-8 flex w-full flex-col gap-10 pt-0 md:pt-5 lg:flex-row"
+          >
+            <motion.div
+              variants={cardVariants}
+              className="w-full rounded-2xl bg-white p-6 shadow-md transition hover:shadow-lg lg:w-1/2"
+            >
+              <div className="mb-4 flex items-center gap-3">
+                <button
+                  onClick={() => setActiveSection(null)}
+                  className="rounded-full px-2 py-1 text-xs text-black transition hover:bg-neutral-100 md:text-sm"
+                >
+                  ←
+                </button>
+                <h2 className="text-base font-bold md:text-lg">Login &amp; Security</h2>
+              </div>
+
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-neutral-700 md:text-base">Password</p>
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => setEditingField(editingField === 'password' ? null : 'password')}
+                      className="text-xs text-black underline-offset-2 transition hover:underline md:text-sm"
                     >
-                      <button
-                        className="text-neutral-700 hover:text-black transition"
-                        aria-label="Newsletter info"
-                      >
-                        <FiInfo size={19} />
-                      </button>
-
-                      <AnimatePresence>
-                        {showTooltip && (
-                          <motion.div
-                            initial={{ opacity: 0, y: -4 }}
-                            animate={{ opacity: 1, y: 4 }}
-                            exit={{ opacity: 0, y: -4 }}
-                            transition={{ duration: 0.2 }}
-                            className="absolute left-0 mt-3 w-72 bg-white text-sm text-neutral-700 rounded-xl shadow-lg p-3 z-50"
-                          >
-                            You’re joined to the Vuola Newsletter.
-                            <br />
-                            Receive curated updates on unforgettable experiences - no spam, just <strong>inspiration</strong>.
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-
-                    <h3 className="text-lg font-semibold">Newsletter</h3>
+                      {editingField === 'password' ? 'Cancel' : 'Update'}
+                    </motion.button>
                   </div>
+                  <p className="text-xs text-neutral-400 md:text-sm">
+                    Last updated: {lastPasswordUpdateDate ? lastPasswordUpdateDate.toLocaleDateString() : 'Not available'}
+                  </p>
 
-                  {/* Right: Switch */}
-                  <Switch
-                    checked={isSubscribed}
-                    onChange={handleToggleSubscription}
-                    className={`${
-                      isSubscribed ? 'bg-blue-600' : 'bg-gray-300'
-                    } relative inline-flex h-6 w-11 items-center rounded-full transition duration-200 focus:outline-none`}
-                    disabled={loading}
-                  >
-                    <span
-                      className={`${
-                        isSubscribed ? 'translate-x-6' : 'translate-x-1'
-                      } inline-block h-4 w-4 transform rounded-full bg-white transition`}
-                    />
-                  </Switch>
-                </div>
-
-                </div>
-
-              </div>
-              {/* Right: FAQ Block */}
-              <div className="w-full lg:w-1/2 lg:sticky lg:top-36 px-5 md:px-20">
-                <FAQ items={personalInfoFAQ} />
-              </div>
-              </div>
-            </>
-          )}
-
-          {activeSection === 'login-security' && (
-              <div className="mt-8 pt-0 md:pt-5 w-full flex flex-col lg:flex-row items-start gap-10">
-              {/* Left: Login & Security */}
-              <div className="w-full lg:w-1/2 bg-white rounded-xl shadow-md hover:shadow-lg p-6 mt-0 md:mt-9">
-                {/* Header */}
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => setActiveSection(null)}
-                      className="text-sm text-black bg-transparent hover:bg-neutral-100 rounded-full py-1 px-2 transition"
-                    >
-                      ←
-                    </button>
-                    <h2 className="text-md md:text-lg font-bold">Login & Security</h2>
-                  </div>
-                </div>
-
-              {/* Password Update */}
-              <div className="space-y-2 mb-10">
-                <div className="flex justify-between items-center">
-                  <p className="text-sm text-neutral-500">Password</p>
-                  <button
-                    onClick={() => setEditingField(editingField === 'password' ? null : 'password')}
-                    className="text-sm text-black border-b border-black hover:opacity-80 ml-2"
-                  >
-                    {editingField === 'password' ? 'Cancel' : 'Update'}
-                  </button>
-                </div>
-                <p className="text-xs text-neutral-400">Last updated: {new Date(currentUser.updatedAt).toLocaleDateString()}</p>
-
-                <AnimatePresence>
-                  {editingField === 'password' && (
-                    <motion.div
-                      key="password-edit"
-                      initial={{ opacity: 0, y: -8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      transition={{ duration: 0.25 }}
-                      className="space-y-4 pt-4"
-                    >
-                      <input
-                        type="password"
-                        placeholder="Current password"
-                        className="w-full border-b p-2 outline-none"
-                        id="currentPassword"
-                      />
-                      <input
-                        type="password"
-                        placeholder="New password"
-                        className="w-full border-b p-2 outline-none"
-                        id="newPassword"
-                      />
-                      <input
-                        type="password"
-                        placeholder="Confirm new password"
-                        className="w-full border-b p-2 outline-none"
-                        id="confirmNewPassword"
-                      />
-                      <button
-                        onClick={async () => {
-                          const currentPassword = (document.getElementById('currentPassword') as HTMLInputElement).value;
-                          const newPassword = (document.getElementById('newPassword') as HTMLInputElement).value;
-                          const confirmNewPassword = (document.getElementById('confirmNewPassword') as HTMLInputElement).value;
-
-                          if (!currentPassword || !newPassword || newPassword !== confirmNewPassword) {
-                            toast.error('Please check your input fields.');
-                            return;
-                          }
-
-                          try {
-                            await axios.put('/api/users/update-password', {
-                              currentPassword,
-                              newPassword,
-                              confirmPassword: confirmNewPassword
-                            });
-                            toast.success('Password updated successfully!', {
-                              iconTheme: {
-                                primary: '#2200ffff',
-                                secondary: '#fff',
-                              }
-                            });
-                            setEditingField(null);
-                          } catch (err) {
-                            toast.error('Failed to update password. Check current password.');
-                          }
-                        }}
-                        className="text-sm text-white bg-[#000] hover:bg-neutral-800 p-3 rounded-xl"
+                  <AnimatePresence mode="wait">
+                    {editingField === 'password' && (
+                      <motion.div
+                        key="password-edit"
+                        initial={{ opacity: 0, y: -8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.25 }}
+                        className="space-y-4 pt-4"
                       >
-                        Update Password
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-                
-              </div>
+                        <input
+                          type="password"
+                          placeholder="Current password"
+                          className="w-full border-b border-neutral-300 px-2 py-2 text-sm focus:border-black focus:outline-none md:text-base"
+                          id="currentPassword"
+                        />
+                        <input
+                          type="password"
+                          placeholder="New password"
+                          className="w-full border-b border-neutral-300 px-2 py-2 text-sm focus:border-black focus:outline-none md:text-base"
+                          id="newPassword"
+                        />
+                        <input
+                          type="password"
+                          placeholder="Confirm new password"
+                          className="w-full border-b border-neutral-300 px-2 py-2 text-sm focus:border-black focus:outline-none md:text-base"
+                          id="confirmNewPassword"
+                        />
+                        <motion.button
+                          whileTap={{ scale: 0.97 }}
+                          onClick={async () => {
+                            const currentPassword = (document.getElementById('currentPassword') as HTMLInputElement).value;
+                            const newPassword = (document.getElementById('newPassword') as HTMLInputElement).value;
+                            const confirmNewPassword = (document.getElementById('confirmNewPassword') as HTMLInputElement).value;
 
-              {/* Account Deactivation */}
-              <div className="space-y-2">
-                <p className="text-sm text-neutral-500">Account</p>
-                <div className="flex justify-between items-center">
-                  <p className="text-lg font-medium">Deactivate your account</p>
-                  <button
-                    onClick={() => setConfirmDeactivation(true)}
-                    className="text-sm text-black border-b border-black hover:opacity-80"
-                  >
-                    Deactivate
-                  </button>
+                            if (!currentPassword || !newPassword || newPassword !== confirmNewPassword) {
+                              toast.error('Please check your input fields.');
+                              return;
+                            }
+
+                            try {
+                              await axios.put('/api/users/update-password', {
+                                currentPassword,
+                                newPassword,
+                                confirmPassword: confirmNewPassword,
+                              });
+                              setEditingField(null);
+                              toast.success('Password updated successfully!', {
+                                iconTheme: {
+                                  primary: '#2200ffff',
+                                  secondary: '#fff',
+                                },
+                              });
+                            } catch (error) {
+                              console.error('Error updating password:', error);
+                              toast.error('Unable to update password.');
+                            }
+                          }}
+                          className="w-full rounded-xl bg-black px-4 py-3 text-sm font-medium text-white transition hover:bg-neutral-800"
+                        >
+                          Save password
+                        </motion.button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-neutral-700 md:text-base">Two-factor authentication</p>
+                    <span className="text-xs text-neutral-500 md:text-sm">Coming soon</span>
+                  </div>
+                  <p className="text-xs text-neutral-500 md:text-sm">
+                    Add an extra layer of protection to keep your account secure.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-neutral-700 md:text-base">Deactivate account</p>
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => setConfirmDeactivation(true)}
+                      className="text-xs text-red-600 underline-offset-2 transition hover:underline md:text-sm"
+                    >
+                      Deactivate
+                    </motion.button>
+                  </div>
+                  <p className="text-xs text-neutral-500 md:text-sm">
+                    Temporarily deactivate your account. You can reactivate it anytime by logging back in.
+                  </p>
                 </div>
               </div>
-            </div>
-            {/* Right: FAQ */}
-              <div className="w-full lg:w-1/2 lg:sticky lg:top-36 px-5 md:px-20">
-                <FAQ items={loginSecurityFAQ} />
-              </div>
-            </div>
-          )}
+            </motion.div>
 
-          {activeSection === 'payments' && (
-            <>
+            <motion.div
+              variants={cardVariants}
+              className="w-full rounded-2xl bg-white p-6 shadow-md transition hover:shadow-lg lg:w-1/2 lg:sticky lg:top-36"
+            >
+              <FAQ
+                items={[
+                  {
+                    question: 'How often should I update my password?',
+                    answer:
+                      'We recommend updating your password every few months and avoiding passwords you use on other platforms.',
+                  },
+                  {
+                    question: 'Why enable two-factor authentication?',
+                    answer:
+                      'Two-factor authentication adds a second verification step, making it much harder for intruders to gain access.',
+                  },
+                  {
+                    question: 'What happens if I deactivate my account?',
+                    answer:
+                      'Your listings and trips will pause immediately. You can reactivate the account simply by signing back in.',
+                  },
+                ]}
+              />
+            </motion.div>
+          </motion.section>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence mode="wait">
+        {activeSection === 'payments' && (
+          <motion.section
+            key="payments"
+            id="payments-section"
+            variants={sectionVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="w-full"
+          >
             <div className="mt-8 pt-0 md:pt-5 flex flex-col lg:flex-row gap-10 w-full items-start">
               <div className="w-full lg:w-1/2 bg-white rounded-xl shadow-md hover:shadow-lg p-6">
 
@@ -1360,7 +1540,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                 </div>
               </div>
                 {/* Tabs */}
-                {currentUser.role === 'promoter' && (
+                {viewRole === 'promoter' && (
                 <div className="flex gap-4 mb-6">
                   {/* <button
                     className={`px-4 py-2 rounded-lg ${activePaymentTab === 'payout' ? 'bg-black text-white' : 'border'}`}
@@ -1372,7 +1552,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                 )}
 
                 {/* Tabs */}
-                {currentUser.role === 'customer' && (
+                {viewRole === 'customer' && (
                 <div className="flex gap-4 mb-6">
                   {/* <button
                     className={`px-4 py-2 rounded-lg ${activePaymentTab === 'payment' ? 'bg-black text-white' : 'border'}`}
@@ -1383,7 +1563,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                 </div>
                 )}
 
-                {activePaymentTab === 'payment' && currentUser.role === 'customer' && (
+                {activePaymentTab === 'payment' && viewRole === 'customer' && (
                   <>
                     <Heading title="Payment Method" subtitle="Manage your cards and payment methods" />
                     {!savedCard ? (
@@ -1554,7 +1734,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                   </>
                 )}
 
-                {activePaymentTab === 'payout' && ['promoter', 'host'].includes(currentUser.role) && (
+                {activePaymentTab === 'payout' && ['promoter', 'host'].includes(viewRole) && (
                   <>
                   <div className="pt-4">
                     <Heading title="Withdrawal Method" subtitle="Manage your withdrawal credentials" />
@@ -1729,8 +1909,9 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
                 <FAQ items={paymentsFAQ} />
               </div>
             </div>
-            </>
-          )}
+          </motion.section>
+        )
+      </AnimatePresence>
 
           {showConfirmDeletePayout && (
             <ConfirmPopup
@@ -2024,298 +2205,304 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
         </AnimatedModal>
   
       {/* ✅ SECTION: DEFAULT OVERVIEW */}
-      {!activeSection && (
-        <>
-  
-          {/* Account Blocks */}
-          <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div
-              onClick={() => setActiveSection('personal-info')}
-              className="cursor-pointer p-6 rounded-xl shadow-md hover:shadow-lg transition"
+      <AnimatePresence mode="wait">
+        {!activeSection && (
+          <motion.div
+            key="overview"
+            variants={sectionVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="space-y-10"
+          >
+            <motion.div
+              variants={cardVariants}
+              className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
             >
-              <div className="text-4xl text-[#000] mb-4"><CgUserlane /></div>
-              <p className="text-lg font-semibold">Personal Info</p>
-              <p className="text-sm text-neutral-600">Edit your name, phone number, and more</p>
-            </div>
-  
-            <div
-              onClick={() => setActiveSection('login-security')}
-              className="cursor-pointer p-6 rounded-xl shadow-md hover:shadow-lg transition"
-            >
-              <div className="text-4xl text-[#000] mb-4"><MdOutlineSecurity /></div>
-              <p className="text-lg font-semibold">Login & Security</p>
-              <p className="text-sm text-neutral-600">Manage your password and account access</p>
-            </div>
-  
-            <div
-              onClick={() => setActiveSection('payments')}
-              className="cursor-pointer p-6 rounded-xl shadow-md hover:shadow-lg transition"
-            >
-              <div className="text-4xl text-[#000] mb-4"><RiSecurePaymentLine /></div>
-              <p className="text-lg font-semibold">Payments & Withdrawal</p>
-              <p className="text-sm text-neutral-600">View and update your withdrawal methods</p>
-            </div>
-          </div>
-        </>
-      )}
+              {[
+                {
+                  sectionKey: 'personal-info',
+                  icon: <CgUserlane />,
+                  title: 'Personal Info',
+                  description: 'Edit your name, phone number, and more',
+                },
+                {
+                  sectionKey: 'login-security',
+                  icon: <MdOutlineSecurity />,
+                  title: 'Login & Security',
+                  description: 'Manage your password and account access',
+                },
+                {
+                  sectionKey: 'payments',
+                  icon: <RiSecurePaymentLine />,
+                  title: 'Payments & Withdrawal',
+                  description: 'View and update your withdrawal methods',
+                },
+              ].map(({ sectionKey, icon, title, description }) => (
+                <motion.button
+                  key={sectionKey}
+                  type="button"
+                  onClick={() => setActiveSection(sectionKey)}
+                  variants={cardVariants}
+                  whileHover={{ y: -4 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex h-full flex-col rounded-2xl bg-white p-6 text-left shadow-md transition hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-black/50"
+                >
+                  <div className="text-4xl text-black">{icon}</div>
+                  <p className="mt-4 text-lg font-semibold text-neutral-900">{title}</p>
+                  <p className="text-sm text-neutral-600 md:text-base">{description}</p>
+                </motion.button>
+              ))}
+            </motion.div>
 
-      {/* Promoter Stats */}
-      {currentUser.role === 'promoter' && !activeSection && (
-            <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* Referral Activities */}
-              <div className="p-6 rounded-xl shadow-md hover:shadow-lg">
-                <p className="text-lg font-semibold mb-2">Referral Activities</p>
-                <p className="text-sm text-neutral-600 mb-4">
-                  Performance and Earnings overview — renewed twice a month.
-                </p>
-
-                <div className="space-y-4 p-5">
-                  <div className="flex justify-between items-center shadow-md rounded-xl p-4 text-lg text-neutral-800 hover:shadow-sm transition">
-                    <span className="font-medium">Total Books</span>
-                    <span className="font-semibold text-black">{analytics.totalBooks}</span>
-                  </div>
-
-                  <div className="flex justify-between items-center shadow-md rounded-xl p-4 text-lg text-neutral-800 hover:shadow-sm transition">
-                    <span className="font-medium">QR Code Scanned</span>
-                    <span className="font-semibold text-black">{analytics.qrScans}</span> {/* Update dynamically */}
-                  </div>
-
-                  <div className="flex justify-between items-center shadow-md rounded-xl p-4 text-lg text-neutral-800 hover:shadow-sm transition">
-                    <span className="font-medium">Total Books Revenue</span>
-                    <span className="font-semibold text-black">{formatConverted(analytics.totalRevenue)}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Total Earned */}
-              <div className="p-6 rounded-xl shadow-md hover:shadow-lg flex flex-col">
-                <p className="text-lg font-semibold mb-2">Pre-Withdrawal Revenue</p>
-                <p className="text-sm text-neutral-600 mb-4">
-                  Earning 10% from each referral booking made through your code.
-                </p>
-                <div className="rounded-xl p-10 pl-8 pr-8 flex justify-center md:items-center md:h-52 hover:shadow-sm">
-                  <p className="text-3xl text-black font-semibold">
-                    {formatConverted((analytics.totalRevenue || 0) * 0.10)}
+            {viewRole === 'promoter' && (
+              <motion.div
+                variants={cardVariants}
+                className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
+              >
+                <div className="rounded-2xl bg-white p-6 shadow-md transition hover:shadow-lg">
+                  <p className="text-lg font-semibold text-neutral-900">Referral Activities</p>
+                  <p className="mt-2 text-sm text-neutral-600 md:text-base">
+                    Performance and earnings overview — renewed twice a month.
                   </p>
-                </div>
-              </div>
 
-              {/* Withdraw Details */}
-              <div className="p-6 rounded-xl shadow-md hover:shadow-lg">
-                <p className="text-lg font-semibold mb-2">Withdrawal Method</p>
-                <p className="text-sm text-neutral-600 mb-4">Deposits processed twice per month.</p>
-
-                {savedPayout ? (
-                  <div
-                    className="relative w-full max-w-sm h-56 perspective"
-                    onClick={() => setIsFlipped(prev => !prev)}
-                  >
-                    <div
-                      className={`absolute w-full h-full sm:h-full h-[90%] duration-700 transform transition-transform preserve-3d ${
-                        isFlipped ? 'rotate-y-180' : ''
-                      }`}
-                      >
-                      {/* FRONT SIDE */}
-                      {/* <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-xl flex items-center justify-center">
-                        <p className="text-lg font-bold tracking-widest uppercase border-b border-white">
-                          {savedPayout.method}
-                        </p>
-                      </div> */}
-                      <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-xl flex items-center justify-center">
-                        <Image
-                          src={
-                            savedPayout.method === 'paypal'
-                              ? '/images/paypal.png'
-                              : savedPayout.method === 'iban'
-                              ? '/images/iban.png'
-                              : savedPayout.method === 'revolut'
-                              ? '/images/revolut.png'
-                              : savedPayout.method === 'card' &&
-                                savedPayout.number?.replace(/\D/g, '').startsWith('4')
-                              ? '/images/Visa.png'
-                              : savedPayout.method === 'card' &&
-                                savedPayout.number?.replace(/\D/g, '').startsWith('5')
-                              ? '/images/MasterCard.png'
-                              : savedPayout.method === 'card' &&
-                                savedPayout.number?.replace(/\D/g, '').startsWith('3')
-                              ? '/images/americanexpress.png'
-                              // : savedPayout.method === 'card' &&
-                              //   savedPayout.number?.replace(/\D/g, '').startsWith('6')
-                              // ? '/images/Discover.png'
-                              : '/images/card.png'
-                          }
-                          alt={savedPayout.method}
-                          className="w-24 h-auto object-contain"
-                          width={64}
-                          height={32}
-                        />
-                      </div>
-
-
-                      {/* BACK SIDE */}
-                      <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-xl rotate-y-180 p-6 flex flex-col justify-center items-center gap-4">
-                        <p className="text-xs tracking-wider text-gray-400">Credentials</p>
-                        <p className="text-lg font-mono text-center">
-                          {savedPayout.method === 'paypal'
-                            ? savedPayout.number
-                            : savedPayout.number && savedPayout.number.length >= 8
-                            ? `${savedPayout.number.slice(0, 4)} ${'*'.repeat(8)} ${savedPayout.number.slice(-4)}`
-                            : '****'}
-                        </p>
-                      </div>
+                  <div className="mt-5 space-y-4">
+                    <div className="flex items-center justify-between rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800 shadow-sm">
+                      <span className="font-medium">Total Books</span>
+                      <span className="text-lg font-semibold text-black">{analytics.totalBooks}</span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800 shadow-sm">
+                      <span className="font-medium">QR Code Scanned</span>
+                      <span className="text-lg font-semibold text-black">{analytics.qrScans}</span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800 shadow-sm">
+                      <span className="font-medium">Total Books Revenue</span>
+                      <span className="text-lg font-semibold text-black">
+                        {formatConverted(analytics.totalRevenue)}
+                      </span>
                     </div>
                   </div>
-                ) : (
-                  <div className="bg-neutral-100 p-4 rounded-xl flex items-center justify-between">
-                    <p className="text-sm text-neutral-600">Withdrawmethod is not provided</p>
-                    <button
-                      onClick={() => {
-                        setActiveSection('payments');
-                        setActivePaymentTab('payout');
-                        const section = document.getElementById('payments-section');
-                        if (section) section.scrollIntoView({ behavior: 'smooth' });
-                      }}
-                      className="text-sm underline text-black ml-4"
-                    >
-                      Go to Withdraw
-                    </button>
+                </div>
+
+                <div className="flex flex-col justify-between rounded-2xl bg-white p-6 shadow-md transition hover:shadow-lg">
+                  <div>
+                    <p className="text-lg font-semibold text-neutral-900">Pre-Withdrawal Revenue</p>
+                    <p className="mt-2 text-sm text-neutral-600 md:text-base">
+                      Earning 10% from each referral booking made through your code.
+                    </p>
                   </div>
-                )}
-              </div>
-
-            </div>
-      )}
-
-      {/* Host Stats */}
-      {currentUser.role === 'host' && !activeSection && (
-        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Reservation Activities */}
-          <div className="p-6 rounded-xl shadow-md hover:shadow-lg">
-            <p className="text-lg font-semibold mb-2">Booking Activity</p>
-            <p className="text-sm text-neutral-600 mb-4">
-              Earnings and Bookings overview — renewed twice a month.
-            </p>
-
-            <div className="space-y-4 p-5">
-              <div className="flex justify-between items-center shadow-md rounded-xl p-4 text-lg text-neutral-800 hover:shadow-sm transition">
-                <span className="font-medium">Total Bookings</span>
-                <span className="font-semibold text-black">{hostAnalytics.totalBooks}</span>
-              </div>
-
-              <div className="flex justify-between items-center shadow-md rounded-xl p-4 text-lg text-neutral-800 hover:shadow-sm transition">
-                <span className="font-medium">Total Revenue</span>
-                <span className="font-semibold text-black">{formatConverted(hostAnalytics.totalRevenue)}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Host Total Earned */}
-          <div className="p-6 rounded-xl shadow-md hover:shadow-lg flex flex-col">
-            <p className="text-lg font-semibold mb-2">Pre-Withdrawal Revenue</p>
-            <p className="text-sm text-neutral-600 mb-4">
-              As a host, you earn 90% of your listing revenue.
-            </p>
-            <div className="rounded-xl p-10 pl-8 pr-8 flex justify-center md:items-center md:h-52 hover:shadow-sm">
-              <p className="text-3xl text-black font-semibold">
-                {formatConverted((hostAnalytics.totalRevenue || 0) * 0.90)}
-              </p>
-            </div>
-          </div>
-
-          {/* Withdraw Method */}
-          <div className="p-6 rounded-xl shadow-md hover:shadow-lg">
-            <p className="text-lg font-semibold mb-2">Withdrawal Method</p>
-            <p className="text-sm text-neutral-600 mb-4">Deposits processed twice per month.</p>
-
-            {savedPayout ? (
-              <div
-                className="relative w-full max-w-sm h-56 perspective"
-                onClick={() => setIsFlipped(prev => !prev)}
-              >
-                <div
-                  className={`absolute w-full h-full sm:h-full h-[90%] duration-700 transform transition-transform preserve-3d ${
-                    isFlipped ? 'rotate-y-180' : ''
-                  }`}
-                >
-                  {/* FRONT SIDE */}
-                  <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-xl flex items-center justify-center">
-                    <Image
-                      src={
-                        savedPayout.method === 'paypal'
-                          ? '/images/paypal.png'
-                          : savedPayout.method === 'iban'
-                          ? '/images/iban.png'
-                          : savedPayout.method === 'revolut'
-                          ? '/images/revolut.png'
-                          : savedPayout.method === 'card' &&
-                            savedPayout.number?.replace(/\D/g, '').startsWith('4')
-                          ? '/images/Visa.png'
-                          : savedPayout.method === 'card' &&
-                            savedPayout.number?.replace(/\D/g, '').startsWith('5')
-                          ? '/images/MasterCard.png'
-                          : savedPayout.method === 'card' &&
-                            savedPayout.number?.replace(/\D/g, '').startsWith('3')
-                          ? '/images/americanexpress.png'
-                          // : savedPayout.method === 'card' &&
-                          //   savedPayout.number?.replace(/\D/g, '').startsWith('6')
-                          // ? '/images/Discover.png'
-                          : '/images/card.png'
-                      }
-                      alt={savedPayout.method}
-                      className="w-24 h-auto object-contain"
-                      width={64}
-                      height={32}
-                    />
-                  </div>
-
-                  {/* BACK SIDE */}
-                  <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-xl rotate-y-180 p-6 flex flex-col justify-center items-center gap-4">
-                    <p className="text-xs tracking-wider text-gray-400">Credentials</p>
-                    <p className="text-lg font-mono text-center">
-                      {savedPayout.method === 'paypal'
-                        ? savedPayout.number
-                        : savedPayout.number && savedPayout.number.length >= 8
-                        ? `${savedPayout.number.slice(0, 4)} ${'*'.repeat(8)} ${savedPayout.number.slice(-4)}`
-                        : '****'}
+                  <div className="mt-6 flex items-center justify-center rounded-xl bg-neutral-50 p-10 md:h-52">
+                    <p className="text-3xl font-semibold text-black">
+                      {formatConverted((analytics.totalRevenue || 0) * 0.1)}
                     </p>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="bg-neutral-100 p-4 rounded-xl flex items-center justify-between">
-                <p className="text-sm text-neutral-600">Withdrawal method is not provided</p>
-                <button
-                  onClick={() => {
-                    setActiveSection('payments');
-                    setActivePaymentTab('payout');
-                    const section = document.getElementById('payments-section');
-                    if (section) section.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="text-sm underline text-black ml-4"
-                >
-                  Go to Withdraw
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
-      {(currentUser.role === 'host' || currentUser.role === 'promoter') && !activeSection && (
-        <>
-        <div className="mt-10">
-          <EarningsCard
-            title="What You’ve Achieved"
-            roleLabel={currentUser.role === 'host' ? 'Host' : 'Promoter'}
-            dailyData={earnings.daily}
-            monthlyData={earnings.monthly}
-            yearlyData={earnings.yearly}
-            totalEarnings={earnings.totalEarnings}
-          />
-        </div>
-        </>
-      )}
-  
+                <div className="rounded-2xl bg-white p-6 shadow-md transition hover:shadow-lg">
+                  <p className="text-lg font-semibold text-neutral-900">Withdrawal Method</p>
+                  <p className="mt-2 text-sm text-neutral-600 md:text-base">
+                    Deposits processed twice per month.
+                  </p>
+
+                  {savedPayout ? (
+                    <div
+                      className="relative mt-6 h-56 w-full max-w-sm cursor-pointer perspective"
+                      onClick={() => setIsFlipped((prev) => !prev)}
+                    >
+                      <div
+                        className={`absolute h-full w-full transform rounded-2xl transition-transform duration-700 preserve-3d ${
+                          isFlipped ? 'rotate-y-180' : ''
+                        }`}
+                      >
+                        <div className="absolute flex h-full w-full items-center justify-center rounded-2xl bg-gradient-to-br from-gray-800 to-gray-900 text-white backface-hidden">
+                          <Image
+                            src={
+                              savedPayout.method === 'paypal'
+                                ? '/images/paypal.png'
+                                : savedPayout.method === 'iban'
+                                ? '/images/iban.png'
+                                : savedPayout.method === 'revolut'
+                                ? '/images/revolut.png'
+                                : savedPayout.method === 'card' &&
+                                  savedPayout.number?.replace(/\D/g, '').startsWith('4')
+                                ? '/images/Visa.png'
+                                : savedPayout.method === 'card' &&
+                                  savedPayout.number?.replace(/\D/g, '').startsWith('5')
+                                ? '/images/MasterCard.png'
+                                : savedPayout.method === 'card' &&
+                                  savedPayout.number?.replace(/\D/g, '').startsWith('3')
+                                ? '/images/americanexpress.png'
+                                : '/images/card.png'
+                            }
+                            alt={savedPayout.method}
+                            className="h-auto w-24 object-contain"
+                            width={64}
+                            height={32}
+                          />
+                        </div>
+
+                        <div className="absolute flex h-full w-full flex-col items-center justify-center gap-4 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 p-6 text-white backface-hidden rotate-y-180">
+                          <p className="text-xs tracking-wider text-gray-400">Credentials</p>
+                          <p className="text-center text-lg font-mono">
+                            {savedPayout.method === 'paypal'
+                              ? savedPayout.number
+                              : savedPayout.number && savedPayout.number.length >= 8
+                              ? `${savedPayout.number.slice(0, 4)} ${'*'.repeat(8)} ${savedPayout.number.slice(-4)}`
+                              : '****'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-6 flex items-center justify-between rounded-xl bg-neutral-50 p-4 text-sm text-neutral-600">
+                      <p>Withdrawal method is not provided</p>
+                      <button
+                        onClick={() => {
+                          setActiveSection('payments');
+                          setActivePaymentTab('payout');
+                          const section = document.getElementById('payments-section');
+                          if (section) section.scrollIntoView({ behavior: 'smooth' });
+                        }}
+                        className="text-sm font-medium text-black underline"
+                      >
+                        Go to Withdraw
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+
+            {viewRole === 'host' && (
+              <motion.div
+                variants={cardVariants}
+                className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
+              >
+                <div className="rounded-2xl bg-white p-6 shadow-md transition hover:shadow-lg">
+                  <p className="text-lg font-semibold text-neutral-900">Booking Activity</p>
+                  <p className="mt-2 text-sm text-neutral-600 md:text-base">
+                    Earnings and bookings overview — renewed twice a month.
+                  </p>
+
+                  <div className="mt-5 space-y-4">
+                    <div className="flex items-center justify-between rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800 shadow-sm">
+                      <span className="font-medium">Total Bookings</span>
+                      <span className="text-lg font-semibold text-black">{hostAnalytics.totalBooks}</span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800 shadow-sm">
+                      <span className="font-medium">Total Revenue</span>
+                      <span className="text-lg font-semibold text-black">
+                        {formatConverted(hostAnalytics.totalRevenue)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col justify-between rounded-2xl bg-white p-6 shadow-md transition hover:shadow-lg">
+                  <div>
+                    <p className="text-lg font-semibold text-neutral-900">Pre-Withdrawal Revenue</p>
+                    <p className="mt-2 text-sm text-neutral-600 md:text-base">
+                      As a host, you earn 90% of your listing revenue.
+                    </p>
+                  </div>
+                  <div className="mt-6 flex items-center justify-center rounded-xl bg-neutral-50 p-10 md:h-52">
+                    <p className="text-3xl font-semibold text-black">
+                      {formatConverted((hostAnalytics.totalRevenue || 0) * 0.9)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl bg-white p-6 shadow-md transition hover:shadow-lg">
+                  <p className="text-lg font-semibold text-neutral-900">Withdrawal Method</p>
+                  <p className="mt-2 text-sm text-neutral-600 md:text-base">
+                    Deposits processed twice per month.
+                  </p>
+
+                  {savedPayout ? (
+                    <div
+                      className="relative mt-6 h-56 w-full max-w-sm cursor-pointer perspective"
+                      onClick={() => setIsFlipped((prev) => !prev)}
+                    >
+                      <div
+                        className={`absolute h-full w-full transform rounded-2xl transition-transform duration-700 preserve-3d ${
+                          isFlipped ? 'rotate-y-180' : ''
+                        }`}
+                      >
+                        <div className="absolute flex h-full w-full items-center justify-center rounded-2xl bg-gradient-to-br from-gray-800 to-gray-900 text-white backface-hidden">
+                          <Image
+                            src={
+                              savedPayout.method === 'paypal'
+                                ? '/images/paypal.png'
+                                : savedPayout.method === 'iban'
+                                ? '/images/iban.png'
+                                : savedPayout.method === 'revolut'
+                                ? '/images/revolut.png'
+                                : savedPayout.method === 'card' &&
+                                  savedPayout.number?.replace(/\D/g, '').startsWith('4')
+                                ? '/images/Visa.png'
+                                : savedPayout.method === 'card' &&
+                                  savedPayout.number?.replace(/\D/g, '').startsWith('5')
+                                ? '/images/MasterCard.png'
+                                : savedPayout.method === 'card' &&
+                                  savedPayout.number?.replace(/\D/g, '').startsWith('3')
+                                ? '/images/americanexpress.png'
+                                : '/images/card.png'
+                            }
+                            alt={savedPayout.method}
+                            className="h-auto w-24 object-contain"
+                            width={64}
+                            height={32}
+                          />
+                        </div>
+
+                        <div className="absolute flex h-full w-full flex-col items-center justify-center gap-4 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 p-6 text-white backface-hidden rotate-y-180">
+                          <p className="text-xs tracking-wider text-gray-400">Credentials</p>
+                          <p className="text-center text-lg font-mono">
+                            {savedPayout.method === 'paypal'
+                              ? savedPayout.number
+                              : savedPayout.number && savedPayout.number.length >= 8
+                              ? `${savedPayout.number.slice(0, 4)} ${'*'.repeat(8)} ${savedPayout.number.slice(-4)}`
+                              : '****'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-6 flex items-center justify-between rounded-xl bg-neutral-50 p-4 text-sm text-neutral-600">
+                      <p>Withdrawal method is not provided</p>
+                      <button
+                        onClick={() => {
+                          setActiveSection('payments');
+                          setActivePaymentTab('payout');
+                          const section = document.getElementById('payments-section');
+                          if (section) section.scrollIntoView({ behavior: 'smooth' });
+                        }}
+                        className="text-sm font-medium text-black underline"
+                      >
+                        Go to Withdraw
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+
+            {(viewRole === 'host' || viewRole === 'promoter') && (
+              <motion.div variants={cardVariants} className="mt-2">
+                <EarningsCard
+                  title="What You’ve Achieved"
+                  roleLabel={viewRole === 'host' ? 'Host' : 'Promoter'}
+                  dailyData={earnings.daily}
+                  monthlyData={earnings.monthly}
+                  yearlyData={earnings.yearly}
+                  totalEarnings={earnings.totalEarnings}
+                />
+              </motion.div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Crop Modal */}
       {isCropping && uploadedImage && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
@@ -2346,7 +2533,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
           </div>
         </div>
       )}
-      </div>
+      </motion.div>
 
     </Container>
   );  

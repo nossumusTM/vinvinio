@@ -49,6 +49,7 @@ export default async function getCurrentUser(): Promise<SafeUser | null> {
         createdAt: true,
         updatedAt: true,
         emailVerified: true,
+        passwordUpdatedAt: true,
       },
     });
 
@@ -83,6 +84,7 @@ export default async function getCurrentUser(): Promise<SafeUser | null> {
       visitedPlaces: Array.isArray(user.visitedPlaces)
         ? (user.visitedPlaces as SocialCardVisitedPlace[])
         : null,
+      passwordUpdatedAt: user.passwordUpdatedAt?.toISOString() || null,
     };
   } catch (error) {
     console.error("getCurrentUser error:", error);
