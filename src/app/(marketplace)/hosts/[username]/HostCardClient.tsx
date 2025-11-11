@@ -5,6 +5,8 @@ import Image from 'next/image';
 import NextImage from 'next/image';
 import { FiCamera } from 'react-icons/fi';
 import { BiUpload } from "react-icons/bi";
+import { FiChevronDown } from 'react-icons/fi';
+import { createPortal } from 'react-dom';
 import clsx from 'clsx';
 
 // import cropImage from '@/app/(marketplace)/utils/cropImage';
@@ -103,6 +105,13 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
   // local optimistic previews (optional)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [coverPreview, setCoverPreview]   = useState<string | null>(null);
+  const [showLangPopup, setShowLangPopup] = useState(false);
+
+  const [langPopupPos, setLangPopupPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const langBtnRef = useRef<HTMLButtonElement | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => setIsMounted(true), []);
 
   const ratingLabel = (rating: number) => `${rating.toFixed(1)} / 5`;
 
@@ -160,6 +169,15 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
       loginModal.onOpen();
     }
   }, [host?.id, host?.name, host?.hostName, host?.image, loginModal, messenger]);
+
+  const toggleLangPopup = () => {
+    const next = !showLangPopup;
+    if (next && langBtnRef.current) {
+      const r = langBtnRef.current.getBoundingClientRect();
+      setLangPopupPos({ top: r.bottom + 8, left: r.left });
+    }
+    setShowLangPopup(next);
+  };
 
   const coverImage = useMemo(() => {
     // 1) If user has uploaded a cover in profile
@@ -494,7 +512,7 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                 </div>
 
                 <div className="text-white drop-shadow-lg">
-                  {!host.identityVerified ? (
+                  {host.identityVerified ? (
                     <span className="w-fit items-center gap-1 rounded-full shadow-md backdrop-blur-sm text-emerald-400 px-2.5 py-1.5 pb-0.5 text-[10px] font-bold">
                         ✓ ID VERIFIED
                       </span>
@@ -551,43 +569,104 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
 
 
                 {spokenLanguages.length > 0 ? (
-                  <div className="flex items-center gap-2 p-2 shadow-xl rounded-xl">
-                    <span className="text-sm font-medium text-white/90">Available in</span>
-                    <div className="flex items-center gap-0.5">
-                      {spokenLanguages.map((lang) => {
-                        const code = toFlagCode(lang);
-                        if (!code) {
-                          // fallback pill if flag not found
-                          return (
-                            <span
-                              key={lang}
-                              className="px-2 py-1 rounded-full bg-white/20 text-xs text-white/90"
-                              title={lang}
-                            >
-                              {lang}
-                            </span>
-                          );
-                        }
-                        return (
-                          <span
-                            key={lang}
-                            className="inline-flex items-center justify-center rounded-sm overflow-hidden"
-                            title={lang}
-                          >
-                            {/* 20x20 circle flag */}
-                            <NextImage
-                              src={flagSrc(code)}
-                              alt={lang}
-                              width={14}
-                              height={14}
-                              className="mr-1.5 h-4 w-6 object-cover rounded"
-                            />
-                          </span>
-                        );
-                      })}
-                    </div>
+  <div className="relative flex items-center gap-2 p-2 shadow-xl rounded-xl">
+    <span className="text-sm font-medium text-white/90">Available in</span>
+
+    {/* Flags (first 3 always visible) */}
+    <div className="flex items-center gap-0.5">
+      {(spokenLanguages.slice(0, 3)).map((lang) => {
+        const code = toFlagCode(lang);
+        if (!code) {
+          return (
+            <span
+              key={lang}
+              className="px-2 py-1 rounded-full bg-white/20 text-xs text-white/90"
+              title={lang}
+            >
+              {lang}
+            </span>
+          );
+        }
+        return (
+          <span
+            key={lang}
+            className="inline-flex items-center justify-center rounded-sm overflow-hidden"
+            title={lang}
+          >
+            <NextImage
+              src={flagSrc(code)}
+              alt={lang}
+              width={14}
+              height={14}
+              className="mr-1.5 h-4 w-6 object-cover rounded"
+            />
+          </span>
+        );
+      })}
+    </div>
+
+    {/* Show more button */}
+    {spokenLanguages.length > 3 && (
+      <button
+        ref={langBtnRef}
+        type="button"
+        onClick={toggleLangPopup}
+        className="ml-0 inline-flex items-center gap-1 rounded-full bg-transaparent shadow-md px-2 py-1 text-[11px] font-semibold text-white/90 hover:shadow-lg transition"
+        aria-expanded={showLangPopup}
+      >
+        +{spokenLanguages.length - 3} more
+        <FiChevronDown
+          className={twMerge('transition-transform', showLangPopup ? 'rotate-180' : 'rotate-0')}
+          size={14}
+        />
+      </button>
+    )}
+
+    {/* Popup with all languages */}
+    {isMounted && createPortal(
+      <AnimatePresence>
+        {showLangPopup && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.18 }}
+            className="fixed z-[99999] w-fit max-w-[85vw] bg-white text-neutral-800 rounded-xl shadow-2xl p-2"
+            style={{ top: langPopupPos.top, left: langPopupPos.left - 4 }}
+            onMouseLeave={() => setShowLangPopup(false)}
+          >
+            {/* <p className="text-[10px] font-semibold text-neutral-500 mb-1.5">
+              All available languages
+            </p> */}
+            <div className="grid grid-cols-1 gap-1.5">
+              {spokenLanguages.map((lang) => {
+                const code = toFlagCode(lang);
+                return (
+                  <div key={lang} className="flex items-center gap-1.5">
+                    {code ? (
+                      <NextImage
+                        src={flagSrc(code)}
+                        alt={lang}
+                        width={14}
+                        height={14}
+                        className="h-3.5 w-5 object-cover rounded"
+                      />
+                    ) : (
+                      <span className="inline-block h-3.5 w-5 rounded bg-neutral-200" />
+                    )}
+                    <span className="text-xs">{lang}</span>
                   </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>,
+      document.body
+    )}
+  </div>
                 ) : null}
+
                 </div>
               </div>
             </div>
