@@ -87,6 +87,7 @@ model User {
   preferredContacts String[] @default([])
   identityVerified Boolean  @default(false)
   phoneVerified    Boolean  @default(false)
+  passwordUpdatedAt DateTime? @default(now())
 
   isSuspended      Boolean  @default(false)
   suspendedAt      DateTime?

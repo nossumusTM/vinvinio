@@ -58,6 +58,7 @@ export async function POST(request: Request) {
         hashedPassword,
         role,
         referenceId,
+        passwordUpdatedAt: new Date(),
       },
     });
 

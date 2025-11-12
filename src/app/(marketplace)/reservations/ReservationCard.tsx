@@ -329,7 +329,7 @@ const ReservationCard: React.FC<ReservationCardProps> = ({
 
         {/* Meta blocks */}
         <div className="pt-2 pb-2 w-full max-w-md p-4 rounded-xl md:mx-0 mx-auto">
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-0">
             {/* Guests */}
             <div className="w-full rounded-2xl bg-white/90 backdrop-blur-md px-4 py-3">
               <div className="flex items-center gap-3">

@@ -373,7 +373,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
 
               {/* Reservation Meta — stacked, left-aligned (same as ReservationCard) */}
               <div className="pt-2 pb-4 w-full max-w-md p-4 rounded-xl md:mx-0 mx-auto">
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col ga">
 
                   {/* Guests */}
                   <div className="w-full rounded-2xl bg-white/90 backdrop-blur-md px-4 py-3">
@@ -501,7 +501,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
                     </div>
                   )}
                 </div>
-                <div className="mt-auto pt-4">
+                <div className="mt-0 pt-4">
                  <div className="flex justify-center px-6 pb-4 pt-4">
                    <Button
                      label="Send a Message"

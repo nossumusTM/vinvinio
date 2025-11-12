@@ -563,14 +563,14 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                       }}
                       href="/reservations"
                     />
-                    <MenuItem label="Manage listings"
+                    <MenuItem label="Manage Services"
                       onClick={() => {
                         setIsOpen(false);
                       }}
                       href="/my-listings"
                     />
                     <MenuItem
-                      label="Host ID Card"
+                      label="Manage Host"
                       onClick={() => {
                         setIsOpen(false);
                       }}
@@ -578,6 +578,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                     />
                     {(userRole === 'host') && (
                         <>
+                        <hr className="my-2" />
                           <MenuItem label="Dashboard"
                             onClick={() => {
                               setIsOpen(false);

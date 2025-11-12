@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { Card, CardContent } from './navbar/Card';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import useCurrencyFormatter from '@/app/(marketplace)/hooks/useCurrencyFormatter';
+import { AnimatePresence, motion } from 'framer-motion';
 
 interface EarningsEntry {
   date: string; // ISO date or formatted date
@@ -39,14 +40,25 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
   };
 
   const currentData = view === 'all'
-  ? Array.from(new Set([...dailyData.map(d => d.date)])) // Deduplicate if needed
-      .map(date => dailyData.find(d => d.date === date)!)
-  : dataMap[view];
+  ? Array.from(new Set([...dailyData.map((d) => d.date)]))
+        .map((date) => dailyData.find((d) => d.date === date)!)
+    : dataMap[view];
 
-  //   const total = currentData.reduce((sum, entry) => sum + entry.amount, 0);
   const total = view === 'daily'
     ? totalEarnings
     : currentData.reduce((sum, entry) => sum + entry.amount, 0);
+
+    const todaysProfitValue = useMemo(() => {
+    const today = new Date().toDateString();
+    return dailyData.find((d) => new Date(d.date).toDateString() === today)?.amount || 0;
+  }, [dailyData]);
+
+    const totalDisplay = Number(total.toFixed(2));
+    const revenueLabel = view === 'daily'
+      ? 'Total Revenue'
+      : view === 'all'
+      ? 'Total Revenue'
+      : `${view.charAt(0).toUpperCase() + view.slice(1)} Total`;
 
   return (
     <Card className="w-full bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-all">
@@ -59,45 +71,59 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
                 <h2 className="text-lg md:text-2xl font-bold text-black mb-2">{title || 'Earnings Overview'}</h2>
             </div>
 
-            <div className="mb-3 md:mb-0 pt-3 flex flex-wrap sm:flex-row sm:justify-baseline gap-4">
-                <div className="flex flex-col justify-center items-center">
-                    <p className="text-sm text-white bg-gradient-to-br from-[#08e2ff] to-[#3F00FF] p-3 rounded-xl mb-2 select-none">Today&#39;s Profit</p>
-                    <p className="text-lg font-semibold text-black">
-                    {/* {formatCurrency(dailyData?.[dailyData.length - 1]?.amount || 0)} */}
+                        <div className="mb-3 mt-3 flex flex-wrap gap-4 pt-3 sm:mb-0 sm:flex-row sm:justify-baseline">
+              <div className="flex flex-col items-center justify-center">
+                <p className="select-none rounded-xl bg-gradient-to-br from-[#08e2ff] to-[#3F00FF] p-3 text-sm text-white">
+                  Today&#39;s Profit
+                </p>
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={`profit-${todaysProfitValue}`}
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    transition={{ duration: 0.2 }}
+                    className="text-lg font-semibold text-black"
+                  >
+                    {formatConverted(todaysProfitValue)}
+                  </motion.span>
+                </AnimatePresence>
+              </div>
 
-                    {formatConverted(
-                        dailyData.find((d) => new Date(d.date).toDateString() === new Date().toDateString())?.amount || 0
-                        )}
-                    </p>
-                </div>
-                
-                <div className="flex flex-col justify-center items-center">
-                    <p className="text-sm text-white bg-gradient-to-br from-gray-800 to-gray-700 p-3 rounded-xl mb-2 select-none">
-                    {view === 'daily'
-                        ? 'Total Revenue'
-                        : view === 'all'
-                        ? 'Total Revenue'
-                        : `${view.charAt(0).toUpperCase() + view.slice(1)} Total`}
-                    </p>
-                    <p className="text-lg font-semibold text-black">
-                        {formatConverted(Number(total.toFixed(2)))}
-                    </p>
-                </div>
+              <div className="flex flex-col items-center justify-center">
+                <p className="select-none rounded-xl bg-gradient-to-br from-gray-800 to-gray-700 p-3 text-sm text-white">
+                  {revenueLabel}
+                </p>
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={`total-${view}-${totalDisplay}`}
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    transition={{ duration: 0.2 }}
+                    className="text-lg font-semibold text-black"
+                  >
+                    {formatConverted(totalDisplay)}
+                  </motion.span>
+                </AnimatePresence>
+              </div>
             </div>
 
-            <div className="flex gap-2 mt-4 sm:mt-0">
-            {(['daily', 'monthly', 'yearly', 'all'] as const).map((type) => (
-                <button
-                    key={type}
-                    onClick={() => setView(type)}
-                    className={`px-4 py-2 rounded-full text-sm transition ${
+            <div className="mt-4 flex gap-2 sm:mt-0">
+              {(['daily', 'monthly', 'yearly', 'all'] as const).map((type) => (
+                <motion.button
+                  key={type}
+                  onClick={() => setView(type)}
+                  whileTap={{ scale: 0.95 }}
+                  whileHover={{ y: -2 }}
+                  className={`rounded-full px-4 py-2 text-sm transition ${
                     view === type
                         ? 'bg-black text-white'
-                        : 'bg-neutral-100 text-gray-700 hover:bg-gray-200'
-                    }`}
+                      : 'bg-neutral-100 text-gray-700 hover:bg-gray-200'
+                  }`}
                 >
                     {type === 'all' ? 'All' : type.charAt(0).toUpperCase() + type.slice(1)}
-                </button>
+                </motion.button>
                 ))}
             </div>
             </div>
