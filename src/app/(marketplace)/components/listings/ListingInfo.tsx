@@ -8,6 +8,7 @@ import { BsTranslate } from "react-icons/bs";
 import { RiUserHeartFill } from "react-icons/ri";
 import { GiExtraTime } from "react-icons/gi";
 import LocationDescription from '../LocationDescription';
+import NextImage from 'next/image';
 
 import { useEffect, useState, useCallback } from "react";
 import Button from "../Button";
@@ -90,6 +91,25 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
 
     const [averageRating, setAverageRating] = useState<number | null>(null);
     const [reviewCount, setReviewCount] = useState(0);
+    const [coverImage, setCoverImage] = useState<string | null>(null);
+    const [coverLoaded, setCoverLoaded] = useState(false);
+
+    useEffect(() => {
+      let alive = true;
+      (async () => {
+        try {
+          if (!user?.id) return;
+          const res = await fetch(`/api/users/cover?userId=${encodeURIComponent(user.id)}`, {
+            credentials: 'include',
+            cache: 'no-store',
+          });
+          if (!res.ok) return;
+          const data = await res.json();
+          if (alive) setCoverImage(data?.coverImage ?? null);
+        } catch {}
+      })();
+      return () => { alive = false; };
+    }, [user?.id]);
 
     useEffect(() => {
         const fetchHostReviews = async () => {
@@ -122,6 +142,11 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
         router.push(profilePath);
     }, [router, user]);
 
+    const scrollToReviews = useCallback(() => {
+      const el = document.getElementById('reviews');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, []);
+
     return (
         <div className="col-span-4 flex flex-col gap-8">
             <div className="flex flex-col gap-2">
@@ -136,44 +161,98 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                     "
                     >
                     {/* <div className="w-full rounded-2xl p-8 rounded-xl flex items-center gap-3 justify-between items-center"> */}
-                    <div className="w-full rounded-2xl p-8 rounded-xl flex items-center gap-3 justify-baseline">
-                    <Avatar src={user?.image} name={user?.username} size={65}/>
-                    <div className="mt-2 flex text-md md:text-lg flex-col justify-start font-normal items-center">
-                        <button
-                            type="button"
-                            onClick={handleHostNavigate}
-                            className="px-4 py-1 rounded-full font-semibold bg-neutral-100 hover:bg-neutral-200 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300"
-                        >
-                        {user?.username || 'Host'}
-                        </button>
+                    <div className="relative w-full overflow-visible rounded-2xl pt-10 sm:pt-8">
+  {/* Cover area */}
+  <div className="relative h-64 sm:h-50 md:h-58 overflow-hidden rounded-2xl">
+    {/* Background cover */}
+    {coverImage ? (
+      <NextImage
+        src={coverImage}
+        alt={`${user?.username || 'host'} cover`}
+        fill
+        priority={false}
+        className={`object-cover transition-[opacity,filter,transform] duration-500 ease-out
+                    ${coverLoaded ? 'opacity-100 blur-0 scale-100' : 'opacity-80 blur-sm scale-[1.02]'}`}
+        onLoadingComplete={() => setCoverLoaded(true)}
+      />
+    ) : (
+      <div className="absolute inset-0 bg-neutral-200" />
+    )}
 
-                    {averageRating !== null && (
-                        <div className="flex items-center gap-2 justify-center">
-                            {/* SVG Star with partial fill */}
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                            <defs>
-                                <linearGradient id="starGradient">
-                                <stop offset={`${(averageRating / 5) * 100}%`} stopColor="black" />
-                                <stop offset={`${(averageRating / 5) * 100}%`} stopColor="lightgray" />
-                                </linearGradient>
-                            </defs>
-                            <path
-                                fill="url(#starGradient)"
-                                d="M12 17.27L18.18 21 16.54 13.97 22 9.24 
-                                14.81 8.63 12 2 9.19 8.63 2 9.24 
-                                7.46 13.97 5.82 21 12 17.27z"
-                            />
-                            </svg>
+    {/* Soft gradient for legibility */}
+    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
 
-                            {/* Rating and count */}
-                            <span className="text-lg text-neutral-700 font-medium">
-                            {averageRating.toFixed(1)} · {reviewCount} review{reviewCount !== 1 ? 's' : ''}
-                            </span>
-                        </div>
-                        )}
-                    </div>
-                    </div>
+    {/* Centered text content */}
+    <div className="absolute inset-0 z-10 flex flex-col pt-2 md:pt-0 items-center justify-center gap-2 px-4 text-center mt-0">
+      {/* Host name */}
+      <button
+        type="button"
+        onClick={handleHostNavigate}
+        className="rounded-full bg-white/90 px-4 py-1 text-sm font-semibold text-neutral-900 shadow-sm backdrop-blur transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300"
+      >
+        {user?.username || 'Host'}
+      </button>
 
+      {/* Rating */}
+      {averageRating !== null && (
+  <div
+    onClick={scrollToReviews}
+    role="button"
+    tabIndex={0}
+    onKeyDown={(e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        scrollToReviews();
+      }
+    }}
+    aria-label="Scroll to reviews"
+    className="flex flex-col items-center gap-1 cursor-pointer select-none"
+  >
+    <div className="flex items-center justify-center gap-2">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="starGradientHostHeaderTop">
+            <stop offset={`${(averageRating / 5) * 100}%`} stopColor="white" />
+            <stop offset={`${(averageRating / 5) * 100}%`} stopColor="rgba(255,255,255,0.35)" />
+          </linearGradient>
+        </defs>
+        <path
+          fill="url(#starGradientHostHeaderTop)"
+          d="M12 17.27L18.18 21 16.54 13.97 22 9.24 
+             14.81 8.63 12 2 9.19 8.63 2 9.24 
+             7.46 13.97 5.82 21 12 17.27z"
+        />
+      </svg>
+      <span className="text-base sm:text-lg font-semibold text-white drop-shadow underline decoration-transparent hover:decoration-white/80">
+        {averageRating.toFixed(1)} / 5
+      </span>
+    </div>
+
+    <span className="text-xs sm:text-sm font-medium border-b border-white/85 text-white/85 drop-shadow-sm tracking-wide">
+      {reviewCount} TOTAL REVIEW{reviewCount !== 1 ? 'S' : ''}
+    </span>
+  </div>
+      )}
+
+    </div>
+  </div>
+
+  {/* Avatar floating on top (half in, half out of the cover) */}
+  <button
+    type="button"
+    onClick={handleHostNavigate}
+    title={user?.username || 'Host'}
+    className="absolute left-1/2 -top-2 -translate-x-1/2 z-20 rounded-full outline-none focus:ring-2 focus:ring-black/30"
+  >
+    <div className="rounded-full ring-4 ring-white shadow-xl">
+      <Avatar
+        src={user?.image}
+        name={user?.username}
+        size={96} // adjust as needed
+      />
+    </div>
+  </button>
+</div>
                         
                         {hostDescription && (
                             <div>
@@ -268,9 +347,9 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                 <h2 className="text-lg font-semibold mb-2">Moodboard</h2>
 
                 {Array.isArray(locationType) && locationType.length > 0 && (
-                <div className="flex items-center flex-wrap gap-2 text-sm text-neutral-700 mb-3">
+                <div className="flex items-center flex-wrap gap-2 text-sm font-semibold text-neutral-700 mb-3">
                     {locationType.map((type) => (
-                    <span key={type} className="bg-neutral-100 px-2 py-1 rounded-full uppercase tracking-wide text-[11px] text-neutral-700">
+                    <span key={type} className="bg-neutral-100 px-3 py-1.5 rounded-full uppercase tracking-wide text-[11px] text-neutral-700">
                         {formatToken(type)}
                     </span>
                     ))}
@@ -281,7 +360,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                 <LocationDescription text={locationDescription} />
                 )}
 
-                {(Array.isArray(groupStyles) && groupStyles.length > 0) || durationCategory ||
+                {/* {(Array.isArray(groupStyles) && groupStyles.length > 0) || durationCategory ||
                   (Array.isArray(environments) && environments.length > 0) ||
                   (Array.isArray(activityForms) && activityForms.length > 0) ||
                   (Array.isArray(seoKeywords) && seoKeywords.length > 0)
@@ -348,7 +427,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                       </div>
                     )}
                   </div>
-                ) : null}
+                ) : null} */}
             </div>
             )}
             
@@ -362,7 +441,113 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                     description={category?.description}
                 />
             )}
-            <hr className="mb-5"/>
+
+            {/* Experience meta (restyled, single-column with soft shadow) */}
+              {(
+                (Array.isArray(groupStyles) && groupStyles.length > 0) ||
+                durationCategory ||
+                (Array.isArray(environments) && environments.length > 0) ||
+                (Array.isArray(activityForms) && activityForms.length > 0) ||
+                (Array.isArray(seoKeywords) && seoKeywords.length > 0)
+              ) && (
+                <section className="mt-6">
+                  <div className="rounded-2xl bg-white shadow-lg p-6 space-y-5">
+                    <h3 className="text-lg font-semibold text-neutral-900 mb-2">
+                      Experience details
+                    </h3>
+
+                    {/* Group style */}
+                    {Array.isArray(groupStyles) && groupStyles.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                          Group style
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {groupStyles.map((style) => (
+                            <span
+                              key={style}
+                              className="rounded-full bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-800 shadow-sm"
+                            >
+                              {formatToken(style)}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Duration */}
+                    {durationCategory && (
+                      <div className="space-y-2">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                          Duration
+                        </p>
+                        <span className="inline-flex rounded-full bg-neutral-900 px-3 py-1.5 text-sm font-semibold text-white shadow-sm">
+                          {formatToken(durationCategory)}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Environment */}
+                    {Array.isArray(environments) && environments.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                          Environment
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {environments.map((env) => (
+                            <span
+                              key={env}
+                              className="rounded-full bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-800 shadow-sm"
+                            >
+                              {formatToken(env)}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Activity form */}
+                    {Array.isArray(activityForms) && activityForms.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                          Activity form
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {activityForms.map((act) => (
+                            <span
+                              key={act}
+                              className="rounded-full bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-800 shadow-sm"
+                            >
+                              {formatToken(act)}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Keywords */}
+                    {Array.isArray(seoKeywords) && seoKeywords.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                          Keywords
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {seoKeywords.map((kw) => (
+                            <span
+                              key={kw}
+                              className="rounded-full bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-700 shadow-sm"
+                            >
+                              {formatToken(kw)}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </section>
+              )}
+
+            <hr className="mb-5 mt-8"/>
 
             <div className="ml-0">
                 <div className="ml-4">

@@ -13,7 +13,7 @@ import getCroppedImg from '@/app/(marketplace)/utils/cropImage';
 import CountrySelect from "../components/inputs/CountrySelect";
 import { CountrySelectValue } from "@/app/(marketplace)/components/inputs/CountrySelect";
 import AnimatedModal from "../components/modals/AnimatedModal";
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, type Variants, type Easing } from 'framer-motion';
 import { TbUserCircle, TbLock, TbCreditCard } from "react-icons/tb";
 import { CgUserlane } from "react-icons/cg";
 import { MdOutlineSecurity } from "react-icons/md";
@@ -26,7 +26,10 @@ import FAQ from "../components/FAQ";
 import toast from "react-hot-toast";
 import useCurrencyFormatter from '@/app/(marketplace)/hooks/useCurrencyFormatter';
 import { slugSegment } from '@/app/(marketplace)/libs/links';
-export const dynamic = 'force-dynamic';
+import { FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
+import Avatar from "../components/Avatar";
+import NextImage from 'next/image';
+import { BiUpload } from 'react-icons/bi';
 
 interface ProfileClientProps {
   currentUser: SafeUser;
@@ -81,36 +84,136 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
 
   const [viewRole, setViewRole] = useState<'customer' | 'host' | 'promoter' | 'moder'>(currentUser.role);
 
+  // --- OWNER & MEDIA STATE ---
+const [isOwner, setIsOwner] = useState(false);
+
+const avatarInputRef = useRef<HTMLInputElement | null>(null);
+const coverInputRef  = useRef<HTMLInputElement | null>(null);
+
+const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+const [coverPreview,  setCoverPreview]  = useState<string | null>(null);
+const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
+const [coverLoaded,   setCoverLoaded]   = useState(false);
+
+const [uploadingAvatar, setUploadingAvatar] = useState(false);
+const [uploadingCover,  setUploadingCover]  = useState(false);
+
+const busy = uploadingAvatar || uploadingCover;
+
+// --- OWNER RESOLUTION (profile == currentUser) ---
+useEffect(() => {
+  setIsOwner(Boolean(currentUser?.id));
+}, [currentUser?.id]);
+
+// --- FETCH COVER FROM API (optional, if you store cover separately) ---
+useEffect(() => {
+  let alive = true;
+  (async () => {
+    try {
+      if (!currentUser?.id) return;
+      const res = await fetch(`/api/users/cover?userId=${encodeURIComponent(currentUser.id)}`, {
+        credentials: 'include',
+        cache: 'no-store',
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (alive) setCoverImageUrl(data?.coverImage ?? null);
+    } catch {}
+  })();
+  return () => { alive = false; };
+}, [currentUser?.id]);
+
+// --- FILE HELPERS ---
+const fileToBase64 = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+const pickAvatar = () => avatarInputRef.current?.click();
+const pickCover  = () => coverInputRef.current?.click();
+
+// --- UPLOAD HANDLERS (no crop; plug in your cropper if needed) ---
+const handleAvatarSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  setUploadingAvatar(true);
+  try {
+    const dataUrl = await fileToBase64(file);
+    setAvatarPreview(dataUrl);
+    const base64 = dataUrl.replace(/^data:image\/\w+;base64,/, '');
+    await axios.put('/api/users/profile-image', { image: base64 });
+  } catch (err) {
+    console.error('Avatar upload failed', err);
+  } finally {
+    setUploadingAvatar(false);
+    e.target.value = '';
+  }
+};
+
+const handleCoverSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  setUploadingCover(true);
+  try {
+    const dataUrl = await fileToBase64(file);
+    setCoverPreview(dataUrl);
+    const base64 = dataUrl.replace(/^data:image\/\w+;base64,/, '');
+    await axios.put('/api/users/cover', { image: base64 });
+  } catch (err) {
+    console.error('Cover upload failed', err);
+  } finally {
+    setUploadingCover(false);
+    e.target.value = '';
+  }
+};
+
+// --- CHOOSE COVER IMAGE SOURCE ---
+const coverImage = useMemo(() => {
+  if (coverPreview)    return coverPreview;           // fresh local
+  if (coverImageUrl)   return coverImageUrl;          // fetched from API
+  if (currentUser?.coverImage) return currentUser.coverImage as string; // if stored on user
+  return null;
+}, [coverPreview, coverImageUrl, currentUser?.coverImage]);
+
+
   useEffect(() => {
     if (currentUser.role !== 'host') {
       setViewRole(currentUser.role);
     }
   }, [currentUser.role]);
 
-  const pageVariants = useMemo(
-    () => ({
-      hidden: { opacity: 0 },
-      visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
-    }),
-    []
-  );
+  const EASE_BEZIER: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
 
-  const cardVariants = useMemo(
-    () => ({
-      hidden: { opacity: 0, y: 18 },
-      visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] } },
-    }),
-    []
-  );
+  const pageVariants: Variants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
+  };
 
-  const sectionVariants = useMemo(
-    () => ({
-      hidden: { opacity: 0, y: 22 },
-      visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] } },
-      exit: { opacity: 0, y: -14, transition: { duration: 0.25 } },
-    }),
-    []
-  );
+  const cardVariants: Variants = {
+    hidden: { opacity: 0, y: 18 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.35, ease: EASE_BEZIER },
+    },
+  };
+
+  const sectionVariants: Variants = {
+    hidden: { opacity: 0, y: 22 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.35, ease: EASE_BEZIER },
+    },
+    exit: {
+      opacity: 0,
+      y: -14,
+      transition: { duration: 0.25, ease: EASE_BEZIER },
+    },
+  };
 
   const canToggleRole = currentUser.role === 'host';
   const isHostView = viewRole === 'host';
@@ -120,28 +223,35 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
     : 'from-amber-400 via-orange-500 to-rose-500';
   const modeDescription = isHostView
     ? 'Manage listings, payouts and analytics without losing guest-facing data.'
-    : 'Preview the marketplace as a guest while we keep your host workspace untouched.';
+    : 'Preview as a guest while we keep your host workspace untouched.';
 
   const lastPasswordUpdateDate = useMemo(
     () => (currentUser.passwordUpdatedAt ? new Date(currentUser.passwordUpdatedAt) : null),
     [currentUser.passwordUpdatedAt]
   );
 
+  const lastRoleToastRef = useRef<'host' | 'customer' | null>(null);
+
   const handleRoleToggle = (nextIsHost: boolean) => {
     if (!canToggleRole) return;
 
-    setViewRole((prev) => {
-      const target = nextIsHost ? 'host' : 'customer';
-      if (prev === target) {
-        return prev;
-      }
+    const target: 'host' | 'customer' = nextIsHost ? 'host' : 'customer';
 
-      toast.success(`Switched to ${target === 'host' ? 'Host' : 'Guest'} mode`, {
-        iconTheme: {
-          primary: '#2200ffff',
-          secondary: '#fff',
-        },
-      });
+    setViewRole((prev) => {
+      if (prev === target) return prev; // no actual change → no toast
+
+      // prevent duplicate toast (Strict Mode / rapid clicks)
+      if (lastRoleToastRef.current !== target) {
+        lastRoleToastRef.current = target;
+        toast.success(`Switched to ${target === 'host' ? 'Host' : 'Guest'} mode`, {
+          iconTheme: { primary: '#2200ffff', secondary: '#fff' },
+        });
+        // release after a short delay
+        setTimeout(() => {
+          // only clear if nothing else changed meanwhile
+          if (lastRoleToastRef.current === target) lastRoleToastRef.current = null;
+        }, 400);
+      }
 
       return target;
     });
@@ -830,206 +940,171 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
         animate="visible"
         variants={pageVariants}
       >
-        <motion.div
-          variants={cardVariants}
-          className="rounded-3xl border border-neutral-200 bg-white/70 backdrop-blur-sm px-5 py-6 shadow-lg md:px-8"
-        >
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-stretch">
-            <div className="flex flex-1 flex-col gap-4">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div className="flex items-start gap-4">
-                  {canToggleRole ? (
-                    <Switch.Group
-                      as="div"
-                      className="flex h-full min-w-[7.5rem] flex-col justify-between gap-2"
-                    >
-                      <div className="flex flex-col gap-1">
-                        <Switch.Label className="text-[10px] font-semibold uppercase tracking-[0.28em] text-neutral-500">
-                          Role View
-                        </Switch.Label>
-                        <Switch.Description className="text-[11px] text-neutral-500">
-                          {isHostView ? 'Hosting tools active' : 'Guest preview active'}
-                        </Switch.Description>
-                      </div>
-                      <Switch
-                        checked={isHostView}
-                        onChange={handleRoleToggle}
-                        className={twMerge(
-                          'relative inline-flex h-12 w-32 items-center justify-between rounded-2xl border border-black/10 px-3 text-[11px] font-semibold uppercase tracking-wide transition focus:outline-none focus:ring-2 focus:ring-black/60',
-                          isHostView
-                            ? 'bg-gradient-to-r from-indigo-500 via-sky-500 to-blue-500 text-white shadow-lg'
-                            : 'bg-neutral-100 text-neutral-600 shadow-sm'
-                        )}
-                      >
-                        <span className="sr-only">Toggle between host and guest modes</span>
-                        <span className="pointer-events-none flex w-full items-center justify-between">
-                          <span>Guest</span>
-                          <span>Host</span>
-                        </span>
-                        <motion.span
-                          layout
-                          transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-                          className={twMerge(
-                            'pointer-events-none absolute left-1 top-1 flex h-10 w-[4.25rem] items-center justify-center rounded-xl bg-white text-xs font-semibold uppercase tracking-wide text-neutral-900 shadow-lg',
-                            isHostView ? 'text-neutral-900' : 'text-neutral-900'
-                          )}
-                          animate={{ x: isHostView ? 52 : 0 }}
-                        >
-                          {isHostView ? 'Host' : 'Guest'}
-                        </motion.span>
-                      </Switch>
-                      <p className="text-[10px] text-neutral-400">
-                        Your host workspace stays exactly as you left it.
-                      </p>
-                    </Switch.Group>
-                  ) : (
-                    <span className="hidden h-14 w-16 shrink-0 items-center justify-center rounded-2xl border border-neutral-200 bg-neutral-100 text-xs font-semibold uppercase tracking-wide text-neutral-600 sm:flex">
-                      {viewRole}
-                    </span>
+
+      <div className="rounded-3xl overflow-visible shadow-xl border border-neutral-100 bg-white">
+        <div className="relative z-0 h-56 sm:h-64 md:h-72 overflow-visible">
+          {/* ROLE SWITCH — bottom-center over the cover */}
+          <div className="absolute left-1/2 -bottom-3 translate-x-[-50%] z-[99999]">
+            <Switch.Group as="div" className="flex flex-col items-center">
+              <Switch
+                checked={isHostView}
+                onChange={(checked) => handleRoleToggle(checked)}
+                aria-label="Toggle role"
+                className={twMerge(
+                  'relative inline-flex h-8 w-[64px] items-center rounded-full p-[3px]',
+                  'transition-colors duration-300 focus:outline-none overflow-visible', // allow pulse to extend
+                  isHostView
+                    ? 'bg-neutral-900 shadow-md'
+                    : 'bg-neutral-200 shadow-inner'
+                )}
+              >
+                {/* BORDER PULSE — remounts on each state to retrigger animation */}
+                <motion.div
+                  key={isHostView ? 'pulse-host' : 'pulse-guest'}
+                  className={twMerge(
+                    'pointer-events-none absolute inset-0 -m-[2px] rounded-full z-10',
+                    isHostView ? 'ring-2 ring-neutral-900' : 'ring-2 ring-neutral-400'
                   )}
-                  <div
-                    className="relative cursor-pointer overflow-hidden rounded-full border-4 border-white/80 shadow-xl transition hover:shadow-2xl"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    {profileImage ? (
-                      <Image
-                        src={profileImage}
-                        alt="User"
-                        width={96}
-                        height={96}
-                        className="h-24 w-24 object-cover"
-                      />
-                    ) : (
-                      <div
-                        className={twMerge(
-                          'flex h-24 w-24 items-center justify-center rounded-full bg-black text-4xl font-semibold text-white'
-                        )}
-                      >
-                        {initials}
-                      </div>
+                  initial={{ opacity: 0.55, scale: 1 }}
+                  animate={{ opacity: 0, scale: 1.18 }}
+                  transition={{ duration: 0.45, ease: 'easeOut' }}
+                />
+
+                {/* SLIDING PILL */}
+                <motion.span
+                  layout
+                  initial={false}
+                  transition={{ type: 'spring', stiffness: 340, damping: 23 }}
+                  className={twMerge(
+                    'pointer-events-none absolute left-[3px] top-[3px] z-20',
+                    'flex h-[26px] w-[34px] items-center justify-center rounded-full',
+                    'px-[5px] text-[8px] font-semibold uppercase tracking-wide leading-none whitespace-nowrap',
+                    isHostView ? 'bg-white text-neutral-900' : 'bg-neutral-800 text-white'
+                  )}
+                  animate={{ x: isHostView ? 24 : 0 }}
+                >
+                  {isHostView ? 'Host' : 'Guest'}
+                </motion.span>
+              </Switch>
+            </Switch.Group>
+
+              </div>
+
+                {coverImage ? (
+                  <NextImage
+                    src={coverImage}
+                    alt={`Cover for ${currentUser?.name ?? currentUser?.username ?? 'user'}`}
+                    fill
+                    placeholder="blur"
+                    blurDataURL="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+                    className={twMerge(
+                      'rounded-3xl object-cover pointer-events-none z-0 transition-[filter,opacity,transform] duration-500 ease-out',
+                      coverLoaded ? 'blur-0 opacity-100 scale-100' : 'blur-md opacity-80 scale-[1.02]'
                     )}
+                    onLoadingComplete={() => setCoverLoaded(true)}
+                    priority
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-neutral-200" />
+                )}
+
+                <div className="rounded-3xl absolute inset-0 z-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+
+                {isOwner && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={pickCover}
+                      disabled={busy}
+                      className="aspect-square absolute top-3 right-3 z-[2] inline-flex items-center gap-2 rounded-full backdrop-blur-sm px-3 py-1.5 text-xs font-semibold text-white shadow-md hover:shadow-lg transition"
+                      title="Change cover"
+                    >
+                      <BiUpload className="h-5 w-5" />
+                      {uploadingCover ? '…' : ''}
+                    </button>
                     <input
-                      ref={fileInputRef}
+                      ref={coverInputRef}
                       type="file"
                       accept="image/*"
-                      onChange={handleImageUpload}
                       className="hidden"
+                      onChange={handleCoverSelect}
                     />
-                  </div>
-                </div>
-                <div className="flex-1 space-y-3">
-                  {currentUser?.isSuspended && (
-                    <span className="inline-flex items-center gap-2 rounded-full bg-red-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-red-700 shadow-sm">
-                      Account suspended
-                      {suspensionDate && (
-                        <span className="text-[10px] font-medium lowercase text-red-600/80">
-                          since {suspensionDate.toLocaleDateString()}
+                  </>
+                )}
+
+                <div className="absolute inset-x-0 bottom-0 z-[2] px-6 pb-6">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="relative">
+                        {isOwner ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={pickAvatar}
+                              disabled={busy}
+                              className="group rounded-full outline-none focus:ring-2 focus:ring-white/80 focus:ring-offset-2 focus:ring-offset-black/20"
+                              title="Change avatar"
+                            >
+                              <div className="rounded-full overflow-hidden ring-0 transition shadow-md hover:shadow-lg cursor-pointer">
+                                <Avatar
+                                  src={avatarPreview ?? currentUser?.image ?? undefined}
+                                  name={currentUser?.name ?? currentUser?.username ?? 'User'}
+                                  size={92}
+                                />
+                              </div>
+                            </button>
+                            <input
+                              ref={avatarInputRef}
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={handleAvatarSelect}
+                            />
+                          </>
+                        ) : (
+                          <Avatar
+                            src={currentUser?.image ?? undefined}
+                            name={currentUser?.name ?? currentUser?.username ?? 'User'}
+                            size={92}
+                          />
+                        )}
+                      </div>
+
+                      <div className="text-white drop-shadow-lg">
+                        {/* {currentUser?.identityVerified ? (
+                          <span className="w-fit items-center gap-1 rounded-full shadow-md backdrop-blur-sm text-emerald-400 px-2.5 py-1.5 pb-0.5 text-[10px] font-bold">
+                            ✓ ID VERIFIED
+                          </span>
+                        ) : (
+                          <span className="w-fit items-center gap-1 shadow-md rounded-full backdrop-blur-sm text-orange-400 px-2.5 py-1.5 text-[10px] font-bold">
+                            ID IN REVIEW
+                          </span>
+                        )} */}
+
+                        <p className="ml-1 text-2xl font-semibold flex items-center gap-2">
+                          {currentUser?.username || currentUser?.name || 'User'}
+                        </p>
+
+                        {currentUser?.legalName && (
+                          <p className="ml-1 text-sm text-white/80">{currentUser.legalName}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Optional right-side chips (profession, languages) — keep or remove */}
+                    <div className="flex flex-wrap items-center gap-3 text-white/90">
+                      {currentUser?.profession && (
+                        <span className="rounded-full bg-white/20 px-4 py-2 text-sm font-medium">
+                          {currentUser.profession}
                         </span>
                       )}
-                    </span>
-                  )}
-                  <div className="flex flex-col gap-2">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                      <p className="text-xl font-semibold text-neutral-900 md:text-2xl">
-                        {currentUser?.legalName || currentUser?.name || 'Unnamed'}
-                      </p>
-                      <span className="inline-flex items-center rounded-full bg-neutral-900/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-neutral-700">
-                        {modeLabel}
-                      </span>
-                    </div>
-                    <p className="text-xs text-neutral-500 sm:text-sm">
-                      {currentUser.username
-                        ? `@${currentUser.username}`
-                        : 'Complete your profile to share more about you'}
-                    </p>
-                  </div>
-                  <div className="grid gap-2 text-sm text-neutral-600 sm:text-base">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <FiMail className="text-black" size={16} />
-                      <span className="truncate text-sm font-medium text-neutral-800 sm:text-base">
-                        {currentUser?.email || 'Email not provided'}
-                      </span>
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${
-                          currentUser?.emailVerified ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
-                        }`}
-                      >
-                        {currentUser?.emailVerified ? 'Verified' : 'Unverified'}
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <FiPhone className="text-black" size={16} />
-                      <span className="truncate text-sm font-medium text-neutral-800 sm:text-base">
-                        {currentUser?.phone || 'Phone not added'}
-                      </span>
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${
-                          currentUser?.phoneVerified ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
-                        }`}
-                      >
-                        {currentUser?.phoneVerified ? 'Verified' : 'Unverified'}
-                      </span>
+                      {/* You can insert your languages popup here if you have `spokenLanguages` */}
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            <motion.div
-              variants={cardVariants}
-              className={`relative flex w-full overflow-hidden rounded-2xl border border-white/30 bg-gradient-to-br ${modeGradient} text-white shadow-md lg:max-w-sm`}
-            >
-              <div className="relative z-10 flex h-full w-full flex-col justify-between gap-4 p-6">
-                <div className="flex items-center justify-between text-xs uppercase tracking-wide text-white/80">
-                  <span className="rounded-full bg-white/20 px-3 py-1 font-semibold text-white">
-                    {modeLabel}
-                  </span>
-                  <span className="text-white/70">{isHostView ? 'Full control' : 'Guest preview'}</span>
-                </div>
-                <p className="text-base font-semibold leading-relaxed md:text-lg">
-                  {modeDescription}
-                </p>
-                <p className="text-xs text-white/80">
-                  {canToggleRole
-                    ? 'Switch roles anytime. We keep your host setup intact.'
-                    : `You are exploring Vuola as a ${modeLabel.toLowerCase()}.`}
-                </p>
-              </div>
-              <motion.svg
-                className="absolute -right-8 -top-8 h-32 w-32 text-white/30"
-                viewBox="0 0 100 100"
-                initial={{ rotate: -8, scale: 0.9, opacity: 0 }}
-                animate={{ rotate: 0, scale: 1, opacity: 1 }}
-                transition={{ duration: 0.8, ease: 'easeOut' }}
-              >
-                <defs>
-                  <linearGradient id="modeGlow" x1="0" x2="1" y1="0" y2="1">
-                    <stop offset="0%" stopColor="#ffffff" stopOpacity="0.6" />
-                    <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-                <motion.circle
-                  cx="50"
-                  cy="50"
-                  r="32"
-                  fill="none"
-                  stroke="url(#modeGlow)"
-                  strokeWidth="8"
-                  strokeDasharray="120"
-                  animate={{ strokeDashoffset: [120, 0, 120] }}
-                  transition={{ repeat: Infinity, duration: 6, ease: 'easeInOut' }}
-                />
-                <motion.circle
-                  cx="50"
-                  cy="50"
-                  r="18"
-                  fill="url(#modeGlow)"
-                  animate={{ opacity: [0.4, 0.9, 0.4], scale: [0.9, 1.05, 0.9] }}
-                  transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
-                />
-              </motion.svg>
-            </motion.div>
-          </div>
-        </motion.div>
+
   
       <AnimatePresence mode="wait">
         {activeSection === 'personal-info' && (
@@ -1910,7 +1985,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
               </div>
             </div>
           </motion.section>
-        )
+        )}
       </AnimatePresence>
 
           {showConfirmDeletePayout && (
@@ -2217,7 +2292,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
           >
             <motion.div
               variants={cardVariants}
-              className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
+              className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 relative z-0"
             >
               {[
                 {

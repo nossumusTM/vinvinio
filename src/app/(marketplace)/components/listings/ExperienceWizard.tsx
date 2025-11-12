@@ -1424,20 +1424,26 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
           subtitle="Match your experience with the right audience and improve discovery."
         />
 
+        {/* Group style (multi-select) */}
         <div className="flex flex-col gap-2">
           <label className="text-md font-medium">Group style</label>
           <Select
             options={groupStyleOptions}
             value={groupStyles}
-            onChange={(value: any) => setCustomValue('groupStyles', value)}
-            placeholder="Choose one style"
+            onChange={(selected: any) => setCustomValue('groupStyles', selected)}
+            placeholder="Choose one or more styles"
+            isMulti
+            closeMenuOnSelect={false}
             menuPlacement="auto"
+            maxMenuHeight={260}
             styles={{
               menuPortal: (base) => ({ ...base, zIndex: 9999 }),
               menu: (base) => ({ ...base, zIndex: 9999 }),
             }}
           />
-          <p className="text-xs text-neutral-500">Select the group dynamic that best matches your experience.</p>
+          <p className="text-xs text-neutral-500">
+            Pick all styles that fit your experience.
+          </p>
         </div>
 
         <div className="flex flex-col gap-2">
