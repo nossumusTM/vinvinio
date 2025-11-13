@@ -5,11 +5,10 @@ import Image from 'next/image';
 import NextImage from 'next/image';
 import { FiCamera } from 'react-icons/fi';
 import { BiUpload } from "react-icons/bi";
-import { FiChevronDown } from 'react-icons/fi';
-import { createPortal } from 'react-dom';
 import clsx from 'clsx';
 
-// import cropImage from '@/app/(marketplace)/utils/cropImage';
+import { createPortal } from 'react-dom';
+import { FiChevronDown } from 'react-icons/fi';
 import axios from 'axios';
 
 import { AnimatePresence, motion } from 'framer-motion';
@@ -105,13 +104,11 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
   // local optimistic previews (optional)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [coverPreview, setCoverPreview]   = useState<string | null>(null);
-  const [showLangPopup, setShowLangPopup] = useState(false);
 
+  const [showLangPopup, setShowLangPopup] = useState(false);
   const [langPopupPos, setLangPopupPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const langBtnRef = useRef<HTMLButtonElement | null>(null);
   const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => setIsMounted(true), []);
 
   const ratingLabel = (rating: number) => `${rating.toFixed(1)} / 5`;
 
@@ -129,6 +126,15 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
     }
 
     return 'bg-orange-100 text-orange-700';
+  };
+
+  const toggleLangPopup = () => {
+    const next = !showLangPopup;
+    if (next && langBtnRef.current) {
+      const r = langBtnRef.current.getBoundingClientRect();
+      setLangPopupPos({ top: r.bottom + 8, left: r.left });
+    }
+    setShowLangPopup(next);
   };
 
   const handleContactHost = useCallback(async () => {
@@ -169,15 +175,6 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
       loginModal.onOpen();
     }
   }, [host?.id, host?.name, host?.hostName, host?.image, loginModal, messenger]);
-
-  const toggleLangPopup = () => {
-    const next = !showLangPopup;
-    if (next && langBtnRef.current) {
-      const r = langBtnRef.current.getBoundingClientRect();
-      setLangPopupPos({ top: r.bottom + 8, left: r.left });
-    }
-    setShowLangPopup(next);
-  };
 
   const coverImage = useMemo(() => {
     // 1) If user has uploaded a cover in profile
@@ -356,6 +353,8 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
   //   `/flags/${countryCode.toLowerCase()}.svg`; // e.g. /flags/it.png
   const flagPath = (cc: string) => `/flags/${cc.toLowerCase()}.svg`;
 
+  useEffect(() => setIsMounted(true), []);
+
   useEffect(() => {
      if (currentUser?.id) {
        setIsOwner(String(currentUser.id) === String(host.id));
@@ -454,8 +453,6 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                 /> */}
               </>
             )}
-
-
           
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
@@ -512,14 +509,16 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                 </div>
 
                 <div className="text-white drop-shadow-lg">
-                  {host.identityVerified ? (
-                    <span className="w-fit items-center gap-1 rounded-full shadow-md backdrop-blur-sm text-emerald-400 px-2.5 py-1.5 pb-0.5 text-[10px] font-bold">
-                        ✓ ID VERIFIED
-                      </span>
+                  {!host.identityVerified ? (
+                    <div className="px-2 py-1 bg-black/20 w-fit items-center justify-center gap-1 rounded-full shadow-md backdrop-blur-sm text-emerald-400 border border-emerald-400 text-[10px] font-bold">
+                        <span>
+                          ✓ ID VERIFIED
+                        </span>
+                      </div>
                     ) : (
-                      <span className="w-fit items-center gap-1 shadow-md rounded-full backdrop-blur-sm text-orange-400 px-2.5 py-1.5 text-[10px] font-bold">
+                      <div className="px-2 py-1 bg-black/20 w-fit items-center justify-center gap-1 rounded-full shadow-md backdrop-blur-sm text-orange-400 border border-orange-400 text-[10px] font-bold">
                         ID IN REVIEW
-                      </span>
+                      </div>
                     )}
                   <p className="ml-1 text-2xl font-semibold flex items-center gap-2">
                     {host.username || host.name || 'Host'}
@@ -566,107 +565,102 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                         </span>
                       </span>
                     )}
+                    {spokenLanguages.length > 0 ? (
+                      <div className="relative flex items-center gap-2 p-2 shadow-xl rounded-xl">
+                        <span className="text-sm font-medium text-white/90">Available in</span>
 
+                        {/* Flags (first 3 always visible) */}
+                        <div className="flex items-center gap-0.5">
+                          {(spokenLanguages.slice(0, 3)).map((lang) => {
+                            const code = toFlagCode(lang);
+                            if (!code) {
+                              return (
+                                <span
+                                  key={lang}
+                                  className="px-2 py-1 rounded-full bg-white/20 text-xs text-white/90"
+                                  title={lang}
+                                >
+                                  {lang}
+                                </span>
+                              );
+                            }
+                            return (
+                              <span
+                                key={lang}
+                                className="inline-flex items-center justify-center rounded-sm overflow-hidden"
+                                title={lang}
+                              >
+                                <NextImage
+                                  src={flagSrc(code)}
+                                  alt={lang}
+                                  width={14}
+                                  height={14}
+                                  className="mr-1.5 h-4 w-6 object-cover rounded"
+                                />
+                              </span>
+                            );
+                          })}
+                        </div>
 
-                {spokenLanguages.length > 0 ? (
-  <div className="relative flex items-center gap-2 p-2 shadow-xl rounded-xl">
-    <span className="text-sm font-medium text-white/90">Available in</span>
+                        {/* Show more button */}
+                        {spokenLanguages.length > 3 && (
+                          <button
+                            ref={langBtnRef}
+                            type="button"
+                            onClick={toggleLangPopup}
+                            className="inline-flex items-center rounded-full backdrop-blur-xs bg-transparent px-2 py-1 text-[11px] font-semibold text-white/90 hover:backdrop-blur-sm transition"
+                            aria-expanded={showLangPopup}
+                          >
+                            +{spokenLanguages.length - 3} more
+                            <FiChevronDown
+                              className={twMerge('transition-transform', showLangPopup ? 'rotate-180' : 'rotate-0')}
+                              size={14}
+                            />
+                          </button>
+                        )}
 
-    {/* Flags (first 3 always visible) */}
-    <div className="flex items-center gap-0.5">
-      {(spokenLanguages.slice(0, 3)).map((lang) => {
-        const code = toFlagCode(lang);
-        if (!code) {
-          return (
-            <span
-              key={lang}
-              className="px-2 py-1 rounded-full bg-white/20 text-xs text-white/90"
-              title={lang}
-            >
-              {lang}
-            </span>
-          );
-        }
-        return (
-          <span
-            key={lang}
-            className="inline-flex items-center justify-center rounded-sm overflow-hidden"
-            title={lang}
-          >
-            <NextImage
-              src={flagSrc(code)}
-              alt={lang}
-              width={14}
-              height={14}
-              className="mr-1.5 h-4 w-6 object-cover rounded"
-            />
-          </span>
-        );
-      })}
-    </div>
+                        {/* Popup with all languages */}
+                        {isMounted && createPortal(
+                          <AnimatePresence>
+                            {showLangPopup && (
+                              <motion.div
+                                initial={{ opacity: 0, y: -4 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -4 }}
+                                transition={{ duration: 0.18 }}
+                                className="fixed z-[99999] w-fit max-w-[85vw] bg-white text-neutral-800 rounded-xl shadow-2xl p-2"
+                                style={{ top: langPopupPos.top, left: langPopupPos.left - 6 }}
+                                onMouseLeave={() => setShowLangPopup(false)}
+                              >
 
-    {/* Show more button */}
-    {spokenLanguages.length > 3 && (
-      <button
-        ref={langBtnRef}
-        type="button"
-        onClick={toggleLangPopup}
-        className="ml-0 inline-flex items-center gap-1 rounded-full bg-transaparent shadow-md px-2 py-1 text-[11px] font-semibold text-white/90 hover:shadow-lg transition"
-        aria-expanded={showLangPopup}
-      >
-        +{spokenLanguages.length - 3} more
-        <FiChevronDown
-          className={twMerge('transition-transform', showLangPopup ? 'rotate-180' : 'rotate-0')}
-          size={14}
-        />
-      </button>
-    )}
-
-    {/* Popup with all languages */}
-    {isMounted && createPortal(
-      <AnimatePresence>
-        {showLangPopup && (
-          <motion.div
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.18 }}
-            className="fixed z-[99999] w-fit max-w-[85vw] bg-white text-neutral-800 rounded-xl shadow-2xl p-2"
-            style={{ top: langPopupPos.top, left: langPopupPos.left - 4 }}
-            onMouseLeave={() => setShowLangPopup(false)}
-          >
-            {/* <p className="text-[10px] font-semibold text-neutral-500 mb-1.5">
-              All available languages
-            </p> */}
-            <div className="grid grid-cols-1 gap-1.5">
-              {spokenLanguages.map((lang) => {
-                const code = toFlagCode(lang);
-                return (
-                  <div key={lang} className="flex items-center gap-1.5">
-                    {code ? (
-                      <NextImage
-                        src={flagSrc(code)}
-                        alt={lang}
-                        width={14}
-                        height={14}
-                        className="h-3.5 w-5 object-cover rounded"
-                      />
-                    ) : (
-                      <span className="inline-block h-3.5 w-5 rounded bg-neutral-200" />
-                    )}
-                    <span className="text-xs">{lang}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>,
-      document.body
-    )}
-  </div>
-                ) : null}
-
+                                <div className="grid grid-cols-1 gap-1.5">
+                                  {spokenLanguages.map((lang) => {
+                                    const code = toFlagCode(lang);
+                                    return (
+                                      <div key={lang} className="flex items-center gap-1.5">
+                                        {code ? (
+                                          <NextImage
+                                            src={flagSrc(code)}
+                                            alt={lang}
+                                            width={14}
+                                            height={14}
+                                            className="h-3.5 w-5 object-cover rounded"
+                                          />
+                                        ) : (
+                                          <span className="inline-block h-3.5 w-5 rounded bg-neutral-200" />
+                                        )}
+                                        <span className="text-xs">{lang}</span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>,
+                          document.body
+                        )}
+                      </div>
+                    ) : null}
                 </div>
               </div>
             </div>
@@ -849,25 +843,29 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                               </div>
                             </div>
 
-                          {/* stars */}
-                          <div className="flex flex-col text-center gap-1">
-                            {reviews.length > 0 && (
+                            {/* stars */}
+                            <div className="flex flex-col text-center gap-1">
                               <span
                                 className={clsx(
                                   'rounded-full px-3 py-1 text-xs font-semibold',
-                                  ratingBadgeClasses(averageRating),
+                                  ratingBadgeClasses(review.rating),
                                 )}
                               >
-                                {ratingLabel(averageRating)}
+                                {ratingLabel(review.rating)}
                               </span>
-                            )}
-                            
-                            <div className="flex gap-1">
-                              {[1,2,3,4,5].map((i) => (
-                                <span key={i} className={`text-lg ${i <= review.rating ? 'text-black' : 'text-neutral-300'}`}>★</span>
-                              ))}
+
+                              <div className="flex gap-1">
+                                {[1, 2, 3, 4, 5].map((i) => (
+                                  <span
+                                    key={i}
+                                    className={`text-lg ${i <= review.rating ? 'text-black' : 'text-neutral-300'}`}
+                                  >
+                                    ★
+                                  </span>
+                                ))}
+                              </div>
                             </div>
-                          </div>
+
                         </div>
 
                         {/* listing title */}
@@ -936,4 +934,3 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
 };
 
 export default HostCardClient;
-

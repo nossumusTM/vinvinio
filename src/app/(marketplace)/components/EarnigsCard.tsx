@@ -1,10 +1,10 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Card, CardContent } from './navbar/Card';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import useCurrencyFormatter from '@/app/(marketplace)/hooks/useCurrencyFormatter';
-import { AnimatePresence, motion } from 'framer-motion';
 
 interface EarningsEntry {
   date: string; // ISO date or formatted date
@@ -40,7 +40,7 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
   };
 
   const currentData = view === 'all'
-  ? Array.from(new Set([...dailyData.map((d) => d.date)]))
+    ? Array.from(new Set([...dailyData.map((d) => d.date)]))
         .map((date) => dailyData.find((d) => d.date === date)!)
     : dataMap[view];
 
@@ -48,17 +48,17 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
     ? totalEarnings
     : currentData.reduce((sum, entry) => sum + entry.amount, 0);
 
-    const todaysProfitValue = useMemo(() => {
+  const todaysProfitValue = useMemo(() => {
     const today = new Date().toDateString();
     return dailyData.find((d) => new Date(d.date).toDateString() === today)?.amount || 0;
   }, [dailyData]);
 
-    const totalDisplay = Number(total.toFixed(2));
-    const revenueLabel = view === 'daily'
-      ? 'Total Revenue'
-      : view === 'all'
-      ? 'Total Revenue'
-      : `${view.charAt(0).toUpperCase() + view.slice(1)} Total`;
+  const totalDisplay = Number(total.toFixed(2));
+  const revenueLabel = view === 'daily'
+    ? 'Total Revenue'
+    : view === 'all'
+    ? 'Total Revenue'
+    : `${view.charAt(0).toUpperCase() + view.slice(1)} Total`;
 
   return (
     <Card className="w-full bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-all">
@@ -71,7 +71,7 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
                 <h2 className="text-lg md:text-2xl font-bold text-black mb-2">{title || 'Earnings Overview'}</h2>
             </div>
 
-                        <div className="mb-3 mt-3 flex flex-wrap gap-4 pt-3 sm:mb-0 sm:flex-row sm:justify-baseline">
+            <div className="mb-3 mt-3 flex flex-wrap gap-4 pt-3 sm:mb-0 sm:flex-row sm:justify-baseline">
               <div className="flex flex-col items-center justify-center">
                 <p className="select-none rounded-xl bg-gradient-to-br from-[#08e2ff] to-[#3F00FF] p-3 text-sm text-white">
                   Today&#39;s Profit
@@ -118,13 +118,13 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
                   whileHover={{ y: -2 }}
                   className={`rounded-full px-4 py-2 text-sm transition ${
                     view === type
-                        ? 'bg-black text-white'
+                      ? 'bg-black text-white'
                       : 'bg-neutral-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                    {type === 'all' ? 'All' : type.charAt(0).toUpperCase() + type.slice(1)}
+                  {type === 'all' ? 'All' : type.charAt(0).toUpperCase() + type.slice(1)}
                 </motion.button>
-                ))}
+              ))}
             </div>
             </div>
 

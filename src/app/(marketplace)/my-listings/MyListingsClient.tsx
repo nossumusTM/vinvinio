@@ -1,8 +1,9 @@
 'use client';
 
 import Image from 'next/image';
-import { useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { redirect } from 'next/navigation';
+import { useMemo, useState, useEffect, useRef } from 'react';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import clsx from 'clsx';
@@ -28,6 +29,7 @@ type KnownListingStatus = Extract<SafeListing['status'], string>;
 interface MyListingsClientProps {
   listings: SafeListing[];
   currentUser: SafeUser;
+  activeTab: TabKey;
 }
 
 type StatusStylesMap =
@@ -70,78 +72,109 @@ const TAB_ITEMS = [
   { key: 'revision',            label: 'Revision requests',       ping: 'bg-blue-400',   dot: 'bg-blue-600'   },
   { key: 'awaiting_reapproval', label: 'Awaiting re-approval',    ping: 'bg-purple-400', dot: 'bg-purple-600' },
   { key: 'inactive',            label: 'Inactive experiences',    ping: 'bg-neutral-300',dot: 'bg-neutral-500'},
+  { key: 'rejected',            label: 'Rejected',                ping: 'bg-rose-300',   dot: 'bg-rose-600'   },
 ] as const satisfies readonly { key: TabKey; label: string; ping: string; dot: string }[];
 
-const MyListingsClient: React.FC<MyListingsClientProps> = ({ listings, currentUser }) => {
+const TABS: TabKey[] = TAB_ITEMS.map(t => t.key);
+const DEFAULT_TAB: TabKey = 'approved';
+
+const MyListingsClient: React.FC<MyListingsClientProps> = ({ listings, currentUser, activeTab }) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+
+  const initialTabParam = (searchParams?.get('tab') as TabKey | null) ?? null;
+  const initialTab = (initialTabParam && TABS.includes(initialTabParam)) ? initialTabParam : DEFAULT_TAB;
+
+  const [tab, setTab] = useState<TabKey>(activeTab ?? DEFAULT_TAB);
+  const didMountRef = useRef(false);
+  const userChangedTabRef = useRef(false);
+
+  const setTabGuarded = (next: TabKey) => {
+    userChangedTabRef.current = true;   // → only after user acts do we sync URL
+    setTab(next);
+  };
+
+  useEffect(() => {
+    if (!userChangedTabRef.current) return; // only after a user click
+
+    const sp = new URLSearchParams(searchParams?.toString() ?? window.location.search);
+    if (sp.get('tab') === tab) return;
+
+    sp.set('tab', tab);
+    router.replace(`${pathname}?${sp.toString()}`, { scroll: false });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
+
+  // useEffect(() => {
+  //   const qp = (searchParams?.get('tab') as TabKey | null) ?? null;
+  //   const valid = qp && TABS.includes(qp);
+
+  //   if (!didMountRef.current) {
+  //     didMountRef.current = true;
+  //     if (valid && qp !== tab) setTab(qp);
+  //     return;
+  //   }
+
+  //   if (!userChangedTabRef.current && valid && qp !== tab) {
+  //     setTab(qp);
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [searchParams]);
+
   const [processingId, setProcessingId] = useState<string | null>(null);
-
-  // const [tab, setTab] = useState<'pending' | 'revision' | 'approved' | 'inactive' | 'awaiting_reapproval'>('approved');
-
-  const [tab, setTab] = useState<TabKey>('approved');
-  
   const [showPassword, setShowPassword] = useState(false);
 
   const regionNames = useMemo(
-  () => new Intl.DisplayNames(['en'], { type: 'region' }),
-  []
-);
+    () => new Intl.DisplayNames(['en'], { type: 'region' }),
+    []
+  );
 
-const [showDeactivate, setShowDeactivate] = useState(false);
-const [selectedListing, setSelectedListing] = useState<SafeListing | null>(null);
-const [deactivatePassword, setDeactivatePassword] = useState('');
+  const [showDeactivate, setShowDeactivate] = useState(false);
+  const [selectedListing, setSelectedListing] = useState<SafeListing | null>(null);
+  const [deactivatePassword, setDeactivatePassword] = useState('');
 
-const cap = (s?: string | null) => (typeof s === 'string' && s.length ? s[0].toUpperCase() + s.slice(1) : s ?? '');
+  const cap = (s?: string | null) => (typeof s === 'string' && s.length ? s[0].toUpperCase() + s.slice(1) : s ?? '');
 
-const parseLocation = (value?: string | null) => {
-  if (!value) return null;
-  // expected like "milan-IT" or "rome-it" or just "IT"
-  const parts = String(value).split('-');
-  const countryCode = parts.pop()?.toUpperCase() || '';
-  const citySlug = parts.join('-');
-  const city = citySlug
-    ? citySlug.split('-').map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' ')
-    : '';
-  const countryName = countryCode ? regionNames.of(countryCode) : '';
-  return countryCode && countryName ? { city, countryCode, countryName } : null;
-};
-
-// const grouped = useMemo(() => {
-//   const pending = listings.filter((l) => l.status === 'pending');
-//   const revision = listings.filter((l) => l.status === 'revision');
-//   const awaitingReapproval = listings.filter(l => (l.status as TabKey) === 'awaiting_reapproval');
-//   const approved = listings.filter((l) => l.status === 'approved');
-//   const inactive = listings.filter((l) => l.status === 'inactive');
-//   return { pending, revision, awaiting_reapproval: awaitingReapproval, approved, inactive };
-// }, [listings]);
-
-const grouped = useMemo(() => {
-  const pending = listings.filter(l => l.status === 'pending');
-  const revision = listings.filter(l => l.status === 'revision');
-  const awaitingReapproval = listings.filter(l => (l.status as TabKey) === 'awaiting_reapproval'); // if it exists
-  const approved = listings.filter(l => l.status === 'approved');
-  const inactive = listings.filter(l => l.status === 'inactive');
-  const rejected = listings.filter(l => l.status === 'rejected');
-  return { pending, revision, awaiting_reapproval: awaitingReapproval, approved, inactive, rejected };
-}, [listings]);
-
-const filtered = useMemo(() => {
-  const byTab: Record<TabKey, SafeListing[]> = {
-    pending: grouped.pending,
-    revision: grouped.revision,
-    awaiting_reapproval: grouped.awaiting_reapproval,
-    approved: grouped.approved,
-    inactive: grouped.inactive,
-    rejected: grouped.rejected,
+  const parseLocation = (value?: string | null) => {
+    if (!value) return null;
+    const parts = String(value).split('-');
+    const countryCode = parts.pop()?.toUpperCase() || '';
+    const citySlug = parts.join('-');
+    const city = citySlug
+      ? citySlug.split('-').map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' ')
+      : '';
+    const countryName = countryCode ? regionNames.of(countryCode) : '';
+    return countryCode && countryName ? { city, countryCode, countryName } : null;
   };
-  return byTab[tab] ?? [];
-}, [grouped, tab]);
 
-const tabVariants = {
-  initial: { opacity: 0, y: 8, filter: 'blur(2px)' },
-  animate: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.2 } },
-  exit:    { opacity: 0, y: -8, filter: 'blur(2px)', transition: { duration: 0.15 } },
-};
+  const grouped = useMemo(() => {
+    const pending = listings.filter(l => l.status === 'pending');
+    const revision = listings.filter(l => l.status === 'revision');
+    const awaitingReapproval = listings.filter(l => (l.status as TabKey) === 'awaiting_reapproval');
+    const approved = listings.filter(l => l.status === 'approved');
+    const inactive = listings.filter(l => l.status === 'inactive');
+    const rejected = listings.filter(l => l.status === 'rejected');
+    return { pending, revision, awaiting_reapproval: awaitingReapproval, approved, inactive, rejected };
+  }, [listings]);
+
+  const filtered = useMemo(() => {
+    const byTab: Record<TabKey, SafeListing[]> = {
+      pending: grouped.pending,
+      revision: grouped.revision,
+      awaiting_reapproval: grouped.awaiting_reapproval,
+      approved: grouped.approved,
+      inactive: grouped.inactive,
+      rejected: grouped.rejected,
+    };
+    return byTab[tab] ?? [];
+  }, [grouped, tab]);
+
+  const tabVariants = {
+    initial: { opacity: 0, y: 8, filter: 'blur(2px)' },
+    animate: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.2 } },
+    exit:    { opacity: 0, y: -8, filter: 'blur(2px)', transition: { duration: 0.15 } },
+  };
 
   const handleEdit = (listing: SafeListing) => {
     router.push(`/edit-listing/${listing.id}`);
@@ -205,11 +238,9 @@ const tabVariants = {
         }
         return 'Flat group rate';
       }
-
       if (listing.pricingType === 'custom') {
         return 'Custom pricing';
       }
-
       return 'Per guest pricing';
     })();
 
@@ -217,7 +248,6 @@ const tabVariants = {
       if (listing.pricingType === 'group' && listing.groupPrice) {
         return `${listing.groupPrice.toLocaleString()} €`;
       }
-
       return `${listing.price.toLocaleString()} €`;
     })();
 
@@ -250,67 +280,59 @@ const tabVariants = {
 
     return (
       <article
-          key={listing.id}
-          className="rounded-3xl shadow-md bg-white/90 p-8 ring-1 ring-transparent transition hover:shadow-lg sm:p-10"
-        >
-                <div className="grid gap-5 lg:grid-cols-[minmax(0,280px)_1fr] lg:items-start">
-                  <div
-                    className="
-                      relative 
-                      aspect-[4/3] 
-                      w-full 
-                      max-w-[420px]     /* cap image width on desktops */
-                      mx-auto           /* center when capped */
-                      overflow-hidden 
-                      rounded-2xl 
-                      bg-neutral-100 
-                      ring-1 ring-inset ring-neutral-200/60
-                    "
-                  >
-          {/* media stays the same */}
-          {coverMedia ? (
-            isVideo ? (
-              <video
-                src={coverMedia}
-                className="h-full w-full object-cover"
-                muted
-                playsInline
-                preload="metadata"
-                controls
-              />
-            ) : (
-              <Image src={coverMedia} alt={listing.title} fill className="object-cover" />
-            )
-          ) : (
-            <div className="flex h-full w-full items-center justify-center text-sm text-neutral-500">
-              No media uploaded
-            </div>
-          )}
-
-          {/* NEW: submitted/approved date box (top-left) */}
-          {/* <div className="absolute left-3 top-3 rounded-xl bg-white/90 px-3 py-2 text-[11px] shadow-md ring-1 ring-neutral-200">
-            <div className="font-semibold text-neutral-600">{timestampMeta.label}</div>
-            <div className="font-medium text-neutral-900">{formattedTimestamp}</div>
-          </div> */}
-
-          {/* Move status chip to top-right to avoid overlap */}
-          <span
-            className={clsx(
-              'absolute right-3 top-3 rounded-full px-3 py-1 text-xs font-medium uppercase tracking-wide',
-              statusMeta.badgeClass,
-            )}
+        key={listing.id}
+        className="rounded-3xl shadow-md bg-white/90 p-8 ring-1 ring-transparent transition hover:shadow-lg sm:p-10"
+      >
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,280px)_1fr] lg:items-start">
+          <div
+            className="
+              relative 
+              aspect-[4/3] 
+              w-full 
+              max-w-[420px]
+              mx-auto
+              overflow-hidden 
+              rounded-2xl 
+              bg-neutral-100 
+              ring-1 ring-inset ring-neutral-200/60
+            "
           >
-            {statusMeta.label}
-          </span>
-        </div>
+            {coverMedia ? (
+              isVideo ? (
+                <video
+                  src={coverMedia}
+                  className="h-full w-full object-cover"
+                  muted
+                  playsInline
+                  preload="metadata"
+                  controls
+                />
+              ) : (
+                <Image src={coverMedia} alt={listing.title} fill className="object-cover" />
+              )
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-sm text-neutral-500">
+                No media uploaded
+              </div>
+            )}
+
+            <span
+              className={clsx(
+                'absolute right-3 top-3 rounded-full px-3 py-1 text-xs font-medium uppercase tracking-wide',
+                statusMeta.badgeClass,
+              )}
+            >
+              {statusMeta.label}
+            </span>
+          </div>
 
           <div className="flex flex-1 flex-col justify-between gap-5">
             <div className="space-y-3">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="absolute rounded-xl flex flex-row gap-1 rounded-lg bg-white/90 px-3 py-2 text-[11px] shadow-md ring-1 ring-neutral-200">
-                    <div className="font-semibold text-neutral-600">{timestampMeta.label}</div>
-                    <div className="font-medium text-neutral-900">{formattedTimestamp}</div>
-                  </div>
+                  <div className="font-semibold text-neutral-600">{timestampMeta.label}</div>
+                  <div className="font-medium text-neutral-900">{formattedTimestamp}</div>
+                </div>
                 <div className="space-y-1 pt-10">
                   <h3 className="ml-1 mt-1 text-lg font-semibold text-neutral-900 sm:text-xl">
                     {listing.title}
@@ -324,51 +346,6 @@ const tabVariants = {
               <p className="ml-1 text-sm leading-relaxed text-neutral-600 line-clamp-4 md:line-clamp-3">
                 {listing.description}
               </p>
-              {/* <dl className="flex flex-row flex-wrap w-full items-center justify-start gap-3 text-sm text-neutral-500">
-                <div className={clsx(infoCardBase, 'sm:max-w-[230px]')}>
-                  <span className="flex h-10 w-10 items-center bg-neutral-100 justify-center rounded-xl text-neutral-600">
-                    <FiUsers className="text-base" />
-                  </span>
-                  <div className="min-w-0">
-                    <dt className="text-[8px] font-semibold uppercase tracking-wide text-neutral-500">Guests</dt>
-                    <dd className="truncate font-medium text-neutral-800">{listing.guestCount}</dd>
-                  </div>
-                </div>
-                {listing.durationCategory && (
-                  <div className={clsx(infoCardBase, 'sm:max-w-[230px]')}>
-                    <span className="flex h-10 w-10 items-center bg-neutral-100 justify-center rounded-xl text-neutral-600">
-                      <FiClock className="text-base" />
-                    </span>
-                    <div className="min-w-0">
-                      <dt className="text-[8px] font-semibold uppercase tracking-wide text-neutral-500">Duration</dt>
-                      <dd className="truncate font-medium text-neutral-800">{cap(listing.durationCategory)}</dd>
-                    </div>
-                  </div>
-                )}
-                {listing.locationValue && (() => {
-                  const loc = parseLocation(listing.locationValue);
-                  if (!loc) return null;
-                  return (
-                    <div className={clsx(infoCardBase, 'sm:col-span-3 sm:max-w-2xl')}>
-                      <span className="flex h-10 w-10 items-center bg-neutral-100 justify-center rounded-xl text-neutral-600 overflow-hidden">
-                        <Image
-                          src={`/flags/${loc.countryCode.toLowerCase()}.svg`}
-                          alt={loc.countryName}
-                          width={24}
-                          height={18}
-                          className="h-[18px] w-[24px] object-cover rounded-[3px]"
-                        />
-                      </span>
-                      <div className="min-w-0">
-                        <dt className="text-[8px] font-semibold uppercase tracking-wide text-neutral-500">Location</dt>
-                        <dd className="line-clamp-2 text-[14px] font-medium text-neutral-800">
-                          {loc.city ? `${cap(loc.city)}, ${loc.countryName}` : loc.countryName}
-                        </dd>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </dl> */}
             </div>
 
             <div className="flex flex-col gap-3 sm:items-end">
@@ -413,7 +390,6 @@ const tabVariants = {
               </div>
             </div>
 
-
           </div>
         </div>
       </article>
@@ -453,88 +429,77 @@ const tabVariants = {
           />
         </header>
 
-      {listings.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50/70 p-10 text-center text-neutral-500">
-          You haven&apos;t created any listings yet. Submit your first experience to see it here.
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {/* Tabs slider */}
-          {/* <div className="-mx-4 px-4">
-            <div className="flex gap-2 overflow-x-auto pb-5 md:pb-10">
-              {([
-                { key: 'pending',  label: 'Awaiting review' },
-                { key: 'revision', label: 'Awaiting re-approval' },
-                { key: 'approved', label: 'Live experiences' },
-                { key: 'inactive', label: 'Inactive experiences' },
-              ] as const).map(({ key, label }) => (
-                <button
-                  key={key}
-                  onClick={() => setTab(key)}
-                  className={clsx(
-                    'whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition',
-                    tab === key
-                      ? 'border-black bg-black text-white shadow-sm'
-                      : 'border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300'
-                  )}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div> */}
-
-          <div className="flex gap-2 overflow-x-auto pb-5 md:pb-10">
-            {TAB_ITEMS.map(({ key, label, ping, dot }) => {
-              const isActive = tab === key;
-              return (
-                <button
-                  key={key}
-                  onClick={() => setTab(key)}
-                  className={clsx(
-                    'flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition',
-                    isActive
-                      ? 'border-black bg-black text-white shadow-sm'
-                      : 'border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300'
-                  )}
-                >
-                  {isActive && (
-                    <span className="relative inline-flex h-3.5 w-3.5 items-center justify-center">
-                      <span className={clsx('absolute inline-flex h-3.5 w-3.5 rounded-full opacity-75 animate-ping', ping)} />
-                      <span className={clsx('relative inline-flex h-3.5 w-3.5 rounded-full shadow-md', dot)} />
-                    </span>
-                  )}
-                  {label}
-                </button>
-              );
-            })}
+        {listings.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50/70 p-10 text-center text-neutral-500">
+            You haven&apos;t created any listings yet. Submit your first experience to see it here.
           </div>
-
-          {/* Cards grid: 1 col mobile, 2 cols desktop */}
-          <AnimatePresence mode="wait">
-            <motion.div key={tab} variants={tabVariants} initial="initial" animate="animate" exit="exit">
-              {filtered.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-neutral-200 bg-neutral-50/70 p-6 text-sm text-neutral-500">
-              No listings in this section yet.
+        ) : (
+          <div className="space-y-6">
+            {/* Tabs */}
+            <div className="flex gap-2 overflow-x-auto pb-5 md:pb-10" role="tablist" aria-label="Listing status tabs">
+              {TAB_ITEMS.map(({ key, label, ping, dot }) => {
+                const isActive = tab === key;
+                return (
+                  <button
+                    key={key}
+                    id={`tab-${key}`}
+                    aria-controls={`panel-${key}`}
+                    aria-selected={isActive}
+                    role="tab"
+                    onClick={() => setTabGuarded(key)}
+                    className={clsx(
+                      'flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition',
+                      isActive
+                        ? 'border-black bg-black text-white shadow-sm'
+                        : 'border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300'
+                    )}
+                  >
+                    {isActive && (
+                      <span className="relative inline-flex h-3.5 w-3.5 items-center justify-center">
+                        <span className={clsx('absolute inline-flex h-3.5 w-3.5 rounded-full opacity-75 animate-ping', ping)} />
+                        <span className={clsx('relative inline-flex h-3.5 w-3.5 rounded-full shadow-md', dot)} />
+                      </span>
+                    )}
+                    {label}
+                  </button>
+                );
+              })}
             </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
-              {filtered.map((listing) => renderListingCard(listing))}
-            </div>
-          )}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      )}
 
-      {showDeactivate && selectedListing && (
-        <ConfirmPopup
-          title="Deactivate listing"
-          message={
-            <div className="space-y-3">
-              <p className="text-sm text-neutral-700">
-                To deactivate <span className="font-semibold">{selectedListing.title}</span>, please enter your password.
-              </p>
+            {/* Cards grid */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={tab}
+                id={`panel-${tab}`}
+                role="tabpanel"
+                aria-labelledby={`tab-${tab}`}
+                variants={tabVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
+                {filtered.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-neutral-200 bg-neutral-50/70 p-6 text-sm text-neutral-500">
+                    No listings in this section yet.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
+                    {filtered.map((listing) => renderListingCard(listing))}
+                  </div>
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        )}
+
+        {showDeactivate && selectedListing && (
+          <ConfirmPopup
+            title="Deactivate listing"
+            message={
+              <div className="space-y-3">
+                <p className="text-sm text-neutral-700">
+                  To deactivate <span className="font-semibold">{selectedListing.title}</span>, please enter your password.
+                </p>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
@@ -556,33 +521,31 @@ const tabVariants = {
                     )}
                   </button>
                 </div>
-            </div>
-          }
-          cancelLabel="Cancel"
-          confirmLabel="Deactivate"
-          onCancel={() => { setShowDeactivate(false); setSelectedListing(null); }}
-          onConfirm={async () => {
-            if (!deactivatePassword) {
-              toast.error('Password is required to deactivate a listing.');
-              return;
+              </div>
             }
-            setProcessingId(selectedListing.id);
-            try {
-              await axios.post(`/api/listings/${selectedListing.id}/deactivate`, { password: deactivatePassword });
-              toast.success('Listing deactivated', {
-                iconTheme: { primary: '#2200ffff', secondary: '#fff' },
-              });
-              router.refresh();
-            } catch (error: any) {
-              toast.error(error?.response?.data || 'Failed to deactivate listing.');
-            } finally {
-              setProcessingId(null);
-            }
-          }}
-        />
-      )}
-
-
+            cancelLabel="Cancel"
+            confirmLabel="Deactivate"
+            onCancel={() => { setShowDeactivate(false); setSelectedListing(null); }}
+            onConfirm={async () => {
+              if (!deactivatePassword) {
+                toast.error('Password is required to deactivate a listing.');
+                return;
+              }
+              setProcessingId(selectedListing.id);
+              try {
+                await axios.post(`/api/listings/${selectedListing.id}/deactivate`, { password: deactivatePassword });
+                toast.success('Listing deactivated', {
+                  iconTheme: { primary: '#2200ffff', secondary: '#fff' },
+                });
+                router.refresh();
+              } catch (error: any) {
+                toast.error(error?.response?.data || 'Failed to deactivate listing.');
+              } finally {
+                setProcessingId(null);
+              }
+            }}
+          />
+        )}
       </div>
     </Container>
   );

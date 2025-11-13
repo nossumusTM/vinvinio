@@ -163,7 +163,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                     {/* <div className="w-full rounded-2xl p-8 rounded-xl flex items-center gap-3 justify-between items-center"> */}
                     <div className="relative w-full overflow-visible rounded-2xl pt-10 sm:pt-8">
   {/* Cover area */}
-  <div className="relative h-64 sm:h-50 md:h-58 overflow-hidden rounded-2xl">
+  <div className="relative h-48 sm:h-50 md:h-58 overflow-hidden rounded-2xl">
     {/* Background cover */}
     {coverImage ? (
       <NextImage
@@ -183,7 +183,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
 
     {/* Centered text content */}
-    <div className="absolute inset-0 z-10 flex flex-col pt-2 md:pt-0 items-center justify-center gap-2 px-4 text-center mt-0">
+    <div className="mt-6 md:mt-10 absolute inset-0 z-10 flex flex-col pt-2 md:pt-0 items-center justify-center gap-1 px-4 text-center mt-0">
       {/* Host name */}
       <button
         type="button"

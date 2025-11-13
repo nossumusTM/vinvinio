@@ -209,7 +209,7 @@ const SearchExperienceModal = () => {
           </div>
         </div>
       </div>
-      <div className="flex flex-row flex-wrap gap-3">
+      <div className="ml-1 flex flex-row flex-wrap gap-3">
         <StepBadge stepIndex={STEPS.LOCATION} label={t('where')} icon={LuMapPin} />
         <StepBadge stepIndex={STEPS.DATE} label={t('when')} icon={LuCalendarDays} />
         <StepBadge stepIndex={STEPS.GUESTS} label={t('who')} icon={LuUsers} />
