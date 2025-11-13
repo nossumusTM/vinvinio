@@ -54,6 +54,7 @@ model User {
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
   role              Role               @default(customer)
+  alternateRole     Role?
   referenceId       String?
   favoriteIds       String[]           @db.ObjectId
   username          String?            @unique
