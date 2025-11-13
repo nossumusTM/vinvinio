@@ -103,6 +103,7 @@ type SafeUserStrict = Omit<
   createdAt: string;
   updatedAt: string;
   emailVerified: string | null;
+  alternateRole: User["role"] | null;
 
   phone: string | null;
   contact: string | null;
@@ -140,8 +141,8 @@ type SafeUserStrict = Omit<
  * This lets older/partial users pass without refactors.
  */
 export type SafeUser = Simplify<
-  Pick<SafeUserStrict, "id" | "role" | "createdAt" | "updatedAt" | "emailVerified"> &
-  Partial<Omit<SafeUserStrict, "id" | "role" | "createdAt" | "updatedAt" | "emailVerified">>
+  Pick<SafeUserStrict, "id" | "role" | "alternateRole" | "createdAt" | "updatedAt" | "emailVerified"> &
+  Partial<Omit<SafeUserStrict, "id" | "role" | "alternateRole" | "createdAt" | "updatedAt" | "emailVerified">>
 >;
 
 /* ------------------------ SafeListing (relaxed) ----------------------- */
