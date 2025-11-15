@@ -4,6 +4,7 @@ import getCurrentUser from "@/app/(marketplace)/actions/getCurrentUser";
 import nodemailer from "nodemailer";
 import { hrefForListing } from "@/app/(marketplace)/libs/links";
 import { ensureListingSlug } from "@/app/(marketplace)/libs/ensureListingSlug";
+import { ensureListingApprovalPunti } from "@/app/(marketplace)/libs/partnerMetrics";
 
 interface IParams {
   listingId?: string;
@@ -33,6 +34,7 @@ export async function POST(
       include: { user: true },
     });
 
+    await ensureListingApprovalPunti(listingId);
     const listingWithSlug = await ensureListingSlug(listing);
 
     const listingPath = hrefForListing(listingWithSlug);

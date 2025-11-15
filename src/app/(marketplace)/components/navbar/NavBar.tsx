@@ -114,7 +114,7 @@ useEffect(() => {
         `}
       >
         {/* <div className="p-4 pt-6 md:py-6 border-b-[1px]"> */}
-        <div className="p-4 pt-6 md:py-6">
+        <div className="p-4 pt-6 md:py-6 shadow-sm">
           <Container>
             <motion.div layout className="flex items-center justify-between w-full relative gap-4">
               {/* Centered logo on desktop, left on mobile */}

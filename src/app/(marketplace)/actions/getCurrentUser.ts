@@ -8,6 +8,8 @@ import {
   SocialCardVisibility,
 } from "@/app/(marketplace)/types";
 
+import { MIN_PARTNER_COMMISSION } from "@/app/(marketplace)/constants/partner";
+
 export async function getSession() {
   return await getServerSession(authOptions);
 }
@@ -26,6 +28,7 @@ export default async function getCurrentUser(): Promise<SafeUser | null> {
         hostName: true,
         image: true,
         role: true,
+        alternateRole: true,
         referenceId: true,
         favoriteIds: true,
         username: true,
@@ -50,6 +53,7 @@ export default async function getCurrentUser(): Promise<SafeUser | null> {
         updatedAt: true,
         emailVerified: true,
         passwordUpdatedAt: true,
+        partnerCommission: true,
       },
     });
 
@@ -60,6 +64,7 @@ export default async function getCurrentUser(): Promise<SafeUser | null> {
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
       emailVerified: user.emailVerified?.toISOString() || null,
+      alternateRole: user.alternateRole ?? null,
       phone: user.phone ?? null,
       contact: user.contact ?? null,
       legalName: user.legalName ?? null,
@@ -85,6 +90,10 @@ export default async function getCurrentUser(): Promise<SafeUser | null> {
         ? (user.visitedPlaces as SocialCardVisitedPlace[])
         : null,
       passwordUpdatedAt: user.passwordUpdatedAt?.toISOString() || null,
+      partnerCommission:
+        typeof user.partnerCommission === "number"
+          ? user.partnerCommission
+          : MIN_PARTNER_COMMISSION,
     };
   } catch (error) {
     console.error("getCurrentUser error:", error);

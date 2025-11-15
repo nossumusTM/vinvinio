@@ -1077,7 +1077,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                       alt={location?.label ?? 'Country flag'}
                       width={20}
                       height={14}
-                      className="h-3 w-3 rounded-sm object-cover"
+                      className="h-auto w-3 rounded-sm object-cover"
                     />
                   )}
 

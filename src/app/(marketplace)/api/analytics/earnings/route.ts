@@ -67,10 +67,14 @@ type RawEarning = {
   amount: number;
   totalBooks: number;
   createdAt: Date;
+  partnerCommission?: number;
+  punti?: number;
+  puntiShare?: number;
+  puntiLabel?: string;
 };
 
 function groupByDate(data: RawEarning[], type: 'daily' | 'monthly' | 'yearly') {
-  const map = new Map<string, { amount: number; totalBooks: number }>();
+  const map = new Map<string, { amount: number; totalBooks: number, partnerCommission?: number, punti?: number, puntiShare?: number, puntiLabel?: string }>();
 
   data.forEach(entry => {
     const date = new Date(entry.createdAt);

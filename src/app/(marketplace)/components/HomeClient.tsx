@@ -87,7 +87,7 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
       let suggestionApplied = false;
 
       if (process.env.NODE_ENV !== 'production') {
-        console.log('[geo] starting detection');
+        // console.log('[geo] starting detection');
       }
 
       try {
@@ -112,13 +112,13 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
         if (cancelled) return;
 
         if (process.env.NODE_ENV !== 'production') {
-          console.log('[geo] ip detection payload', payload);
+          // console.log('[geo] ip detection payload', payload);
         }
 
         const suggestion = buildGeoLocaleSuggestion(payload);
 
         if (process.env.NODE_ENV !== 'production') {
-          console.log('[geo] ip detection suggestion', suggestion);
+          // console.log('[geo] ip detection suggestion', suggestion);
         }
 
         setDetection(suggestion);
@@ -137,7 +137,7 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
         if (!cancelled && !suggestionApplied) {
           const fallbackSuggestion = buildBrowserLocaleSuggestion();
           if (process.env.NODE_ENV !== 'production') {
-            console.log('[geo] using browser fallback suggestion', fallbackSuggestion);
+            // console.log('[geo] using browser fallback suggestion', fallbackSuggestion);
           }
           if (fallbackSuggestion) {
             setDetection(fallbackSuggestion);
@@ -161,7 +161,7 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
     if (geoHasPrompted) return;
 
     if (process.env.NODE_ENV !== 'production') {
-      console.log('[geo] opening consent modal with detection', detection);
+      // console.log('[geo] opening consent modal with detection', detection);
     }
 
     openGeoModal();
@@ -172,7 +172,7 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
     if (geoApplied) return;
 
     if (process.env.NODE_ENV !== 'production') {
-      console.log('[geo] applying detection', detection);
+      // console.log('[geo] applying detection', detection);
     }
 
     const languageOption = LANGUAGE_OPTIONS.find((option) => option.code === detection.languageCode) ?? LANGUAGE_OPTIONS[0];

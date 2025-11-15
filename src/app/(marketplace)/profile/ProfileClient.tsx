@@ -1,9 +1,10 @@
 'use client';
 
-import { useRef, useState, useEffect, useMemo } from "react";
+import { useRef, useState, useEffect, useMemo, useCallback } from "react";
 import { SafeUser } from "@/app/(marketplace)/types";
 import Container from "@/app/(marketplace)/components/Container";
 import Heading from "@/app/(marketplace)/components/Heading";
+import PartnershipCommision from "@/app/(marketplace)/components/PartnershipCommision";
 import Image from "next/image";
 import { twMerge } from "tailwind-merge";
 import CryptoJS from 'crypto-js';
@@ -30,6 +31,13 @@ import { FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
 import Avatar from "../components/Avatar";
 import NextImage from 'next/image';
 import { BiUpload } from 'react-icons/bi';
+import {
+  MAX_PARTNER_COMMISSION,
+  MAX_PARTNER_POINT_VALUE,
+  MIN_PARTNER_COMMISSION,
+  computeHostShareFromCommission,
+  getPuntiLabel,
+} from "@/app/(marketplace)/constants/partner";
 
 interface ProfileClientProps {
   currentUser: SafeUser;
@@ -44,6 +52,42 @@ interface EarningsEntry {
   amount: number;
   books?: number;
 }
+
+type HostAnalytics = {
+  totalBooks: number;
+  totalRevenue: number;
+  partnerCommission: number;
+  punti: number;
+  puntiShare: number;
+  puntiLabel: string;
+  payoutMethod?: string;
+  payoutNumber?: string;
+  userId?: string;
+};
+
+interface PartnershipCommisionProps {
+  punti: number;
+  puntiShare: number;
+  puntiLabel: string;
+  partnerCommission: number;
+  maxPointValue: number;
+  minCommission?: number;
+  maxCommission?: number;
+  onCommissionChange?: (commission: number) => Promise<void> | void;
+  loading?: boolean;
+}
+
+const DEFAULT_HOST_ANALYTICS: HostAnalytics = {
+  totalBooks: 0,
+  totalRevenue: 0,
+  partnerCommission: MIN_PARTNER_COMMISSION,
+  punti: 0,
+  puntiShare: 0,
+  puntiLabel: getPuntiLabel(0),
+  payoutMethod: undefined,
+  payoutNumber: undefined,
+  userId: undefined,
+};
 
 const getRandomColor = () => {
   const colors = [
@@ -394,12 +438,26 @@ const coverImage = useMemo(() => {
     totalBooks: 0,
     qrScans: 0,
     totalRevenue: 0,
+    partnerCommission: MIN_PARTNER_COMMISSION,
+    punti: 0,
+    puntiShare: 0,
+    puntiLabel: getPuntiLabel(0),
   });
 
-  const [hostAnalytics, setHostAnalytics] = useState({
-    totalBooks: 0,
-    totalRevenue: 0,
-  });  
+  // const [hostAnalytics, setHostAnalytics] = useState({
+  //   totalBooks: 0,
+  //   totalRevenue: 0,
+  // }); 
+  
+  const [hostAnalytics, setHostAnalytics] = useState<HostAnalytics | null>(null);
+  const effectiveHostAnalytics = hostAnalytics ?? DEFAULT_HOST_ANALYTICS;
+
+  const [updatingCommission, setUpdatingCommission] = useState(false);
+
+  const hostRevenueShare = useMemo(
+    () => computeHostShareFromCommission(effectiveHostAnalytics.partnerCommission),
+    [effectiveHostAnalytics.partnerCommission],
+  );
 
   const personalInfoFAQ = [
     {
@@ -541,6 +599,7 @@ const coverImage = useMemo(() => {
     const fetchAnalytics = async () => {
       try {
         const res = await axios.get('/api/analytics/get', { timeout: 10000 });
+        const data = res.data ?? {};
         setAnalytics(res.data);
       } catch (error) {
         console.error('Error fetching analytics:', error);
@@ -579,13 +638,130 @@ const coverImage = useMemo(() => {
     }
   }, [currentUser]);  
 
+  const handleCommissionUpdate = useCallback(
+    async (commission: number) => {
+      if (currentUser?.role !== "host") return;
+
+      try {
+        setUpdatingCommission(true);
+
+        const safeCommission = Math.min(
+          MAX_PARTNER_COMMISSION,
+          Math.max(MIN_PARTNER_COMMISSION, commission)
+        );
+
+        const res = await axios.post(
+          "/api/analytics/host/update-commission",
+          { commission: safeCommission },
+          { timeout: 10000 }
+        );
+
+        const data = res.data ?? {};
+        const totalBooksValue = Number(data.totalBooks ?? 0);
+        const totalRevenueValue = Number(data.totalRevenue ?? 0);
+        const partnerCommissionValue = Number(data.partnerCommission);
+        const puntiValue = Number(data.punti);
+        const puntiShareValue = Number(data.puntiShare);
+        const puntiLabelValue =
+          typeof data.puntiLabel === "string" ? data.puntiLabel : undefined;
+
+        setHostAnalytics((prev) => {
+          const fallback = {
+            totalBooks: 0,
+            totalRevenue: 0,
+            partnerCommission: MIN_PARTNER_COMMISSION,
+            punti: 0,
+            puntiShare: 0,
+            puntiLabel: getPuntiLabel(0),
+          };
+
+          const base = prev ?? fallback;
+
+          const nextPartnerCommission = Number.isFinite(partnerCommissionValue)
+            ? Math.min(
+                MAX_PARTNER_COMMISSION,
+                Math.max(MIN_PARTNER_COMMISSION, partnerCommissionValue)
+              )
+            : base.partnerCommission;
+
+          const nextPunti = Number.isFinite(puntiValue)
+            ? Math.max(0, puntiValue)
+            : base.punti;
+
+          const nextPuntiShare = Number.isFinite(puntiShareValue)
+            ? Math.min(1, Math.max(0, puntiShareValue))
+            : base.puntiShare;
+
+          const nextPuntiLabel = puntiLabelValue ?? getPuntiLabel(nextPunti);
+
+          return {
+            totalBooks: Number.isFinite(totalBooksValue)
+              ? totalBooksValue
+              : base.totalBooks,
+            totalRevenue: Number.isFinite(totalRevenueValue)
+              ? totalRevenueValue
+              : base.totalRevenue,
+            partnerCommission: nextPartnerCommission,
+            punti: nextPunti,
+            puntiShare: nextPuntiShare,
+            puntiLabel: nextPuntiLabel,
+          };
+        });
+
+        toast.success("Partnership commission updated");
+      } catch (error: unknown) {
+        if (axios.isAxiosError(error)) {
+          console.error("Error updating partnership commission", {
+            status: error.response?.status,
+            data: error.response?.data,
+          });
+
+          const message =
+            (error.response?.data as any)?.message ||
+            `Unable to update partnership commission (status ${
+              error.response?.status ?? "unknown"
+            })`;
+
+          toast.error(message);
+        } else {
+          console.error("Unexpected error updating partnership commission:", error);
+          toast.error("Unexpected error updating partnership commission");
+        }
+      } finally {
+        setUpdatingCommission(false);
+      }
+    },
+    [currentUser?.role]
+  );
+
+
   useEffect(() => {
     if (currentUser?.role !== 'host') return;
   
     const fetchHostAnalytics = async () => {
       try {
         const res = await axios.get('/api/analytics/host/get', { timeout: 10000 });
-        setHostAnalytics(res.data);
+        // setHostAnalytics(res.data);
+        const data = res.data ?? {};
+        const puntiValue = Number(data.punti);
+        const punti = Number.isFinite(puntiValue) ? puntiValue : 0;
+        const puntiShareValue = Number(data.puntiShare);
+        const puntiShare = Number.isFinite(puntiShareValue)
+          ? Math.min(1, Math.max(0, puntiShareValue))
+          : 0;
+        const partnerCommissionValue = Number(data.partnerCommission);
+
+        setHostAnalytics({
+          totalBooks: Number(data.totalBooks ?? 0),
+          totalRevenue: Number(data.totalRevenue ?? 0),
+          partnerCommission: Number.isFinite(partnerCommissionValue)
+            ? partnerCommissionValue
+            : MIN_PARTNER_COMMISSION,
+          punti,
+          puntiShare,
+          puntiLabel: typeof data.puntiLabel === 'string' ? data.puntiLabel : getPuntiLabel(punti),
+        });
+
       } catch (error) {
         console.error('Error fetching host analytics:', error);
       }
@@ -947,15 +1123,15 @@ const coverImage = useMemo(() => {
           <div className="absolute left-1/2 -bottom-3 translate-x-[-50%] z-[99999]">
             <Switch.Group as="div" className="flex flex-col items-center">
               <Switch
-                checked={isHostView}
+                checked={isHostView} 
                 onChange={(checked) => handleRoleToggle(checked)}
                 aria-label="Toggle role"
                 className={twMerge(
                   'relative inline-flex h-8 w-[64px] items-center rounded-full p-[3px]',
                   'transition-colors duration-300 focus:outline-none overflow-visible bg-[#2200ffff]', // allow pulse to extend
                   isHostView
-                    ? 'bg-[#2200ffff] shadow-md'
-                    : 'bg-neutral-200 shadow-inner'
+                    ? 'bg-[#2200ffff] shadow-md-[#0000ff]'
+                    : 'bg-neutral-200 shadow-md-[#0000ff]'
                 )}
               >
                 {/* BORDER PULSE — remounts on each state to retrigger animation */}
@@ -2354,7 +2530,7 @@ const coverImage = useMemo(() => {
                   variants={cardVariants}
                   whileHover={{ y: -1 }}
                   whileTap={{ scale: 0.008 }}
-                  className="flex h-full flex-col rounded-2xl bg-white p-6 text-left shadow-md transition hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-black/50"
+                  className="flex h-full flex-col rounded-2xl bg-white p-6 text-left shadow-md transition hover:shadow-lg"
                 >
                   <div className="text-4xl text-black">{icon}</div>
                   <p className="mt-4 text-lg font-semibold text-neutral-900">{title}</p>
@@ -2481,6 +2657,22 @@ const coverImage = useMemo(() => {
               </motion.div>
             )}
 
+            {viewRole === 'host' && hostAnalytics && (
+              <motion.div variants={cardVariants} className="mt-6">
+                <PartnershipCommision
+                  punti={hostAnalytics.punti}
+                  puntiShare={hostAnalytics.puntiShare}
+                  puntiLabel={hostAnalytics.puntiLabel}
+                  partnerCommission={effectiveHostAnalytics.partnerCommission}
+                  maxPointValue={MAX_PARTNER_POINT_VALUE}
+                  minCommission={MIN_PARTNER_COMMISSION}
+                  maxCommission={MAX_PARTNER_COMMISSION}
+                  onCommissionChange={handleCommissionUpdate}
+                  loading={updatingCommission}
+                />
+              </motion.div>
+            )}
+
             {viewRole === 'host' && (
               <motion.div
                 variants={cardVariants}
@@ -2495,12 +2687,14 @@ const coverImage = useMemo(() => {
                   <div className="mt-5 space-y-4">
                     <div className="flex items-center justify-between rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800 shadow-sm">
                       <span className="font-medium">Total Bookings</span>
-                      <span className="text-lg font-semibold text-black">{hostAnalytics.totalBooks}</span>
+                      <span className="text-lg font-semibold text-black">
+                        {effectiveHostAnalytics.totalBooks ?? 0}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800 shadow-sm">
                       <span className="font-medium">Total Revenue</span>
                       <span className="text-lg font-semibold text-black">
-                        {formatConverted(hostAnalytics.totalRevenue)}
+                        {formatConverted(effectiveHostAnalytics.totalRevenue ?? 0)}
                       </span>
                     </div>
                   </div>
@@ -2510,12 +2704,14 @@ const coverImage = useMemo(() => {
                   <div>
                     <p className="text-lg font-semibold text-neutral-900">Pre-Withdrawal Revenue</p>
                     <p className="mt-2 text-sm text-neutral-600 md:text-base">
-                      As a host, you earn 90% of your listing revenue.
+                      As a host, your partnership commission is {Math.round(effectiveHostAnalytics.partnerCommission)}%,
+                      giving you {Math.round(hostRevenueShare * 100)}% of each booking before withdrawal.
                     </p>
                   </div>
                   <div className="mt-6 flex items-center justify-center rounded-xl bg-neutral-50 p-10 md:h-52">
                     <p className="text-3xl font-semibold text-black">
-                      {formatConverted((hostAnalytics.totalRevenue || 0) * 0.9)}
+                      {/* {formatConverted((hostAnalytics?.totalRevenue || 0) * 0.9)} */}
+                      {formatConverted((hostAnalytics?.totalRevenue || 0) * hostRevenueShare)}
                     </p>
                   </div>
                 </div>

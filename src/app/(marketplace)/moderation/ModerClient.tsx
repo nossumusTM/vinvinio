@@ -13,6 +13,14 @@ import Slider from 'react-slick';
 import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
 import clsx from 'clsx';
+import {
+  MAX_PARTNER_COMMISSION,
+  MAX_PARTNER_POINT_VALUE,
+  MIN_PARTNER_COMMISSION,
+  computePartnerCommission,
+  formatPuntiPercentage,
+  getPuntiLabel,
+} from "@/app/(marketplace)/constants/partner";
 
 type SliderArrowProps = {
   className?: string;
@@ -123,11 +131,20 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
     monthly: DataEntry[];
     yearly: DataEntry[];
     totalRevenue: number;
+    partnerCommission: number;
+    punti: number;
+    puntiShare: number;
+    puntiLabel: string;
+    
   }>({
     daily: [],
     monthly: [],
     yearly: [],
     totalRevenue: 0,
+    partnerCommission: MIN_PARTNER_COMMISSION,
+    punti: 0,
+    puntiShare: 0,
+    puntiLabel: 'No punti yet',
   });
     
   const router = useRouter();
@@ -167,6 +184,8 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
   const [isSuspendingUser, setIsSuspendingUser] = useState(false);
   const [showListingDeactivateConfirm, setShowListingDeactivateConfirm] = useState(false);
   const [showSuspendConfirmPopup, setShowSuspendConfirmPopup] = useState(false);
+  const [puntiUpdate, setPuntiUpdate] = useState({ listingId: '', punti: '' });
+  const [isUpdatingPunti, setIsUpdatingPunti] = useState(false);
 
   const openLightbox = (slides: string[], startIndex: number) => {
     if (!Array.isArray(slides) || slides.length === 0) return;
@@ -615,13 +634,31 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
     try {
       const res = await axios.post('/api/analytics/host/get', { identifier: hostLookup });
       const payout = await axios.post('/api/users/get-payout-method', { identifier: res.data.userId });
+
+      const data = res.data ?? {};
+      const puntiValue = Number(data.punti);
+      const punti = Number.isFinite(puntiValue) ? puntiValue : 0;
+      const puntiShareValue = Number(data.puntiShare);
+      const puntiShare = Number.isFinite(puntiShareValue)
+        ? Math.min(1, Math.max(0, puntiShareValue))
+        : 0;
+      const partnerCommissionValue = Number(data.partnerCommission);
+      const partnerCommission = Number.isFinite(partnerCommissionValue)
+        ? partnerCommissionValue
+        : MIN_PARTNER_COMMISSION;
   
       setHostAnalytics({
-        totalBooks: res.data.totalBooks,
-        totalRevenue: res.data.totalRevenue,
+        // totalBooks: res.data.totalBooks,
+        // totalRevenue: res.data.totalRevenue,
+        totalBooks: Number(data.totalBooks ?? 0),
+        totalRevenue: Number(data.totalRevenue ?? 0),
         payoutMethod: payout?.data?.method || 'None',
         payoutNumber: payout?.data?.number || '',
-        userId: res.data.userId || '',
+        userId: data.userId || '',
+        punti,
+        puntiShare,
+        partnerCommission,
+        puntiLabel: typeof data.puntiLabel === 'string' ? data.puntiLabel : getPuntiLabel(punti),
       });
     } catch (err) {
       toast.error('Host not found or error fetching data');
@@ -646,6 +683,86 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
     }
   };  
 
+  const handlePuntiUpdate = async () => {
+    const listingId = puntiUpdate.listingId.trim();
+
+    if (!listingId) {
+      toast.error('Please provide a listing ID.');
+      return;
+    }
+
+    const puntiValue = Number(puntiUpdate.punti);
+    if (!Number.isFinite(puntiValue)) {
+      toast.error('Enter a valid punti value.');
+      return;
+    }
+
+    if (puntiValue < 0 || puntiValue > MAX_PARTNER_POINT_VALUE) {
+      toast.error(`Punti must be between 0 and ${MAX_PARTNER_POINT_VALUE}.`);
+      return;
+    }
+
+    setIsUpdatingPunti(true);
+
+    try {
+      const response = await axios.post('/api/moderation/listings/punti', {
+        listingId,
+        punti: puntiValue,
+      });
+
+      toast.success('Listing punti updated.', {
+        iconTheme: {
+          primary: '#2200ffff',
+          secondary: '#fff',
+        },
+      });
+
+      setPuntiUpdate({ listingId: '', punti: '' });
+
+      const metrics = response.data?.metrics;
+      const userId = response.data?.userId;
+
+      if (metrics && userId && hostAnalytics?.userId === userId) {
+        setHostAnalytics((prev: any) => {
+          if (!prev) return prev;
+
+          const updatedPunti = Number(metrics.punti);
+          const updatedShare = Number(metrics.puntiShare);
+          const updatedCommission = Number(metrics.partnerCommission);
+
+          return {
+            ...prev,
+            punti: Number.isFinite(updatedPunti) ? updatedPunti : prev.punti ?? 0,
+            puntiShare: Number.isFinite(updatedShare)
+              ? Math.min(1, Math.max(0, updatedShare))
+              : prev.puntiShare ?? 0,
+            partnerCommission: Number.isFinite(updatedCommission)
+              ? updatedCommission
+              : prev.partnerCommission ?? MIN_PARTNER_COMMISSION,
+            puntiLabel:
+              typeof metrics.puntiLabel === 'string'
+                ? metrics.puntiLabel
+                : getPuntiLabel(Number.isFinite(updatedPunti) ? updatedPunti : 0),
+          };
+        });
+      }
+    } catch (error) {
+      const message = axios.isAxiosError(error)
+        ? typeof error.response?.data === 'string'
+          ? error.response?.data
+          : (error.response?.data as { message?: string })?.message || 'Failed to update punti.'
+        : 'Failed to update punti.';
+      toast.error(message);
+    } finally {
+      setIsUpdatingPunti(false);
+    }
+  };
+
+  const puntiNumeric = Number(puntiUpdate.punti);
+  const puntiPreview = Number.isFinite(puntiNumeric) ? puntiNumeric : 0;
+  const safePuntiPreview = Math.max(0, Math.min(MAX_PARTNER_POINT_VALUE, Math.round(puntiPreview)));
+  const commissionPreview = computePartnerCommission(safePuntiPreview);
+
   useEffect(() => {
     if (currentUser?.role === 'moder') {
       fetchListings();
@@ -656,7 +773,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
     const fetchData = async () => {
       const res = await axios.get('/api/analytics/platform');
       const platform = res.data;
-  
+
       const normalize = (arr: any[]) =>
         arr.map((entry) => ({
           date: entry.date,
@@ -664,17 +781,23 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
           platformFee: Number(entry.platformFee || 0),
           bookingCount: Number(entry.bookingCount || 0),
         }));
-  
+
       setPlatformData({
         daily: normalize(platform.daily),
         monthly: normalize(platform.monthly),
         yearly: normalize(platform.yearly),
-        totalRevenue: res.data.totalRevenue,
+        totalRevenue: Number(platform.totalRevenue ?? 0),
+        partnerCommission: Number(platform.partnerCommission ?? MIN_PARTNER_COMMISSION),
+        punti: Number(platform.punti ?? 0),
+        puntiShare: Number(platform.puntiShare ?? 0),
+        puntiLabel: typeof platform.puntiLabel === 'string'
+          ? platform.puntiLabel
+          : getPuntiLabel(Number(platform.punti ?? 0)),
       });
     };
-  
+
     fetchData();
-  }, []);  
+  }, []);
 
   const onCancel = async (id: string) => {
     if (!id) return toast.error('Reservation ID required');
@@ -978,15 +1101,19 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
 
   return (
     <>
-    <div className="px-5 md:px-60 pt-2 md:pt-10 pb-0">
+    <div className="px-5 md:px-20 pt-2 md:pt-10 pb-0">
       <PlatformCard
           daily={platformData.daily}
           monthly={platformData.monthly}
           yearly={platformData.yearly}
           totalRevenue={platformData.totalRevenue}
+          partnerCommission={platformData.partnerCommission}
+          punti={platformData.punti}
+          puntiShare={platformData.puntiShare}
+          puntiLabel={platformData.puntiLabel}
         />
       </div>
-    <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-6 py-10 md:px-8 lg:grid-cols-12">
+    <div className="mx-auto grid max-w-full grid-cols-1 gap-10 px-6 py-10 md:px-20 lg:grid-cols-12">
       <section className="space-y-8 lg:col-span-8">
         <div className="rounded-3xl bg-white px-6 py-6 shadow-lg ring-1 ring-neutral-200/70">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -1004,7 +1131,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
               Revision: {revisionListings.length}
             </span>
             <span className="rounded-full bg-neutral-900/5 px-3 py-1 font-semibold text-neutral-800">
-              Awaiting re-approval: {awaitingReapprovalListings.length}
+              Re-approval: {awaitingReapprovalListings.length}
             </span>
           </div>
           </div>
@@ -1184,11 +1311,8 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
             Cancel Reservation
           </button>
         </div>
-      </aside>
-    </div>
 
-    <div className="grid grid-cols-1 lg:grid-cols-2 px-5 md:px-60 gap-10 mt-10  pt-16">
-      {/* Host Lookup */}
+        {/* Host Lookup */}
       <div className="bg-white p-6 rounded-xl shadow-lg space-y-4">
         <h2 className="text-lg font-bold text-black">Host Analytics Lookup</h2>
         <input
@@ -1210,38 +1334,70 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
             <p><strong>Total Revenue:</strong> {formatConverted(hostAnalytics.totalRevenue * 0.9)}</p>
             <p><strong>Payout Method:</strong> {hostAnalytics.payoutMethod.toUpperCase()}</p>
             <p><strong>Payout Number:</strong> {hostAnalytics.payoutNumber}</p>
-            <p><strong>User ID:</strong> {hostAnalytics.userId}</p>
+            <p><strong>Partner Commission:</strong> {Math.round(hostAnalytics.partnerCommission ?? MIN_PARTNER_COMMISSION)}%</p>
+            <p>
+              <strong>Punti Score:</strong> {Math.round(hostAnalytics.punti ?? 0)} / {MAX_PARTNER_POINT_VALUE}
+              {hostAnalytics.puntiLabel ? ` (${hostAnalytics.puntiLabel})` : ''}
+            </p>
+            <p>
+              <strong>Relevance:</strong> {formatPuntiPercentage(hostAnalytics.puntiShare ?? 0)}
+            </p>
           </div>
         )}
+      </div>
+      </aside>
+    </div>
+
+    {/* Promoter Lookup */}
+    <div className="grid px-5 md:px-60 gap-10 mt-10  pt-16">
+      <div className="bg-white p-6 rounded-xl shadow-lg space-y-4">
+          <h2 className="text-lg font-bold text-black">Adjust Listing Punti</h2>
+          <p className="text-sm text-neutral-600">
+            Tune a listing's punti score (0 – {MAX_PARTNER_POINT_VALUE}). Host commission updates instantly.
+          </p>
+          <input
+            type="text"
+            placeholder="Enter listingId"
+            value={puntiUpdate.listingId}
+            onChange={(event) => setPuntiUpdate((prev) => ({ ...prev, listingId: event.target.value }))}
+            className="w-full p-2 border rounded-xl"
+          />
+          <div className="space-y-3">
+            <input
+              type="number"
+              min={0}
+              max={MAX_PARTNER_POINT_VALUE}
+              value={puntiUpdate.punti}
+              onChange={(event) => setPuntiUpdate((prev) => ({ ...prev, punti: event.target.value }))}
+              className="w-full p-2 border rounded-xl"
+              placeholder={`0 - ${MAX_PARTNER_POINT_VALUE}`}
+            />
+            <input
+              type="range"
+              min={0}
+              max={MAX_PARTNER_POINT_VALUE}
+              value={safePuntiPreview}
+              onChange={(event) =>
+                setPuntiUpdate((prev) => ({ ...prev, punti: event.target.value }))
+              }
+              className="w-full"
+            />
+          </div>
+          <div className="flex items-center justify-between text-xs font-semibold text-neutral-600">
+            <span>{safePuntiPreview} punti</span>
+            <span>{commissionPreview}% commission</span>
+          </div>
+          <button
+            onClick={handlePuntiUpdate}
+            disabled={isUpdatingPunti}
+            className="w-full py-2 bg-neutral-900 text-white rounded-xl shadow-md hover:shadow-lg transition disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isUpdatingPunti ? 'Updating…' : 'Update punti'}
+          </button>
+        </div>
       </div>
 
-      {/* Promoter Lookup */}
-      <div className="bg-white p-6 rounded-xl shadow-lg space-y-4">
-        <h2 className="text-lg font-bold text-black">Promoter Analytics Lookup</h2>
-        <input
-          type="text"
-          placeholder="Enter Promoter userId or Email"
-          value={promoterLookup}
-          onChange={(e) => setPromoterLookup(e.target.value)}
-          className="w-full p-2 border rounded-xl"
-        />
-        <button
-          onClick={handlePromoterAnalytics}
-          className="w-full py-2 bg-neutral-200 text-black rounded-xl hover:bg-neutral-100 transition"
-        >
-          Fetch Promoter Data
-        </button>
-        {promoterAnalytics && (
-          <div className="text-sm text-neutral-700 space-y-1">
-            <p><strong>Total Books:</strong> {promoterAnalytics.totalBooks}</p>
-            <p><strong>QR Code Scans:</strong> {promoterAnalytics.qrScans}</p>
-            <p><strong>Total Revenue:</strong> {formatConverted(promoterAnalytics.totalRevenue * 0.1)}</p>
-            <p><strong>Payout Method:</strong> {promoterAnalytics.payoutMethod.toUpperCase()}</p>
-            <p><strong>Payout Number:</strong> {promoterAnalytics.payoutNumber}</p>
-            <p><strong>User ID:</strong> {promoterAnalytics.userId}</p>
-          </div>
-        )}
-      </div>
+    <div className="grid grid-cols-1 lg:grid-cols-2 px-5 md:px-60 gap-10 mt-10  pt-16">
 
       <div className="bg-white p-6 rounded-xl shadow-lg space-y-4">
         <h2 className="text-lg font-bold text-black">Moderator Listing Deactivation</h2>

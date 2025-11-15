@@ -102,13 +102,17 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
     markNotificationsSeen();
   }, [markNotificationsSeen]);
 
-  const onRent = useCallback(() => {
-    if (!currentUser) {
-      return loginModal.onOpen();
-    }
+  // const onRent = useCallback(() => {
+  //   if (!currentUser) {
+  //     return loginModal.onOpen();
+  //   }
 
-    router.push('/become-a-partner');
-  }, [loginModal, currentUser, router]);
+  //   router.push('/become-a-partner');
+  // }, [loginModal, currentUser, router]);
+
+  const onRent = useCallback(() => {
+    router.push('/landing-partner');
+  }, [router]);
 
   const onPromote = () => {
     promoteModal.onOpen();

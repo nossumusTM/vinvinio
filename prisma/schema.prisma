@@ -54,6 +54,8 @@ model User {
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
   role              Role               @default(customer)
+  partnerCommission Int                @default(15)
+  alternateRole     Role?
   referenceId       String?
   favoriteIds       String[]           @db.ObjectId
   username          String?            @unique
@@ -150,6 +152,7 @@ model Listing {
   groupPrice          Int?
   groupSize           Int?
   customPricing       Json?
+  punti               Int            @default(0)
   user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   reservations        Reservation[]
   reviews             Review[]
