@@ -23,7 +23,7 @@ import { useLayoutEffect } from 'react';
 export type CountrySelectValue = {
   flag: string;
   label: string;
-  latlng: [number, number];
+  latlng: number[];
   region: string;
   value: string;
   city?: string;
@@ -109,14 +109,14 @@ const CountrySearchSelect = forwardRef<CountrySearchSelectHandle, CountrySelectP
     const [portalReady, setPortalReady] = useState(false);
     const [dropdownRect, setDropdownRect] = useState<{ left: number; top: number; width: number; } | null>(null);
 
-    const popularSuggestions = useMemo(() => {
+    const popularSuggestions = useMemo<Suggestion[]>(() => {
       return getPopularCities().map((entry) => ({
         ...entry,
         isPopular: true,
       }));
     }, [getPopularCities]);
 
-    const countrySuggestions = useMemo(() => getAll(), [getAll]);
+    const countrySuggestions = useMemo<Suggestion[]>(() => getAll(), [getAll]);
 
     // ✅ INSIDE the component, after countrySuggestions
     const displayedFlagCode = useMemo(() => {
@@ -157,7 +157,6 @@ const CountrySearchSelect = forwardRef<CountrySearchSelectHandle, CountrySelectP
       const searchTerm = query.trim().toLowerCase();
 
       if (!searchTerm) {
-        // show a curated subset when the user just focuses the field
         return dataset.slice(0, 20);
       }
 
@@ -173,7 +172,7 @@ const CountrySearchSelect = forwardRef<CountrySearchSelectHandle, CountrySelectP
       });
 
       return Array.from(unique.values()).slice(0, 30);
-    }, [countrySuggestions, popularSuggestions, query]);
+    }, [popularSuggestions, countrySuggestions, query]);
 
     const formatDisplayValue = useCallback((option?: CountrySelectValue | null) => {
       if (!option) return '';
