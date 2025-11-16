@@ -69,6 +69,8 @@ export default async function getHostCardData(identifier: string): Promise<HostC
     hostName: host.hostName ?? null,
     image: host.image ?? null,
     role: host.role,
+    // 👇 add this line
+    alternateRole: host.alternateRole ?? null,
     referenceId: host.referenceId ?? null,
     favoriteIds: Array.isArray(host.favoriteIds) ? host.favoriteIds : [],
     phone: host.phone ?? null,
