@@ -16,7 +16,7 @@ export async function POST(request: Request) {
 
     const sanitizedPhone = phone.trim();
 
-    const user = await prisma.user.findUnique({
+    const user = await prisma.user.findFirst({
       where: { phone: sanitizedPhone },
       select: { id: true },
     });
