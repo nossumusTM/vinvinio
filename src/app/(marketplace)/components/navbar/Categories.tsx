@@ -201,9 +201,30 @@ const Categories = () => {
     [],
   );
 
-  const resolvedInitialLocation = useMemo(() => {
+  const normalizeToCountrySelectValue = (
+    value: CountrySelectValue | undefined | null,
+  ): CountrySelectValue | undefined => {
+    if (!value) return undefined;
+
+    // If latlng is already a tuple, nothing to do
+    if (Array.isArray(value.latlng) && value.latlng.length === 2) {
+      return value;
+    }
+
+    // If it came from useCountries() with latlng: number[]
+    const latlngArray = Array.isArray(value.latlng) ? value.latlng : [];
+    const [lat, lng] = latlngArray;
+
+    return {
+      ...value,
+      latlng: [lat ?? 0, lng ?? 0] as [number, number],
+    };
+  };
+
+  const resolvedInitialLocation = useMemo<CountrySelectValue | undefined>(() => {
     if (globalLocation) {
-      return globalLocation;
+      // Already a CountrySelectValue (from state), normalize just in case
+      return normalizeToCountrySelectValue(globalLocation);
     }
 
     const locationValue = params?.get('locationValue');
@@ -216,14 +237,14 @@ const Categories = () => {
       .find((entry) => entry.value === locationValue);
 
     if (popularMatch) {
-      return popularMatch;
+      return normalizeToCountrySelectValue(popularMatch as any);
     }
 
     const countryMatch = countryHelpers
       .getAll()
       .find((entry) => entry.value === locationValue);
 
-    return countryMatch ?? undefined;
+    return normalizeToCountrySelectValue(countryMatch as any);
   }, [countryHelpers, globalLocation, params]);
 
   const initialFilters = useMemo<FiltersState>(() => {

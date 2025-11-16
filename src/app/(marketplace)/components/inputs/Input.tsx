@@ -7,6 +7,9 @@ import {
 } from "react-hook-form";
 import { TbCurrencyEuro } from "react-icons/tb";
 
+import { useMemo, useState } from 'react';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
+
 interface InputProps {
   id: string;
   name?: string;
@@ -20,6 +23,7 @@ interface InputProps {
   maxLength?: number,
   textarea?: boolean;
   inputClassName?: string;
+  withVisibilityToggle?: boolean;
 }
 
 const Input: React.FC<InputProps> = ({
@@ -33,7 +37,8 @@ const Input: React.FC<InputProps> = ({
   required,
   errors,
   textarea,
-  inputClassName
+  inputClassName,
+  withVisibilityToggle,
 }) => {
   const fieldName = name ?? id;
 
@@ -56,6 +61,15 @@ const Input: React.FC<InputProps> = ({
 
   const fieldError = resolveError(fieldName, errors);
   const hasError = Boolean(fieldError);
+
+  const enableToggle = type === 'password' && withVisibilityToggle;
+  const [isVisible, setIsVisible] = useState(false);
+
+  const resolvedType = useMemo(() => {
+    if (!enableToggle) return type;
+    return isVisible ? 'text' : 'password';
+  }, [enableToggle, isVisible, type]);
+
   return (
     <div className="w-full relative">
       {formatPrice && (
@@ -87,16 +101,32 @@ const Input: React.FC<InputProps> = ({
           disabled={disabled}
           {...register(fieldName, { required })}
           placeholder=" "
-          type={type}
+          type={resolvedType}
           className={`
             peer w-full h-11 px-4 pt-[14px] pb-[2px] text-base font-light bg-white shadow-md rounded-md outline-none transition
             disabled:opacity-70 disabled:cursor-not-allowed
             ${formatPrice ? 'pl-9' : ''}
             ${hasError ? 'border-rose-500' : 'border-neutral-300'}
             ${hasError ? 'focus:border-rose-500' : 'focus:border-black'}
+            ${enableToggle ? 'pr-12' : ''}
             ${inputClassName || ''}
           `}
         />
+      )}
+
+      {enableToggle && (
+        <button
+          type="button"
+          onClick={() => setIsVisible((prev) => !prev)}
+          className="absolute inset-y-0 right-3 flex items-center text-neutral-500 transition hover:text-neutral-800"
+          tabIndex={-1}
+        >
+          {isVisible ? (
+            <FiEyeOff aria-label="Hide password" />
+          ) : (
+            <FiEye aria-label="Show password" />
+          )}
+        </button>
       )}
 
       <label

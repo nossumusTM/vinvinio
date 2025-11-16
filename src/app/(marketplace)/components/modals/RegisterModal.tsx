@@ -1,44 +1,49 @@
-'use client';
-
+ 'use client';
+ 
 import axios from "axios";
-import { AiFillGithub } from "react-icons/ai";
-import { MdOutlineSwitchAccount } from "react-icons/md";
-import { RiShieldUserLine } from "react-icons/ri";
 import { MdOutlineModeOfTravel } from "react-icons/md";
 import { BiNavigation } from "react-icons/bi";
 import { PiBarcode } from "react-icons/pi";
-import { signIn } from "next-auth/react";
-import { FcGoogle } from "react-icons/fc";
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, useMemo } from "react";
 import ConfirmPopup from "../ConfirmPopup";
 import { toast } from "react-hot-toast";
-
-import {
-    FieldValues,
-    SubmitHandler,
-    useForm
-} from "react-hook-form";
-
+ 
+ import {
+     FieldValues,
+     SubmitHandler,
+     useForm
+ } from "react-hook-form";
+ 
 import useLoginModal from "@/app/(marketplace)/hooks/useLoginModal";
 import useRegisterModal from "@/app/(marketplace)/hooks/useRegisterModal";
+import useCountries from "@/app/(marketplace)/hooks/useCountries";
 import { motion, AnimatePresence } from 'framer-motion';
 
 import Modal from "./Modal";
 import Input from "../inputs/Input";
 import Heading from "../Heading";
-import Button from "../Button";
+import PhoneNumberInput from "../inputs/PhoneNumberInput";
+import { formatPhoneNumberToE164 } from "@/app/(marketplace)/utils/phone";
 
-const RegisterModal = () => {
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
+ 
+ const RegisterModal = () => {
     const registerModal = useRegisterModal();
     const loginModal = useLoginModal();
+    const { getAll } = useCountries();
     const [isLoading, setIsLoading] = useState(false);
     const [role, setRole] = useState<'customer' | 'host' | 'promoter' | 'moder'>('customer');
     const [popupMessage, setPopupMessage] = useState<string | null>(null);
     const [step, setStep] = useState(1);
+    const [phoneCountry, setPhoneCountry] = useState('IT');
+    const [phoneInput, setPhoneInput] = useState('');
+    const [phoneError, setPhoneError] = useState<string | null>(null);
 
     const {
         register,
         handleSubmit,
+        setValue,
         formState: {
             errors,
         },
@@ -48,8 +53,16 @@ const RegisterModal = () => {
             email: '',
             password: '',
             confirmPassword: '',
+            phone: '',
         },
     });
+
+    const countries = useMemo(() => getAll(), [getAll]);
+    const phoneDialCode = useMemo(() => {
+      const country = countries.find((entry) => entry.value === phoneCountry);
+      return country?.dialCode ?? null;
+    }, [countries, phoneCountry]);
+ 
 
     const onSubmit: SubmitHandler<FieldValues> = (data) => {
       // If still on step 1, go to step 2
@@ -58,61 +71,74 @@ const RegisterModal = () => {
         return;
       }
 
-        setIsLoading(true);
-
-        const formData = {
-            ...data,
-            role // Include selected role
-        };
+        const formattedPhone = formatPhoneNumberToE164(
+          phoneInput,
+         phoneDialCode ?? undefined,
+       );
+       if (!formattedPhone) {
+          setPhoneError('Enter a valid phone number.');
+          return;
+        }
 
         if (data.password !== data.confirmPassword) {
           toast.error('Passwords do not match');
-          setIsLoading(false);
           return;
-        }        
+        }
+
+        setIsLoading(true);
+
+        setPhoneError(null);
+
+        const formData = {
+            ...data,
+            role, // Include selected role
+            phone: formattedPhone,
+        };
 
         axios.post('/api/register', formData)
             .then(() => {
                 toast.success('Welcome to Vuola! Please sign in to start exploring.', {
-                    iconTheme: {
-                        primary: '#2200ffff',
-                        secondary: '#fff',
-                    },
-                  });
-                registerModal.onClose();
-                loginModal.onOpen();
-            })
+                     iconTheme: {
+                         primary: '#2200ffff',
+                         secondary: '#fff',
+                     },
+                   });
+                 registerModal.onClose();
+                 loginModal.onOpen();
+             })
+
             .catch((error) => {
                 if (axios.isAxiosError(error)) {
                   if (error.response?.status === 409) {
                     const message = error.response.data;
-              
+
                     if (message === "Email already in use" || message === "Email is already registered.") {
                       // setPopupMessage("This email is already registered.");
-                      toast.error('This email is already registered.');
-
-                    } else if (message === "Name is already taken.") {
-                      // setPopupMessage("This name is already taken. Please choose another.");
+                     toast.error('This email is already registered.');
+                   } else if (message === "Name is already taken.") {
+                     // setPopupMessage("This name is already taken. Please choose another.");
                       toast.error('This name is already taken. Please choose another.');
+                    } else if (message === "Phone number already in use") {
+                      toast.error('This phone number is already registered.');
                     } else {
                       // setPopupMessage("Something went wrong. Please try again.");
                       toast.error('Something went wrong. Please try again.');
                     }
-              
-                  } else if (error.response?.data) {
-                    setPopupMessage(error.response.data);
-                  } else {
-                    setPopupMessage("Something went wrong.");
-                  }
-                } else if (error.response?.status === 403) {
-                  setPopupMessage("Only administrators can register as a moderator.");
-                } else {
-                  setPopupMessage("Unexpected error occurred.");
-                }
-              })            
-            .finally(() => {
-                setIsLoading(false);
-            });
+               
+                   } else if (error.response?.data) {
+                     setPopupMessage(error.response.data);
+                   } else {
+                     setPopupMessage("Something went wrong.");
+                   }
+                 } else if (error.response?.status === 403) {
+                   setPopupMessage("Only administrators can register as a moderator.");
+                 } else {
+                   setPopupMessage("Unexpected error occurred.");
+                 }
+               })            
+             .finally(() => {
+                 setIsLoading(false);
+             });
     };
 
     const onToggle = useCallback(() => {
@@ -120,62 +146,73 @@ const RegisterModal = () => {
         loginModal.onOpen();
     }, [registerModal, loginModal]);
 
+    const goBackToRoleSelect = useCallback(() => {
+      setStep(1);
+      setPhoneError(null);
+    }, []);
+   
     useEffect(() => {
       if (registerModal.isOpen) {
         setStep(1);
+        setPhoneCountry('IT');
+        setPhoneInput('');
+        setPhoneError(null);
+        setValue('phone', '');
       }
-    }, [registerModal.isOpen]);    
+   }, [registerModal.isOpen, setValue]);
 
-    const bodyContent = (
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={`step-${step}`}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.25 }}
-          className="flex flex-col gap-2"
-        >
+    useEffect(() => {
+      if (step !== 2) {
+        return;
+      }
 
-        {step === 1 ? (
+      const formatted = formatPhoneNumberToE164(phoneInput, phoneDialCode ?? undefined) ?? '';
+      setValue('phone', formatted);
+
+    }, [phoneInput, phoneDialCode, setValue, step]);
+ 
+     const bodyContent = (
+       <AnimatePresence mode="wait">
+         <motion.div
+           key={`step-${step}`}
+           initial={{ opacity: 0, y: 20 }}
+           animate={{ opacity: 1, y: 0 }}
+           exit={{ opacity: 0, y: -10 }}
+           transition={{ duration: 0.25 }}
+           className="flex flex-col gap-2"
+         >
+ 
+         {step === 1 ? (
           <>
-            <Heading 
-              title={`Continue as a ${role === 'customer' ? 'Traveller' : role === 'host' ? 'Host' : 'Promoter'}`} 
+            <Heading
+              title={`Continue as a ${
+                role === 'customer' ? 'Traveller' : role === 'host' ? 'Host' : 'Promoter'
+              }`}
               subtitle="Choose your journey to move forward"
-              center 
+              center
             />
+
             <div className="flex justify-center items-center gap-2 flex-wrap pt-6">
-              {[
-                { key: 'customer', icon: <MdOutlineModeOfTravel size={14} />, label: 'Traveller' },
-                { key: 'host', icon: <BiNavigation size={14} />, label: 'Host' },
-                { key: 'promoter', icon: <PiBarcode size={14} />, label: 'Promoter' }
-              ].map(({ key, icon, label }) => {
-                const isSelected = role === key;
-    
+              {([
+                { key: 'customer' as const, icon: <MdOutlineModeOfTravel size={14} />, label: 'Traveller' },
+                { key: 'host' as const, icon: <BiNavigation size={14} />, label: 'Host' },
+                { key: 'promoter' as const, icon: <PiBarcode size={14} />, label: 'Promoter' },
+              ]).map(({ key, icon, label }) => {
+                const isActive = role === key;
+
                 return (
                   <button
                     key={key}
                     type="button"
-                    onClick={() => {
-                      setRole(key as any);
-                      setStep(2);
-                    }}
-                    className={`
-                      flex items-center gap-2 
-                      px-3 py-2 sm:px-6 sm:py-3 
-                      rounded-xl 
-                      text-[11px] sm:text-base 
-                      font-medium 
-                      transition 
-                      shadow-md hover:shadow-lg
-                      ${isSelected ? 'text-white bg-neutral-800' : 'bg-white text-black hover:bg-neutral-100'}
-                    `}
-                    // style={{
-                    //   background: isSelected
-                    //     ? 'linear-gradient(45deg, #047dff,rgb(0, 64, 255),rgb(74, 8, 255))'
-                    //     : undefined,
-                    // }}
+                    onClick={() => setRole(key)}
                     disabled={isLoading}
+                    className={`
+                      inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium
+                      border transition
+                      ${isActive
+                        ? 'bg-neutral-100 text-neutral-900'
+                        : 'bg-white text-neutral-800 border-neutral-200 hover:border-neutral-400'}
+                    `}
                   >
                     <span className="text-xl">{icon}</span>
                     {label}
@@ -186,19 +223,22 @@ const RegisterModal = () => {
           </>
         ) : (
           <>
-            {/* <button
-                type="button"
-                onClick={() => setStep(1)}
-                className="text-sm text-neutral-500 hover:text-black self-start"
-              >
-                ← Back
-              </button> */}
-            <div className="mb-4">
-              <Heading
-                title='Your Journey Starts Here'
-                subtitle='Lights, camera… just need your info to run the show.'
-              />
-            </div>
+            {/* rest of step 2 stays as you have it */}
+
+             {/* <button
+                 type="button"
+                 onClick={() => setStep(1)}
+                 className="text-sm text-neutral-500 hover:text-black self-start"
+               >
+                 ← Back
+               </button> */}
+             <div className="mb-4">
+               <Heading
+                 title='Your Journey Starts Here'
+                 subtitle='Lights, camera… just need your info to run the show.'
+               />
+             </div>
+
             <Input
               id="email"
               label="Email"
@@ -208,88 +248,100 @@ const RegisterModal = () => {
               required
               inputClassName="h-14 lg:h-[46px] text-base rounded-xl"
             />
+            <PhoneNumberInput
+              countryCode={phoneCountry}
+              onCountryChange={(value) => {
+                setPhoneCountry(value);
+                setPhoneError(null);
+              }}
+              value={phoneInput}
+              onValueChange={(value) => {
+                setPhoneInput(value);
+                setPhoneError(null);
+              }}
+              disabled={isLoading}
+              error={phoneError}
+              label="Phone number"
+              hint="We'll verify this number with a quick SMS after you sign up."
+              inputId="register-phone"
+            />
             <Input
               id="name"
               label="Username"
               disabled={isLoading}
               register={register}
-              errors={errors}
-              required
-              inputClassName="h-14 lg:h-[46px] text-base rounded-xl"
-            />
-            <Input
-              id="password"
-              label="Password"
-              type="password"
-              disabled={isLoading}
-              register={register}
-              errors={errors}
-              required
-              inputClassName="h-14 lg:h-[46px] text-base rounded-xl"
-            />
-            <Input
-              id="confirmPassword"
-              label="Confirm Password"
-              type="password"
-              disabled={isLoading}
-              register={register}
-              errors={errors}
-              required
-              inputClassName="h-14 lg:h-[46px] text-base rounded-xl"
-            />
-            {popupMessage && (
-              <ConfirmPopup
-                title="Notice"
-                message={popupMessage}
-                hideCancel
-                confirmLabel="OK"
-                onConfirm={() => setPopupMessage(null)}
-              />
-            )}
-          </>
-        )}
-        </motion.div>
-      </ AnimatePresence>
-    );    
-
-    const footerContent = step === 2 ? (
-      <div className="flex flex-col gap-4 mt-3 overflow-y-auto max-h-[40vh] sm:max-h-none">
-        <hr />
-        <div className="text-neutral-800 text-center font-light">
-          <p>
-            Already have an account?&nbsp;
-            <span
-              onClick={onToggle}
-              className="text-normal font-normal cursor-pointer underline"
-            >
-              Sign In
-            </span>
-          </p>
+               errors={errors}
+               required
+               inputClassName="h-14 lg:h-[46px] text-base rounded-xl"
+             />
+             <Input
+               id="password"
+               label="Password"
+               type="password"
+               disabled={isLoading}
+               register={register}
+               errors={errors}
+               required
+               inputClassName="h-14 lg:h-[46px] text-base rounded-xl"
+             />
+             <Input
+               id="confirmPassword"
+               label="Confirm Password"
+               type="password"
+               disabled={isLoading}
+               register={register}
+               errors={errors}
+               required
+               inputClassName="h-14 lg:h-[46px] text-base rounded-xl"
+             />
+             {popupMessage && (
+               <ConfirmPopup
+                 title="Notice"
+                 message={popupMessage}
+                 hideCancel
+                 confirmLabel="OK"
+                 onConfirm={() => setPopupMessage(null)}
+               />
+             )}
+           </>
+         )}
+         </motion.div>
+       </ AnimatePresence>
+     );    
+        
+    const footerContent = (
+      <div className="mt-4 flex flex-col gap-4">
+        <hr className="border-neutral-200" />
+        <div className="rounded-3xl border border-neutral-200 bg-white p-5 text-center shadow-sm">
+          <p className="text-sm text-neutral-600">Already have an account?</p>
+          <button
+            type="button"
+            onClick={onToggle}
+            className="mt-3 inline-flex items-center justify-center rounded-full bg-neutral-900 px-6 py-2 text-sm font-semibold text-white shadow-md transition hover:bg-neutral-800"
+          >
+            Sign in
+          </button>
         </div>
-        {/* <div className="mb-2">
-          <Button
-            outline
-            label="Continue with Google"
-            icon={FcGoogle}
-            onClick={() => signIn('google', { callbackUrl: '/' })}
-          />
-        </div> */}
       </div>
-    ) : undefined;    
-
+    );
+ 
     return (
         <Modal
             disabled={isLoading}
             isOpen={registerModal.isOpen}
             title="Sign Up"
-            actionLabel="Continue"
+            actionLabel={step === 2 ? 'Create account' : 'Continue'}
             onClose={registerModal.onClose}
             onSubmit={handleSubmit(onSubmit)}
             body={bodyContent}
             footer={footerContent}
             className=""
+            closeOnSubmit={false}
+            secondaryAction={step === 2 ? goBackToRoleSelect : undefined}
+            secondaryActionLabel={step === 2 ? 'Back' : undefined}
+            preventOutsideClose
         />
     );
 }
-
-export default RegisterModal;
+ 
+ export default RegisterModal;

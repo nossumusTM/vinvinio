@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/pages/api/auth/[...nextauth]';
 import prisma from '@/app/(marketplace)/libs/prismadb';
+import {
+  isTwilioConfigured,
+  sendVerificationCode,
+} from '@/app/(marketplace)/libs/twilioVerify';
 
 export async function POST() {
   const session = await getServerSession(authOptions);
@@ -13,7 +17,7 @@ export async function POST() {
   try {
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
-      select: { id: true, phone: true },
+      select: { id: true, phone: true, phoneVerified: true },
     });
 
     if (!user) {
@@ -23,6 +27,16 @@ export async function POST() {
     if (!user.phone) {
       return NextResponse.json({ error: 'Phone number missing' }, { status: 400 });
     }
+
+    if (!isTwilioConfigured()) {
+      return NextResponse.json({ error: 'Phone verification unavailable' }, { status: 503 });
+    }
+
+    if (user.phoneVerified) {
+      return NextResponse.json({ success: true, alreadyVerified: true });
+    }
+
+    await sendVerificationCode(user.phone);
 
     console.info('[phone-verification] Request initiated for user', user.id);
 

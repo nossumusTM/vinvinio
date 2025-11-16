@@ -379,7 +379,7 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isOpen, onClose
           <AiOutlineBell className="h-8 w-8 text-neutral-400" />
           <div>
             <p className="text-sm font-semibold text-neutral-900">No notifications yet</p>
-            <p className="mt-1 text-xs text-neutral-500">Interactions with your listings and bookings will appear here.</p>
+            <p className="p-4 mt-1 text-xs text-neutral-500">Interactions with your listings and bookings will appear here.</p>
           </div>
         </div>
       );

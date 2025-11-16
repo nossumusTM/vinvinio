@@ -19,6 +19,7 @@ interface ModalProps {
   secondaryActionLabel?: string;
   className: string;
   submitOnEnter?: boolean;
+  preventOutsideClose?: boolean;
 }
 
 const Modal: React.FC<ModalProps> = ({
@@ -35,6 +36,7 @@ const Modal: React.FC<ModalProps> = ({
   closeOnSubmit = true,
   className,
   submitOnEnter = true,
+  preventOutsideClose = false,
 }) => {
   const [showModal, setShowModal] = useState(isOpen);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -45,8 +47,18 @@ const Modal: React.FC<ModalProps> = ({
     setShowModal(isOpen);
   }, [isOpen]);
 
+  const handleClose = useCallback(() => {
+    if (disabled) return;
+    setExitIntent('close');
+    setShowModal(false);
+  }, [disabled]);
+
   // Outside click to close
   useEffect(() => {
+    if (preventOutsideClose) {
+      return;
+    }
+
     const handleOutsideClick = (event: MouseEvent) => {
       if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
         handleClose();
@@ -60,13 +72,7 @@ const Modal: React.FC<ModalProps> = ({
     return () => {
       document.removeEventListener('mousedown', handleOutsideClick);
     };
-  }, [isOpen, onClose]);
-
-  const handleClose = useCallback(() => {
-    if (disabled) return;
-    setExitIntent('close');
-    setShowModal(false);
-  }, [disabled]);
+  }, [isOpen, preventOutsideClose, handleClose]);
 
    const handleSubmit = useCallback(() => {
     if (disabled) return;
@@ -164,6 +170,10 @@ const Modal: React.FC<ModalProps> = ({
                 transition={{ duration: 0.2 }}
                 className="h-full"
                 onMouseDown={(e) => {
+                  if (preventOutsideClose) {
+                    return;
+                  }
+
                   if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
                     handleClose(); // animated close on outside click
                   }

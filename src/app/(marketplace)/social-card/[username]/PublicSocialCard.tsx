@@ -9,6 +9,7 @@ import type { SocialCardVisitedPlace } from '@/app/(marketplace)/types';
 import useMessenger from '@/app/(marketplace)/hooks/useMessager';
 
 import Heading from '../../components/Heading';
+import VerificationBadge from '../../components/VerificationBadge';
 
 export type BookingSummary = {
   id: string;
@@ -205,15 +206,13 @@ const PublicSocialCard: React.FC<PublicSocialCardProps> = ({
                 <div className="rounded-2xl bg-neutral-100 px-4 py-3">
                   <p className="text-xs uppercase tracking-widest text-black/60">Email</p>
                   <p className="break-words font-medium text-sm">{user.email ?? 'Not provided'}</p>
-                  <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold">
-                    <span
-                      className={clsx('inline-flex h-2.5 w-2.5 rounded-full', {
-                        'bg-green-300': user.emailVerified,
-                        'bg-black/40': !user.emailVerified,
-                      })}
-                    />
-                    {user.emailVerified ? 'Verified' : 'Not verified'}
-                  </span>
+                  <div className="mt-2">
+                    <VerificationBadge
+                      verified={user.emailVerified}
+                      pendingLabel="Pending verification"
+                      size="md"
+                      />
+                </div>
                 </div>
               )}
 
@@ -221,15 +220,13 @@ const PublicSocialCard: React.FC<PublicSocialCardProps> = ({
                 <div className="rounded-2xl bg-neutral-100 px-4 py-3">
                   <p className="text-xs uppercase tracking-widest text-black/60">Phone</p>
                   <p className="break-words font-medium text-sm">{user.phone ?? 'Not provided'}</p>
-                  <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold">
-                    <span
-                      className={clsx('inline-flex h-2.5 w-2.5 rounded-full', {
-                        'bg-green-300': user.phoneVerified,
-                        'bg-black/40': !user.phoneVerified,
-                      })}
+                  <div className="mt-2">
+                    <VerificationBadge
+                      verified={user.phoneVerified}
+                      pendingLabel="Pending verification"
+                      size="md"
                     />
-                    {user.phoneVerified ? 'Verified' : 'Not verified'}
-                  </span>
+                  </div>
                 </div>
               )}
 

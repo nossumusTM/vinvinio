@@ -231,7 +231,9 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
 
       // ✅ Restrict to only one video
       if (isVideo) {
-        const alreadyHasVideo = [...value, ...newUploads].some(v => v.includes('.mp4') || v.includes('video'));
+        const alreadyHasVideo = [...value, ...newUploads].some(
+          (v) => typeof v === 'string' && (v.includes('.mp4') || v.includes('video')),
+        );
         if (alreadyHasVideo) {
           toast.error('You can only upload one video per experience.');
           continue;
@@ -328,6 +330,10 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
       {Array.isArray(value) && value.length > 0 && (
         <div ref={previewRef} className="grid grid-cols-3 gap-3 mt-4">
           {value.map((url, idx) => {
+            if (typeof url !== 'string' || !url) {
+              return null; // skip bad entries defensively
+            }
+
             const isVideo = url.includes('.mp4') || url.includes('video');
 
             return (
@@ -363,7 +369,6 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                   </span>
                 )}
 
-                {/* ❌ Remove Button */}
                 <button
                   type="button"
                   onClick={() => {

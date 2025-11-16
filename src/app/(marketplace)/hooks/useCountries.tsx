@@ -69,13 +69,31 @@ import { useCallback, useMemo } from 'react';
 import countries from 'world-countries';
 
 // 🧭 Base country data
-const formattedCountries = countries.map((country) => ({
+type CountryOption = {
+  value: string;
+  label: string;
+  flag: string;
+  latlng: number[];
+  region: string;
+  city: string;
+  dialCode?: string | null;
+};
+
+const resolveDialCode = (country: (typeof countries)[number]) => {
+  const root = country.idd?.root ?? '';
+  const suffix = country.idd?.suffixes?.[0] ?? '';
+  const dial = `${root}${suffix}`.replace(/\s+/g, '');
+  return dial ? (dial.startsWith('+') ? dial : `+${dial}`) : null;
+};
+
+const formattedCountries: CountryOption[] = countries.map((country) => ({
   value: country.cca2,
   label: country.name.common,
   flag: country.flag,
   latlng: country.latlng,
   region: country.region,
   city: country.capital?.[0] || 'Unknown', // 🏙️ capital city
+  dialCode: resolveDialCode(country),
 }));
 
 // 🌆 Manually defined popular cities (excluding capitals)
@@ -104,6 +122,7 @@ const popularCityEntries = Object.entries(popularCitiesMap).flatMap(([countryNam
     latlng: country.latlng,
     flag: country.flag,
     region: country.region,
+    dialCode: country.dialCode,
   }));
 });
 

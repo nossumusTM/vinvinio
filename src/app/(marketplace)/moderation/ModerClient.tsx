@@ -1353,7 +1353,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
       <div className="bg-white p-6 rounded-xl shadow-lg space-y-4">
           <h2 className="text-lg font-bold text-black">Adjust Listing Punti</h2>
           <p className="text-sm text-neutral-600">
-            Tune a listing's punti score (0 – {MAX_PARTNER_POINT_VALUE}). Host commission updates instantly.
+            Tune a listing&apos;s punti score (0 – {MAX_PARTNER_POINT_VALUE}). Host commission updates instantly.
           </p>
           <input
             type="text"

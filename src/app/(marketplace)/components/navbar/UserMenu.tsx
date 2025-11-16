@@ -477,7 +477,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                       href="/favorites"
                     />
                     <MenuItem
-                      label="My Social Card"
+                      label="Manage Page"
                       onClick={() => {
                         setIsOpen(false);
                       }}

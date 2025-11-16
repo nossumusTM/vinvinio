@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useEffect, useMemo, useCallback } from "react";
+import { useRef, useState, useEffect, useMemo, useCallback, type FormEvent } from "react";
 import { SafeUser } from "@/app/(marketplace)/types";
 import Container from "@/app/(marketplace)/components/Container";
 import Heading from "@/app/(marketplace)/components/Heading";
@@ -38,6 +38,10 @@ import {
   computeHostShareFromCommission,
   getPuntiLabel,
 } from "@/app/(marketplace)/constants/partner";
+
+import VerificationBadge from "../components/VerificationBadge";
+import { maskPhoneNumber } from "@/app/(marketplace)/utils/phone";
+import { useSearchParams } from "next/navigation";
 
 interface ProfileClientProps {
   currentUser: SafeUser;
@@ -100,6 +104,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   currentUser,
   referralBookings,
 }) => {
+  const searchParams = useSearchParams();
   const { formatConverted } = useCurrencyFormatter();
   const suspensionDate = useMemo(() => {
     const raw = currentUser?.suspendedAt;
@@ -125,6 +130,11 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   const [phoneVerificationLoading, setPhoneVerificationLoading] = useState(false);
   const [emailVerificationRequested, setEmailVerificationRequested] = useState(false);
   const [phoneVerificationRequested, setPhoneVerificationRequested] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(Boolean(currentUser?.phoneVerified));
+  const [phoneVerificationCode, setPhoneVerificationCode] = useState('');
+  const [confirmingPhoneCode, setConfirmingPhoneCode] = useState(false);
+  const [phoneVerificationError, setPhoneVerificationError] = useState<string | null>(null);
+  const emailVerified = Boolean(currentUser?.emailVerified);
 
   const [viewRole, setViewRole] = useState<'customer' | 'host' | 'promoter' | 'moder'>(currentUser.role);
 
@@ -142,7 +152,13 @@ const [coverLoaded,   setCoverLoaded]   = useState(false);
 const [uploadingAvatar, setUploadingAvatar] = useState(false);
 const [uploadingCover,  setUploadingCover]  = useState(false);
 
+const [hasMounted, setHasMounted] = useState(false);
+
 const busy = uploadingAvatar || uploadingCover;
+
+useEffect(() => {
+  setHasMounted(true);
+}, []);
 
 // --- OWNER RESOLUTION (profile == currentUser) ---
 useEffect(() => {
@@ -323,13 +339,30 @@ const coverImage = useMemo(() => {
   };
 
   const handlePhoneVerificationRequest = async () => {
-    if (phoneVerificationLoading || phoneVerificationRequested) return;
+    if (phoneVerificationLoading) return;
 
     setPhoneVerificationLoading(true);
     try {
       const response = await axios.post('/api/users/request-phone-verification');
+
       if (response.status === 200) {
+        const alreadyVerified = Boolean(response.data?.alreadyVerified);
+
+        if (alreadyVerified) {
+          setPhoneVerified(true);
+          setPhoneVerificationRequested(false);
+          toast.success('Your phone number is already verified.', {
+            iconTheme: {
+              primary: '#2200ffff',
+              secondary: '#fff',
+            },
+          });
+          return;
+        }
+
         setPhoneVerificationRequested(true);
+        setPhoneVerificationCode('');
+        setPhoneVerificationError(null);
         toast.success('We\'ll text you shortly to verify your phone.', {
           iconTheme: {
             primary: '#2200ffff',
@@ -342,6 +375,46 @@ const coverImage = useMemo(() => {
       toast.error('Could not start phone verification right now.');
     } finally {
       setPhoneVerificationLoading(false);
+    }
+  };
+
+  const handlePhoneCodeSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const trimmedCode = phoneVerificationCode.trim();
+    if (!trimmedCode) {
+      setPhoneVerificationError('Enter the verification code we sent you.');
+      return;
+    }
+
+    setPhoneVerificationError(null);
+    setConfirmingPhoneCode(true);
+    try {
+      const response = await axios.post('/api/users/confirm-phone-verification', {
+        code: trimmedCode,
+      });
+
+      if (response.status === 200) {
+        setPhoneVerified(true);
+        setPhoneVerificationRequested(false);
+        setPhoneVerificationCode('');
+        toast.success('Phone number verified!', {
+          iconTheme: {
+            primary: '#2200ffff',
+            secondary: '#fff',
+          },
+        });
+      }
+    } catch (error) {
+      console.error('Failed to verify phone code:', error);
+      const message = axios.isAxiosError(error) ? error.response?.data?.error : null;
+      if (message) {
+        toast.error(message);
+      } else {
+        toast.error('That code was not valid. Please try again.');
+      }
+    } finally {
+      setConfirmingPhoneCode(false);
     }
   };
 
@@ -360,6 +433,7 @@ const coverImage = useMemo(() => {
   });  
 
   const [activeSection, setActiveSection] = useState<string | null>(null);
+  const [initialSectionApplied, setInitialSectionApplied] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [fieldValues, setFieldValues] = useState<{
     username: string;
@@ -451,6 +525,21 @@ const coverImage = useMemo(() => {
   
   const [hostAnalytics, setHostAnalytics] = useState<HostAnalytics | null>(null);
   const effectiveHostAnalytics = hostAnalytics ?? DEFAULT_HOST_ANALYTICS;
+
+  useEffect(() => {
+    if (initialSectionApplied) {
+      return;
+    }
+
+    const section = searchParams?.get('section');
+    const allowedSections = new Set(['personal-info', 'login-security', 'payments']);
+
+    if (section && allowedSections.has(section)) {
+      setActiveSection(section);
+    }
+
+    setInitialSectionApplied(true);
+  }, [searchParams, initialSectionApplied]);
 
   const [updatingCommission, setUpdatingCommission] = useState(false);
 
@@ -1282,12 +1371,12 @@ const coverImage = useMemo(() => {
             </div>
 
   
-      <AnimatePresence mode="wait">
+      <AnimatePresence initial={false} mode="wait">
         {activeSection === 'personal-info' && (
           <motion.section
             key="personal-info"
             variants={sectionVariants}
-            initial="hidden"
+            initial={hasMounted ? 'hidden' : false}
             animate="visible"
             exit="exit"
             className="mt-8 flex w-full flex-col gap-10 pt-0 md:pt-5 lg:flex-row"
@@ -1321,7 +1410,7 @@ const coverImage = useMemo(() => {
                     <div className="flex-1">
                       <p className="text-xs uppercase tracking-wide text-neutral-500 md:text-sm">{label}</p>
 
-                      <AnimatePresence mode="wait">
+                      <AnimatePresence initial={false} mode="wait">
                         {editingField === key ? (
                           key === 'address' ? (
                             <>
@@ -1524,16 +1613,12 @@ const coverImage = useMemo(() => {
                               {fieldValues.email?.trim() || 'Not provided'}
                             </p>
                             <div className="flex flex-wrap items-center gap-2">
-                              <span
-                                className={`rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${
-                                  currentUser?.emailVerified
-                                    ? 'bg-emerald-100 text-emerald-700'
-                                    : 'bg-amber-100 text-amber-700'
-                                }`}
-                              >
-                                {currentUser?.emailVerified ? 'Verified' : 'Unverified'}
-                              </span>
-                              {!currentUser?.emailVerified && fieldValues.email?.trim() && (
+                              <VerificationBadge
+                                verified={emailVerified}
+                                pendingLabel="Pending verification"
+                                size="sm"
+                              />
+                              {!emailVerified && fieldValues.email?.trim() && (
                                 <motion.button
                                   type="button"
                                   whileTap={{ scale: 0.97 }}
@@ -1553,26 +1638,23 @@ const coverImage = useMemo(() => {
                             </div>
                           </div>
                         ) : key === 'phone' ? (
-                          <div className="space-y-2 pt-1">
+                          <div className="space-y-3 pt-1">
                             <p className="text-sm text-neutral-800 md:text-base">
                               {fieldValues.phone?.trim() || 'Not provided'}
                             </p>
                             <div className="flex flex-wrap items-center gap-2">
-                              <span
-                                className={`rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${
-                                  currentUser?.phoneVerified
-                                    ? 'bg-emerald-100 text-emerald-700'
-                                    : 'bg-amber-100 text-amber-700'
-                                }`}
-                              >
-                                {currentUser?.phoneVerified ? 'Verified' : 'Unverified'}
-                              </span>
-                              {!currentUser?.phoneVerified && fieldValues.phone?.trim() && (
+                              <VerificationBadge
+                                verified={phoneVerified}
+                                pendingLabel="Pending verification"
+                                size="sm"
+                              />
+                              {!phoneVerified && fieldValues.phone?.trim() && (
+
                                 <motion.button
                                   type="button"
                                   whileTap={{ scale: 0.97 }}
                                   onClick={handlePhoneVerificationRequest}
-                                  disabled={phoneVerificationLoading || phoneVerificationRequested}
+                                  disabled={phoneVerificationLoading}
                                   className={`rounded-full border border-neutral-900/20 px-3 py-1 text-[12px] font-medium text-neutral-800 transition hover:bg-neutral-900/5 ${
                                     phoneVerificationLoading ? 'pointer-events-none opacity-60' : ''
                                   }`}
@@ -1580,11 +1662,63 @@ const coverImage = useMemo(() => {
                                   {phoneVerificationLoading
                                     ? 'Sending…'
                                     : phoneVerificationRequested
-                                    ? 'Request sent'
+                                    ? 'Request code'
                                     : 'Verify phone'}
                                 </motion.button>
                               )}
                             </div>
+                            <AnimatePresence>
+                              {phoneVerificationRequested && !phoneVerified && fieldValues.phone?.trim() && (
+                                <motion.form
+                                  key="phone-verification"
+                                  onSubmit={handlePhoneCodeSubmit}
+                                  initial={{ opacity: 0, y: 8 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, y: -8 }}
+                                  transition={{ duration: 0.2 }}
+                                  className="w-full rounded-2xl border border-neutral-200 bg-white/70 p-4 text-sm shadow-sm backdrop-blur"
+                                >
+                                  <label
+                                    htmlFor="profile-phone-code"
+                                    className="text-xs font-semibold uppercase tracking-wide text-neutral-600"
+                                  >
+                                    Enter verification code
+                                  </label>
+                                  <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                                    <input
+                                      id="profile-phone-code"
+                                      type="text"
+                                      inputMode="numeric"
+                                      pattern="[0-9]*"
+                                      maxLength={6}
+                                      value={phoneVerificationCode}
+                                      onChange={(event) => {
+                                        const value = event.target.value.replace(/[^0-9]/g, '').slice(0, 6);
+                                        setPhoneVerificationCode(value);
+                                        setPhoneVerificationError(null);
+                                      }}
+                                      className="w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+                                      placeholder="6-digit code"
+                                    />
+                                    <button
+                                      type="submit"
+                                      disabled={confirmingPhoneCode}
+                                      className="inline-flex items-center justify-center rounded-xl bg-neutral-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
+                                    >
+                                      {confirmingPhoneCode ? 'Verifying…' : 'Confirm'}
+                                    </button>
+                                  </div>
+                                  {phoneVerificationError && (
+                                    <p className="mt-1 text-xs text-rose-500">{phoneVerificationError}</p>
+                                  )}
+                                  {fieldValues.phone?.trim() && (
+                                    <p className="mt-1 text-xs text-neutral-500">
+                                      Sent to {maskPhoneNumber(fieldValues.phone)}
+                                    </p>
+                                  )}
+                                </motion.form>
+                              )}
+                            </AnimatePresence>
                           </div>
                         ) : (
                           <p className="text-sm text-neutral-800 md:text-base">
@@ -1634,7 +1768,7 @@ const coverImage = useMemo(() => {
         )}
       </AnimatePresence>
 
-      <AnimatePresence mode="wait">
+      <AnimatePresence initial={false} mode="wait">
         {activeSection === 'login-security' && (
           <motion.section
             key="login-security"
@@ -1674,7 +1808,7 @@ const coverImage = useMemo(() => {
                     Last updated: {lastPasswordUpdateDate ? lastPasswordUpdateDate.toLocaleDateString() : 'Not available'}
                   </p>
 
-                  <AnimatePresence mode="wait">
+                  <AnimatePresence initial={false} mode="wait">
                     {editingField === 'password' && (
                       <motion.div
                         key="password-edit"
@@ -1797,7 +1931,7 @@ const coverImage = useMemo(() => {
         )}
       </AnimatePresence>
 
-      <AnimatePresence mode="wait">
+      <AnimatePresence initial={false} mode="wait">
         {activeSection === 'payments' && (
           <motion.section
             key="payments"
@@ -1938,7 +2072,7 @@ const coverImage = useMemo(() => {
                         </p>
                       }
 
-                  <AnimatePresence mode="wait">
+                  <AnimatePresence initial={false} mode="wait">
                     {showCouponInput ? (
                       <motion.div
                         key="couponInput"
@@ -2489,7 +2623,7 @@ const coverImage = useMemo(() => {
         </AnimatedModal>
   
       {/* ✅ SECTION: DEFAULT OVERVIEW */}
-      <AnimatePresence mode="wait">
+      <AnimatePresence initial={false} mode="wait">
         {!activeSection && (
           <motion.div
             key="overview"

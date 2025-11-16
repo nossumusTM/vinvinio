@@ -19,6 +19,7 @@ import CountrySearchSelect, {
 import { twMerge } from 'tailwind-merge';
 
 import { LuPlus, LuTrash2 } from 'react-icons/lu';
+import VerificationBadge from '@/app/(marketplace)/components/VerificationBadge';
 
 const FRIENDLY_CONTACT_MESSAGE =
   'Need to make changes to your email, phone, or contact preferences? Head to your Account page.';
@@ -401,11 +402,11 @@ const SocialCardClient: React.FC<SocialCardClientProps> = ({ currentUser }) => {
     <div className="max-w-6xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
       <div className="grid gap-10 lg:grid-cols-[2fr,1fr]">
         <div>
-          <Heading title="My Social Card" subtitle="Curate what other travellers can see about you." />
+          {/* <Heading title="My Social Card" subtitle="Curate what other travellers can see about you." /> */}
 
-          <div className="mt-6 bg-white/80 backdrop-blur rounded-3xl shadow-xl border border-white/40">
+          <div className="mt-0 bg-white/80 backdrop-blur rounded-3xl shadow-xl border border-white/40">
             <div className="relative overflow-hidden rounded-3xl">
-              <div className="absolute inset-0 bg-gradient-to-br from-cyan-500 via-blue-500 to-indigo-600 opacity-90" />
+              <div className="absolute inset-0 bg-gradient-to-br from-cyan-500 via-blue-500 to-indigo-600 backdrop-blur-md opacity-90" />
               <div className="relative p-8 flex flex-col gap-6 text-white">
                 {(visibleCard.image || visibleCard.name || visibleCard.profession) && (
                   <div className="flex items-center gap-4">
@@ -508,30 +509,26 @@ const SocialCardClient: React.FC<SocialCardClientProps> = ({ currentUser }) => {
                     <div className="rounded-2xl bg-white/10 px-4 py-3">
                       <p className="text-xs uppercase tracking-widest text-white/60">Email</p>
                       <p className="font-medium break-words">{email}</p>
-                      <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold">
-                        <span
-                          className={twMerge(
-                            'inline-flex h-2.5 w-2.5 rounded-full',
-                            currentUser.emailVerified ? 'bg-emerald-300' : 'bg-white/40'
-                          )}
+                      <div className="mt-2">
+                        <VerificationBadge
+                          verified={Boolean(currentUser.emailVerified)}
+                          pendingLabel="Pending verification"
+                          size="md"
                         />
-                        {currentUser.emailVerified ? 'Verified' : 'Not verified'}
-                      </span>
+                    </div>
                     </div>
                   )}
                   {visibleCard.phone && (
                     <div className="rounded-2xl bg-white/10 px-4 py-3">
                       <p className="text-xs uppercase tracking-widest text-white/60">Phone</p>
                       <p className="font-medium break-words">{phone}</p>
-                      <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold">
-                        <span
-                          className={twMerge(
-                            'inline-flex h-2.5 w-2.5 rounded-full',
-                            currentUser.phoneVerified ? 'bg-emerald-300' : 'bg-white/40'
-                          )}
+                      <div className="mt-2">
+                        <VerificationBadge
+                          verified={Boolean(currentUser.phoneVerified)}
+                          pendingLabel="Pending verification"
+                          size="md"
                         />
-                        {currentUser.phoneVerified ? 'Verified' : 'Not verified'}
-                      </span>
+                    </div>
                     </div>
                   )}
                 </div>
@@ -616,19 +613,23 @@ const SocialCardClient: React.FC<SocialCardClientProps> = ({ currentUser }) => {
               <p className="text-sm text-neutral-600">
                 Use the search below to add cities and countries you have explored.
               </p>
-              <CountrySearchSelect
-                value={locationValue}
-                onChange={(value) => setLocationValue(value ?? null)}
-              />
-              <button
-                type="button"
-                onClick={handleAddVisitedPlace}
-                disabled={isSubmitting || !locationValue || initializing}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-neutral-900 px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <LuPlus className="h-4 w-4" aria-hidden="true" />
-                Add destination
-              </button>
+              <div className='flex flex-row gap-2'>
+                <CountrySearchSelect
+                  value={locationValue}
+                  onChange={(value) => setLocationValue(value ?? null)}
+                />
+                <div className='flex flex-row gap-2'>
+                  <button
+                    type="button"
+                    onClick={handleAddVisitedPlace}
+                    disabled={isSubmitting || !locationValue || initializing}
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-neutral-900 px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <LuPlus className="h-4 w-4" aria-hidden="true" />
+                    Add
+                  </button>
+                </div>
+              </div>
               <div className="space-y-2">
                 {card.visitedPlaces.length === 0 && (
                   <p className="text-sm text-neutral-500">No destinations yet. Start adding the places you love!</p>
@@ -671,28 +672,28 @@ const SocialCardClient: React.FC<SocialCardClientProps> = ({ currentUser }) => {
             <div className="rounded-3xl border border-neutral-200 bg-white shadow-lg p-6 space-y-4">
               <h3 className="text-base font-semibold text-neutral-900">Your favourite hobbies</h3>
               <p className="text-sm text-neutral-600">Let the community know what energises you outside of travelling.</p>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="flex flex-row gap-2">
                 <input
                   type="text"
                   value={hobbyDraft}
                   onChange={(event) => setHobbyDraft(event.target.value)}
                   placeholder="Add a hobby"
-                  className="flex-1 rounded-xl border border-neutral-200 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900/20"
+                  className="ring-0 focus-within:ring-0 rounded-2xl border-2 bg-white/90 backdrop-blur shadow-sm hover:shadow-md border-white/60 hover:border-neutral-200 flex-1 rounded-xl shadow-sm px-4 py-3 text-sm"
                   disabled={isSubmitting || initializing}
                 />
                 <button
                   type="button"
                   onClick={handleAddHobby}
                   disabled={isSubmitting || initializing || hobbyDraft.trim().length === 0}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-neutral-900 px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-neutral-900 px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <LuPlus className="h-4 w-4" aria-hidden="true" />
-                  Add hobby
+                  Add
                 </button>
               </div>
               <div className="flex flex-wrap gap-2">
                 {card.hobbies.length === 0 && (
-                  <span className="rounded-full bg-neutral-100 px-3 py-1 text-sm text-neutral-500">{HOBBY_PROMPT}</span>
+                  <span className="rounded-2xl bg-neutral-100 px-3 py-1 text-sm text-neutral-500">{HOBBY_PROMPT}</span>
                 )}
                 {card.hobbies.map((hobby) => (
                   <span
