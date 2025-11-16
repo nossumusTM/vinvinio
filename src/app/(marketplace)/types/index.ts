@@ -103,7 +103,9 @@ type SafeUserStrict = Omit<
   createdAt: string;
   updatedAt: string;
   emailVerified: string | null;
-  alternateRole: User["role"] | null;
+
+  // 🔧 make this optional+nullable so older rows / partial shapes are fine
+  alternateRole?: User["role"] | null;
 
   phone: string | null;
   contact: string | null;
@@ -137,13 +139,13 @@ type SafeUserStrict = Omit<
   partnerCommission: number;
 };
 
-/** 
+/**
  * Easy-mode: core identity stays required; everything else is optional.
- * This lets older/partial users pass without refactors.
+ * `alternateRole` is *not* in the required core anymore.
  */
 export type SafeUser = Simplify<
-  Pick<SafeUserStrict, "id" | "role" | "alternateRole" | "createdAt" | "updatedAt" | "emailVerified"> &
-  Partial<Omit<SafeUserStrict, "id" | "role" | "alternateRole" | "createdAt" | "updatedAt" | "emailVerified">>
+  Pick<SafeUserStrict, "id" | "role" | "createdAt" | "updatedAt" | "emailVerified"> &
+  Partial<Omit<SafeUserStrict, "id" | "role" | "createdAt" | "updatedAt" | "emailVerified">>
 >;
 
 /* ------------------------ SafeListing (relaxed) ----------------------- */
@@ -181,8 +183,8 @@ export type SafeListing = Simplify<
     slug?: string | null;
     primaryCategory?: string | null;
 
-    status: Statusish; // usually still required in your flow
-    user: SafeUser;    // now accepts partials
+    status: Statusish;
+    user: SafeUser;
   }
 >;
 
