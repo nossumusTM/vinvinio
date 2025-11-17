@@ -204,7 +204,11 @@ import { useRouter } from "next/navigation";
                   <button
                     key={key}
                     type="button"
-                    onClick={() => setRole(key)}
+                    onClick={() => {
+                      setRole(key);
+                      setStep(2);          // 👈 jump straight to form step
+                      setPhoneError(null); // optional: clear phone errors when switching
+                    }}
                     disabled={isLoading}
                     className={`
                       inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium
@@ -311,8 +315,8 @@ import { useRouter } from "next/navigation";
         
     const footerContent = (
       <div className="mt-4 flex flex-col gap-4">
-        <hr className="border-neutral-200" />
-        <div className="rounded-3xl border border-neutral-200 bg-white p-5 text-center shadow-sm">
+        {/* <hr className="border-neutral-200" />
+        <div className="rounded-3xl border border-neutral-100 bg-neutral-100 p-5 text-center shadow-sm">
           <p className="text-sm text-neutral-600">Already have an account?</p>
           <button
             type="button"
@@ -321,7 +325,7 @@ import { useRouter } from "next/navigation";
           >
             Sign in
           </button>
-        </div>
+        </div> */}
       </div>
     );
  
@@ -330,7 +334,7 @@ import { useRouter } from "next/navigation";
             disabled={isLoading}
             isOpen={registerModal.isOpen}
             title="Sign Up"
-            actionLabel={step === 2 ? 'Create account' : 'Continue'}
+            actionLabel={step === 2 ? 'Register' : 'Continue'}
             onClose={registerModal.onClose}
             onSubmit={handleSubmit(onSubmit)}
             body={bodyContent}

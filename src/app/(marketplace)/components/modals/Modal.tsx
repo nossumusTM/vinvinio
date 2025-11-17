@@ -248,11 +248,13 @@ const Modal: React.FC<ModalProps> = ({
                         outline
                       />
                     )}
+                    {actionLabel.trim() !== '' && (
                     <Button
                       disabled={disabled}
                       label={actionLabel}
-                      onClick={handleSubmit}
+                      onClick={onSubmit}
                     />
+                  )}
                   </div>
                   {footer}
                 </div>

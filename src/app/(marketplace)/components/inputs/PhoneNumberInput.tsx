@@ -72,7 +72,7 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
       <label htmlFor={inputId} className="text-sm font-medium text-neutral-700">
         {label}
       </label>
-      <div className="flex flex-col gap-2 sm:flex-row">
+      <div className="flex flex-row md:flex-col lg:flex-col gap-2 sm:flex-row">
        <div className="relative w-full sm:max-w-[180px]">
         {selectedCountry && (
           <div className="pointer-events-none absolute left-3 top-1/2 flex -translate-y-1/2 items-center">

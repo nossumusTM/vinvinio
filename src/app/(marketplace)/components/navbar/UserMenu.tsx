@@ -639,7 +639,9 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
 
                   <MenuItem label="Logout" onClick={() => {
                     setIsOpen(false);
-                    signOut();
+                    signOut({
+                      callbackUrl: '/',
+                    });
                   }} />
               </>
             ) : (
@@ -654,7 +656,6 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                       setIsOpen(false);
                       registerModal.onOpen();
                     }} />
-
               </>
             )}
           </div>

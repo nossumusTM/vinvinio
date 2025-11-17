@@ -62,7 +62,7 @@ const LoginModal = () => {
   const { getAll } = useCountries();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [step, setStep] = useState<'method' | 'form'>('method');
+  const [step, setStep] = useState<'method' | 'form' | 'altOptions'>('method');
   const [selectedMethod, setSelectedMethod] = useState<AuthMethod>('email');
   const [phoneCountry, setPhoneCountry] = useState('IT');
   const [phoneInput, setPhoneInput] = useState('');
@@ -92,6 +92,23 @@ const LoginModal = () => {
   });
 
   const identifierValue = watch('identifier');
+
+  const [showAltOptions, setShowAltOptions] = useState(false);
+
+  useEffect(() => {
+    if (!loginModal.isOpen) {
+        return;
+    }
+
+    setStep('method');          // 👈 ensure we always start here
+    setSelectedMethod('email');
+    setPhoneCountry('IT');
+    setPhoneInput('');
+    setPhoneError(null);
+    setIdentifierError(null);
+    setEmailValue('');
+    reset({ identifier: '', password: '', method: 'email' });
+  }, [loginModal.isOpen, reset]);
 
   useEffect(() => {
     if (selectedMethod === 'email') {
@@ -228,7 +245,7 @@ const LoginModal = () => {
   const bodyContent = (
     <div className="flex flex-col gap-5">
       <AnimatePresence mode="wait">
-        {step === 'method' ? (
+        {step === 'method' && (
           <motion.div
             key="method-step"
             variants={stepVariants}
@@ -251,18 +268,25 @@ const LoginModal = () => {
                     key={option.key}
                     type="button"
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => setSelectedMethod(option.key)}
+                    onClick={() => {
+                      setSelectedMethod(option.key as AuthMethod);
+                      setStep('form');
+                      setIdentifierError(null);
+                      setPhoneError(null);
+                    }}
                     className={`
-                      flex h-full flex-col gap-2 rounded-2xl border p-4 text-left transition
-                      ${active
-                        ? 'border-black bg-neutral-900 text-white shadow-lg shadow-neutral-900/20'
-                        : 'border-neutral-200 bg-white text-neutral-800 shadow-sm hover:border-neutral-400 hover:shadow-md'}
+                      flex h-full flex-col gap-2 text-neutral-800 rounded-2xl border p-4 text-left transition
+                      ${
+                        active
+                          ? 'bg-neutral-100 text-neutral-800 shadow-lg shadow-neutral-900/20'
+                          : 'bg-white text-neutral-800 shadow-sm hover:border-neutral-400 hover:shadow-md'
+                      }
                     `}
                   >
                     <div className="flex items-center gap-3">
                       <span
                         className={`aspect-square flex h-10 w-10 items-center justify-center rounded-xl text-base font-medium ${
-                          active ? 'bg-white/20 text-white' : 'bg-neutral-100 text-neutral-800'
+                          active ? 'bg-white/50 text-neutral-800' : 'bg-neutral-100 text-neutral-800'
                         }`}
                       >
                         {option.icon}
@@ -281,7 +305,9 @@ const LoginModal = () => {
               })}
             </div>
           </motion.div>
-        ) : (
+        )}
+
+        {step === 'form' && (
           <motion.div
             key={`form-${selectedMethod}`}
             variants={stepVariants}
@@ -304,20 +330,22 @@ const LoginModal = () => {
               }
             />
             {selectedMethod === 'email' ? (
-              <div className="flex flex-col gap-2">
-                <Input
-                  id="identifier"
-                  label="Email"
-                  type="email"
-                  disabled={isLoading}
-                  register={register}
-                  errors={errors}
-                  required
-                  inputClassName="h-14 rounded-xl"
-                />
-                {identifierError && (
-                  <p className="text-xs text-rose-500">{identifierError}</p>
-                )}
+              <div className="flex flex-row md:flex-col gap-2">
+                <div className='flex flex-row'>
+                    <Input
+                    id="identifier"
+                    label="Email"
+                    type="email"
+                    disabled={isLoading}
+                    register={register}
+                    errors={errors}
+                    required
+                    inputClassName="h-14 rounded-xl"
+                    />
+                    {identifierError && (
+                    <p className="text-xs text-rose-500">{identifierError}</p>
+                    )}
+                </div>
               </div>
             ) : (
               <PhoneNumberInput
@@ -365,45 +393,81 @@ const LoginModal = () => {
             </button>
           </motion.div>
         )}
+
+        {step === 'altOptions' && (
+          <motion.div
+            key="alt-options-step"
+            variants={stepVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.25 }}
+            className="flex flex-col gap-4"
+          >
+            {/* Top-left: back to login */}
+            <div className="flex justify-start">
+              <button
+                type="button"
+                onClick={() => setStep('method')}
+                className="rounded-full px-2 py-1 text-xs text-black transition hover:bg-neutral-100 md:text-sm"
+                  >
+                    ← BACK TO SIGN IN
+              </button>
+            </div>
+
+            <Button
+              outline
+              label="Continue with Google"
+              icon={FcGoogle}
+              onClick={handleGoogleLogin}
+              disabled={isLoading}
+            />
+            <div className="rounded-3xl bg-neutral-100 p-5 text-center text-neutral-800 shadow-lg mt-12">
+              <p className="text-xs uppercase tracking-[0.35em] text-black/60">
+                New on Vuola?
+              </p>
+              <p className="mt-2 text-sm text-black/80">
+                Create an account to unlock exclusive experiences tailored for you.
+              </p>
+              <button
+                type="button"
+                onClick={onToggleRegister}
+                className="mt-4 inline-flex items-center justify-center rounded-full bg-white px-6 py-2 text-sm font-semibold text-neutral-900 shadow-md transition hover:bg-white/90"
+              >
+                Create an account
+              </button>
+            </div>
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );
 
-  const footerContent = (
-    <div className="mt-4 flex flex-col gap-4">
-      <hr className="border-neutral-200" />
-      <Button
-        outline
-        label="Continue with Google"
-        icon={FcGoogle}
-        onClick={handleGoogleLogin}
-        disabled={isLoading}
-      />
-      <div className="rounded-3xl bg-gradient-to-br from-neutral-900 via-neutral-800 to-black p-5 text-center text-white shadow-lg">
-        <p className="text-xs uppercase tracking-[0.35em] text-white/60">New on Vuola?</p>
-        <p className="mt-2 text-sm text-white/80">
-          Create an account to unlock exclusive experiences tailored for you.
-        </p>
-        <button
-          type="button"
-          onClick={onToggleRegister}
-          className="mt-4 inline-flex items-center justify-center rounded-full bg-white px-6 py-2 text-sm font-semibold text-neutral-900 shadow-md transition hover:bg-white/90"
-        >
-          Create an account
-        </button>
-      </div>
-    </div>
+  const footerContent =
+    step === 'altOptions'
+      ? undefined
+      : (
+        <div className="mt-4 flex flex-col gap-4">
+          <Button
+            outline
+            label="Use other options"
+            onClick={() => setStep('altOptions')}
+            disabled={isLoading}
+          />
+        </div>
   );
 
   return (
     <>
-      <Modal
+    <Modal
         disabled={isLoading}
         isOpen={loginModal.isOpen}
         title="Sign in"
-        actionLabel={step === 'form' ? 'Sign in' : 'Continue'}
+        // When we're in altOptions, hide the primary button by sending an empty label
+        actionLabel={step === 'altOptions' ? '' : step === 'form' ? 'Sign in' : 'Continue'}
         onClose={loginModal.onClose}
-        onSubmit={handleSubmit(onSubmit)}
+        // No-op on altOptions (primary button will be hidden anyway)
+        onSubmit={step === 'altOptions' ? () => {} : handleSubmit(onSubmit)}
         body={bodyContent}
         footer={footerContent}
         className=""
@@ -411,6 +475,7 @@ const LoginModal = () => {
         secondaryActionLabel={step === 'form' ? 'Back' : undefined}
         closeOnSubmit={false}
       />
+
       <ForgetPasswordModal />
     </>
   );
