@@ -1,7 +1,8 @@
 'use client';
 
+import React from 'react';
 import Image from 'next/image';
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import useCountries from '@/app/(marketplace)/hooks/useCountries';
 import { PiShareFat } from "react-icons/pi";
 import { SafeUser } from '@/app/(marketplace)/types';
@@ -40,7 +41,121 @@ const ListingHead: React.FC<ListingHeadProps> = ({
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [imageGallery, setImageGallery] = useState<string[]>([]);
   const [showSharePopup, setShowSharePopup] = useState(false);
+
+  const lastDragDelta = useRef(0);
+
+  const dragStartX = useRef(0);
+  const scrollStartX = useRef(0);
+  const lastClientX = useRef(0);
+
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const hasDraggedOnce = useRef(false);
+
   const [hasInteractedGallery, setHasInteractedGallery] = useState(false);
+
+    const dragState = useRef({
+      pointerId: null as number | null,
+      startX: 0,
+      scrollStart: 0,
+      hasMoved: false,
+    });
+
+  const handleDragStart = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!scrollerRef.current || hasDraggedOnce.current) return;
+
+    setIsDragging(true);
+    setHasInteractedGallery(true); // hide helper once user interacts
+
+    dragStartX.current = e.clientX;
+    scrollStartX.current = scrollerRef.current.scrollLeft;
+    lastClientX.current = e.clientX;
+
+    // Avoid image dragging / text selection
+    e.preventDefault();
+  };
+
+  const handleDragMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDragging || !scrollerRef.current) return;
+
+    e.preventDefault();
+    const dx = e.clientX - dragStartX.current;
+
+    // small deadzone to avoid micro-jitter
+    if (Math.abs(dx) < 3) return;
+
+    scrollerRef.current.scrollLeft = scrollStartX.current - dx;
+    lastClientX.current = e.clientX;
+  };
+
+  const handleDragEnd = () => {
+    if (!isDragging || !scrollerRef.current) return;
+
+    setIsDragging(false);
+
+    // subtle inertial finish
+    const dx = lastClientX.current - dragStartX.current;
+    scrollerRef.current.scrollLeft -= dx * 0.2;
+
+    hasDraggedOnce.current = true;
+  };
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+      // Only left mouse / primary pointer
+      if (e.button !== 0) return;
+      const scroller = scrollerRef.current;
+      if (!scroller) return;
+
+      dragState.current = {
+        pointerId: e.pointerId,
+        startX: e.clientX,
+        scrollStart: scroller.scrollLeft,
+        hasMoved: false,
+      };
+
+      setIsDragging(false);
+      (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+    };
+
+    const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+      const scroller = scrollerRef.current;
+      if (!scroller) return;
+
+      const state = dragState.current;
+      if (state.pointerId !== e.pointerId) return;
+
+      const deltaX = e.clientX - state.startX;
+
+      // small threshold to start dragging
+      if (!state.hasMoved && Math.abs(deltaX) > 4) {
+        state.hasMoved = true;
+        setIsDragging(true);
+      }
+
+      if (state.hasMoved) {
+        e.preventDefault();
+        scroller.scrollLeft = state.scrollStart - deltaX;
+      }
+    };
+
+    const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+      const state = dragState.current;
+      if (state.pointerId !== e.pointerId) return;
+
+      (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
+
+      if (state.hasMoved) {
+        hasDraggedOnce.current = true;
+      }
+
+      dragState.current = {
+        pointerId: null,
+        startX: 0,
+        scrollStart: 0,
+        hasMoved: false,
+      };
+      setIsDragging(false);
+    };
 
   const { primaryImage, firstGridImages, extraImageGroups } = useMemo(() => {
     if (!imageGallery.length) {
@@ -50,6 +165,7 @@ const ListingHead: React.FC<ListingHeadProps> = ({
         extraImageGroups: [] as string[][],
       };
     }
+
 
   const primary = imageGallery[0];
   const secondary = imageGallery.slice(1);
@@ -184,7 +300,7 @@ const ListingHead: React.FC<ListingHeadProps> = ({
   return (
     <>
     <div className='flex flex-col md:pt-8 px-4'>
-      <div className="flex items-center gap-3 mb-2">
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-3 mb-2">
         <button
           type="button"
           onClick={handleBack}
@@ -237,33 +353,50 @@ const ListingHead: React.FC<ListingHeadProps> = ({
       </div>
       </div>
 
-     {/* 🔹 Horizontally scrollable media strip (hero height) */}
+      {/* 🔹 Horizontally scrollable media strip (hero height) */}
             <div className="w-full rounded-xl relative mt-4">
+
+              {/* One-time drag hint */}
+              {!hasInteractedGallery && imageGallery.length > 3 && (
+                <div className="pointer-events-none absolute inset-x-0 bottom-4 z-20 flex justify-center">
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    className="inline-flex items-center gap-2 rounded-full bg-black/55 px-4 py-2 text-xs font-medium text-white backdrop-blur-sm shadow-md"
+                  >
+                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-white/40 text-[10px]">
+                      ⇆
+                    </span>
+                    <span>Drag to explore all photos</span>
+                  </motion.div>
+                </div>
+              )}
+
         {/* Top-right actions */}
         <div className="absolute top-3 right-4 z-20 flex items-center gap-1 pointer-events-auto">
-  <HeartButton listingId={id} currentUser={currentUser} inline />
+          <HeartButton listingId={id} currentUser={currentUser} inline />
 
-  <button
-    onClick={() => {
-      navigator.clipboard.writeText(window.location.href);
-      setShowSharePopup(true);
-      setTimeout(() => setShowSharePopup(false), 2500);
-    }}
-    aria-label="Share"
-    className="
-      mt-2
-      p-2 rounded-full
-      border border-white/30 hover:border-white
-      bg-white/10 backdrop-blur-sm
-      text-white
-      transition
-      flex items-center justify-center
-    "
-  >
-    <PiShareFat size={18} />
-  </button>
-</div>
-
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(window.location.href);
+              setShowSharePopup(true);
+              setTimeout(() => setShowSharePopup(false), 2500);
+            }}
+            aria-label="Share"
+            className="
+              mt-2
+              p-2 rounded-full
+              border border-white/30 hover:border-white
+              bg-white/10 backdrop-blur-sm
+              text-white
+              transition
+              flex items-center justify-center
+            "
+          >
+            <PiShareFat size={18} />
+          </button>
+        </div>
 
         {/* 🎥 Pure video cover case */}
         {videoSrc && imageGallery.length === 0 && (
@@ -304,25 +437,39 @@ const ListingHead: React.FC<ListingHeadProps> = ({
         {/* 🎥 Video + images OR multiple images → horizontal scroller */}
         {(!hasSingleImage || videoSrc) && (
           <div
+            ref={scrollerRef}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
+            onScroll={() => {
+              if (!hasInteractedGallery) setHasInteractedGallery(true);
+            }}
+            onWheel={() => {
+              if (!hasInteractedGallery) setHasInteractedGallery(true);
+            }}
+            onClickCapture={(e) => {
+              // prevent accidental image clicks right after a drag
+              if (isDragging) e.preventDefault();
+            }}
+            onDragStart={(e) => e.preventDefault()}
             className="
-              relative
-              flex
-              w-full
-              h-[70vh]
+              relative flex w-full h-[70vh]
               overflow-x-auto overflow-y-hidden
               rounded-2xl
-              scroll-smooth
-              snap-x snap-mandatory
               touch-pan-x
-              cursor-grab active:cursor-grabbing
               scrollbar-thin
+              select-none
+              gap-2
             "
+            style={{
+              cursor: isDragging ? 'grabbing' : hasDraggedOnce.current ? 'auto' : 'grab',
+            }}
           >
             {(() => {
               const primaryImage = imageGallery[0];
               const secondaryImages = imageGallery.slice(1);
 
-              // slice secondary images into chunks of 4 for 2x2 grids
               const gridSlides: string[][] = [];
               for (let i = 0; i < secondaryImages.length; i += 4) {
                 gridSlides.push(secondaryImages.slice(i, i + 4));
@@ -330,13 +477,14 @@ const ListingHead: React.FC<ListingHeadProps> = ({
 
               return (
                 <>
-                  {/* First slide: video or cover + 2x2 grid */}
-                  <div className="flex min-w-full snap-start gap-2">
-                    <div className="relative flex-1 h-full group">
+                  {/* First slide: video or cover + grid */}
+                  <div className="flex min-w-full flex-none gap-2 flex-col md:flex-row">
+                    {/* Primary media — full width on mobile, left column on md+ */}
+                    <div className="relative w-full h-full md:flex-1 group overflow-hidden rounded-2xl">
                       {videoSrc ? (
                         <video
                           src={videoSrc}
-                          className="w-full h-full object-cover rounded-2xl"
+                          className="w-full h-full object-cover"
                           autoPlay
                           muted
                           loop
@@ -352,48 +500,52 @@ const ListingHead: React.FC<ListingHeadProps> = ({
                               src={primaryImage}
                               alt="Main cover"
                               fill
-                              className="object-cover rounded-2xl"
+                              className="object-cover"
                               sizes="(max-width: 768px) 100vw, 60vw"
                               priority
                             />
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-opacity group-hover:opacity-100">
-                              <span className="p-8 w-10 h-10 flex items-center justify-center text-[10px] font-semibold uppercase tracking-wide text-white backdrop-blur-sm rounded-full bg-black/40">
-                                TAP
-                              </span>
-                            </div>
                           </div>
                         )
                       )}
                     </div>
 
-                    {/* Right 2x2 grid for first 4 secondary images */}
+                    {/* Right grid – stylish mobile strip, 2x2 on md+ */}
+                    {/* Right grid – 2 images on mobile, 4 in a 2x2 on md+ */}
                     {gridSlides[0] && (
-                      <div className="grid flex-1 grid-cols-2 grid-rows-2 gap-2 h-full">
+                      <div
+                        className="
+                          w-full md:flex-1
+                          grid gap-2
+                          grid-cols-2 grid-rows-1
+                          h-[18vh] md:h-full
+                          md:grid-rows-2
+                        "
+                      >
                         {gridSlides[0].map((src, index) => (
                           <div
                             key={src + index}
-                            className="relative w-full h-full cursor-pointer group"
+                            className={`
+                              relative w-full h-full cursor-pointer group overflow-hidden rounded-xl
+                              ${index >= 2 ? 'hidden md:block' : ''}
+                            `}
                             onClick={() => handleMediaClick(src)}
                           >
                             <Image
                               src={src}
                               alt={`gallery-${index}`}
                               fill
-                              className="object-cover rounded-xl"
-                              sizes="(max-width: 768px) 100vw, 40vw"
+                              className="object-cover select-none"
+                              sizes="(max-width: 768px) 50vw, 40vw"
                             />
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/15 opacity-0 transition-opacity group-hover:opacity-100">
-                              <span className="p-8 w-10 h-10 flex items-center justify-center text-[10px] font-semibold uppercase tracking-wide text-white backdrop-blur-sm rounded-full bg-black/40">
-                                TAP
-                              </span>
-                            </div>
+                            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                           </div>
                         ))}
                       </div>
                     )}
+
                   </div>
 
-                  {/* Extra slides: handle last single image as full-cover */}
+                  {/* Extra slides */}
                   {gridSlides.slice(1).map((slideImages, slideIndex) => {
                     const isSingle = slideImages.length === 1;
                     const slideKey = `slide-${slideIndex}`;
@@ -403,7 +555,7 @@ const ListingHead: React.FC<ListingHeadProps> = ({
                       return (
                         <div
                           key={slideKey}
-                          className="min-w-full snap-start h-full flex px-2"
+                          className="min-w-full h-[70vh] flex flex-none px-1"
                         >
                           <div
                             className="relative w-full h-full cursor-pointer group rounded-2xl overflow-hidden"
@@ -416,51 +568,47 @@ const ListingHead: React.FC<ListingHeadProps> = ({
                               className="object-cover"
                               sizes="100vw"
                             />
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-opacity group-hover:opacity-100">
-                              <span className="p-8 w-10 h-10 flex items-center justify-center text-[10px] font-semibold uppercase tracking-wide text-white backdrop-blur-sm rounded-full bg-black/40">
-                                TAP
-                              </span>
-                            </div>
+                            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                           </div>
                         </div>
                       );
                     }
 
-                    // Default: 2x2 grid for 2–4 images
                     return (
                       <div
                         key={slideKey}
-                        className="min-w-full snap-start grid grid-cols-2 grid-rows-2 gap-2 h-full"
+                        className="
+                          min-w-full flex-none
+                          grid grid-cols-2 grid-rows-2 gap-2
+                          h-[70vh]
+                          px-1
+                        "
                       >
                         {slideImages.map((src, index) => (
                           <div
                             key={src + index}
-                            className="relative w-full h-full cursor-pointer group"
-                                    onClick={() => handleMediaClick(src)}
-                                  >
-                                    <Image
-                                      src={src}
-                                      alt={`gallery-extra-${slideIndex}-${index}`}
-                                      fill
-                                      className="object-cover rounded-xl"
-                                      sizes="(max-width: 768px) 100vw, 50vw"
-                                    />
-                                    <div className="absolute inset-0 flex items-center justify-center bg-black/15 opacity-0 transition-opacity group-hover:opacity-100">
-                                      <span className="p-8 w-10 h-10 flex items-center justify-center text-[10px] font-semibold uppercase tracking-wide text-white backdrop-blur-sm rounded-full bg-black/40">
-                                        TAP
-                                      </span>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            );
-                          })}
-
+                            className="relative w-full h-full cursor-pointer group overflow-hidden rounded-xl"
+                            onClick={() => handleMediaClick(src)}
+                          >
+                            <Image
+                              src={src}
+                              alt={`gallery-extra-${slideIndex}-${index}`}
+                              fill
+                              className="object-cover select-none"
+                              sizes="(max-width: 768px) 50vw, 50vw"
+                            />
+                            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })}
                 </>
               );
             })()}
           </div>
         )}
+
       </div>
 
 
