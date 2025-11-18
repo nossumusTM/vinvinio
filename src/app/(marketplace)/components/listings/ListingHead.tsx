@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import useCountries from '@/app/(marketplace)/hooks/useCountries';
 import { PiShareFat } from "react-icons/pi";
 import { SafeUser } from '@/app/(marketplace)/types';
@@ -13,6 +13,8 @@ import 'yet-another-react-lightbox/styles.css';
 import { TbShare2 } from 'react-icons/tb';
 import ConfirmPopup from '../ConfirmPopup';
 import { CountrySelectValue } from '../inputs/CountrySelect';
+import { useRouter } from 'next/navigation';
+import { LuArrowLeft } from 'react-icons/lu';
 
 interface ListingHeadProps {
   title: string;
@@ -30,6 +32,7 @@ const ListingHead: React.FC<ListingHeadProps> = ({
   currentUser,
 }) => {
   const { getByValue } = useCountries();
+  const router = useRouter();
   // const location = getByValue(locationValue);
   const location = getByValue(locationValue) as CountrySelectValue | undefined;
 
@@ -37,6 +40,33 @@ const ListingHead: React.FC<ListingHeadProps> = ({
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [imageGallery, setImageGallery] = useState<string[]>([]);
   const [showSharePopup, setShowSharePopup] = useState(false);
+  const [hasInteractedGallery, setHasInteractedGallery] = useState(false);
+
+  const { primaryImage, firstGridImages, extraImageGroups } = useMemo(() => {
+    if (!imageGallery.length) {
+      return {
+        primaryImage: undefined as string | undefined,
+        firstGridImages: [] as string[],
+        extraImageGroups: [] as string[][],
+      };
+    }
+
+  const primary = imageGallery[0];
+  const secondary = imageGallery.slice(1);
+  const firstGrid = secondary.slice(0, 4);
+  const remaining = secondary.slice(4);
+
+  const groups: string[][] = [];
+    for (let i = 0; i < remaining.length; i += 4) {
+      groups.push(remaining.slice(i, i + 4));
+    }
+
+    return {
+      primaryImage: primary,
+      firstGridImages: firstGrid,
+      extraImageGroups: groups,
+    };
+  }, [imageGallery]);
 
   const [reviews, setReviews] = useState<{ 
       rating: number; 
@@ -50,6 +80,8 @@ const ListingHead: React.FC<ListingHeadProps> = ({
   const videoSrc = imageSrc.find(
     (src) => src.endsWith('.mp4') || src.includes('/video/')
   );
+
+  const hasSingleImage = !videoSrc && imageGallery.length === 1;
 
   const handleMediaClick = (src: string) => {
     if (!imageGallery.length) return;
@@ -128,18 +160,47 @@ const ListingHead: React.FC<ListingHeadProps> = ({
     if (reviews.length === 0) return 0;
     const total = reviews.reduce((sum, review) => sum + review.rating, 0);
     return total / reviews.length;
-  }, [reviews]);   
+  }, [reviews]);
+
+  const simplifiedLocation = useMemo(() => {
+    if (!locationValue) return 'Unknown location';
+    const parts = locationValue.split(',').map((p) => p.trim()).filter(Boolean);
+    if (parts.length >= 4) {
+      const [streetNumber, streetName, neighborhood, city] = parts;
+      return `${streetName || streetNumber}${streetNumber ? `, ${streetNumber}` : ''} ${neighborhood || ''} ${city || ''}`.trim();
+    }
+    return locationValue;
+  }, [locationValue]);
+
+  const handleBack = useCallback(() => {
+    router.back();
+  }, [router]);
+
+  const handleScrollToReviews = useCallback(() => {
+    const el = document.getElementById('reviews');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
 
   return (
     <>
     <div className='flex flex-col md:pt-8 px-4'>
-      <Heading title={title} subtitle={''} />
+      <div className="flex items-center gap-3 mb-2">
+        <button
+          type="button"
+          onClick={handleBack}
+          className="mb-2 inline-flex items-center gap-2 rounded-full bg-neutral-50 px-3 py-2 text-sm font-medium text-neutral-700 shadow-sm transition hover:-translate-x-0.5 hover:bg-neutral-100"
+        >
+          <LuArrowLeft className="h-4 w-4" />
+          Back
+        </button>
+        <Heading title={title} subtitle={''} />
+      </div>
       <div className='flex flex-row gap-2 items-center'>
 
       {reviews.length > 0 && (
        <div className="md:col-span-7">
           {/* Overall Rating */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 cursor-pointer" onClick={handleScrollToReviews}>
               {/* SVG Star with partial fill */}
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                   <defs>
@@ -169,124 +230,239 @@ const ListingHead: React.FC<ListingHeadProps> = ({
           {location
             ? 'city' in location
               ? `${location.city}, ${location.label}`
-              : location.label
-            : 'Unknown location'}
+              : location.label ?? simplifiedLocation
+            : simplifiedLocation}
         </span>
         </p>
       </div>
       </div>
 
-      <div className="w-full rounded-xl relative mt-4">
-        <div className="absolute top-5 right-5 z-10 flex gap-4 items-center">
+     {/* 🔹 Horizontally scrollable media strip (hero height) */}
+            <div className="w-full rounded-xl relative mt-4">
+        {/* Top-right actions */}
+        <div className="absolute top-3 right-4 z-20 flex items-center gap-1 pointer-events-auto">
+  <HeartButton listingId={id} currentUser={currentUser} inline />
 
-        <div className='absolute top-0 left-2'>
-        <HeartButton listingId={id} currentUser={currentUser} />
-        </div>
+  <button
+    onClick={() => {
+      navigator.clipboard.writeText(window.location.href);
+      setShowSharePopup(true);
+      setTimeout(() => setShowSharePopup(false), 2500);
+    }}
+    aria-label="Share"
+    className="
+      mt-2
+      p-2 rounded-full
+      border border-white/30 hover:border-white
+      bg-white/10 backdrop-blur-sm
+      text-white
+      transition
+      flex items-center justify-center
+    "
+  >
+    <PiShareFat size={18} />
+  </button>
+</div>
 
-        <div className='absolute top-1 right-10'>
 
-        <button
-          onClick={() => {
-            navigator.clipboard.writeText(window.location.href);
-            setShowSharePopup(true);
-            setTimeout(() => setShowSharePopup(false), 2500);
-          }}
-          aria-label="Share"
-          className="
-            p-2 rounded-full
-            border border-white/30 hover:border-white
-            bg-white/10 backdrop-blur-sm
-            text-white
-            transition
-          "
-        >
-          <PiShareFat size={18} />
-        </button>
-        </div>
-
-        </div>
-
-        {imageSrc.length === 1 && videoSrc ? (
-          <div className="relative w-full h-[80vh] rounded-xl overflow-hidden">
-            {/* Blurred background video */}
+        {/* 🎥 Pure video cover case */}
+        {videoSrc && imageGallery.length === 0 && (
+          <div className="relative w-full h-[70vh] rounded-2xl overflow-hidden">
             <video
               src={videoSrc}
-              className="rounded-xl absolute top-0 left-0 w-full h-full object-cover filter blur-xl scale-110"
+              className="absolute inset-0 w-full h-full object-cover"
               autoPlay
               muted
               loop
               playsInline
-            />  
-            <div className="absolute inset-0 bg-white/30 z-10" />
+            />
+          </div>
+        )}
 
-            {/* Foreground video */}
-            <div className="p-10 relative z-20 flex justify-center items-center h-full">
-              <video
-                src={videoSrc}
-                className="rounded-xl h-full w-auto max-w-full object-contain"
-                autoPlay
-                muted
-                loop
-                playsInline
-              />
+        {/* 🖼 Single image → full cover */}
+        {!videoSrc && hasSingleImage && imageGallery[0] && (
+          <div
+            className="relative w-full h-[70vh] rounded-2xl overflow-hidden cursor-pointer group"
+            onClick={() => handleMediaClick(imageGallery[0])}
+          >
+            <Image
+              src={imageGallery[0]}
+              alt="Cover image"
+              fill
+              className="object-cover"
+              sizes="100vw"
+              priority
+            />
+            <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-opacity group-hover:opacity-100">
+              <span className="p-8 w-10 h-10 flex items-center justify-center text-[10px] font-semibold uppercase tracking-wide text-white backdrop-blur-sm rounded-full bg-black/40">
+                TAP
+              </span>
             </div>
           </div>
-        ) : (
-        // 🖼️ Standard media grid
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 w-full rounded-xl overflow-hidden h-[60vh]">
-          {/* Left: Video or first image */}
-          <div className="relative w-full h-full">
-            {videoSrc ? (
-              <video
-                src={videoSrc}
-                className="w-full h-full object-cover rounded-xl"
-                autoPlay
-                muted
-                loop
-                playsInline
-              />
-            ) : (
-              imageGallery[0] && (
-                <div
-                  className="relative w-full h-full"
-                  onClick={() => handleMediaClick(imageGallery[0])}
-                >
-                  <Image
-                    src={imageGallery[0]}
-                    alt="Main Cover"
-                    fill
-                    className="object-cover rounded-xl"
-                    priority
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                  />
-                </div>
-              )
-            )}
-          </div>
+        )}
 
-          {/* Right: Image collage */}
-          <div className="grid grid-cols-2 grid-rows-2 gap-2 w-full h-full">
-            {imageGallery.slice(1, 5).map((src, index) => (
-              <div
-                key={index}
-                className="relative w-full h-full cursor-pointer"
-                onClick={() => handleMediaClick(src)}
-              >
-                <Image
-                  src={src}
-                  alt={`gallery-${index}`}
-                  fill
-                  className="object-cover rounded-md"
-                  priority
-                  sizes="(max-width: 768px) 100vw, 25vw"
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+        {/* 🎥 Video + images OR multiple images → horizontal scroller */}
+        {(!hasSingleImage || videoSrc) && (
+          <div
+            className="
+              relative
+              flex
+              w-full
+              h-[70vh]
+              overflow-x-auto overflow-y-hidden
+              rounded-2xl
+              scroll-smooth
+              snap-x snap-mandatory
+              touch-pan-x
+              cursor-grab active:cursor-grabbing
+              scrollbar-thin
+            "
+          >
+            {(() => {
+              const primaryImage = imageGallery[0];
+              const secondaryImages = imageGallery.slice(1);
 
+              // slice secondary images into chunks of 4 for 2x2 grids
+              const gridSlides: string[][] = [];
+              for (let i = 0; i < secondaryImages.length; i += 4) {
+                gridSlides.push(secondaryImages.slice(i, i + 4));
+              }
+
+              return (
+                <>
+                  {/* First slide: video or cover + 2x2 grid */}
+                  <div className="flex min-w-full snap-start gap-2">
+                    <div className="relative flex-1 h-full group">
+                      {videoSrc ? (
+                        <video
+                          src={videoSrc}
+                          className="w-full h-full object-cover rounded-2xl"
+                          autoPlay
+                          muted
+                          loop
+                          playsInline
+                        />
+                      ) : (
+                        primaryImage && (
+                          <div
+                            className="relative w-full h-full cursor-pointer"
+                            onClick={() => handleMediaClick(primaryImage)}
+                          >
+                            <Image
+                              src={primaryImage}
+                              alt="Main cover"
+                              fill
+                              className="object-cover rounded-2xl"
+                              sizes="(max-width: 768px) 100vw, 60vw"
+                              priority
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-opacity group-hover:opacity-100">
+                              <span className="p-8 w-10 h-10 flex items-center justify-center text-[10px] font-semibold uppercase tracking-wide text-white backdrop-blur-sm rounded-full bg-black/40">
+                                TAP
+                              </span>
+                            </div>
+                          </div>
+                        )
+                      )}
+                    </div>
+
+                    {/* Right 2x2 grid for first 4 secondary images */}
+                    {gridSlides[0] && (
+                      <div className="grid flex-1 grid-cols-2 grid-rows-2 gap-2 h-full">
+                        {gridSlides[0].map((src, index) => (
+                          <div
+                            key={src + index}
+                            className="relative w-full h-full cursor-pointer group"
+                            onClick={() => handleMediaClick(src)}
+                          >
+                            <Image
+                              src={src}
+                              alt={`gallery-${index}`}
+                              fill
+                              className="object-cover rounded-xl"
+                              sizes="(max-width: 768px) 100vw, 40vw"
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/15 opacity-0 transition-opacity group-hover:opacity-100">
+                              <span className="p-8 w-10 h-10 flex items-center justify-center text-[10px] font-semibold uppercase tracking-wide text-white backdrop-blur-sm rounded-full bg-black/40">
+                                TAP
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Extra slides: handle last single image as full-cover */}
+                  {gridSlides.slice(1).map((slideImages, slideIndex) => {
+                    const isSingle = slideImages.length === 1;
+                    const slideKey = `slide-${slideIndex}`;
+
+                    if (isSingle) {
+                      const src = slideImages[0];
+                      return (
+                        <div
+                          key={slideKey}
+                          className="min-w-full snap-start h-full flex px-2"
+                        >
+                          <div
+                            className="relative w-full h-full cursor-pointer group rounded-2xl overflow-hidden"
+                            onClick={() => handleMediaClick(src)}
+                          >
+                            <Image
+                              src={src}
+                              alt={`gallery-extra-full-${slideIndex}`}
+                              fill
+                              className="object-cover"
+                              sizes="100vw"
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-opacity group-hover:opacity-100">
+                              <span className="p-8 w-10 h-10 flex items-center justify-center text-[10px] font-semibold uppercase tracking-wide text-white backdrop-blur-sm rounded-full bg-black/40">
+                                TAP
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    // Default: 2x2 grid for 2–4 images
+                    return (
+                      <div
+                        key={slideKey}
+                        className="min-w-full snap-start grid grid-cols-2 grid-rows-2 gap-2 h-full"
+                      >
+                        {slideImages.map((src, index) => (
+                          <div
+                            key={src + index}
+                            className="relative w-full h-full cursor-pointer group"
+                                    onClick={() => handleMediaClick(src)}
+                                  >
+                                    <Image
+                                      src={src}
+                                      alt={`gallery-extra-${slideIndex}-${index}`}
+                                      fill
+                                      className="object-cover rounded-xl"
+                                      sizes="(max-width: 768px) 100vw, 50vw"
+                                    />
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/15 opacity-0 transition-opacity group-hover:opacity-100">
+                                      <span className="p-8 w-10 h-10 flex items-center justify-center text-[10px] font-semibold uppercase tracking-wide text-white backdrop-blur-sm rounded-full bg-black/40">
+                                        TAP
+                                      </span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })}
+
+                </>
+              );
+            })()}
+          </div>
+        )}
       </div>
+
 
       <AnimatePresence>
         {lightboxOpen && (

@@ -25,6 +25,7 @@ import Heading from '../Heading';
 import Button from '../Button';
 import PhoneNumberInput from '../inputs/PhoneNumberInput';
 import { formatPhoneNumberToE164 } from '@/app/(marketplace)/utils/phone';
+import { HiMiniArrowLeft } from "react-icons/hi2";
 
 type AuthMethod = 'email' | 'phone';
 
@@ -331,7 +332,7 @@ const LoginModal = () => {
             />
             {selectedMethod === 'email' ? (
               <div className="flex flex-row md:flex-col gap-2">
-                <div className='flex flex-row'>
+                <div className='flex flex-row w-full'>
                     <Input
                     id="identifier"
                     label="Email"
@@ -409,9 +410,10 @@ const LoginModal = () => {
               <button
                 type="button"
                 onClick={() => setStep('method')}
-                className="rounded-full px-2 py-1 text-xs text-black transition hover:bg-neutral-100 md:text-sm"
-                  >
-                    ← BACK TO SIGN IN
+                className="inline-flex items-center gap-2 self-start rounded-full bg-neutral-50 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100"
+                    >
+                    <HiMiniArrowLeft />
+                    BACK TO SIGN IN
               </button>
             </div>
 

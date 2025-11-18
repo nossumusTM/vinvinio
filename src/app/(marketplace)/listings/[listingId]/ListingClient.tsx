@@ -133,7 +133,8 @@ const ListingClient: React.FC<ListingClientProps> = ({
         return {
             label: found?.label ?? categoryArray[0] ?? 'General',
             description: found?.description ?? 'No category description provided.',
-            imageSrc: listing.user?.image ?? null // ✅ Use listing.user
+            imageSrc: listing.user?.image ?? null,
+            icon: found?.icon,
         };
         }, [listing.category, listing.user]);
 
@@ -372,7 +373,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                             messenger.openChat(recipient);
                             }
                         }}
-                        className="text-md text-white bg-black hover:bg-neutral-800 p-4 rounded-xl transition font-normal mt-1"
+                        className="text-md text-neutral-900 bg-neutral-50 hover:bg-neutral-100 p-4 rounded-xl transition font-normal mt-1 shadow-sm hover:shadow"
                         >
                         Text @{listing.user?.username?.split(' ')[0] ?? 'Host'}
                     </button>

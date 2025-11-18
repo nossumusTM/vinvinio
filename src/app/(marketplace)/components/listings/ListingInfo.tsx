@@ -34,7 +34,7 @@ interface ListingInfoProps {
     description: string;
     guestCount: number;
     category: {
-        // icon: IconType,
+        icon?: IconType,
         imageSrc: string | null | undefined;
         label: string;
         description: string;
@@ -435,7 +435,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
 
             {category && (
                 <ListingCategory
-                    // icon={category.icon}
+                    icon={category.icon}
                     imageSrc={user?.image}
                     label={category?.label}
                     description={category?.description}
@@ -450,7 +450,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                 (Array.isArray(activityForms) && activityForms.length > 0) ||
                 (Array.isArray(seoKeywords) && seoKeywords.length > 0)
               ) && (
-                <section className="mt-6">
+                <section className="p-5 mt-6">
                   <div className="rounded-2xl bg-white shadow-lg p-6 space-y-5">
                     <h3 className="text-lg font-semibold text-neutral-900 mb-2">
                       Experience details

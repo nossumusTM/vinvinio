@@ -39,10 +39,10 @@ const methodOptions: Array<{ key: RecoveryMethod; title: string; description: st
 
 const flowActionLabels: Record<FlowState, string> = {
   method: 'Continue',
-  'email-request': 'Send reset link',
-  'email-token': 'Update password',
-  'phone-request': 'Send code',
-  'phone-verify': 'Update password',
+  'email-request': 'Send',
+  'email-token': 'Update',
+  'phone-request': 'Send',
+  'phone-verify': 'Update',
 };
  
  interface ForgetPasswordModalProps {
@@ -131,7 +131,7 @@ const ForgetPasswordModal: React.FC<ForgetPasswordModalProps> = () => {
 
    const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     if (flow === 'method') {
-      setFlow(selectedMethod === 'email' ? 'email-request' : 'phone-request');
+      toast.error('Choose email or phone to continue.');
       return;
     }
 
@@ -298,43 +298,51 @@ const ForgetPasswordModal: React.FC<ForgetPasswordModalProps> = () => {
             transition={{ duration: 0.25, ease: 'easeOut' }}
             className="flex flex-col gap-5"
           >
-          <div className="flex flex-col gap-5">
-            <Heading
-              title="Forgot your password?"
-              subtitle="Choose how you'd like to recover your account."
-            />
-            <div className="grid gap-3 sm:grid-cols-2">
-              {methodOptions.map((option) => {
-                const active = selectedMethod === option.key;
-                return (
-                  <button
-                    key={option.key}
-                    type="button"
-                    onClick={() => setSelectedMethod(option.key)}
-                    className={`flex h-full flex-col gap-2 rounded-2xl border p-4 text-left transition ${
-                      active
-                        ? 'bg-neutral-100 text-neutral-900 shadow-lg shadow-neutral-900/20'
-                        : 'bg-white text-neutral-800 shadow-sm hover:border-neutral-400 hover:shadow-md'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`aspect-square flex h-10 w-10 items-center justify-center rounded-xl text-base font-medium ${
-                          active ? 'bg-white/20 text-neutral-800' : 'bg-neutral-100 text-neutral-800'
-                        }`}
-                      >
-                        {option.icon}
-                      </span>
-                      <div>
-                        <p className="text-sm font-semibold uppercase tracking-wide">{option.title}</p>
-                        <p className="text-xs text-neutral-500">{option.description}</p>
+            <div className="flex flex-col gap-5">
+              <Heading
+                title="Forgot your password?"
+                subtitle="Choose how you'd like to recover your account."
+              />
+              <div className="grid gap-3 sm:grid-cols-2">
+                {methodOptions.map((option) => {
+                  const active = selectedMethod === option.key;
+                  return (
+                    <button
+                      key={option.key}
+                      type="button"
+                      onClick={() => {
+                        const key = option.key as RecoveryMethod;
+                        setSelectedMethod(key);
+                        setFlow(key === 'email' ? 'email-request' : 'phone-request');
+                      }}
+                      className={`flex h-full flex-col gap-2 rounded-2xl border p-4 text-left transition ${
+                        active
+                          ? 'bg-neutral-100 text-neutral-900 shadow-lg shadow-neutral-900/20'
+                          : 'bg-white text-neutral-800 shadow-sm hover:border-neutral-400 hover:shadow-md'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`aspect-square flex h-10 w-10 items-center justify-center rounded-xl text-base font-medium ${
+                            active ? 'bg-white text-neutral-800' : 'bg-neutral-100 text-neutral-800'
+                          }`}
+                        >
+                          {option.icon}
+                        </span>
+                        <div>
+                          <p className="text-sm font-semibold uppercase tracking-wide">
+                            {option.title}
+                          </p>
+                          <p className="text-xs text-neutral-500">
+                            {option.description}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </button>
-                );
-              })}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
           </motion.div>
         )}
 

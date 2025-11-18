@@ -1217,10 +1217,10 @@ const coverImage = useMemo(() => {
                 aria-label="Toggle role"
                 className={twMerge(
                   'relative inline-flex h-8 w-[64px] items-center rounded-full p-[3px]',
-                  'transition-colors duration-300 focus:outline-none overflow-visible bg-[#2200ffff]', // allow pulse to extend
+                  'transition-colors duration-300 focus:outline-none overflow-visible', // allow pulse to extend
                   isHostView
-                    ? 'bg-[#2200ffff] shadow-md-[#0000ff]'
-                    : 'bg-neutral-200 shadow-md-[#0000ff]'
+                    ? 'bg-neutral-50 shadow-md'
+                    : 'bg-neutral-100 shadow-lg'
                 )}
               >
                 {/* BORDER PULSE — remounts on each state to retrigger animation */}

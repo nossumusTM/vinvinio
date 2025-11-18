@@ -18,17 +18,17 @@ const CategoryView: React.FC<CategoryViewProps> = ({
     return (
         <div className="flex flex-col gap-6 p-5">
             <div className="shadow-md rounded-xl px-10 py-5 flex flex-row items-center gap-4">
-                {imageSrc ? (
-                    <div className="h-auto w-[50px] rounded-full overflow-hidden bg-neutral-200">
+                {Icon ? (
+                    <div className="aspect-square text-neutral-700 text-2xl flex items-center justify-center h-12 w-12 rounded-full bg-neutral-50 shadow-inner">
+                        <Icon size={30} />
+                    </div>
+                ) : imageSrc ? (
+                    <div className="h-12 w-12 rounded-full overflow-hidden bg-neutral-200">
                         <img
                             src={imageSrc}
                             alt="Avatar"
                             className="object-cover w-full h-full"
                         />
-                    </div>
-                ) : Icon ? (
-                    <div className="text-neutral-600 text-2xl">
-                        <Icon size={30} />
                     </div>
                 ) : null}
                 <div className="flex flex-col">

@@ -356,7 +356,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
       <Avatar src={currentUser.image} size={30}/>
     ) : (
       <div
-        className="w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-sm bg-black"
+        className="w-8 h-8 rounded-full flex items-center justify-center text-neutral-900 font-semibold text-sm shadow-md"
         // style={{
         //   background: 'linear-gradient(135deg, #08e2ff, #04aaff, #0066ff, #0066ff, #ffffff)',
         // }}

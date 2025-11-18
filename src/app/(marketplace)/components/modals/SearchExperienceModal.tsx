@@ -125,6 +125,8 @@ const SearchExperienceModal = () => {
     // modal.onClose();
     setStep(STEPS.LOCATION);
     router.push(qs.stringifyUrl({ url: '/', query: updatedQuery }, { skipNull: true }));
+
+    modal.onClose();
   }, [dateRange.endDate, dateRange.startDate, guestCount, location, modal, onNext, params, router, setLocation, step]);
 
   const actionLabel = useMemo(() => {
@@ -285,7 +287,6 @@ const SearchExperienceModal = () => {
       secondaryAction={step === STEPS.LOCATION ? undefined : onBack}
       title="Craft your search"
       className="bg-transparent"
-      closeOnSubmit={step === STEPS.GUESTS}
       body={
         <div className="relative">
           <AnimatePresence mode="wait" initial={false}>

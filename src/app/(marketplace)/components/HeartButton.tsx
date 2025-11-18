@@ -10,11 +10,13 @@ import ClientOnly from "./ClientOnly";
 interface HeartButtonProps {
     listingId: string
     currentUser?: SafeUser | null
+    inline?: boolean;
 }
 
 const HeartButton: React.FC<HeartButtonProps> = ({
     listingId,
-    currentUser
+    currentUser,
+    inline = false,
 }) => {
     const { hasFavorited, toggleFavorite } = useFavorite({
         listingId,
@@ -52,7 +54,7 @@ const HeartButton: React.FC<HeartButtonProps> = ({
     return (
         <div
             onClick={toggleFavorite}
-            className="absolute top-1 right-1 z-30 cursor-pointer"
+            className={`${inline ? 'static relative' : 'absolute top-3 right-3'} top-1 right-1 z-30 cursor-pointer"`}
         >
             <div
             className={`

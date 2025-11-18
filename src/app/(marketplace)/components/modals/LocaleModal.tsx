@@ -66,10 +66,10 @@ const LocaleModal = () => {
         type="button"
         onClick={() => handleLanguageSelect(option)}
         className={clsx(
-          'flex items-center gap-3 rounded-2xl border px-4 py-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-black/30',
+          'flex items-center gap-3 rounded-2xl border px-4 py-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none',
           isSelected
-            ? 'bg-black text-white shadow-lg'
-            : 'border-black/10 bg-white/90 backdrop-blur'
+            ? 'bg-neutral-100 text-neutral-900 shadow-lg'
+            : 'bg-white/90 backdrop-blur'
         )}
       >
         <Image
@@ -80,10 +80,10 @@ const LocaleModal = () => {
           className="h-5 w-7 rounded object-cover"
         />
         <div className="flex flex-col">
-          <span className={clsx('text-sm font-semibold', isSelected ? 'text-white' : 'text-neutral-900')}>
+          <span className={clsx('text-sm font-semibold', isSelected ? 'text-black/70' : 'text-neutral-900')}>
             {option.language}
           </span>
-          <span className={clsx('text-xs uppercase tracking-wide', isSelected ? 'text-white/70' : 'text-neutral-500')}>
+          <span className={clsx('text-xs uppercase tracking-wide', isSelected ? 'text-black/70' : 'text-neutral-500')}>
             {option.region}
           </span>
         </div>
@@ -100,10 +100,10 @@ const LocaleModal = () => {
         type="button"
         onClick={() => handleCurrencySelect(option)}
         className={clsx(
-          'flex items-center gap-3 rounded-2xl border px-4 py-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-black/30',
+          'flex items-center gap-3 rounded-2xl border px-4 py-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none',
           isSelected
-            ? 'border-black/60 bg-black text-white shadow-lg'
-            : 'border-black/10 bg-white/90 backdrop-blur'
+            ? 'bg-neutral-100 text-neutral-900 shadow-lg'
+            : 'bg-white/90 backdrop-blur'
         )}
       >
         <Image
@@ -114,11 +114,11 @@ const LocaleModal = () => {
           className="h-5 w-7 rounded object-cover"
         />
         <div className="flex flex-col">
-          <span className={clsx('text-sm font-semibold', isSelected ? 'text-white' : 'text-neutral-900')}>
+          <span className={clsx('text-sm font-semibold', isSelected ? 'text-neutral-900' : 'text-neutral-900')}>
             {option.currency}
           </span>
 
-          <span className={clsx('text-xs uppercase tracking-wide', isSelected ? 'text-white/70' : 'text-neutral-500')}>
+          <span className={clsx('text-xs uppercase tracking-wide', isSelected ? 'text-black/70' : 'text-neutral-500')}>
             {option.region} · {option.symbol}
           </span>
 
@@ -136,7 +136,7 @@ const LocaleModal = () => {
           className={clsx(
             'rounded-full px-6 py-2 text-sm font-semibold transition',
             activeTab === 'language'
-              ? 'bg-black text-white shadow-lg'
+              ? 'bg-neutral-100 text-neutral-900 shadow-lg'
               : 'bg-white/80 text-neutral-700 ring-1 ring-black/10'
           )}
         >
@@ -148,7 +148,7 @@ const LocaleModal = () => {
           className={clsx(
             'rounded-full px-6 py-2 text-sm font-semibold transition',
             activeTab === 'currency'
-              ? 'bg-black text-white shadow-lg'
+              ? 'bg-neutral-100 text-neutral-900 shadow-lg'
               : 'bg-white/80 text-neutral-700 ring-1 ring-black/10'
           )}
         >

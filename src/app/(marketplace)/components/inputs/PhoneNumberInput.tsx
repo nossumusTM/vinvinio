@@ -72,7 +72,7 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
       <label htmlFor={inputId} className="text-sm font-medium text-neutral-700">
         {label}
       </label>
-      <div className="flex flex-row md:flex-col lg:flex-col gap-2 sm:flex-row">
+      <div className="flex flex-row gap-2 sm:flex-row">
        <div className="relative w-full sm:max-w-[180px]">
         {selectedCountry && (
           <div className="pointer-events-none absolute left-3 top-1/2 flex -translate-y-1/2 items-center">
@@ -88,7 +88,7 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
 
         <select
           className={twMerge(
-            'w-full appearance-none rounded-xl border border-neutral-200 bg-white py-3 pl-10 pr-10 text-sm font-medium text-neutral-800 shadow-sm transition focus:border-black focus:outline-none focus:ring-1 focus:ring-black',
+            'w-full appearance-none uppercase rounded-xl border border-neutral-200 bg-white py-3 pl-10 pr-10 text-sm font-medium text-neutral-800 shadow-sm transition focus:border-black focus:outline-none focus:ring-1 focus:ring-black',
             disabled ? 'opacity-60' : ''
           )}
           value={selectedCountry?.value ?? ''}
@@ -112,7 +112,7 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
           inputMode="tel"
           autoComplete="tel"
           className={twMerge(
-            'w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-base font-light text-neutral-900 shadow-sm transition focus:border-black focus:outline-none focus:ring-1 focus:ring-black',
+            'w-full rounded-xl border border-neutral-200 bg-white px-4 py-2 text-base font-light text-neutral-900 shadow-sm transition focus:border-black focus:outline-none focus:ring-1 focus:ring-black',
             disabled ? 'opacity-60' : '',
             error ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-400/70' : ''
           )}
