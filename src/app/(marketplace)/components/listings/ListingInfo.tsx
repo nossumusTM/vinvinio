@@ -442,6 +442,17 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                 />
             )}
 
+            <hr className="mb-5 mt-2"/>
+
+            <div className="ml-0">
+                <div className="ml-4">
+                    <Heading title="About experience" />
+                </div>
+                <div className="mr-2 px-4 py-5 text-md md:p-5 text-neutral-600 text-justify whitespace-pre-line">
+                {description}
+                </div>
+            </div>
+
             {/* Experience meta (restyled, single-column with soft shadow) */}
               {(
                 (Array.isArray(groupStyles) && groupStyles.length > 0) ||
@@ -450,9 +461,9 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                 (Array.isArray(activityForms) && activityForms.length > 0) ||
                 (Array.isArray(seoKeywords) && seoKeywords.length > 0)
               ) && (
-                <section className="p-5 mt-6">
-                  <div className="rounded-2xl bg-white shadow-lg p-6 space-y-5">
-                    <h3 className="text-lg font-semibold text-neutral-900 mb-2">
+                <section className="p-2 mt-6">
+                  <div className="rounded-2xl bg-white p-2 space-y-5">
+                    <h3 className="text-lg font-semibold text-neutral-900 mb-2 w-fit border-b">
                       Experience details
                     </h3>
 
@@ -546,17 +557,6 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                   </div>
                 </section>
               )}
-
-            <hr className="mb-5 mt-8"/>
-
-            <div className="ml-0">
-                <div className="ml-4">
-                    <Heading title="About experience" />
-                </div>
-                <div className="mr-2 px-4 py-5 text-md md:p-5 text-neutral-600 text-justify whitespace-pre-line">
-                {description}
-                </div>
-            </div>
             
             <hr className="mb-2"/>
 

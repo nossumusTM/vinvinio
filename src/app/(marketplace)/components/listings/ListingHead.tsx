@@ -44,13 +44,18 @@ const ListingHead: React.FC<ListingHeadProps> = ({
 
   const lastDragDelta = useRef(0);
 
-  const dragStartX = useRef(0);
-  const scrollStartX = useRef(0);
+
   const lastClientX = useRef(0);
 
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const hasDraggedOnce = useRef(false);
+
+  const dragStartX = useRef(0);
+  const scrollStartX = useRef(0);
+  const dragMoved = useRef(false);
+  const suppressClick = useRef(false);
+  const suppressTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [hasInteractedGallery, setHasInteractedGallery] = useState(false);
 
@@ -60,6 +65,64 @@ const ListingHead: React.FC<ListingHeadProps> = ({
       scrollStart: 0,
       hasMoved: false,
     });
+
+    const lightboxControllerRef = useRef<any>(null);
+
+    const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+      if (e.button !== 0) return; // only left click
+      const scroller = scrollerRef.current;
+      if (!scroller) return;
+
+      setIsDragging(true);
+      dragMoved.current = false;
+      dragStartX.current = e.clientX;
+      scrollStartX.current = scroller.scrollLeft;
+
+      if (suppressTimeout.current) {
+        clearTimeout(suppressTimeout.current);
+        suppressTimeout.current = null;
+      }
+    };
+
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!isDragging) return;
+      const scroller = scrollerRef.current;
+      if (!scroller) return;
+
+      const dx = e.clientX - dragStartX.current;
+
+      // small threshold before we treat it as a drag
+      if (!dragMoved.current && Math.abs(dx) < 4) return;
+
+      dragMoved.current = true;
+      e.preventDefault();
+      scroller.scrollLeft = scrollStartX.current - dx;
+    };
+
+    const endDrag = () => {
+      if (!isDragging) return;
+
+      setIsDragging(false);
+
+      if (dragMoved.current) {
+        hasDraggedOnce.current = true;
+        suppressClick.current = true;
+
+        // block click for a short moment so drag doesn't trigger lightbox
+        suppressTimeout.current = setTimeout(() => {
+          suppressClick.current = false;
+        }, 150);
+      }
+    };
+
+    const handleMouseUp = () => {
+      endDrag();
+    };
+
+    const handleMouseLeave = () => {
+      endDrag();
+    };
+
 
   const handleDragStart = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!scrollerRef.current || hasDraggedOnce.current) return;
@@ -166,7 +229,6 @@ const ListingHead: React.FC<ListingHeadProps> = ({
       };
     }
 
-
   const primary = imageGallery[0];
   const secondary = imageGallery.slice(1);
   const firstGrid = secondary.slice(0, 4);
@@ -199,9 +261,39 @@ const ListingHead: React.FC<ListingHeadProps> = ({
 
   const hasSingleImage = !videoSrc && imageGallery.length === 1;
 
+  const [videoOrientation, setVideoOrientation] = useState<'portrait' | 'landscape' | null>(null);
+
+  const handleVideoMetadata = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+    const v = e.currentTarget;
+    if (!v.videoWidth || !v.videoHeight) return;
+
+    if (v.videoHeight > v.videoWidth) {
+      setVideoOrientation('portrait');
+    } else {
+      setVideoOrientation('landscape');
+    }
+  };
+
+  const mediaSlides = useMemo(
+    () => {
+      const slides: { src: string; kind: 'image' | 'video' }[] = [];
+
+      if (videoSrc) {
+        slides.push({ src: videoSrc, kind: 'video' });
+      }
+
+      imageGallery.forEach((src) => {
+        slides.push({ src, kind: 'image' });
+      });
+
+      return slides;
+    },
+    [videoSrc, imageGallery]
+  );
+
   const handleMediaClick = (src: string) => {
-    if (!imageGallery.length) return;
-    const index = imageGallery.findIndex((s) => s === src);
+    if (!mediaSlides.length) return;
+    const index = mediaSlides.findIndex((s) => s.src === src);
     if (index !== -1) {
       setLightboxIndex(index);
       setLightboxOpen(true);
@@ -334,7 +426,7 @@ const ListingHead: React.FC<ListingHeadProps> = ({
                </svg>
 
                {/* Rating and count */}
-              <span className="text-lg text-neutral-700 font-normal">
+              <span className="text-lg text-neutral-700 font-normal hover:border-b border-neutral-800 transition">
                   {averageRating.toFixed(1)} · {reviews.length} review{reviews.length !== 1 ? 's' : ''}
                </span>
           </div>
@@ -354,24 +446,24 @@ const ListingHead: React.FC<ListingHeadProps> = ({
       </div>
 
       {/* 🔹 Horizontally scrollable media strip (hero height) */}
-            <div className="w-full rounded-xl relative mt-4">
+      <div className="w-full rounded-xl relative mt-4">
 
-              {/* One-time drag hint */}
-              {!hasInteractedGallery && imageGallery.length > 3 && (
-                <div className="pointer-events-none absolute inset-x-0 bottom-4 z-20 flex justify-center">
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 8 }}
-                    className="inline-flex items-center gap-2 rounded-full bg-black/55 px-4 py-2 text-xs font-medium text-white backdrop-blur-sm shadow-md"
-                  >
-                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-white/40 text-[10px]">
-                      ⇆
-                    </span>
-                    <span>Drag to explore all photos</span>
-                  </motion.div>
-                </div>
-              )}
+        {/* 🔹 One-time drag hint (with soft looping animation) */}
+        {!hasInteractedGallery && imageGallery.length > 3 && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-4 z-20 flex justify-center">
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: [0.5, 1, 0.5], y: [8, 0, 4] }}
+              transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+              className="inline-flex items-center gap-2 rounded-full bg-black/55 px-4 py-2 text-xs font-medium text-white backdrop-blur-sm shadow-md"
+            >
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-white/40 text-[10px]">
+                ⇆
+              </span>
+              <span>Drag to explore all photos</span>
+            </motion.div>
+          </div>
+        )}
 
         {/* Top-right actions */}
         <div className="absolute top-3 right-4 z-20 flex items-center gap-1 pointer-events-auto">
@@ -400,14 +492,20 @@ const ListingHead: React.FC<ListingHeadProps> = ({
 
         {/* 🎥 Pure video cover case */}
         {videoSrc && imageGallery.length === 0 && (
-          <div className="relative w-full h-[70vh] rounded-2xl overflow-hidden">
+          <div className="relative w-full h-[70vh] rounded-2xl overflow-hidden bg-transparent">
             <video
               src={videoSrc}
-              className="absolute inset-0 w-full h-full object-cover"
+              className={`absolute inset-0 w-full h-full ${
+                videoOrientation === 'portrait'
+                  ? 'object-contain'
+                  : 'object-cover object-center'
+              }`}
               autoPlay
               muted
               loop
               playsInline
+              onLoadedMetadata={handleVideoMetadata}
+              onClick={() => handleMediaClick(videoSrc)}
             />
           </div>
         )}
@@ -435,13 +533,13 @@ const ListingHead: React.FC<ListingHeadProps> = ({
         )}
 
         {/* 🎥 Video + images OR multiple images → horizontal scroller */}
-        {(!hasSingleImage || videoSrc) && (
+        {imageGallery.length > 0 && (!hasSingleImage || videoSrc) && (
           <div
             ref={scrollerRef}
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            onPointerCancel={handlePointerUp}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseLeave}
             onScroll={() => {
               if (!hasInteractedGallery) setHasInteractedGallery(true);
             }}
@@ -449,8 +547,11 @@ const ListingHead: React.FC<ListingHeadProps> = ({
               if (!hasInteractedGallery) setHasInteractedGallery(true);
             }}
             onClickCapture={(e) => {
-              // prevent accidental image clicks right after a drag
-              if (isDragging) e.preventDefault();
+              // prevent clicks right after a drag
+              if (suppressClick.current) {
+                e.preventDefault();
+                e.stopPropagation();
+              }
             }}
             onDragStart={(e) => e.preventDefault()}
             className="
@@ -484,11 +585,17 @@ const ListingHead: React.FC<ListingHeadProps> = ({
                       {videoSrc ? (
                         <video
                           src={videoSrc}
-                          className="w-full h-full object-cover"
+                          className={`w-full h-full rounded-2xl ${
+                            videoOrientation === 'portrait'
+                              ? 'object-cover bg-transparent'
+                              : 'object-cover object-center'
+                          }`}
                           autoPlay
                           muted
                           loop
                           playsInline
+                          onLoadedMetadata={handleVideoMetadata}
+                          onClick={() => handleMediaClick(videoSrc)}
                         />
                       ) : (
                         primaryImage && (
@@ -623,7 +730,7 @@ const ListingHead: React.FC<ListingHeadProps> = ({
             style={{
               position: 'fixed',
               inset: 0,
-              background: 'rgba(0,0,0,0.35)',
+              background: 'rgba(0,0,0,0.05)',
               WebkitBackdropFilter: 'blur(10px)',
               zIndex: 60, // below the lightbox root (we’ll raise the root next)
               pointerEvents: 'none', // clicks go to the lightbox backdrop
@@ -636,34 +743,73 @@ const ListingHead: React.FC<ListingHeadProps> = ({
         open={lightboxOpen}
         close={() => setLightboxOpen(false)}
         index={lightboxIndex}
-        controller={{ closeOnBackdropClick: true }}   // ✅ THIS LINE
-        slides={lightboxSlides}
-        toolbar={{ buttons: [] }}
+        controller={{
+          closeOnBackdropClick: true, // backdrop click still closes
+        }}
+        slides={mediaSlides}
+        toolbar={{ buttons: ["close"] }} // top-right close button
         animation={{ fade: 300, swipe: 450 }}
         styles={{
           container: {
-            backgroundColor: 'transparent', // let our overlay handle tint/blur
+            backgroundColor: "transparent"
           },
         }}
         render={{
+          slide: ({ slide }) => {
+            const typed = slide as { src: string; kind?: "image" | "video" };
+
+            return (
+              // ✅ clicking anywhere on this wrapper (outside image/video) closes
+              <div
+                className="w-full h-full flex items-center justify-center bg-transparent"
+                onClick={() => setLightboxOpen(false)}
+              >
+                {typed.kind === "video" ? (
+                  <video
+                    src={typed.src}
+                    className="max-h-[90vh] max-w-[90vw] object-contain"
+                    controls
+                    autoPlay
+                    muted
+                    // ❗ stop click from bubbling so video controls don't close lightbox
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                ) : (
+                  <img
+                    src={typed.src}
+                    alt=""
+                    className="max-h-[90vh] max-w-[90vw] object-contain"
+                    // ❗ same here, click on image should not close
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                )}
+              </div>
+            );
+          },
           iconPrev: () => (
             <svg width="18" height="18" viewBox="0 0 24 24" className="pointer-events-none">
-              <path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" strokeWidth="2"
-                    strokeLinecap="round" strokeLinejoin="round" />
+              <path
+                d="M15 18l-6-6 6-6"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           ),
           iconNext: () => (
             <svg width="18" height="18" viewBox="0 0 24 24" className="pointer-events-none">
-              <path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2"
-                    strokeLinecap="round" strokeLinejoin="round" />
+              <path
+                d="M9 6l6 6-6 6"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           ),
-          // iconClose: () => (
-          //   <svg width="18" height="18" viewBox="0 0 24 24" className="pointer-events-none">
-          //     <path d="M18 6L6 18M6 6l12 12" fill="none" stroke="currentColor" strokeWidth="2"
-          //           strokeLinecap="round" strokeLinejoin="round" />
-          //   </svg>
-          // ),
         }}
       />
 
@@ -677,7 +823,6 @@ const ListingHead: React.FC<ListingHeadProps> = ({
         .yarl__root button[aria-label="Previous"],
         .yarl__root button[aria-label="Next"],
         .yarl__root button[aria-label="Close"] {
-          border: 1px solid rgba(255, 255, 255, 0.32) !important;
           background: rgba(255, 255, 255, 0.12) !important;
           backdrop-filter: blur(6px);
           border-radius: 9999px !important;
@@ -707,7 +852,6 @@ const ListingHead: React.FC<ListingHeadProps> = ({
         .yarl__root button[aria-label="Previous"]:hover,
         .yarl__root button[aria-label="Next"]:hover,
         .yarl__root button[aria-label="Close"]:hover {
-          border-color: #ffffff !important;
           background: rgba(255, 255, 255, 0.22) !important;
         }
 
