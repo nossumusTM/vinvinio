@@ -1,7 +1,7 @@
 'use client';
 
 import axios from "axios";
-import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef, type ReactNode } from "react";
 
 import qs from 'query-string';
 import { useSearchParams, usePathname } from 'next/navigation';
@@ -22,6 +22,7 @@ import useLoginModal from "@/app/(marketplace)/hooks/useLoginModal";
 import { SafeListing, SafeReservation, SafeUser } from "@/app/(marketplace)/types";
 import { computePricingForGuests } from "@/app/(marketplace)/libs/pricingDisplay";
 import getCurrentUser from "@/app/(marketplace)/actions/getCurrentUser";
+import useCurrencyFormatter from "@/app/(marketplace)/hooks/useCurrencyFormatter";
 
 import Container from "@/app/(marketplace)/components/Container";
 import { categories } from "@/app/(marketplace)/components/navbar/Categories";
@@ -42,6 +43,55 @@ const initialDateRange = {
     key: 'selection'
 };
 
+type PricingTier = { minGuests: number; maxGuests: number; price: number };
+
+type CustomPricingMeta = {
+    basePrice?: number | null;
+    tiers?: PricingTier[] | null;
+    mode?: string | null;
+} | null;
+
+const sanitizeTier = (tier: any): PricingTier | null => {
+    const min = Number(tier?.minGuests);
+    const max = Number(tier?.maxGuests);
+    const price = Number(tier?.price);
+
+    if (!Number.isFinite(min) || !Number.isFinite(max) || !Number.isFinite(price)) {
+        return null;
+    }
+
+    const normalizedMin = Math.max(1, Math.floor(min));
+    const normalizedMax = Math.max(normalizedMin, Math.floor(max));
+    const normalizedPrice = Math.max(0, price);
+
+    return {
+        minGuests: normalizedMin,
+        maxGuests: normalizedMax,
+        price: normalizedPrice,
+    };
+};
+
+const normalizeCustomPricingTiers = (value: unknown): PricingTier[] => {
+    if (!value) return [];
+    if (Array.isArray(value)) {
+        return value.map(sanitizeTier).filter((tier): tier is PricingTier => Boolean(tier));
+    }
+
+    if (typeof value === 'object' && Array.isArray((value as any).tiers)) {
+        return normalizeCustomPricingTiers((value as any).tiers);
+    }
+
+    return [];
+};
+
+const extractCustomPricingMeta = (value: unknown): CustomPricingMeta => {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+        return null;
+    }
+
+    return value as CustomPricingMeta;
+};
+
 interface ListingClientProps {
     reservations?: SafeReservation[];
     listing: SafeListing & {
@@ -59,6 +109,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
     const router = useRouter();
     const params = useSearchParams();
     const pathname = usePathname();
+    const { formatConverted } = useCurrencyFormatter();
 
     const [dateDirty, setDateDirty] = useState(false);
     const [guestsDirty, setGuestsDirty] = useState(false);
@@ -156,44 +207,185 @@ const ListingClient: React.FC<ListingClientProps> = ({
         listing.pricingType === 'group' && listing.groupSize ? listing.groupSize : 1,
     );
 
-    const [reviews, setReviews] = useState<{ 
-        rating: number; 
-        comment: string; 
+    const [reviews, setReviews] = useState<{
+        rating: number;
+        comment: string;
         userName: string;
         userImage?: string;
         createdAt: string;
     }[]>([]);
 
     const messenger = useMessenger();
+    const [useDarkButton, setUseDarkButton] = useState(false);
 
+    const rawCustomPricing = listing.customPricing as unknown;
     const pricingTiers = useMemo(
-        () => (Array.isArray(listing.customPricing) ? listing.customPricing : []),
-        [listing.customPricing]
+        () => normalizeCustomPricingTiers(rawCustomPricing),
+        [rawCustomPricing]
     );
 
-    const perPersonPrice = useMemo(() => {
-        if (listing.pricingType === 'group' && listing.groupPrice) {
-            return listing.groupPrice;
-        }
+    const sortedCustomPricingTiers = useMemo(
+        () => [...pricingTiers].sort((a, b) => a.minGuests - b.minGuests),
+        [pricingTiers]
+    );
 
-        if (listing.pricingType === 'custom' && pricingTiers.length) {
-            const sorted = [...pricingTiers].sort((a, b) => a.minGuests - b.minGuests);
-            const matched = sorted.find(
-                (tier) => guestCount >= tier.minGuests && guestCount <= tier.maxGuests,
-            );
-
-            if (matched) return matched.price;
-            if (guestCount > sorted[sorted.length - 1].maxGuests) return sorted[sorted.length - 1].price;
-            return sorted[0].price;
-        }
-
-        return listing.price;
-    }, [guestCount, listing.groupPrice, listing.price, listing.pricingType, pricingTiers]);
+    const listingForPricing = useMemo(
+        () => ({
+            price: listing.price,
+            pricingType: listing.pricingType,
+            groupPrice: listing.groupPrice,
+            groupSize: listing.groupSize,
+            customPricing: sortedCustomPricingTiers,
+            guestCount: listing.guestCount,
+        }),
+        [
+            listing.price,
+            listing.pricingType,
+            listing.groupPrice,
+            listing.groupSize,
+            listing.guestCount,
+            sortedCustomPricingTiers,
+        ]
+    );
 
     const pricing = useMemo(
-        () => computePricingForGuests(listing, guestCount),
-        [listing, guestCount]
+        () => computePricingForGuests(listingForPricing, guestCount),
+        [guestCount, listingForPricing]
     );
+
+    const perPersonPrice = pricing.unitPrice;
+
+    const customPricingMeta = useMemo(
+        () => extractCustomPricingMeta(rawCustomPricing),
+        [rawCustomPricing]
+    );
+
+    const [showPricingPopover, setShowPricingPopover] = useState(false);
+
+    const pricingMode: 'custom' | 'group' | 'perPerson' = useMemo(() => {
+        if (listing.pricingType === 'custom') return 'custom';
+        if (listing.pricingType === 'group') return 'group';
+        return 'perPerson';
+    }, [listing.pricingType]);
+
+    const groupFlatPrice = listing.groupPrice ?? listing.price;
+    const groupGuestLimit = listing.groupSize ?? listing.guestCount;
+
+    const baseCustomPrice = useMemo(() => {
+        if (typeof customPricingMeta?.basePrice === 'number') {
+            return customPricingMeta.basePrice;
+        }
+
+        return sortedCustomPricingTiers[0]?.price ?? listing.price;
+    }, [customPricingMeta, listing.price, sortedCustomPricingTiers]);
+
+    const pricingIndicator = useMemo(() => {
+        switch (pricingMode) {
+            case 'custom':
+                return {
+                    label: 'Custom pricing',
+                    headline: `${formatConverted(baseCustomPrice)}+ / person`,
+                    description: 'Rates adapt to your group size.',
+                };
+            case 'group':
+                return {
+                    label: 'Group pricing',
+                    headline: `${formatConverted(groupFlatPrice)} total`,
+                    description: `Flat rate for up to ${groupGuestLimit} guests`,
+                };
+            default:
+                return {
+                    label: 'Price per person',
+                    headline: `${formatConverted(perPersonPrice)} / guest`,
+                    description: 'Simple pay-per-guest rate.',
+                };
+        }
+    }, [baseCustomPrice, formatConverted, groupFlatPrice, groupGuestLimit, perPersonPrice, pricingMode]);
+
+    const pricingPopoverContent = useMemo<ReactNode>(() => {
+        switch (pricingMode) {
+            case 'custom': {
+                if (sortedCustomPricingTiers.length === 0) {
+                    return (
+                        <p className="text-sm text-neutral-600">
+                            The host will confirm custom pricing details once you share your group size.
+                        </p>
+                    );
+                }
+
+                return (
+                    <div className="space-y-3">
+                        <p className="text-sm text-neutral-600">
+                            Pick a guest count and we will snap to the correct tier.
+                        </p>
+                        <div className="space-y-2">
+                            {sortedCustomPricingTiers.map((tier) => (
+                                <div
+                                    key={`${tier.minGuests}-${tier.maxGuests}`}
+                                    className="flex items-center justify-between rounded-2xl border border-white/30 bg-white/80 px-4 py-2 text-sm shadow-sm"
+                                >
+                                    <span className="font-medium text-neutral-700">
+                                        {tier.minGuests} - {tier.maxGuests} guests
+                                    </span>
+                                    <span className="font-semibold text-neutral-900">{formatConverted(tier.price)}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                );
+            }
+            case 'group':
+                return (
+                    <div className="space-y-3 text-sm text-neutral-600">
+                    <p>
+                        This experience uses a flat group price. The total stays the same and currently
+                        covers your selection of {guestCount} guest{guestCount === 1 ? '' : 's'}.
+                    </p>
+                    <div className="rounded-3xl border border-neutral-200 bg-white/90 p-4 shadow-sm">
+                        <p className="text-xs uppercase tracking-[0.3em] text-neutral-500">
+                        Flat total
+                        </p>
+                        <p className="text-lg font-semibold text-neutral-900">
+                        {formatConverted(groupFlatPrice)}
+                        </p>
+                        <p className="text-xs text-neutral-500">
+                        Fixed price, up to {groupGuestLimit} guests
+                        </p>
+                    </div>
+                    </div>
+                );
+            default:
+                return (
+                    <div className="space-y-3 text-sm text-neutral-600">
+                        <p>Each guest pays the same rate. Adjust the counter to see your total update live.</p>
+                        <div className="rounded-3xl border border-neutral-200 bg-white/90 p-4 shadow-sm">
+                            <p className="text-xs uppercase tracking-[0.3em] text-neutral-500">Current selection</p>
+                            <p className="text-lg font-semibold text-neutral-900">{guestCount} guest{guestCount === 1 ? '' : 's'}</p>
+                            <p className="text-sm text-neutral-500">{formatConverted(perPersonPrice)} per guest</p>
+                            <p className="mt-2 text-base font-semibold text-neutral-900">{formatConverted(pricing.totalPrice)}</p>
+                        </div>
+                    </div>
+                );
+        }
+    }, [formatConverted, guestCount, groupFlatPrice, groupGuestLimit, perPersonPrice, pricing.totalPrice, pricingMode, sortedCustomPricingTiers]);
+
+    const hasCustomPricing = listing.pricingType === 'custom' && sortedCustomPricingTiers.length > 0;
+    const [showCustomPricingDetails, setShowCustomPricingDetails] = useState(false);
+
+    useEffect(() => {
+        const handleClick = (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+            if (!target.closest(".pricing-toggle-button") &&
+                !target.closest(".pricing-popover")) {
+            setShowPricingPopover(false);
+            }
+        };
+
+        if (showPricingPopover) {
+            document.addEventListener("mousedown", handleClick);
+        }
+        return () => document.removeEventListener("mousedown", handleClick);
+        }, [showPricingPopover]);
 
     const onCreateReservation = useCallback(() => {
         if (!currentUser) {
@@ -274,15 +466,10 @@ const ListingClient: React.FC<ListingClientProps> = ({
     };
 
     useEffect(() => {
-        if (listing.pricingType === 'group' && listing.groupPrice) {
-            setTotalPrice(listing.groupPrice);
-            return;
+       if (dateRange.startDate) {
+          setTotalPrice(pricing.totalPrice);
         }
-
-        if (dateRange.startDate) {
-          setTotalPrice(perPersonPrice * guestCount);
-        }
-    }, [dateRange.startDate, perPersonPrice, guestCount, listing.pricingType, listing.groupPrice]);
+    }, [dateRange.startDate, pricing.totalPrice]);
 
     useEffect(() => {
         if (listing.pricingType === 'group' && listing.groupSize) {
@@ -417,6 +604,26 @@ const ListingClient: React.FC<ListingClientProps> = ({
         // do NOT set dateDirty/guestsDirty here
     }, [params]);
 
+    useEffect(() => {
+        const observer = new MutationObserver(() => {
+            const btn = document.querySelector(".pricing-toggle-button");
+            if (!btn) return;
+
+            const backdrop = window.getComputedStyle(btn).backgroundColor;
+            const rgb = backdrop.match(/\d+/g)?.map(Number);
+
+            if (!rgb) return;
+
+            // relative luminance
+            const luminance = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
+
+            setUseDarkButton(luminance < 0.55); // dark background -> use white text
+        });
+
+        observer.observe(document.body, { attributes: true, childList: true, subtree: true });
+
+        return () => observer.disconnect();
+        }, []);
 
     const averageRating = useMemo(() => {
         if (reviews.length === 0) return 0;
@@ -425,6 +632,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
     }, [reviews]);     
 
     return (
+        <>
         <Container>
             <div className="max-w-screen-lg mx-auto">
                 <div className="flex flex-col gap-6">
@@ -468,27 +676,30 @@ const ListingClient: React.FC<ListingClientProps> = ({
                     </button>
 
                     <div className="grid grid-cols-1 md:grid-cols-7 md:gap-10 mt-6 relative">
-                        <ListingInfo
-                            user={listing.user}
-                            category={category}
-                            description={listing.description}
-                            hostName={listing.user.name ?? undefined}
-                            guestCount={listing.guestCount}
-                            experienceHour={experienceHour ?? undefined}
-                            hostDescription={hostDescription ?? undefined}
-                            locationValue={listing.locationValue}
-                            meetingPoint={listing.meetingPoint ?? undefined}
-                            imageSrc={typeof listing.imageSrc === 'string' ? [listing.imageSrc] : listing.imageSrc}
-                            languages={languages}
-                            locationType={listing.locationType ?? undefined}
-                            locationDescription={listing.locationDescription ?? undefined}
-                            groupStyles={groupStyles}
-                            durationCategory={durationCategory}
-                            environments={environments}
-                            activityForms={activityForms}
-                            seoKeywords={seoKeywords}
-                            hoursInAdvance={hoursInAdvance}
-                        />
+                        <div className="md:col-span-4 flex flex-col gap-6">
+                            <ListingInfo
+                                user={listing.user}
+                                category={category}
+                                description={listing.description}
+                                hostName={listing.user.name ?? undefined}
+                                guestCount={listing.guestCount}
+                                experienceHour={experienceHour ?? undefined}
+                                hostDescription={hostDescription ?? undefined}
+                                locationValue={listing.locationValue}
+                                meetingPoint={listing.meetingPoint ?? undefined}
+                                imageSrc={typeof listing.imageSrc === 'string' ? [listing.imageSrc] : listing.imageSrc}
+                                languages={languages}
+                                locationType={listing.locationType ?? undefined}
+                                locationDescription={listing.locationDescription ?? undefined}
+                                groupStyles={groupStyles}
+                                durationCategory={durationCategory}
+                                environments={environments}
+                                activityForms={activityForms}
+                                seoKeywords={seoKeywords}
+                                hoursInAdvance={hoursInAdvance}
+                            />
+
+                        </div>
                         <div className="order-first mb-10 md:order-last md:col-span-3">
                             <div className="md:sticky md:top-32">
                             <ListingReservation
@@ -516,7 +727,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                                 pricingType={listing.pricingType as string}
                                 groupPrice={listing.groupPrice}
                                 groupSize={listing.groupSize}
-                                customPricing={pricingTiers}
+                                customPricing={sortedCustomPricingTiers}
                                 hoursInAdvance={hoursInAdvance ?? undefined}
                             />
                             </div>
@@ -644,6 +855,49 @@ const ListingClient: React.FC<ListingClientProps> = ({
                 </div>
             </div>
         </Container>
+
+        <div className="pointer-events-none fixed inset-x-0 bottom-5 z-40 flex justify-center px-4">
+            <div className="pointer-events-auto w-full max-w-xl">
+                <AnimatePresence initial={false}>
+                    {showPricingPopover && (
+                        <motion.div
+                            key="pricing-popover"
+                            initial={{ opacity: 0, y: 16, scale: 0.98 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 16, scale: 0.98 }}
+                            transition={{ duration: 0.25, ease: 'easeOut' }}
+                            className="pricing-popover mb-3 w-full rounded-3xl border border-white/50 bg-white/95 p-5 text-neutral-900 shadow-2xl backdrop-blur"
+                        >
+                            <p className="text-[11px] uppercase tracking-[0.4em] text-neutral-400">{pricingIndicator.label}</p>
+                            <div className="mt-3 text-sm leading-relaxed">{pricingPopoverContent}</div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                <motion.button
+                    type="button"
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => setShowPricingPopover((open) => !open)}
+                    aria-expanded={showPricingPopover}
+                    className="pricing-toggle-button flex w-full items-center justify-between gap-4 rounded-2xl backdrop-blur-md px-6 py-2 text-left text-neutral-900 shadow-[0_20px_45px_rgba(0,0,0,0.35)]"
+                >
+                    <div className="flex-1">
+                        <p className="text-[8px] font-semibold uppercase tracking-[0.5em] text-black/60">{pricingIndicator.label}</p>
+                        <p className="text-md font-semibold">{pricingIndicator.headline}</p>
+                        <p className="text-[10px] text-black/70">{pricingIndicator.description}</p>
+                    </div>
+                    <motion.span
+                        aria-hidden
+                        animate={{ rotate: showPricingPopover ? 180 : 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-lg"
+                    >
+                        ▾
+                    </motion.span>
+                </motion.button>
+            </div>
+        </div>
+        </>
     );
 }
 

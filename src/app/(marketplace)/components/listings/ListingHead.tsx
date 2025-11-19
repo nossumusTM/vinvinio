@@ -479,7 +479,7 @@ const ListingHead: React.FC<ListingHeadProps> = ({
             className="
               mt-2
               p-2 rounded-full
-              border border-white/30 hover:border-white
+              hover:shadow-md
               bg-white/10 backdrop-blur-sm
               text-white
               transition

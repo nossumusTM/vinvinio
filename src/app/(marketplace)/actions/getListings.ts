@@ -110,12 +110,17 @@ export default async function getListings(
         languages: undefined,
      });
 
+    const shouldOrderByPunti = !sort || sort === 'relevance';
+      const orderBy = shouldOrderByPunti
+        ? [{ punti: 'desc' as const }, { createdAt: 'desc' as const }]
+        : undefined;
 
     const listings = await prisma.listing.findMany({
       where: query,
       // orderBy: {
       //   createdAt: "desc",
       // },
+      orderBy,
       include: {
         user: true,
         reviews: true, // include related reviews
@@ -217,7 +222,11 @@ export default async function getListings(
     } else if (sort === 'priceHigh') {
       decoratedListings.sort((a, b) => b.listing.price - a.listing.price);
     } else {
-      decoratedListings.sort(() => Math.random() - 0.5);
+      // decoratedListings.sort(() => Math.random() - 0.5);
+      decoratedListings.sort(
+        (a, b) => (Number(b.listing.punti ?? 0) - Number(a.listing.punti ?? 0)) ||
+          new Date(b.listing.createdAt).getTime() - new Date(a.listing.createdAt).getTime(),
+      );
     }
 
     return decoratedListings.map((entry) => entry.listing);

@@ -58,8 +58,8 @@ const HeartButton: React.FC<HeartButtonProps> = ({
         >
             <div
             className={`
-                p-2 rounded-full backdrop-blur-sm border transition 
-                ${hasFavorited ? 'border-white/80 bg-white/20' : 'border-white/30 bg-white/10 hover:border-white/60'}
+                p-2 rounded-full backdrop-blur-sm transition hover:shadow-md 
+                ${hasFavorited ? 'bg-white/20' : 'bg-white/10'}
             `}
             >
             {hasFavorited ? (

@@ -31,6 +31,7 @@ import getCroppedImg from '@/app/(marketplace)/utils/cropImage';
 
 import useMessenger from '@/app/(marketplace)/hooks/useMessager';
 import useLoginModal from '@/app/(marketplace)/hooks/useLoginModal';
+import CountryFlagByLabel from '../../components/CountryFlagByLabel';
 import { useCallback } from 'react';
 
 type HostCardReviewWithImage = HostCardReview & {
@@ -311,40 +312,82 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
     return `Signed up in ${d.getFullYear()}`;
   }, [host.createdAt]);
 
+  const normalizeLangKey = (lang: string) =>
+  lang
+    .toLowerCase()
+    .trim()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, ''); // strip accents, e.g. "français" -> "francais"
+
   const languageToFlagCode: Record<string, string> = {
-    english: "gb",
-    italian: "it",
-    french: "fr",
-    spanish: "es",
-    german: "de",
-    portuguese: "pt",
-    russian: "ru",
-    turkish: "tr",
-    arabic: "sa",
-    chinese: "cn",
-    japanese: "jp",
-    korean: "kr",
-    dutch: "nl",
-    swedish: "se",
-    norwegian: "no",
-    danish: "dk",
-    finnish: "fi",
-    polish: "pl",
-    ukrainian: "ua",
-    azerbaijani: "az",
-    georgian: "ge",
-    hindi: "in",
-    greek: "gr",
-    czech: "cz",
-    slovak: "sk",
-    romanian: "ro",
-    bulgarian: "bg",
-    hungarian: "hu",
-    // add more as needed
+    // English
+    english: 'gb',
+    en: 'gb',
+    inglese: 'gb',
+
+    // Italian
+    italian: 'it',
+    italiano: 'it',
+    it: 'it',
+
+    // French
+    french: 'fr',
+    francais: 'fr',
+    français: 'fr',
+    fr: 'fr',
+
+    // Spanish
+    spanish: 'es',
+    espanol: 'es',
+    español: 'es',
+    es: 'es',
+
+    // German
+    german: 'de',
+    deutsch: 'de',
+    de: 'de',
+
+    // Portuguese
+    portuguese: 'pt',
+    portugues: 'pt',
+    português: 'pt',
+    pt: 'pt',
+
+    // Russian
+    russian: 'ru',
+    русский: 'ru',
+    ru: 'ru',
+
+    // Turkish
+    turkish: 'tr',
+    türkçe: 'tr',
+    turkce: 'tr',
+    tr: 'tr',
+
+    // More as needed
+    chinese: 'cn',
+    japanese: 'jp',
+    korean: 'kr',
+    dutch: 'nl',
+    swedish: 'se',
+    norwegian: 'no',
+    danish: 'dk',
+    finnish: 'fi',
+    polish: 'pl',
+    ukrainian: 'ua',
+    azerbaijani: 'az',
+    georgian: 'ge',
+    hindi: 'in',
+    greek: 'gr',
+    czech: 'cz',
+    slovak: 'sk',
+    romanian: 'ro',
+    bulgarian: 'bg',
+    hungarian: 'hu',
   };
 
   const toFlagCode = (lang: string) =>
-    languageToFlagCode[lang.toLowerCase().trim()] ?? null;
+    languageToFlagCode[normalizeLangKey(lang)] ?? null;
 
   // If your files are pngs under /public/flags/<code>.png:
   const flagSrc = (code: string) => `/flags/${code}.svg`;
@@ -520,17 +563,23 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                         ID IN REVIEW
                       </div>
                     )}
-                  <p className="ml-1 text-2xl font-semibold flex items-center gap-2">
+                  <p className="text-2xl font-semibold flex items-center gap-2">
                     {host.username || host.name || 'Host'}
                   </p>
-                  {host.legalName && (
+                  {/* {host.legalName && (
                     <p className="ml-1 text-sm text-white/80">{host.legalName}</p>
-                  )}
+                  )} */}
                   {primaryLocation && (
-                    <p className="text-sm text-white/80 flex flex-row gap-1">
-                      Located in <p className='font-semibold'>{primaryLocation.label}</p>
-                    </p>
-                  )}
+                      <div className="flex items-center gap-1.5 text-sm text-white/80">
+                        <span>Located In</span>
+                        <CountryFlagByLabel
+                          label={primaryLocation.label}
+                          // width={18}
+                          // height={12}
+                          className="mr-3 h-4 w-6 object-cover rounded-lg"
+                        />
+                        </div>
+                      )}
                 </div>
               </div>
 

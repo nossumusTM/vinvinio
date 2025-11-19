@@ -24,14 +24,10 @@ const menuVariants: Variants = {
   collapsed: {
     opacity: 0,
     y: -8,
-    scaleY: 0.95,
-    transition: { duration: 0.15, ease: [0.25, 0.1, 0.25, 1] },
   },
   open: {
     opacity: 1,
     y: 0,
-    scaleY: 1,
-    transition: { duration: 0.18, ease: [0.2, 0.8, 0.2, 1] },
   },
 };
 
@@ -43,11 +39,12 @@ const AnimatedMenu = (props: MenuProps<CountrySelectValue, false>) => {
     <AnimatePresence>
       {props.selectProps.menuIsOpen && (
         <motion.div
-          initial="collapsed"
-          animate="open"
-          exit="collapsed"
-          variants={menuVariants}
-          style={{ originY: 0 }} // animate from top
+          key="country-select-menu"
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.2 }}
+          className="rounded-2xl shadow-xl overflow-hidden bg-white"
         >
           <Menu {...props} />
         </motion.div>
@@ -127,7 +124,7 @@ const CountrySelect: React.FC<CountrySelectProps> = ({ value, onChange }) => {
                 ? 'bg-neutral-100'
                 : ''
             }`,
-          menu: () => 'rounded-2xl overflow-hidden shadow-xl',
+          menu: () => 'bg-transparent shadow-none rounded-none', // ⬅️ updated
         }}
         theme={(theme) => ({
           ...theme,

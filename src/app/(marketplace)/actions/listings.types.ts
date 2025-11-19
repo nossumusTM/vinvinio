@@ -7,7 +7,7 @@ export interface IListingsParams {
   endDate?: string;
   locationValue?: string;
   category?: string;
-  sort?: 'rating' | 'priceLow' | 'priceHigh' | 'random';
+  sort?: 'rating' | 'priceLow' | 'priceHigh' | 'random' | 'relevance';
   skip?: number;
   take?: number;
   groupStyles?: string[] | string;

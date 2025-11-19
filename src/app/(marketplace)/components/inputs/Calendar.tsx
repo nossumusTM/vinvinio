@@ -1,13 +1,14 @@
 'use client';
 
 import { Calendar as DatePicker } from 'react-date-range';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { format } from 'date-fns';
 
 import { Range } from 'react-date-range';
 
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
+import { AnimatePresence, motion } from 'framer-motion';
 
 interface ReservationSlot {
   date: string;
@@ -18,7 +19,7 @@ interface CalendarProps {
   value: Range; // ✅ use Range type
   onChange: (value: { selection: Range }) => void; // ✅ updated
   selectedTime?: string | null;
-  onTimeChange?: (time: string | null) => void;
+  onTimeChange?: (time: string | null, meta?: { userInitiated?: boolean }) => void;
   bookedSlots?: ReservationSlot[];
   hoursInAdvance?: number;
 }
@@ -52,6 +53,7 @@ const Calendar: React.FC<CalendarProps> = ({
   : '';
 
   const userHasPickedTime = useRef(false);
+  const [showTimes, setShowTimes] = useState(false);
 
   const bookedTimesForDate = useMemo(() => {
     return bookedSlots
@@ -125,7 +127,8 @@ const Calendar: React.FC<CalendarProps> = ({
           },
         });
 
-        onTimeChange?.(candidateTime);
+        // onTimeChange?.(candidateTime);
+        onTimeChange?.(candidateTime, { userInitiated: false });
         hasAutoSelected.current = true;
         break;
       }
@@ -150,15 +153,28 @@ const Calendar: React.FC<CalendarProps> = ({
   
     if (!selectedTime || bookedTimes.includes(selectedTime) || isSlotTooSoon(value.startDate ?? null, selectedTime)) {
       if (availableTimesForDate.length > 0) {
-        onTimeChange?.(availableTimesForDate[0]);
+        onTimeChange?.(availableTimesForDate[0], { userInitiated: false });
       } else {
-        onTimeChange?.('');
+        onTimeChange?.('', { userInitiated: false });
       }
     }
   }, [value.startDate, bookedSlots, selectedTime, onTimeChange, isSlotTooSoon]);
 
+
   useEffect(() => {
     userHasPickedTime.current = false;
+  }, [value.startDate]);
+
+  useEffect(() => {
+    if (!value.startDate) {
+      setShowTimes(false);
+    }
+  }, [value.startDate]);
+
+  useEffect(() => {
+    if (!value.startDate) {
+      setShowTimes(false);
+    }
   }, [value.startDate]);
 
   const handleSelect = (date: Date) => {
@@ -184,7 +200,21 @@ const Calendar: React.FC<CalendarProps> = ({
 
       {value.startDate && (
       <div className="flex flex-col gap-2 p-4">
-        <label className="text-xl font-medium text-left">Choose a Time Slot</label>
+        <button
+          type="button"
+          onClick={() => setShowTimes((open) => !open)}
+          className="flex items-center justify-between rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-left text-lg font-medium text-neutral-800 shadow-sm"
+        >
+          <span>Choose a Time Slot</span>
+          <motion.span
+            aria-hidden
+            animate={{ rotate: showTimes ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
+            className="text-xl"
+          >
+            ▾
+          </motion.span>
+        </button>
         {/* <select
           value={selectedTime ?? ''}
           // onChange={(e) => onTimeChange?.(e.target.value)}
@@ -221,35 +251,46 @@ const Calendar: React.FC<CalendarProps> = ({
           })}
         </select> */}
 
-        <div className="grid grid-cols-5 gap-2">
-        {availableTimes.map((time) => {
-          const [hour, minute] = time.split(':').map(Number);
-          const isBooked = bookedTimesForDate.includes(time);
-          const isDisabled = isBooked || isSlotTooSoon(value.startDate ?? null, time);
-
-          const ampm = hour >= 12 ? 'PM' : 'AM';
-          const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
-          const formattedTime = `${formattedHour}:${minute.toString().padStart(2, '0')} ${ampm}`;
-
-          return (
-            <button
-              key={time}
-              onClick={() => {
-                userHasPickedTime.current = true;
-                onTimeChange?.(time);
-              }}
-              disabled={isDisabled}
-              className={`
-                text-xs py-2 rounded-xl shadow-md bg-neutral-100 transition text-center
-                ${selectedTime === time ? 'ring-1 ring-black' : ''}
-                ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-aliceblue'}
-              `}
+         <AnimatePresence initial={false}>
+          {showTimes && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
             >
-              {formattedTime}
-            </button>
-          );
-        })}
-      </div>
+              <div className="mt-2 grid grid-cols-5 gap-2">
+                {availableTimes.map((time) => {
+                  const [hour, minute] = time.split(':').map(Number);
+                  const isBooked = bookedTimesForDate.includes(time);
+                  const isDisabled = isBooked || isSlotTooSoon(value.startDate ?? null, time);
+
+                  const ampm = hour >= 12 ? 'PM' : 'AM';
+                  const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
+                  const formattedTime = `${formattedHour}:${minute.toString().padStart(2, '0')} ${ampm}`;
+
+                  return (
+                    <button
+                      key={time}
+                      onClick={() => {
+                        userHasPickedTime.current = true;
+                        onTimeChange?.(time);
+                      }}
+                      disabled={isDisabled}
+                      className={`
+                        text-xs py-2 rounded-xl shadow-md bg-neutral-100 transition text-center
+                        ${selectedTime === time ? 'ring-1 ring-black' : ''}
+                        ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-aliceblue'}
+                      `}
+                    >
+                      {formattedTime}
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
       </div>
     )}

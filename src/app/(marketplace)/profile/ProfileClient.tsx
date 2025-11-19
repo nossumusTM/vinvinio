@@ -1525,7 +1525,7 @@ const coverImage = useMemo(() => {
                                     onChange={(e) =>
                                       setFieldValues((prev) => ({ ...prev, zip: e.target.value }))
                                     }
-                                    className="peer w-full rounded-xl border border-neutral-300 px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
+                                    className="mb-4 peer w-full rounded-xl border border-neutral-300 px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
                                   />
                                   <label
                                     htmlFor="zip"

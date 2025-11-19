@@ -286,7 +286,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
       }
     }}
     aria-label="Scroll to reviews"
-    className="flex flex-col items-center gap-1 cursor-pointer select-none"
+    className="flex flex-col items-center cursor-pointer select-none"
   >
     <div className="flex items-center justify-center gap-2">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -303,12 +303,12 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
              7.46 13.97 5.82 21 12 17.27z"
         />
       </svg>
-      <span className="text-base sm:text-lg font-semibold text-white drop-shadow underline decoration-transparent hover:decoration-white/80">
+      <span className="text-base sm:text-lg font-normal text-white drop-shadow underline decoration-transparent hover:decoration-white/80">
         {averageRating.toFixed(1)} / 5
       </span>
     </div>
 
-    <span className="text-xs sm:text-sm font-medium border-b border-white/85 text-white/85 drop-shadow-sm tracking-wide">
+    <span className="text-[11px] font-medium border-b border-white/85 text-white/85 drop-shadow-sm tracking-wide">
       {reviewCount} TOTAL REVIEW{reviewCount !== 1 ? 'S' : ''}
     </span>
   </div>
