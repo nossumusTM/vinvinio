@@ -32,7 +32,10 @@ const BookingConfirmed = () => {
   const reviewCount = getParam('reviewCount');
   const categoryLabel = getParam('categoryLabel');
   const startDate = getParam('startDate');
-  const timeParam = getParam('time'); // ✅ Add this
+  const timeParam = getParam('time');
+  const guestsParam = getParam('guests');
+  const totalPriceParam = getParam('totalPrice');
+  const priceParam = getParam('price');
 
   const messenger = useMessenger();
   const loginModal = useLoginModal();
@@ -309,15 +312,21 @@ const BookingConfirmed = () => {
           </p>
           <hr />
           <p>
-                <strong>Guest Count:</strong> {searchParams?.get('guests') || 'N/A'}
+                <strong>Guest Count:</strong> {guestsParam || 'N/A'}
             </p>
 
             <p>
                 <strong>Total Paid:</strong>{' '}
                 {(() => {
-                const price = parseFloat(searchParams?.get('price') || '0');
-                const guests = parseInt(searchParams?.get('guests') || '1', 10);
-                return formatConverted(price * guests);
+                const price = parseFloat(priceParam || '0');
+                const guests = parseInt(guestsParam || '1', 10);
+                const totalPrice = parseFloat(totalPriceParam || '0');
+
+                const resolvedTotal = !Number.isNaN(totalPrice) && totalPrice > 0
+                  ? totalPrice
+                  : price * guests;
+
+                return formatConverted(resolvedTotal);
                 })()}
             </p>
         </div>

@@ -5,9 +5,10 @@ import { Range } from 'react-date-range';
 import Button from '../Button';
 import Calendar from '../inputs/Calendar';
 import Counter from '../inputs/Counter';
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import useCurrencyFormatter from '@/app/(marketplace)/hooks/useCurrencyFormatter';
+import { AnimatePresence, motion } from 'framer-motion';
 
 interface ReservationSlot {
   date: string;
@@ -32,6 +33,12 @@ interface ListingReservationProps {
   averageRating: number;
   reviewCount: number;
   categoryLabel?: string;
+  pricingType?: string | null;
+  groupPrice?: number | null;
+  groupSize?: number | null;
+  customPricing?: { minGuests: number; maxGuests: number; price: number }[] | null;
+  /** Minimum hours before start that the experience can be booked */
+  hoursInAdvance?: number | null;
 }
 
 const ListingReservation: React.FC<ListingReservationProps> = ({
@@ -49,48 +56,99 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
   onGuestCountChange,
   averageRating,
   reviewCount,
-  categoryLabel
+  categoryLabel,
+  pricingType,
+  groupPrice,
+  groupSize,
+  customPricing,
+  hoursInAdvance
 }) => {
   const router = useRouter();
 
   const [isLoading, setIsLoading] = useState(false);
+  const [showCustomPricing, setShowCustomPricing] = useState(false);
   const { formatConverted } = useCurrencyFormatter();
+
+  const isGroupPricing = pricingType === 'group' && !!groupPrice;
+  const isCustomPricing = pricingType === 'custom' && Array.isArray(customPricing) && customPricing.length > 0;
+
+  const perPersonPrice = useMemo(() => {
+    if (isGroupPricing) {
+      return groupPrice ?? price;
+    }
+
+    if (isCustomPricing && customPricing) {
+      const sorted = [...customPricing].sort((a, b) => a.minGuests - b.minGuests);
+      const matchedTier = sorted.find(
+        (tier) => guestCount >= tier.minGuests && guestCount <= tier.maxGuests,
+      );
+
+      if (matchedTier) return matchedTier.price;
+
+      if (guestCount > sorted[sorted.length - 1].maxGuests) {
+        return sorted[sorted.length - 1].price;
+      }
+
+      return sorted[0].price;
+    }
+
+    return price;
+  }, [customPricing, guestCount, groupPrice, isCustomPricing, isGroupPricing, price]);
 
   const handleReserve = () => {
     if (!listingId || !selectedTime || !dateRange.startDate) {
-      toast.error("Please select a date and time that is available.");
+      toast.error('Please select a date and time that is available.');
       return;
     }
 
     const selectedDateKey = new Date(dateRange.startDate).toLocaleDateString('sv-SE', {
       timeZone: 'Europe/Rome',
     });
-  
+
     const normalizedTime = selectedTime.padStart(5, '0');
-  
+
     const bookedTimes = bookedSlots
       .filter((slot) => slot.date === selectedDateKey)
       .map((slot) => slot.time.padStart(5, '0'));
-  
+
     const isBooked = bookedTimes.includes(normalizedTime);
-  
+
     const isToday = selectedDateKey === new Date().toLocaleDateString('sv-SE', {
       timeZone: 'Europe/Rome',
     });
-  
+
     const [hour, minute] = normalizedTime.split(':').map(Number);
     const timeDate = new Date();
     timeDate.setHours(hour, minute, 0, 0);
-  
+
     const isPast = isToday && new Date() > timeDate;
-  
+
     if (isBooked || isPast) {
       toast.error('This time slot is not available. Please choose another.');
       return;
     }
 
-    setIsLoading(true); 
-  
+    // ⏱ enforce hoursInAdvance if provided
+    if (typeof hoursInAdvance === 'number' && hoursInAdvance > 0) {
+      const now = new Date();
+      const reservationStart = new Date(dateRange.startDate);
+      reservationStart.setHours(hour, minute, 0, 0);
+
+      const diffMs = reservationStart.getTime() - now.getTime();
+      const diffHours = diffMs / (1000 * 60 * 60);
+
+      if (diffHours < hoursInAdvance) {
+        toast.error(
+          `This experience must be booked at least ${hoursInAdvance} hour${
+            hoursInAdvance === 1 ? '' : 's'
+          } in advance.`,
+        );
+        return;
+      }
+    }
+
+    setIsLoading(true);
+
     const searchParams = new URLSearchParams({
       listingId,
       guests: guestCount.toString(),
@@ -101,66 +159,194 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
       reviewCount: reviewCount.toString(),
       categoryLabel: categoryLabel || '',
     });
-  
+
     router.push(`/checkout?${searchParams.toString()}`);
-  };  
+  };
 
   return (
     <div>
-    <div className="bg-white rounded-2xl shadow-md hover:shadow-lg overflow-hidden">
-      <div className="flex flex-row items-center justify-between p-4">
-        <div className="flex flex-row items-baseline gap-2">
-          <div className="text-3xl font-semibold">{formatConverted(price)}</div>
-          <div className="font-light text-neutral-600">/ person</div>
-        </div>
-        <div className="flex flex-col gap-1">
-          {/* <div className="text-sm font-medium mb-2 text-center">
-            {guestCount === 1 ? '1 Guest' : `${guestCount} Guests`}
-          </div> */}
+      <div className="bg-white rounded-2xl shadow-md hover:shadow-lg overflow-hidden">
+        <div className="space-y-2 p-4">
+          {isCustomPricing && (
+            <div className="flex justify-between items-center">
+              <button
+                type="button"
+                onClick={() => setShowCustomPricing((open) => !open)}
+                className="group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-amber-400 px-3 py-2 text-sm font-semibold text-white shadow-md transition hover:shadow-lg"
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="opacity-90"
+                >
+                  <path
+                    d="M4 10.5L10.5 4L17 10.5M7 13.5L10.5 10L14 13.5M10.5 20V10"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                Custom Pricing
+                <motion.span
+                  animate={{ rotate: showCustomPricing ? 180 : 0 }}
+                  className="inline-block"
+                  transition={{ duration: 0.2 }}
+                >
+                  ▾
+                </motion.span>
+              </button>
+            </div>
+          )}
 
-          <Counter
-            title=""
-            subtitle=""
-            value={guestCount}
-            onChange={(value) => {
-              const safeValue = typeof value === 'number' ? value : 1;
-              onGuestCountChange(Math.min(safeValue, maxGuests));
-            }}
-          />
-        </div>
-      </div>
+          {isGroupPricing && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-400 px-3 py-1.5 text-sm font-semibold text-white shadow-md">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="opacity-90"
+                >
+                  <path
+                    d="M6.5 11C7.88071 11 9 9.88071 9 8.5C9 7.11929 7.88071 6 6.5 6C5.11929 6 4 7.11929 4 8.5C4 9.88071 5.11929 11 6.5 11Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M17.5 11C18.8807 11 20 9.88071 20 8.5C20 7.11929 18.8807 6 17.5 6C16.1193 6 15 7.11929 15 8.5C15 9.88071 16.1193 11 17.5 11Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M5 18.9999C5 16.7908 6.79086 14.9999 9 14.9999H10"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M19 18.9999C19 16.7908 17.2091 14.9999 15 14.9999H14"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M12 14.5C13.3807 14.5 14.5 13.3807 14.5 12C14.5 10.6193 13.3807 9.5 12 9.5C10.6193 9.5 9.5 10.6193 9.5 12C9.5 13.3807 10.6193 14.5 12 14.5Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M8.5 19.9999C8.5 18.067 10.067 16.5 12 16.5C13.933 16.5 15.5 18.067 15.5 19.9999"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                Group Pricing
+              </span>
+              <span className="inline-flex items-center rounded-lg border border-neutral-200 bg-white px-3 py-1 text-xs font-semibold text-neutral-800 shadow-sm">
+                Up to {groupSize ?? 11} guests
+              </span>
+            </div>
+          )}
 
-      <hr />
-
-      <Calendar
-        value={dateRange}
-        bookedSlots={bookedSlots}
-        selectedTime={selectedTime}
-        onTimeChange={(time) => onTimeChange?.(time ?? '')}
-        onChange={(value) => onChangeDate(value.selection)}
-      />
-
-      <hr />
-
-      <div className="p-4">
-        {isLoading ? (
-          <div className="w-full text-center py-3">
-            <span className="loader inline-block w-5 h-5 mt-1 border-2 border-t-transparent border-black rounded-full animate-spin" />
+          <div className="flex flex-row items-center justify-between">
+            <div className="flex flex-row items-baseline gap-2">
+              <div className="text-3xl font-semibold">{formatConverted(perPersonPrice)}</div>
+              <div className="font-light text-neutral-600">{isGroupPricing ? '/ group' : '/ person'}</div>
+            </div>
+            {!isGroupPricing && (
+              <div className="flex flex-col gap-1">
+                <Counter
+                  title=""
+                  subtitle=""
+                  value={guestCount}
+                  onChange={(value) => {
+                    const safeValue = typeof value === 'number' ? value : 1;
+                    onGuestCountChange(Math.min(safeValue, maxGuests));
+                  }}
+                />
+              </div>
+            )}
           </div>
-        ) : (
-          <Button label="Book Now" onClick={handleReserve} />
-        )}
-      </div>
 
-      <hr />
+          <AnimatePresence initial={false}>
+            {showCustomPricing && isCustomPricing && (
+              <motion.div
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.18 }}
+                className="rounded-xl border border-neutral-200 bg-neutral-50/60 p-3 shadow-inner"
+              >
+                <div className="text-xs uppercase tracking-wide text-neutral-500">Pricing by guests</div>
+                <div className="mt-2 space-y-2 text-sm text-neutral-800">
+                  {customPricing?.map((tier) => (
+                    <div
+                      key={`${tier.minGuests}-${tier.maxGuests}`}
+                      className="flex items-center justify-between rounded-lg bg-white px-3 py-2 shadow-sm"
+                    >
+                      <span>
+                        {tier.minGuests} - {tier.maxGuests} guests
+                      </span>
+                      <span className="font-semibold">{formatConverted(tier.price)}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
-      <div className="p-4 flex flex-row items-center justify-center font-semibold text-lg">
-        <div className="flex flex-row items-baseline gap-2">
-          <div>Checkout:</div>
-          <div>{formatConverted(totalPrice)}</div>
+        <hr />
+
+        <Calendar
+          value={dateRange}
+          bookedSlots={bookedSlots}
+          selectedTime={selectedTime}
+          onTimeChange={(time) => onTimeChange?.(time ?? '')}
+          onChange={(value) => onChangeDate(value.selection)}
+        />
+
+        <hr />
+
+        <div className="p-4">
+          {isLoading ? (
+            <div className="w-full text-center py-3">
+              <span className="loader inline-block w-5 h-5 mt-1 border-2 border-t-transparent border-black rounded-full animate-spin" />
+            </div>
+          ) : (
+            <Button
+              label="Book Now"
+              onClick={handleReserve}
+              disabled={disabled || isLoading}   // ✅ UPDATED
+            />
+          )}
+        </div>
+
+        <hr />
+
+        <div className="p-4 flex flex-row items-center justify-center font-semibold text-lg">
+          <div className="flex flex-row items-baseline gap-2">
+            <div>Checkout:</div>
+            <div>{formatConverted(totalPrice)}</div>
+          </div>
         </div>
       </div>
-    </div>
     </div>
   );
 };

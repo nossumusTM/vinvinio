@@ -36,6 +36,7 @@ const CountrySelect = dynamic(() => import('@/app/(marketplace)/components/input
 // import CountrySelect from '@/app/components/inputs/CountrySelect';
 import { CountrySelectValue } from '@/app/(marketplace)/components/inputs/CountrySelect';
 import ConfirmPopup from '../components/ConfirmPopup';
+import { computePricingForGuests } from "@/app/(marketplace)/libs/pricingDisplay";
 
 const detectCardType = (number: string) => {
     const sanitized = number.replace(/\s/g, '');
@@ -249,7 +250,8 @@ const handleSubmit = async () => {
             await axios.post('/api/analytics/update', {
                 referenceId: scannedReferenceId,
                 totalBooksIncrement: 1,
-                totalRevenueIncrement: listingData.price * guests + serviceFee
+                // totalRevenueIncrement: listingData.price * guests + serviceFee
+                totalRevenueIncrement: subtotal + serviceFee
             });
             }
 
@@ -282,9 +284,12 @@ const handleSubmit = async () => {
             countryValue: addressFields.country?.value?.split('-').pop()?.toLowerCase() || '',
             listingId: listingId || '',
             guests: guests.toString(),
-            price: (discountPercentage
-                ? (listingData?.price * (1 - discountPercentage / 100)).toFixed(2)
-                : listingData?.price?.toString() || '0'),
+            // price: (discountPercentage
+            //     ? (listingData?.price * (1 - discountPercentage / 100)).toFixed(2)
+            //     : listingData?.price?.toString() || '0'),
+            price: (pricingTotals?.unitPrice ?? listingData?.price ?? 0).toString(),
+            totalPrice: total.toString(),
+            pricingMode: pricingTotals?.mode ?? '',
             auth: isAuthenticated ? 'true' : '',
             averageRating: (
                 reviews.length > 0
@@ -362,9 +367,14 @@ const handleSubmit = async () => {
   const formattedEnd = endDate ? format(new Date(endDate), 'PP') : '';
   const serviceFee = 0;
 
+  const pricingTotals = useMemo(
+    () => (listingData ? computePricingForGuests(listingData, guests) : null),
+    [listingData, guests]
+  );
+
   const subtotal = useMemo(() => {
-    return listingData ? listingData.price * guests : 0;
-  }, [listingData, guests]);
+    return pricingTotals?.totalPrice ?? 0;
+  }, [pricingTotals]);
   
   const discountAmount = useMemo(() => {
     return subtotal * (discountPercentage / 100);
@@ -905,8 +915,12 @@ const handleSubmit = async () => {
                 {/* <p className="text-neutral-700 font-bold">Guests: {guests}</p> */}
               </div>
               <div className="flex justify-between">
-                <span>{formatConverted(listingData.price)} x {guests} {guests === 1 ? 'guest' : 'guests'}</span>
-                <span>{formatConverted(listingData.price * guests)}</span>
+                <span>
+                  {pricingTotals?.mode === 'group'
+                    ? `Group price${pricingTotals?.descriptor ? ` (${pricingTotals.descriptor})` : ''}`
+                    : `${formatConverted(pricingTotals?.unitPrice ?? listingData.price)} x ${guests} ${guests === 1 ? 'guest' : 'guests'}`}
+                </span>
+                <span>{formatConverted(pricingTotals?.totalPrice ?? 0)}</span>
               </div>
 
               <div className="flex justify-between">

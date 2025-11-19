@@ -276,11 +276,11 @@ const LoginModal = () => {
                       setPhoneError(null);
                     }}
                     className={`
-                      flex h-full flex-col gap-2 text-neutral-800 rounded-2xl border p-4 text-left transition
+                      flex h-full flex-col gap-2 text-neutral-800 rounded-2xl p-4 text-left transition
                       ${
                         active
-                          ? 'bg-neutral-100 text-neutral-800 shadow-lg shadow-neutral-900/20'
-                          : 'bg-white text-neutral-800 shadow-sm hover:border-neutral-400 hover:shadow-md'
+                          ? 'bg-neutral-100 text-neutral-800 shadow-md shadow-neutral-900/20'
+                          : 'bg-white text-neutral-800 shadow-md hover:border-neutral-400 hover:shadow-lg'
                       }
                     `}
                   >
@@ -410,7 +410,7 @@ const LoginModal = () => {
               <button
                 type="button"
                 onClick={() => setStep('method')}
-                className="inline-flex items-center gap-2 self-start rounded-full bg-neutral-50 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100"
+                className="inline-flex items-center gap-2 self-start rounded-full px-4 py-2 text-sm font-medium text-neutral-700 border-b border-neutral-100 transition hover:border-neutral-200"
                     >
                     <HiMiniArrowLeft />
                     BACK TO SIGN IN
@@ -424,7 +424,10 @@ const LoginModal = () => {
               onClick={handleGoogleLogin}
               disabled={isLoading}
             />
-            <div className="rounded-3xl bg-neutral-100 p-5 text-center text-neutral-800 shadow-lg mt-12">
+
+            <hr className='my-2 mx-2' />
+
+            <div className="rounded-3xl bg-neutral-100 p-5 text-center text-neutral-800 shadow-lg mt-0">
               <p className="text-xs uppercase tracking-[0.35em] text-black/60">
                 New on Vuola?
               </p>

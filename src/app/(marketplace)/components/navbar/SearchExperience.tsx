@@ -21,7 +21,7 @@ const SearchExperience = () => {
   const startDate = searchParams?.get('startDate');
   const endDate = searchParams?.get('endDate');
 
-  const [guestCount, setGuestCount] = useState<string | null>(null);
+  const [guestCount, setGuestCount] = useState<string>('1');
 
   const { getAll } = useCountries();
   const countrySuggestions = useMemo(() => getAll(), [getAll]);
@@ -117,7 +117,7 @@ const SearchExperience = () => {
 
   useEffect(() => {
     const g = searchParams?.get('guestCount') ?? searchParams?.get('guests');
-    setGuestCount(g ?? null);
+      setGuestCount(g ?? '1');
   }, [pathname, searchParams]);
 
   const locationLabel = useMemo(() => {

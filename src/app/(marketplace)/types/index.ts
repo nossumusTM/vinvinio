@@ -162,6 +162,7 @@ export type SafeListing = Simplify<
     // Keep your custom fields, but make them permissive
     hostDescription?: string | null;
     experienceHour?: number | null;
+    hoursInAdvance?: number | null;
     meetingPoint?: string | null;
 
     languages?: string[];

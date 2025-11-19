@@ -40,6 +40,7 @@ export async function POST(request: Request) {
     groupPrice,
     groupSize,
     customPricing,
+    hoursInAdvance,
   } = body;
 
   if (
@@ -72,6 +73,8 @@ export async function POST(request: Request) {
   const parsedGroupSize = groupSize !== null && groupSize !== undefined
     ? Math.round(Number(groupSize))
     : null;
+
+  const parsedHoursInAdvance = Math.max(0, Math.round(Number(hoursInAdvance ?? 0)));
 
   if (normalizedPricingType === 'group') {
     if (!parsedGroupPrice || parsedGroupPrice <= 0 || !parsedGroupSize || parsedGroupSize <= 0) {
@@ -167,6 +170,7 @@ export async function POST(request: Request) {
     const pricingSnapshot = {
       mode: normalizedPricingType,
       basePrice: parsedBasePrice,
+      hoursInAdvance: parsedHoursInAdvance,
       groupPrice: normalizedPricingType === 'group' ? parsedGroupPrice : null,
       groupSize: normalizedPricingType === 'group' ? parsedGroupSize : null,
       tiers: sortedCustomPricing,

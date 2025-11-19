@@ -92,7 +92,7 @@ const formattedCountries: CountryOption[] = countries.map((country) => ({
   flag: country.flag,
   latlng: country.latlng,
   region: country.region,
-  city: country.capital?.[0], // optional; no "Unknown" magic string
+  city: country.capital?.[0], // optional; no "Unknown" magic string␊
   dialCode: resolveDialCode(country),
 }));
 
@@ -132,7 +132,44 @@ const useCountries = () => {
   const getAll = useCallback(() => formattedCountries, []);
 
   const getByValue = useCallback((value: string) => {
-    return formattedCountries.find((item) => item.value === value);
+    if (!value) return undefined;
+
+    const normalized = value.toLowerCase();
+
+    const directCountry = formattedCountries.find(
+      (item) => item.value.toLowerCase() === normalized,
+    );
+    if (directCountry) return directCountry;
+
+    const cityMatch = popularCityEntries.find(
+      (entry) => entry.value.toLowerCase() === normalized,
+    );
+    if (cityMatch) return cityMatch;
+
+    if (normalized.includes('-')) {
+      const parts = normalized.split('-');
+      const possibleCountryCode = parts[parts.length - 1];
+      const reconstructedCity = parts.slice(0, -1).join(' ');
+
+      const country = formattedCountries.find(
+        (item) => item.value.toLowerCase() === possibleCountryCode,
+      );
+
+      if (country) {
+        return {
+          ...country,
+          value,
+          city: reconstructedCity
+            ? reconstructedCity
+                .split(' ')
+                .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+                .join(' ')
+            : country.city,
+        } as CountryOption;
+      }
+    }
+
+    return undefined;
   }, []);
 
   const getCities = useCallback(() => {

@@ -611,6 +611,7 @@ import { hrefForListing } from "@/app/(marketplace)/libs/links";
 import useCountries from "@/app/(marketplace)/hooks/useCountries";
 import { CountrySelectValue } from "../inputs/CountrySelect";
 import useCurrencyFormatter from '@/app/(marketplace)/hooks/useCurrencyFormatter';
+import { getDisplayPricing, computePricingForGuests } from "@/app/(marketplace)/libs/pricingDisplay";
 
 import {
   SafeListing,
@@ -824,9 +825,26 @@ const ListingCard: React.FC<ListingCardProps> = ({
     [disabled, onAction, actionId]
   );
 
+  const basePricing = useMemo(() => getDisplayPricing(data), [data]);
+
+  const reservationPricing = useMemo(
+    () => (reservation ? computePricingForGuests(data, reservation.guestCount ?? 1) : null),
+    [data, reservation]
+  );
+
   const price = useMemo(() => {
-    return reservation ? reservation.totalPrice : data.price;
-  }, [reservation, data.price]);
+    if (reservation) {
+      return reservation.totalPrice ?? reservationPricing?.totalPrice ?? basePricing.totalPrice;
+    }
+    return basePricing.unitPrice;
+  }, [reservation, reservationPricing?.totalPrice, basePricing.totalPrice, basePricing.unitPrice]);
+
+  const priceSuffix = useMemo(() => {
+    if (reservation) return '';
+    return basePricing.suffix.toUpperCase();
+  }, [reservation, basePricing.suffix]);
+
+  const priceDescriptor = reservation ? undefined : basePricing.descriptor;
 
   const formattedPrice = useMemo(() => formatConverted(price), [formatConverted, price]);
 
@@ -1101,12 +1119,19 @@ const ListingCard: React.FC<ListingCardProps> = ({
           {data.title}
         </div>
 
-        <hr />
+       <hr />
 
         <div className={`flex flex-row items-center gap-1 ${compact ? 'ml-2 mt-1' : 'ml-1 mt-1'}`}>
           <div className={`font-semibold ${compact ? 'text-sm md:text-base' : 'text-base md:text-lg'}`}>{formattedPrice}</div>
-          {!reservation && <div className="font-normal text-[10px] md:text-xs">/ PER PERSON</div>}
+          {!reservation && (
+            <div className="font-normal text-[10px] md:text-xs">{priceSuffix}</div>
+          )}
         </div>
+        {!reservation && priceDescriptor && (
+          <div className={`ml-1 text-[10px] md:text-xs text-neutral-500 ${compact ? 'mt-0' : 'mt-[2px]'}`}>
+            {priceDescriptor}
+          </div>
+        )}
 
         {onAction && actionLabel && (
           <Button

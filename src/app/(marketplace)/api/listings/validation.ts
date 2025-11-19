@@ -195,6 +195,15 @@ const normalizeOptionalString = (value: unknown): string | null => {
   return trimmed.length > 0 ? trimmed : null;
 };
 
+const normalizeHoursInAdvance = (value: unknown): number => {
+  const parsed = Math.round(Number(value ?? 0));
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    return 0;
+  }
+
+  return parsed;
+};
+
 export interface ListingUpdatePayload {
   title?: unknown;
   description?: unknown;
@@ -204,6 +213,7 @@ export interface ListingUpdatePayload {
   location?: unknown;
   price?: unknown;
   experienceHour?: unknown;
+  hoursInAdvance?: unknown;
   hostDescription?: unknown;
   meetingPoint?: unknown;
   languages?: unknown;
@@ -230,6 +240,7 @@ export interface NormalizedListingUpdate {
     primaryCategory: string | null;
     guestCount: number;
     experienceHour: number | null;
+    hoursInAdvance: number;
     meetingPoint: string | null;
     languages: { set: string[] };
     locationValue: string;
@@ -287,6 +298,7 @@ export const normalizeListingUpdatePayload = (
   const images = normalizeImages(payload.imageSrc);
   const guestCount = normalizeGuestCount(payload.guestCount);
   const experienceHour = normalizeExperienceHour(payload.experienceHour);
+  const hoursInAdvance = normalizeHoursInAdvance(payload.hoursInAdvance);
   const meetingPoint = normalizeOptionalString(payload.meetingPoint);
   const locationDescription = normalizeOptionalString(payload.locationDescription);
 
@@ -320,6 +332,7 @@ export const normalizeListingUpdatePayload = (
       primaryCategory,
       guestCount,
       experienceHour,
+      hoursInAdvance,
       meetingPoint,
       languages: { set: languages },
       locationValue,

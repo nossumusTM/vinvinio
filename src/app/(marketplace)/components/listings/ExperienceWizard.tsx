@@ -37,6 +37,12 @@ const hourOptions = [
   '10', '11', '12', '13', '14', '15', '16'
 ].map((h) => ({ label: `${h} hours`, value: h }));
 
+
+const hoursNoticeOptions = Array.from({ length: 49 }, (_, i) => i).map((h) => ({
+  value: h,
+  label: h === 0 ? 'No advance notice' : `${h} hour${h === 1 ? '' : 's'} notice`,
+}));
+
 const languageOptions = [
   'English', 'Italian', 'Turkish', 'Russian', 'Español', 'Azerbaijani',
   'Français', 'Polski', 'Українська', 'Nederlands', 'Português', 'Română'
@@ -394,6 +400,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
       description: '',
       price: 100,
       experienceHour: null,
+      hoursInAdvance: 0,
       hostDescription: '',
       meetingPoint: '',
       languages: [],
@@ -441,6 +448,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
   const activityForms = watch('activityForms');
   const seoKeywords = watch('seoKeywords');
   const primarySeoKeyword = watch('primarySeoKeyword');
+  const hoursInAdvance = watch('hoursInAdvance');
   const pricingType = watch('pricingType');
   const customPricing = watch('customPricing');
   const groupPrice = watch('groupPrice');
@@ -667,6 +675,10 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
         activityForms: resolvedActivities,
         primarySeoKeyword: primaryKeywordOption ?? null,
         seoKeywords: additionalKeywordOptions,
+        hoursInAdvance:
+          typeof editingListing.hoursInAdvance === 'number'
+            ? editingListing.hoursInAdvance
+            : defaultFormValues.hoursInAdvance,
         pricingType: pricingMode,
         groupPrice: editingListing.groupPrice ?? null,
         groupSize: editingListing.groupSize ?? null,
@@ -996,6 +1008,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
             ? experienceDuration
             : null,
         meetingPoint: typeof data.meetingPoint === 'string' ? data.meetingPoint.trim() : '',
+        hoursInAdvance: Math.max(0, Math.round(Number(data.hoursInAdvance ?? 0))),
         languages: sanitizedLanguages,
         locationType: sanitizedLocationTypes,
         locationDescription:
@@ -1332,6 +1345,18 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
             options={hourOptions}
             value={watch('experienceHour')}
             onChange={(value: any) => setCustomValue('experienceHour', value)}
+            styles={{
+              menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+              menu: (base) => ({ ...base, zIndex: 9999 }),
+            }}
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <label className="text-md font-medium">How much advance notice do you need?</label>
+          <Select
+            options={hoursNoticeOptions}
+            value={hoursNoticeOptions.find((option) => option.value === Number(hoursInAdvance))}
+            onChange={(value: any) => setCustomValue('hoursInAdvance', Number(value?.value ?? 0))}
             styles={{
               menuPortal: (base) => ({ ...base, zIndex: 9999 }),
               menu: (base) => ({ ...base, zIndex: 9999 }),

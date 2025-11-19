@@ -1,7 +1,7 @@
 'use client';
 
 import { Calendar as DatePicker } from 'react-date-range';
-import { useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { format } from 'date-fns';
 
 import { Range } from 'react-date-range';
@@ -20,6 +20,7 @@ interface CalendarProps {
   selectedTime?: string | null;
   onTimeChange?: (time: string | null) => void;
   bookedSlots?: ReservationSlot[];
+  hoursInAdvance?: number;
 }
 
 const availableTimes = [
@@ -41,6 +42,7 @@ const Calendar: React.FC<CalendarProps> = ({
   selectedTime,
   onTimeChange,
   bookedSlots = [],
+  hoursInAdvance,
 }) => {
   // const selectedDateKey = value.startDate
   // ? new Date(value.startDate).toLocaleDateString('sv-SE', { timeZone: 'Europe/Rome' }) // 'sv-SE' keeps YYYY-MM-DD format
@@ -56,6 +58,24 @@ const Calendar: React.FC<CalendarProps> = ({
       .filter((slot) => slot.date === selectedDateKey)
       .map((slot) => slot.time);
   }, [bookedSlots, selectedDateKey]);
+
+  const leadTimeMs = Math.max(0, Number(hoursInAdvance ?? 0)) * 60 * 60 * 1000;
+
+  const isSlotTooSoon = useCallback(
+    (targetDate: Date | null, time: string) => {
+      if (!targetDate) return false;
+
+      const [hour, minute] = time.split(':').map(Number);
+      const slotDate = new Date(targetDate);
+      slotDate.setHours(hour, minute, 0, 0);
+
+      const now = new Date();
+      if (slotDate < now) return true;
+
+      return leadTimeMs > 0 && slotDate.getTime() - now.getTime() < leadTimeMs;
+    },
+    [leadTimeMs],
+  );
 
   const disabledDates = useMemo(() => {
     const map: Record<string, Set<string>> = {};
@@ -90,10 +110,13 @@ const Calendar: React.FC<CalendarProps> = ({
       const bookedTimes = bookedSlots
         .filter((slot) => getDateKey(slot.date) === testDateKey)
         .map((slot) => normalizeTime(slot.time));
-  
-      if (bookedTimes.length < availableTimes.length) {
-        const availableTime = availableTimes.find((t) => !bookedTimes.includes(t)) ?? null;
-  
+
+      const candidateTime = availableTimes.find(
+        (t) => !bookedTimes.includes(t) && !isSlotTooSoon(testDate, t),
+      );
+
+      if (candidateTime) {
+        
         onChange({
           selection: {
             startDate: testDate,
@@ -101,13 +124,13 @@ const Calendar: React.FC<CalendarProps> = ({
             key: 'selection',
           },
         });
-  
-        onTimeChange?.(availableTime);
+
+        onTimeChange?.(candidateTime);
         hasAutoSelected.current = true;
         break;
       }
     }
-  }, [bookedSlots, value.startDate, onChange, onTimeChange]);
+  }, [bookedSlots, value.startDate, onChange, onTimeChange, isSlotTooSoon]);
 
   useEffect(() => {
     if (!value.startDate || userHasPickedTime.current) return;
@@ -120,21 +143,19 @@ const Calendar: React.FC<CalendarProps> = ({
     const bookedTimes = bookedSlots
       .filter((slot) => slot.date === dateKey) // no getDateKey!
       .map((slot) => normalizeTime(slot.time));
+
+    const availableTimesForDate = availableTimes.filter(
+      (t) => !bookedTimes.includes(t) && !isSlotTooSoon(value.startDate ?? null, t),
+    );
   
-    // console.log('📅 Date Key:', dateKey);
-    // console.log('🔒 Booked Times:', bookedTimes);
-  
-    const availableTimesForDate = availableTimes.filter((t) => !bookedTimes.includes(t));
-    // console.log('✅ Available Times:', availableTimesForDate);
-  
-    if (!selectedTime || bookedTimes.includes(selectedTime)) {
+    if (!selectedTime || bookedTimes.includes(selectedTime) || isSlotTooSoon(value.startDate ?? null, selectedTime)) {
       if (availableTimesForDate.length > 0) {
         onTimeChange?.(availableTimesForDate[0]);
       } else {
         onTimeChange?.('');
       }
     }
-  }, [value.startDate, bookedSlots, selectedTime, onTimeChange]);  
+  }, [value.startDate, bookedSlots, selectedTime, onTimeChange, isSlotTooSoon]);
 
   useEffect(() => {
     userHasPickedTime.current = false;
@@ -202,14 +223,9 @@ const Calendar: React.FC<CalendarProps> = ({
 
         <div className="grid grid-cols-5 gap-2">
         {availableTimes.map((time) => {
-          const isBooked = bookedTimesForDate.includes(time);
-          const isToday = selectedDateKey === format(new Date(), 'yyyy-MM-dd');
-          const now = new Date();
           const [hour, minute] = time.split(':').map(Number);
-          const timeDate = new Date();
-          timeDate.setHours(hour, minute, 0, 0);
-          const isPast = isToday && now > timeDate;
-          const isDisabled = isBooked || isPast;
+          const isBooked = bookedTimesForDate.includes(time);
+          const isDisabled = isBooked || isSlotTooSoon(value.startDate ?? null, time);
 
           const ampm = hour >= 12 ? 'PM' : 'AM';
           const formattedHour = hour % 12 === 0 ? 12 : hour % 12;

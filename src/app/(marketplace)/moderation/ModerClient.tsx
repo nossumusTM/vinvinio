@@ -13,6 +13,9 @@ import Slider from 'react-slick';
 import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
 import clsx from 'clsx';
+import { PricingTier } from '@/app/(marketplace)/libs/pricing';
+import { getDisplayPricing } from '@/app/(marketplace)/libs/pricingDisplay';
+import type { ListingLike } from '@/app/(marketplace)/libs/pricingDisplay';
 import {
   MAX_PARTNER_COMMISSION,
   MAX_PARTNER_POINT_VALUE,
@@ -86,6 +89,11 @@ interface Listing {
   description: string;
   status: 'pending' | 'revision' | 'awaiting_reapproval' | string;
   guestCount: number;
+  price?: number | null;
+  pricingType?: 'fixed' | 'group' | 'custom' | string | null;
+  groupPrice?: number | null;
+  groupSize?: number | null;
+  customPricing?: PricingTier[] | null;
   experienceHour?: number | string;
   hostDescription?: string | null;
   meetingPoint?: string | null;
@@ -869,6 +877,13 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
       : [];
     const imageSlides = media.filter((src) => !/\.(mp4|webm|mov)$/i.test(src));
 
+    const safePricingType: 'fixed' | 'group' | 'custom' | null =
+      listing.pricingType === 'fixed' ||
+      listing.pricingType === 'group' ||
+      listing.pricingType === 'custom'
+        ? listing.pricingType
+        : 'fixed';
+
     const locationDisplay = formatListingLocation(listing);
     const categories = Array.from(
       new Set(
@@ -881,7 +896,23 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
       )
     );
 
+    // 🔧 add this
     const formattedCategories = categories.map((category) => toTitleCase(category));
+
+    const safeCustomPricing: ListingLike['customPricing'] =
+      (listing.customPricing ?? null) as ListingLike['customPricing'];
+
+    const pricing = getDisplayPricing({
+      price: listing.price ?? 0,
+      pricingType: safePricingType,
+      groupPrice: listing.groupPrice ?? null,
+      groupSize: listing.groupSize ?? null,
+      customPricing: safeCustomPricing,
+      guestCount: listing.guestCount,
+    });
+
+    const pricingLabel = `${formatConverted(pricing.unitPrice)} ${pricing.suffix.toUpperCase()}`;
+    const pricingDescriptor = pricing.descriptor;
 
     const locationTypesDisplay = Array.isArray(listing.locationType)
       ? listing.locationType
@@ -921,6 +952,11 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
       {
         label: 'Guest capacity',
         value: listing.guestCount ? `${listing.guestCount} guests` : '',
+        span: false,
+      },
+      {
+        label: 'Pricing',
+        value: pricingDescriptor ? `${pricingLabel} · ${pricingDescriptor}` : pricingLabel,
         span: false,
       },
       {

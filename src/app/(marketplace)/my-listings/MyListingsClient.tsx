@@ -283,7 +283,15 @@ const MyListingsClient: React.FC<MyListingsClientProps> = ({ listings, currentUs
         key={listing.id}
         className="rounded-3xl shadow-md bg-white/90 p-8 ring-1 ring-transparent transition hover:shadow-lg sm:p-10"
       >
+          {/* >>> INSERT TIMESTAMP BLOCK HERE <<< */}
+          <div className="mb-4">
+            <div className="inline-block flex flex-row gap-1 w-fit rounded-xl bg-white/95 px-3 py-2 text-[10px] leading-tight shadow ring-1 ring-neutral-200">
+              <div className="font-semibold text-neutral-600">{timestampMeta.label}</div>
+              <div className="font-medium text-neutral-900">{formattedTimestamp}</div>
+            </div>
+          </div>
         <div className="grid gap-5 lg:grid-cols-[minmax(0,280px)_1fr] lg:items-start">
+          
           <div
             className="
               relative 
@@ -326,13 +334,10 @@ const MyListingsClient: React.FC<MyListingsClientProps> = ({ listings, currentUs
             </span>
           </div>
 
+
           <div className="flex flex-1 flex-col justify-between gap-5">
             <div className="space-y-3">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div className="absolute rounded-xl flex flex-row gap-1 rounded-lg bg-white/90 px-3 py-2 text-[11px] shadow-md ring-1 ring-neutral-200">
-                  <div className="font-semibold text-neutral-600">{timestampMeta.label}</div>
-                  <div className="font-medium text-neutral-900">{formattedTimestamp}</div>
-                </div>
                 <div className="space-y-1 pt-10">
                   <h3 className="ml-1 mt-1 text-lg font-semibold text-neutral-900 sm:text-xl">
                     {listing.title}

@@ -1585,7 +1585,7 @@ const coverImage = useMemo(() => {
                                   alt={fieldValues.country.label}
                                   width={24}
                                   height={16}
-                                  className="rounded-full object-cover"
+                                  className="ml-0.5 h-4 w-6 rounded object-cover"
                                 />
                                 <span>
                                   {fieldValues.country.city ? `${fieldValues.country.city}, ` : ''}

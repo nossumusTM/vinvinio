@@ -31,8 +31,8 @@ const NavBar: React.FC<NavBarProps> = ({ currentUser }) => {
 
   const navbarVariants: Variants = {
     hidden:   { y: -120, opacity: 0 },
-    shown:    { y: 0,    opacity: 1, transition: { duration: 0.45, ease: [0.16, 1, 0.3, 2] } },      // cubic-bezier
-    offscreen:{ y: -120,               transition: { duration: 0.25, ease: [0.4, 0, 2, 2] } },
+    shown:    { y: 0,    opacity: 1, transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1] } },      // cubic-bezier
+    offscreen:{ y: -120,               transition: { duration: 0.25, ease: [0.4, 0, 1, 1] } },
   };
 
 //   useEffect(() => {

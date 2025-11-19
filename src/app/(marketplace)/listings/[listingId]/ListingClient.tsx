@@ -20,6 +20,7 @@ import { format } from 'date-fns';
 
 import useLoginModal from "@/app/(marketplace)/hooks/useLoginModal";
 import { SafeListing, SafeReservation, SafeUser } from "@/app/(marketplace)/types";
+import { computePricingForGuests } from "@/app/(marketplace)/libs/pricingDisplay";
 import getCurrentUser from "@/app/(marketplace)/actions/getCurrentUser";
 
 import Container from "@/app/(marketplace)/components/Container";
@@ -29,6 +30,9 @@ import ListingInfo from "@/app/(marketplace)/components/listings/ListingInfo";
 import ListingReservation from "@/app/(marketplace)/components/listings/ListingReservation";
 import { motion, AnimatePresence } from 'framer-motion'
 import Avatar from "@/app/(marketplace)/components/Avatar";
+
+import useCountries from "@/app/(marketplace)/hooks/useCountries";
+import useExperienceSearchState from "@/app/(marketplace)/hooks/useExperienceSearchState";
 
 import ReviewsModal from "@/app/(marketplace)/components/modals/ReviewModal";
 
@@ -73,6 +77,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
         environments = [],
         activityForms = [],
         seoKeywords = [],
+        hoursInAdvance = 0,
       } = listing;
 
     const disabledDates = useMemo(() => {
@@ -138,13 +143,18 @@ const ListingClient: React.FC<ListingClientProps> = ({
         };
         }, [listing.category, listing.user]);
 
+    const [showAllReviews, setShowAllReviews] = useState(false);
+
+    const { getByValue } = useCountries();
+    const { setLocation } = useExperienceSearchState();
 
     const [isLoading, setIsLoading] = useState(false);
     const [totalPrice, setTotalPrice] = useState(listing.price);
     const [dateRange, setDateRange] = useState<Range>(initialDateRange);
     const [selectedTime, setSelectedTime] = useState<string>();
-    const [guestCount, setGuestCount] = useState(1);
-    const [showAllReviews, setShowAllReviews] = useState(false);
+    const [guestCount, setGuestCount] = useState(() =>
+        listing.pricingType === 'group' && listing.groupSize ? listing.groupSize : 1,
+    );
 
     const [reviews, setReviews] = useState<{ 
         rating: number; 
@@ -155,6 +165,35 @@ const ListingClient: React.FC<ListingClientProps> = ({
     }[]>([]);
 
     const messenger = useMessenger();
+
+    const pricingTiers = useMemo(
+        () => (Array.isArray(listing.customPricing) ? listing.customPricing : []),
+        [listing.customPricing]
+    );
+
+    const perPersonPrice = useMemo(() => {
+        if (listing.pricingType === 'group' && listing.groupPrice) {
+            return listing.groupPrice;
+        }
+
+        if (listing.pricingType === 'custom' && pricingTiers.length) {
+            const sorted = [...pricingTiers].sort((a, b) => a.minGuests - b.minGuests);
+            const matched = sorted.find(
+                (tier) => guestCount >= tier.minGuests && guestCount <= tier.maxGuests,
+            );
+
+            if (matched) return matched.price;
+            if (guestCount > sorted[sorted.length - 1].maxGuests) return sorted[sorted.length - 1].price;
+            return sorted[0].price;
+        }
+
+        return listing.price;
+    }, [guestCount, listing.groupPrice, listing.price, listing.pricingType, pricingTiers]);
+
+    const pricing = useMemo(
+        () => computePricingForGuests(listing, guestCount),
+        [listing, guestCount]
+    );
 
     const onCreateReservation = useCallback(() => {
         if (!currentUser) {
@@ -189,7 +228,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
         );
         
         axios.post('/api/reservations', {
-            totalPrice,
+            totalPrice: pricing.totalPrice,
             startDate: format(dateRange.startDate!, 'yyyy-MM-dd'),
             endDate: format(dateRange.endDate!, 'yyyy-MM-dd'),
             listingId: listing?.id,
@@ -213,7 +252,8 @@ const ListingClient: React.FC<ListingClientProps> = ({
                 setIsLoading(false);
             })
     }, [
-        totalPrice,
+        pricing.totalPrice,
+        dateRange,
         dateRange,
         listing?.id,
         router,
@@ -234,10 +274,21 @@ const ListingClient: React.FC<ListingClientProps> = ({
     };
 
     useEffect(() => {
-        if (dateRange.startDate && listing.price) {
-          setTotalPrice(listing.price * guestCount);
+        if (listing.pricingType === 'group' && listing.groupPrice) {
+            setTotalPrice(listing.groupPrice);
+            return;
         }
-    }, [dateRange, listing.price, guestCount]);   
+
+        if (dateRange.startDate) {
+          setTotalPrice(perPersonPrice * guestCount);
+        }
+    }, [dateRange.startDate, perPersonPrice, guestCount, listing.pricingType, listing.groupPrice]);
+
+    useEffect(() => {
+        if (listing.pricingType === 'group' && listing.groupSize) {
+            setGuestCount(listing.groupSize);
+        }
+    }, [listing.groupSize, listing.pricingType]);
     
     useEffect(() => {
         const fetchReviews = async () => {
@@ -255,6 +306,13 @@ const ListingClient: React.FC<ListingClientProps> = ({
       
         fetchReviews();
       }, [listing.id]);
+
+      useEffect(() => {
+        const option = listing.locationValue ? getByValue(listing.locationValue) : undefined;
+        if (option) {
+            setLocation(option as any);
+        }
+      }, [getByValue, listing.locationValue, setLocation]);
 
       useEffect(() => {
         const fetchUserImages = async () => {
@@ -287,6 +345,37 @@ const ListingClient: React.FC<ListingClientProps> = ({
       
         if (reviews.length > 0) fetchUserImages();
     }, [reviews]);
+
+    useEffect(() => {
+        const currentQuery = params ? qs.parse(params.toString()) : {};
+        const updatedQuery: any = { ...currentQuery };
+        let shouldReplace = false;
+
+        if (!currentQuery.startDate && dateRange.startDate) {
+            updatedQuery.startDate = formatISO(dateRange.startDate as Date);
+            shouldReplace = true;
+        }
+        if (!currentQuery.endDate && dateRange.endDate) {
+            updatedQuery.endDate = formatISO(dateRange.endDate as Date);
+            shouldReplace = true;
+        }
+        if (!currentQuery.guestCount && !currentQuery.guests) {
+            updatedQuery.guestCount = guestCount;
+            updatedQuery.guests = String(guestCount);
+            shouldReplace = true;
+        }
+        if (!currentQuery.locationValue && listing.locationValue) {
+            updatedQuery.locationValue = listing.locationValue;
+            shouldReplace = true;
+        }
+
+        if (shouldReplace) {
+            router.replace(
+                qs.stringifyUrl({ url: pathname || '/', query: updatedQuery }, { skipNull: true, skipEmptyString: true }),
+                { scroll: false }
+            );
+        }
+    }, [dateRange.endDate, dateRange.startDate, guestCount, listing.locationValue, params, pathname, router]);
 
     useEffect(() => {
         if (!dateDirty && !guestsDirty) return; // ✅ do nothing until user interacts
@@ -398,21 +487,24 @@ const ListingClient: React.FC<ListingClientProps> = ({
                             environments={environments}
                             activityForms={activityForms}
                             seoKeywords={seoKeywords}
+                            hoursInAdvance={hoursInAdvance}
                         />
                         <div className="order-first mb-10 md:order-last md:col-span-3">
                             <div className="md:sticky md:top-32">
                             <ListingReservation
                                 listingId={listing.id}
-                                price={listing.price}
+                                price={perPersonPrice}
                                 totalPrice={totalPrice}
-                                // onChangeDate={(value) => setDateRange(value)}
                                 onChangeDate={handleDateChange}
                                 dateRange={dateRange}
                                 onSubmit={onCreateReservation}
+
                                 disabled={isLoading}
                                 disabledDates={disabledDates}
                                 bookedSlots={bookedSlots}
                                 selectedTime={selectedTime}
+
+
                                 onTimeChange={setSelectedTime}
                                 maxGuests={listing.guestCount}
                                 guestCount={guestCount}
@@ -421,6 +513,11 @@ const ListingClient: React.FC<ListingClientProps> = ({
                                 averageRating={averageRating}
                                 reviewCount={reviews.length}
                                 categoryLabel={category?.label}
+                                pricingType={listing.pricingType as string}
+                                groupPrice={listing.groupPrice}
+                                groupSize={listing.groupSize}
+                                customPricing={pricingTiers}
+                                hoursInAdvance={hoursInAdvance ?? undefined}
                             />
                             </div>
                         </div>

@@ -69,6 +69,7 @@ export default async function getListingById(params: IParams) {
     return {
       ...listingWithSlug,
       price: normalizedBasePrice,
+      hoursInAdvance: Math.max(0, Number(listingWithSlug.hoursInAdvance ?? 0)),
       updatedAt: listingWithSlug.updatedAt.toISOString(),
       languages: Array.isArray(listingWithSlug.languages)
         ? listingWithSlug.languages

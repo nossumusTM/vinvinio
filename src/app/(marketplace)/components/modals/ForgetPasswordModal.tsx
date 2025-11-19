@@ -281,7 +281,7 @@ const ForgetPasswordModal: React.FC<ForgetPasswordModalProps> = () => {
       <button
         type="button"
         onClick={handleBackToLogin}
-        className="inline-flex items-center gap-2 self-start rounded-full bg-neutral-50 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100"
+        className="inline-flex items-center gap-2 self-start rounded-full px-4 py-2 text-sm font-medium text-neutral-700 border-b border-neutral-50 transition hover:border-neutral-100"
       >
         <HiMiniArrowLeft />
         BACK TO SIGN IN
@@ -315,10 +315,10 @@ const ForgetPasswordModal: React.FC<ForgetPasswordModalProps> = () => {
                         setSelectedMethod(key);
                         setFlow(key === 'email' ? 'email-request' : 'phone-request');
                       }}
-                      className={`flex h-full flex-col gap-2 rounded-2xl border p-4 text-left transition ${
+                      className={`flex h-full flex-col gap-2 rounded-2xl p-4 text-left transition ${
                         active
-                          ? 'bg-neutral-100 text-neutral-900 shadow-lg shadow-neutral-900/20'
-                          : 'bg-white text-neutral-800 shadow-sm hover:border-neutral-400 hover:shadow-md'
+                          ? 'bg-neutral-100 text-neutral-900 shadow-md shadow-neutral-900/20'
+                          : 'bg-white text-neutral-800 shadow-md hover:border-neutral-400 hover:shadow-lg'
                       }`}
                     >
                       <div className="flex items-center gap-3">

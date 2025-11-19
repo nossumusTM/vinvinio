@@ -504,7 +504,7 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isOpen, onClose
           <motion.aside
             key="notifications-panel"
             onClick={(e) => e.stopPropagation()}
-            className="fixed right-0 top-0 z-[101] m-[8px] flex h-[calc(100dvh-16px)] w-fit max-w-md flex-col rounded-3xl bg-white shadow-2xl"
+            className="fixed right-0 top-0 z-[101] m-[8px] flex h-[calc(100dvh-16px)] w-fit min-w-md max-w-md flex-col rounded-3xl bg-white shadow-2xl"
             variants={panelVariants}
             initial="hidden"
             animate="visible"

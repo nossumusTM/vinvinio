@@ -54,6 +54,7 @@ interface ListingInfoProps {
     environments?: string[];
     activityForms?: string[];
     seoKeywords?: string[];
+    hoursInAdvance?: number | null;
 }
 
 const ListingInfo: React.FC<ListingInfoProps> = ({
@@ -76,6 +77,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
     environments,
     activityForms,
     seoKeywords,
+    hoursInAdvance,
 }) => {
     const { getByValue } = useCountries();
     const router = useRouter();
@@ -146,6 +148,84 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
       const el = document.getElementById('reviews');
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, []);
+
+   const formatItalianLocation = (value?: string | null): string => {
+      if (!value) return '';
+      const parts = value
+        .split(',')
+        .map((p) => p.trim())
+        .filter(Boolean);
+
+      if (parts.length === 0) return value;
+
+      const countryIdx = parts.findIndex((p) => /italia/i.test(p));
+      const postalIdx = parts.findIndex((p) => /^\d{5}$/.test(p));
+
+      const regionIdx = (() => {
+        const end = postalIdx > -1 ? postalIdx - 1 : parts.length - 1;
+        for (let i = end; i >= 0; i--) {
+          const p = parts[i];
+          if (/municipio/i.test(p)) continue;
+          if (/capitale/i.test(p)) continue;
+          return i;
+        }
+        return -1;
+      })();
+
+      let street: string | undefined;
+      let house: string | undefined;
+      let poi: string | undefined;
+
+      if (/^\d+$/.test(parts[0]) && parts[1]) {
+        house = parts[0];
+        street = parts[1];
+      } else if (parts[0]) {
+        poi = parts[0];
+      }
+
+      let city: string | undefined;
+      const searchEnd = regionIdx > -1
+        ? regionIdx
+        : postalIdx > -1
+        ? postalIdx
+        : parts.length;
+
+      for (let i = searchEnd - 1; i >= 0; i--) {
+        const p = parts[i];
+        if (/municipio/i.test(p) || /capitale/i.test(p)) continue;
+        if (p === street || p === poi) continue;
+        city = p;
+        break;
+      }
+
+      const region = regionIdx > -1 ? parts[regionIdx] : undefined;
+      const postal = postalIdx > -1 ? parts[postalIdx] : undefined;
+      const country = countryIdx > -1 ? parts[countryIdx] : undefined;
+
+      const buildResult = (arr: (string | undefined)[]) => {
+        const resultParts = arr.filter(Boolean).map((p) => p!.trim());
+        if (resultParts.length >= 2) {
+          const a = resultParts[0].toLowerCase();
+          const b = resultParts[1].toLowerCase();
+          if (a === b) {
+            resultParts.splice(1, 1);
+          }
+        }
+        return resultParts.join(', ');
+      };
+
+      if (street && house) {
+        // Via dei Campani, 55, Roma, Lazio, 00185[, Italia]
+        return buildResult([street, house, city, region, postal, country]);
+      }
+
+      if (poi) {
+        // Colosseo, Roma, Lazio, 00184[, Italia]
+        return buildResult([poi, city, region, postal, country]);
+      }
+
+      return value;
+    };
 
     return (
         <div className="col-span-4 flex flex-col gap-8">
@@ -329,7 +409,23 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                     </div>
                     </div>
                 )}
-                </div>
+
+                {typeof hoursInAdvance === 'number' && hoursInAdvance > 0 && (
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 shrink-0 aspect-square shadow-md rounded-full flex items-center justify-center">
+                      <GiExtraTime size={20} className="text-neutral-600 mt-1" />
+                    </div>
+                    <div>
+                      <p className="text-lg font-medium text-black">
+                        {hoursInAdvance} hour{hoursInAdvance === 1 ? '' : 's'} notice required
+                      </p>
+                      <p className="text-sm text-neutral-600">
+                        Guests must book this experience at least that many hours before start time.
+                      </p>
+                    </div>
+                  </div>
+                )}
+                </div>  
 
                 {/* </div> */}
             </div>
@@ -562,7 +658,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
 
         <div className="flex flex-col gap-1">
             <div className="ml-4">
-                <Heading title="Activity starts" />
+                <Heading title="Location" />
                 </div>
 
             <div className="ml-4 flex flex-row gap-3 items-center rounded-full px-2 text-black-500">
@@ -573,9 +669,9 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                 </div>
 
                 {meetingPoint && (
-                <p className="text-sm font-semibold rounded-full bg-neutral-100 inline p-3 text-neutral-800 ">
-                    {meetingPoint}
-                </p>
+                  <p className="text-sm font-semibold rounded-full bg-neutral-100 inline p-3 text-neutral-800 ">
+                    {formatItalianLocation(meetingPoint)}
+                  </p>
                 )}
             </div>
         </div>
