@@ -9,6 +9,7 @@ interface ButtonProps {
     outline?: boolean;
     small?: boolean;
     icon?: IconType;
+    loading?: boolean;
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -18,10 +19,11 @@ const Button: React.FC<ButtonProps> = ({
     outline,
     small,
     icon: Icon,
+    loading,
 }) => {
     return (
     <button
-        disabled={disabled}
+        disabled={disabled || loading}
         onClick={onClick}
         className={`
             relative
@@ -51,7 +53,18 @@ const Button: React.FC<ButtonProps> = ({
             className="absolute left-4 top-3"
             />
         )}
-        {label}
+        
+        {loading ? (
+            <span className="flex items-center justify-center gap-2">
+                <span
+                    className="h-4 w-4 border-2 border-t-transparent rounded-full animate-spin"
+                    style={{ borderColor: outline ? '#000' : '#fff', borderTopColor: 'transparent' }}
+                ></span>
+                <span>{label}</span>
+            </span>
+        ) : (
+            label
+        )}
     </button>
     );
 }

@@ -246,10 +246,11 @@ interface ReservationCardProps {
   guestImage?: string;
   guestId?: string;
   currentUser?: SafeUser | null;
+  onNavigate?: () => void;
 }
 
 const ReservationCard: React.FC<ReservationCardProps> = ({
-  reservation, currentUser, guestName, guestImage, guestId
+  reservation, currentUser, guestName, guestImage, guestId, onNavigate
 }) => {
   const router = useRouter();
   const messenger = useMessenger();
@@ -310,8 +311,25 @@ const ReservationCard: React.FC<ReservationCardProps> = ({
     return `${hour12}:${String(minute).padStart(2, '0')} ${ampm}`;
   };
 
+  const cardIsInteractive = typeof onNavigate === 'function';
+
   return (
-    <div className="relative bg-white rounded-3xl shadow-md hover:shadow-lg transition duration-300 overflow-hidden">
+    <div
+      role={cardIsInteractive ? 'button' : undefined}
+      tabIndex={cardIsInteractive ? 0 : -1}
+      onClick={() => cardIsInteractive && onNavigate?.()}
+      onKeyDown={(event) => {
+        if (!cardIsInteractive) return;
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onNavigate?.();
+        }
+      }}
+      className={`relative bg-white rounded-3xl shadow-md hover:shadow-lg transition duration-300 overflow-hidden ${
+        cardIsInteractive ? 'cursor-pointer focus-visible:ring-2 focus-visible:ring-black' : ''
+      }`}
+      aria-label={cardIsInteractive ? `Open ${reservation.listing?.title ?? 'reservation'}` : undefined}
+    >
       {Array.isArray(reservation.listing?.imageSrc) && reservation.listing.imageSrc.length > 0 && (
         <Image
           src={reservation.listing.imageSrc[0]}
@@ -400,8 +418,14 @@ const ReservationCard: React.FC<ReservationCardProps> = ({
           {guestProfilePath ? (
             <button
               type="button"
-              onClick={handleGuestNavigation}
-              onAuxClick={handleGuestNavigation}
+              onClick={(event) => {
+                event.stopPropagation();
+                handleGuestNavigation(event);
+              }}
+              onAuxClick={(event) => {
+                event.stopPropagation();
+                handleGuestNavigation(event);
+              }}
               className={guestProfileButtonClasses}
               title="Open guest profile"
             >
@@ -455,7 +479,8 @@ const ReservationCard: React.FC<ReservationCardProps> = ({
         <div className="mt-auto flex px-6 justify-center mb-7">
           <Button
             label="Send a Message"
-            onClick={() => {
+            onClick={(event) => {
+              event.stopPropagation();
               if (currentUser?.id === guestId) return;
               messenger.openChat({
                 id: guestId || '',

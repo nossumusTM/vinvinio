@@ -11,19 +11,24 @@ interface IParams {
 interface IReservationParams {
   userId?: string;
   listingId?: string;
-}
-
-interface IReservationParams {
-  userId?: string;
-  listingId?: string;
-  authorId?: string; // ✅ Add this
+  authorId?: string;
   skip?: number;
   take?: number;
+  dateFrom?: Date;
+  dateTo?: Date;
 }
 
 export default async function getReservations(params: IReservationParams) {
   try {
-    const { userId, listingId, authorId, skip = 0, take = 4 } = params;
+    const { userId, listingId, authorId, skip = 0, take = 4, dateFrom, dateTo } = params;
+
+    const dateFilters: { gte?: Date; lte?: Date } = {};
+    if (dateFrom) {
+      dateFilters.gte = dateFrom;
+    }
+    if (dateTo) {
+      dateFilters.lte = dateTo;
+    }
 
     const reservations = await prisma.reservation.findMany({
       skip,
@@ -38,6 +43,9 @@ export default async function getReservations(params: IReservationParams) {
           listing: {
             userId: authorId,
           },
+        }),
+        ...(Object.keys(dateFilters).length > 0 && {
+          startDate: dateFilters,
         }),
       },
       include: {

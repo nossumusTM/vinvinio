@@ -390,11 +390,34 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
     languageToFlagCode[normalizeLangKey(lang)] ?? null;
 
   // If your files are pngs under /public/flags/<code>.png:
-  const flagSrc = (code: string) => `/flags/${code}.svg`;
+  // const flagSrc = (code: string) => `/flags/${code}.svg`;
 
   // const flagPath = (countryCode: string) =>
   //   `/flags/${countryCode.toLowerCase()}.svg`; // e.g. /flags/it.png
+  // const flagPath = (cc: string) => `/flags/${cc.toLowerCase()}.svg`;
+
+  const flagSrc = (code: string) => `/flags/${code}.svg`;
   const flagPath = (cc: string) => `/flags/${cc.toLowerCase()}.svg`;
+
+  const normalizeCountryCode = (code: string) => {
+    const c = String(code).toLowerCase().trim();
+
+    const map3to2: Record<string, string> = {
+      ita: 'it',
+      esp: 'es',
+      fra: 'fr',
+      deu: 'de',
+      usa: 'us',
+      gbr: 'gb',
+    };
+
+    if (map3to2[c]) return map3to2[c];
+
+    // Fallback: if it's longer than 2 chars, take first 2
+    if (c.length > 2) return c.slice(0, 2);
+
+    return c;
+  };
 
   useEffect(() => setIsMounted(true), []);
 
@@ -569,17 +592,7 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                   {/* {host.legalName && (
                     <p className="ml-1 text-sm text-white/80">{host.legalName}</p>
                   )} */}
-                  {primaryLocation && (
-                      <div className="flex items-center gap-1.5 text-sm text-white/80">
-                        <span>Located In</span>
-                        <CountryFlagByLabel
-                          label={primaryLocation.label}
-                          // width={18}
-                          // height={12}
-                          className="mr-3 h-4 w-6 object-cover rounded-lg"
-                        />
-                        </div>
-                      )}
+                  {primaryLocation && ( <p className="border-b w-fit mr-3.5 text-sm text-white/80 flex flex-row gap-1"> Located In <p className='font-semibold'>{primaryLocation.label.toUpperCase()}</p> </p> )}
                 </div>
               </div>
 
@@ -616,7 +629,7 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                     )}
                     {spokenLanguages.length > 0 ? (
                       <div className="relative flex items-center gap-2 p-2 shadow-xl rounded-xl">
-                        <span className="text-sm font-medium text-white/90">Available in</span>
+                        <span className="text-sm font-medium text-white/90">Available In</span>
 
                         {/* Flags (first 3 always visible) */}
                         <div className="flex items-center gap-0.5">
@@ -828,21 +841,15 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                               const loc = getByValue(listing.locationValue);
                               if (!loc) return null;
 
-                              const countryCode = (loc.value || "").toLowerCase(); // "it"
-                              const countryName = loc.label;                        // "Italy"
-                              const cityName = loc.city?.trim();                    // "Milan" or "Rome"
+                              const countryName = loc.label;            // e.g. "Italy"
+                              const cityName = loc.city?.trim();        // e.g. "Milan"
 
                               return (
-                                <div className="flex items-center gap-2 text-neutral-500 text-xs">
-                                  {countryCode && (
-                                    <NextImage
-                                      src={flagPath(countryCode)}
-                                      alt={countryName}
-                                      width={14}
-                                      height={14}
-                                      className="rounded-sm aspect-square"
-                                    />
-                                  )}
+                                <div className="flex items-center gap-1 text-neutral-500 text-xs">
+                                  <CountryFlagByLabel
+                                    label={countryName}
+                                    className="rounded-sm aspect-square mr-1.5 h-4 w-6 object-cover rounded"
+                                  />
                                   <span className="uppercase tracking-widest">
                                     {cityName ? `${cityName}, ${countryName}` : countryName}
                                   </span>

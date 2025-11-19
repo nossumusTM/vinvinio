@@ -2,10 +2,12 @@
 
 import { toast } from "react-hot-toast";
 import axios from "axios";
-import { MouseEvent, useCallback, useEffect, useState } from "react";
+import { MouseEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from 'date-fns';
 import Button from "../components/Button";
+import type { Range, RangeKeyDict } from 'react-date-range';
+import { AnimatePresence, motion } from 'framer-motion';
 
 import { SafeReservation, SafeUser } from "@/app/(marketplace)/types";
 import { TbCalendarTime, TbUserScan, TbClock, TbUserSquareRounded, TbMessageDots } from "react-icons/tb";
@@ -22,6 +24,7 @@ import Avatar from "@/app/(marketplace)/components/Avatar";
 import ConfirmPopup from "../components/ConfirmPopup";
 import useCurrencyFormatter from '@/app/(marketplace)/hooks/useCurrencyFormatter';
 import Modal from "../components/modals/Modal";
+import FilterTrips from "./FilterTrips";
 
 import { AxiosError } from 'axios';
 
@@ -49,6 +52,36 @@ const TripsClient: React.FC<TripsClientProps> = ({
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(reservations.length === 4);
 
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  const [filterKeyword, setFilterKeyword] = useState<string | null>(null);
+  const [isFilterLoading, setIsFilterLoading] = useState(false);
+  const [filteredReservations, setFilteredReservations] = useState<SafeReservation[] | null>(null);
+
+  const now = useMemo(() => new Date(), []);
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth(); // 0–11
+
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+  const [selectedTime, setSelectedTime] = useState('12:00');
+
+  const yearOptions = useMemo(() => {
+    const baseYear = new Date().getFullYear();
+    return Array.from({ length: 5 }, (_, index) => baseYear - 2 + index);
+  }, []);
+
+  // const filteredReservations = useMemo(() => {
+  //   if (!filterKeyword) {
+  //     return loadedReservations;
+  //   }
+
+  //   const normalized = filterKeyword.toLowerCase();
+  //   return loadedReservations.filter((reservation) => {
+  //     const keywords = reservation.listing?.seoKeywords ?? [];
+  //     return keywords.some((keyword) => keyword?.toLowerCase().includes(normalized));
+  //   });
+  // }, [loadedReservations, filterKeyword]);
 
   const messenger = useMessenger();
 
@@ -79,9 +112,12 @@ const TripsClient: React.FC<TripsClientProps> = ({
   );
 
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showCancelConfirmPrompt, setShowCancelConfirmPrompt] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
+  const [isSubmittingCancellation, setIsSubmittingCancellation] = useState(false);
   const [customReason, setCustomReason] = useState('');
   const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
+  const [navigationPrompt, setNavigationPrompt] = useState<{ path: string; title: string } | null>(null);
   const cancelOptions = [
     "Change of plans",
     "Found a better deal",
@@ -120,7 +156,14 @@ const TripsClient: React.FC<TripsClientProps> = ({
   const handleSubmitCancellation = async () => {
     if (!selectedReservationId || !cancelReason) return;
   
-    const reasonToSend = cancelReason === 'Other' ? customReason : cancelReason;
+     if (cancelReason === 'Other' && !customReason.trim()) {
+      setPopupMessage("Please share your reason for cancellation.");
+      return;
+    }
+
+    setIsSubmittingCancellation(true);
+
+    const reasonToSend = cancelReason === 'Other' ? customReason.trim() : cancelReason;
     const reservation = reservations.find(r => r.id === selectedReservationId);
     const formattedDate = format(new Date(reservation?.startDate || ''), 'PPP');
   
@@ -159,16 +202,54 @@ const TripsClient: React.FC<TripsClientProps> = ({
         }
       });
       setShowCancelModal(false);
+      setShowCancelConfirmPrompt(false);
+      setCancelReason('');
+      setCustomReason('');
       setSelectedReservationId(null);
     } catch (err) {
       toast.error('Failed to send cancellation email.');
+    } finally {
+      setIsSubmittingCancellation(false);
     }
   };  
 
   const openCancelModal = useCallback((id: string) => {
     setSelectedReservationId(id);
+    setCancelReason('');
+    setCustomReason('');
+    setShowCancelConfirmPrompt(false);
     setShowCancelModal(true);
   }, []);  
+
+  const handleCloseCancelModal = useCallback(() => {
+    setShowCancelModal(false);
+    setShowCancelConfirmPrompt(false);
+  }, []);
+
+  const requestCancellationSubmission = useCallback(() => {
+    if (!cancelReason) {
+      setPopupMessage('Please choose a reason before sending.');
+      return;
+    }
+    if (cancelReason === 'Other' && !customReason.trim()) {
+      setPopupMessage('Please share a few words about your reason.');
+      return;
+    }
+    setShowCancelConfirmPrompt(true);
+  }, [cancelReason, customReason]);
+
+  const handleNavigationPrompt = useCallback((path: string | null, title: string) => {
+    if (!path) return;
+    setNavigationPrompt({ path, title });
+  }, []);
+
+  const confirmNavigation = useCallback(() => {
+    if (!navigationPrompt) return;
+    router.push(navigationPrompt.path);
+    setNavigationPrompt(null);
+  }, [navigationPrompt, router]);
+
+  const cancelNavigation = useCallback(() => setNavigationPrompt(null), []);
   
   // const onCancel = useCallback(async (id: string) => {
   //   if (currentUser?.role !== 'moder') return;
@@ -280,13 +361,59 @@ const TripsClient: React.FC<TripsClientProps> = ({
       const newData = res.data;
       setLoadedReservations((prev) => [...prev, ...newData]);
       setPage((prev) => prev + 1);
-      if (newData.length === 4) setHasMore(false);
+      if (newData.length < 4) {
+        setHasMore(false);
+      }
     } catch (err) {
       toast.error("Failed to load more reservations.");
     } finally {
       setLoadingMore(false);
     }
   }, [page]);
+
+  const applyTripsFilter = useCallback(async () => {
+  setIsFilterLoading(true);
+
+  try {
+    const startDate = new Date(selectedYear, selectedMonth, 1);
+    const endDate = new Date(selectedYear, selectedMonth + 1, 0); // last day of month
+
+    const response = await axios.post('/api/trips/filter', {
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      time: selectedTime || null,
+      year: selectedYear,
+    });
+
+    setFilteredReservations(response.data ?? []);
+    setFilterKeyword('activities');
+  } catch (error) {
+    const err = error as AxiosError<{ error?: string; message?: string }>;
+    console.error('🔴 /api/trips/filter failed:', {
+      status: err.response?.status,
+      data: err.response?.data,
+    });
+
+    toast.error(
+      err.response?.data?.error ||
+      err.response?.data?.message ||
+      'Unable to filter your activities right now.'
+    );
+  } finally {
+    setIsFilterLoading(false);
+  }
+  }, [selectedYear, selectedMonth, selectedTime]);
+
+  const resetTripsFilter = useCallback(() => {
+    setIsFilterLoading(true);
+    setFilterKeyword(null);
+    setFilteredReservations(null);
+    setSelectedTime('12:00');
+    setSelectedYear(currentYear);
+    setSelectedMonth(currentMonth);
+    setTimeout(() => setIsFilterLoading(false), 200);
+  }, [currentYear, currentMonth]);
+
 
   useEffect(() => {
     const handleScroll = () => {
@@ -298,44 +425,78 @@ const TripsClient: React.FC<TripsClientProps> = ({
     return () => window.removeEventListener("scroll", handleScroll);
   }, [hasMore, loadingMore, loadMoreReservations]);
 
+  const showLoadMore = hasMore && !filteredReservations;
+  const reservationsToRender = filteredReservations ?? loadedReservations;
+
     return (
       <>
       <Container className="py-10">
-      <div className="pageadjust px-5 space-y-6">
+  <div className="pageadjust px-5 space-y-6">
+    <div className="space-y-2 rounded-3xl border border-neutral-200 bg-white/90 shadow-md p-6">
       <Heading
         title="Activities"
         subtitle="Tracing your steps — behind and ahead"
       />
-      <div className="mt-6 grid grid-cols-1 gap-10 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4">
-        {loadedReservations.map((reservation) => {
+      <p className="text-sm text-neutral-600">
+        Use the filter bubble at the bottom to jump to a specific month, year, and time.
+      </p>
+    </div>
 
-          const host = reservation.listing?.user;
-          const hostNameClean = host?.username?.trim() || null;
-          const hostName = hostNameClean ?? 'Unknown';
-          const hostImage = host?.image ?? '';
-          const hostId = host?.id ?? null;
+    {/* your grid of reservations stays as-is below */}
+    <div className="mt-6 grid grid-cols-1 gap-10 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4">
+        {reservationsToRender.length === 0 ? (
+            <div className="col-span-full rounded-3xl border border-dashed border-neutral-200 bg-white/70 p-10 text-center shadow-sm">
+              <p className="text-base font-semibold text-neutral-900">
+                No activities found for this filter.
+              </p>
+              <p className="text-sm text-neutral-600 mt-2">
+                Try resetting the filter to view all of your trips.
+              </p>
+            </div>
+          ) : (
+            reservationsToRender.map((reservation: SafeReservation) => {
+            const host = reservation.listing?.user;
+            const hostNameClean = host?.username?.trim() || null;
+            const hostName = hostNameClean ?? 'Unknown';
+            const hostImage = host?.image ?? '';
+            const hostId = host?.id ?? null;
 
-          // prefer @username; otherwise slugify name; finally fall back to id
-          const slugify = (s: string) =>
-            s.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+            const slugify = (s: string) =>
+              s.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
-          const handle =
-            (typeof host?.username === 'string' && host.username.trim())
-              ? host.username.trim()
-              : (hostNameClean ? slugify(hostNameClean) : (hostId ?? ''));
+            const handle =
+              (typeof host?.username === 'string' && host.username.trim())
+                ? host.username.trim()
+                : (hostNameClean ? slugify(hostNameClean) : (hostId ?? ''));
 
-          const hostProfilePath =
-            host?.role === 'host'
-              ? (handle ? `/hosts/${encodeURIComponent(handle)}` : null)
-              : (handle ? `/social-card/${encodeURIComponent(handle)}` : null);
+            const hostProfilePath =
+              host?.role === 'host'
+                ? (handle ? `/hosts/${encodeURIComponent(handle)}` : null)
+                : (handle ? `/social-card/${encodeURIComponent(handle)}` : null);
 
-          const handleHostNavigation = makeNavigationHandler(hostProfilePath);
+            const handleHostNavigation = makeNavigationHandler(hostProfilePath);
+            const listingPath = reservation.listing?.slug
+              ? `/listings/${reservation.listing.slug}`
+              : (reservation.listing?.id ? `/listings/${reservation.listing.id}` : null);
+            const handleCardNavigation = () =>
+              handleNavigationPrompt(listingPath, reservation.listing?.title ?? 'this listing');
 
           return (
-            <div
-              key={reservation.id}
-              className="relative bg-white rounded-3xl shadow-md hover:shadow-lg transition duration-300 overflow-hidden flex flex-col"
-            >
+              <div
+                key={reservation.id}
+                role={listingPath ? 'button' : undefined}
+                tabIndex={listingPath ? 0 : -1}
+                aria-label={listingPath ? `Open ${reservation.listing?.title ?? 'listing'} details` : undefined}
+                onClick={() => listingPath && handleCardNavigation()}
+                onKeyDown={(event) => {
+                  if (!listingPath) return;
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    handleCardNavigation();
+                  }
+                }}
+                className="relative bg-white rounded-3xl shadow-md hover:shadow-lg transition duration-300 overflow-hidden flex flex-col cursor-pointer focus-visible:ring-2 focus-visible:ring-black"
+              >
               {/* ✅ Status Label with fallback */}
               {reservation.status === 'cancelled' ? (
                 <div className="absolute top-4 left-4 px-3 py-1 bg-red-100 text-red-600 text-xs font-bold uppercase rounded-lg shadow-md z-10">
@@ -468,8 +629,14 @@ const TripsClient: React.FC<TripsClientProps> = ({
                   {hostProfilePath ? (
                     <button
                       type="button"
-                      onClick={handleHostNavigation}
-                      onAuxClick={handleHostNavigation}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleHostNavigation(event);
+                      }}
+                      onAuxClick={(event) => {
+                        event.stopPropagation();
+                        handleHostNavigation(event);
+                      }}
                       className={profileButtonClasses}
                       title="Open host profile"
                     >
@@ -522,9 +689,12 @@ const TripsClient: React.FC<TripsClientProps> = ({
                   <div className="min-h-[88px] grid place-items-center px-6 text-center">
                     {new Date(reservation.startDate) > new Date(Date.now() + 24 * 60 * 60 * 1000) ? (
                       <button
-                        onClick={() => openCancelModal(reservation.id)}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          openCancelModal(reservation.id);
+                        }}
                         disabled={deletingId === reservation.id}
-                        className="text-sm font-medium text-neutral-700 hover:underline hover:text-black transition disabled:opacity-50"
+                        className="inline-flex items-center justify-center rounded-2xl border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm hover:shadow-md transition disabled:opacity-50"
                       >
                         Need to cancel for some reason?
                       </button>
@@ -643,7 +813,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
                 </div>
               )}
 
-              {popupMessage && (
+              {/* {popupMessage && (
                 <ConfirmPopup
                   title="Notice"
                   message={popupMessage}
@@ -651,125 +821,191 @@ const TripsClient: React.FC<TripsClientProps> = ({
                   hideCancel
                   onConfirm={() => setPopupMessage(null)}
                 />
-              )}
+              )} */}
             </div>
           );
-        })}
-
-        {showCancelModal && (
-          <Modal
-            isOpen={showCancelModal}
-            onClose={() => setShowCancelModal(false)}
-            onSubmit={handleSubmitCancellation}
-            title="Cancel Reservation"
-            actionLabel="Send Request"
-            className="max-h-[60vh]"
-            body={
-              <div className="flex flex-col gap-4">
-                {/* Heading */}
-                <div className="text-left">
-                  <h3 className="text-lg font-semibold text-black">What Happened?</h3>
-                  <p className="text-sm text-neutral-600 mt-1">
-                    Sharing your reason helps us improve.
-                    <br />
-                    <span className="text-xs text-neutral-500">
-                      *Note: You can review our{" "}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const footer = document.getElementById('vuoiaggio-footer');
-                          if (footer) {
-                            footer.scrollIntoView({ behavior: 'smooth' });
-                          }
-                        }}
-                        className="underline hover:text-black"
-                      >
-                        cancellation policy
-                      </button>{" "}
-                      for more details.
-                    </span>
-                  </p>
-                </div>
-            
-                {/* Options */}
-                <div className="flex flex-col gap-2">
-                  {cancelOptions.map(option => (
-                    <label
-                      key={option}
-                      className={`
-                        flex items-center shadow-md rounded-lg px-8 py-4 text-md cursor-pointer transition 
-                        ${cancelReason === option ? 'shadow-md bg-neutral-100' : 'hover:bg-neutral-100'}
-                      `}
-                    >
-                      <input
-                        type="radio"
-                        name="cancel-reason"
-                        value={option}
-                        checked={cancelReason === option}
-                        onChange={(e) => setCancelReason(e.target.value)}
-                        className="mr-3 accent-black"
-                      />
-                      {option}
-                    </label>
-                  ))}
-                </div>
-            
-                {/* Textarea for 'Other' */}
-                {cancelReason === 'Other' && (
-                  <div>
-                    <textarea
-                      placeholder="Please specify your reason"
-                      className="w-full border border-neutral-300 rounded-lg p-3 text-sm mt-2 focus:outline-none focus:ring-2 focus:ring-black"
-                      rows={4}
-                      value={customReason}
-                      onChange={(e) => setCustomReason(e.target.value)}
-                    />
-                  </div>
-                )}
-              </div>
-            }            
-          />        
-        )}
-      </div>
-      </div>
-
-      {hasMore && (
-        <div className="flex justify-center mt-20">
-          <button
-            onClick={loadMoreReservations}
-            disabled={loadingMore}
-            className="px-6 py-2 rounded-full bg-black text-white hover:bg-neutral-800 transition text-sm"
-          >
-            {loadingMore ? (
-              <div className="loader inline-block w-5 h-5 mt-1 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
-            ) : (
-              "Load More"
-            )}
-          </button>
-        </div>
+        })
       )}
-
-    </Container>
-    <div>
-      {/* {currentUser?.role === 'moder' && (
-          <div className="mt-10 max-w-md mx-auto bg-white p-4 rounded-xl shadow-md">
-            <h3 className="text-md font-semibold mb-2">Moderator Cancellation Tool</h3>
-            <input
-              type="text"
-              placeholder="Enter Reservation ID"
-              value={selectedReservationId || ''}
-              onChange={(e) => setSelectedReservationId(e.target.value)}
-              className="w-full border p-2 mb-2 rounded-md"
-            />
-            <button
-              onClick={() => onCancel(selectedReservationId || '')}
-              className="w-full bg-black text-white py-2 rounded-md hover:bg-neutral-800"
-            >
-              Cancel Reservation
-            </button>
-          </div>
-        )} */}
+        
       </div>
+      </div>
+
+      {/* Bottom-center filter dropdown – anchored to button center */}
+      <div className="fixed inset-x-0 bottom-4 z-40 flex justify-center pointer-events-none">
+        <div className="pointer-events-auto">
+          {/* This wrapper is the ONLY relative parent for the dropup */}
+          <div className="relative inline-flex items-center justify-center">
+            {/* Trigger pill */}
+            <button
+              type="button"
+              onClick={() => setIsFilterOpen((prev) => !prev)}
+              className="flex items-center gap-2 rounded-full bg-black text-neutral-50 px-5 py-3 shadow-lg transition text-sm font-semibold hover:shadow-xl"
+            >
+              <span className="inline-flex h-6 w-6 items-center shadow-md justify-center rounded-full text-[13px]">
+                {isFilterOpen ? '–' : '+'}
+              </span>
+              <span>Filter activities</span>
+            </button>
+
+            {/* Dropup content — perfectly centered over the button */}
+            <AnimatePresence>
+              {isFilterOpen && (
+                <motion.div
+                    style={{ left: '50%', x: '-50%' }}
+                    className="
+                      absolute
+                      bottom-[calc(100%+12px)]
+                      md:bottom-[calc(100%+100px)]
+                      w-[min(100vw-32px,480px)]
+                    "
+                    initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.97 }}
+                    transition={{ duration: 0.18, ease: [0.22, 0.61, 0.36, 1] }}
+                  >
+                  <FilterTrips
+                    activeKeyword={filterKeyword}
+                    isLoading={isFilterLoading}
+                    timeValue={selectedTime}
+                    selectedYear={selectedYear}
+                    yearOptions={yearOptions}
+                    selectedMonth={selectedMonth}
+                    onMonthChange={setSelectedMonth}
+                    onTimeChange={setSelectedTime}
+                    onYearChange={setSelectedYear}
+                    onFilter={async () => {
+                      await applyTripsFilter();
+                      setIsFilterOpen(false);
+                    }}
+                    onReset={() => {
+                      resetTripsFilter();
+                      setIsFilterOpen(false);
+                    }}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </div>
+
+
+      </Container>
+
+     {showLoadMore && (
+      <div className="flex justify-center mt-20">
+        <button
+          onClick={loadMoreReservations}
+          disabled={loadingMore}
+          className="px-6 py-2 rounded-full bg-black text-white hover:bg-neutral-800 transition text-sm"
+        >
+          {loadingMore ? (
+            <div className="loader inline-block w-5 h-5 mt-1 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
+          ) : (
+            "Load More"
+          )}
+        </button>
+      </div>
+    )}
+
+      {navigationPrompt && (
+        <ConfirmPopup
+          title="Leave this page?"
+          message={`You're about to open ${navigationPrompt.title || 'this listing'}. Continue?`}
+          onCancel={cancelNavigation}
+          onConfirm={() => {
+            confirmNavigation();
+        }}
+        confirmLabel="Open listing"
+      />
+    )}
+
+    {popupMessage && (
+      <ConfirmPopup
+        title="Notice"
+        message={popupMessage}
+        confirmLabel="OK"
+        hideCancel
+        onConfirm={() => setPopupMessage(null)}
+      />
+    )}
+
+    {showCancelModal && (
+      <Modal
+        isOpen={showCancelModal}
+        onClose={handleCloseCancelModal}
+        onSubmit={requestCancellationSubmission}
+        closeOnSubmit={false}
+        actionLoading={isSubmittingCancellation}
+        submitOnEnter={false}
+        title="Cancel Reservation"
+        actionLabel="Send Request"
+        className="max-h-[60vh]"
+        body={
+          <div className="flex flex-col gap-5">
+            <div className="rounded-2xl border border-neutral-200 bg-neutral-50/80 p-4">
+              <h3 className="text-lg font-semibold text-neutral-900">Need to cancel?</h3>
+              <p className="text-sm text-neutral-600 mt-1">
+                Tell us what happened so we can support you and notify the host in time.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  const footer = document.getElementById('vuoiaggio-footer');
+                  footer?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="mt-3 inline-flex text-xs font-semibold text-neutral-700 underline decoration-dotted"
+              >
+                Review the cancellation policy
+              </button>
+            </div>
+
+             <div className="grid gap-3">
+              {cancelOptions.map(option => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => setCancelReason(option)}
+                  className={`w-full rounded-2xl border px-5 py-4 text-left text-sm font-medium transition shadow-sm ${
+                    cancelReason === option
+                      ? 'bg-neutral-900 text-white border-neutral-900'
+                      : 'bg-white text-neutral-800 border-neutral-200 hover:border-neutral-400'
+                  }`}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+
+            {cancelReason === 'Other' && (
+              <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
+                <label className="text-sm font-semibold text-neutral-800">Let us know more</label>
+                <textarea
+                  placeholder="Please specify your reason"
+                  className="mt-2 w-full rounded-2xl border border-neutral-200 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900"
+                  rows={4}
+                  value={customReason}
+                  onChange={(e) => setCustomReason(e.target.value)}
+                />
+              </div>
+            )}
+          </div>
+          }
+      />
+    )}
+
+    {showCancelConfirmPrompt && (
+      <ConfirmPopup
+        title="Send this request?"
+        message="We will email our team and the host with your cancellation reason."
+        onCancel={() => setShowCancelConfirmPrompt(false)}
+        onConfirm={async () => {
+          await handleSubmitCancellation();
+          setShowCancelConfirmPrompt(false);
+        }}
+        confirmLabel="Send request"
+      />
+    )}
     </>
   );
 };
