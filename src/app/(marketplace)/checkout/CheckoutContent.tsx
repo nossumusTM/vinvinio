@@ -274,6 +274,7 @@ const handleSubmit = async () => {
             email,
             contact,
             startDate,
+            endDate,
             time,
             street: addressFields.street,
             apt: addressFields.apt,
@@ -365,6 +366,13 @@ const handleSubmit = async () => {
 
   const formattedStart = startDate ? format(new Date(startDate), 'PP') : '';
   const formattedEnd = endDate ? format(new Date(endDate), 'PP') : '';
+  const displayDateRange = useMemo(() => {
+    if (formattedStart && formattedEnd) {
+      if (startDate === endDate) return formattedStart;
+      return `${formattedStart} – ${formattedEnd}`;
+    }
+    return formattedStart || formattedEnd || '';
+  }, [formattedStart, formattedEnd, startDate, endDate]);
   const serviceFee = 0;
 
   const pricingTotals = useMemo(
@@ -899,17 +907,18 @@ const handleSubmit = async () => {
             <div className="text-md space-y-2">
             <div>
             {/* <p className="text-neutral-500 font-semibold mb-1">Booking information:</p> */}
-                <div className="flex flex-row gap-2">
+                <div className="flex flex-row gap-1">
                   {/* <p className="text-lg font-medium"><TbCalendarTime /></p> */}
                   <p className="text-neutral-700 font-normal">
-                    {formattedStart} at {
-                      time ? (() => {
+                    {displayDateRange}
+                  </p>
+                    <p className="text-neutral-700 font-normal">
+                      {time ? (() => {
                         const [hour, minute] = time.split(':').map(Number);
                         const ampm = hour >= 12 ? 'PM' : 'AM';
                         const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
                         return `${formattedHour}:${minute.toString().padStart(2, '0')} ${ampm}`;
-                      })() : 'Time unavailable'
-                    }
+                      })() : 'Time unavailable'}
                   </p>
                 </div>
                 {/* <p className="text-neutral-700 font-bold">Guests: {guests}</p> */}

@@ -315,8 +315,13 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                         </span>
                       </div>
 
-                      <span className="text-[11px] font-medium border-b border-white/85 text-white/85 drop-shadow-sm tracking-wide">
-                        {reviewCount} TOTAL REVIEW{reviewCount !== 1 ? 'S' : ''}
+                      <span className="text-[11px] font-medium text-white/85 drop-shadow-sm tracking-wide">
+                        (
+                        <span className="text-sm font-semibold">
+                          {reviewCount}
+                        </span>
+                        ){" "}
+                        TOTAL REVIEW{reviewCount !== 1 ? "S" : ""}
                       </span>
                     </div>
                         )}
@@ -341,47 +346,46 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                     </button>
                   </div>
                         
-                  <div className="mt-4 flex w-full flex-row flex-nowrap justify-center items-center gap-3 overflow-x-auto scroll-smooth md:flex-wrap md:overflow-visible">
-                    {/* Followers */}
-                    <div className="inline-flex min-w-[110px] flex-col rounded-2xl border border-white/15 bg-white/10 px-3.5 py-2.5 text-black/90 shadow-sm backdrop-blur-md">
-                      <div className="flex items-center gap-1.5">
-                        <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-sm" />
-                        <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-black/70">
-                          Followers
-                        </p>
-                      </div>
-                      <p className="mt-1 text-xl font-semibold leading-tight">
-                        {hostFollowersCount}
+                  <div className="mt-4 pb-4 md:pb-0 flex w-full flex-row flex-nowrap justify-center items-center gap-2 overflow-x-auto scroll-smooth md:flex-wrap md:overflow-visible md:gap-3">
+                  {/* Followers */}
+                  <div className="inline-flex shrink-0 min-w-[100px] flex-col rounded-2xl border border-white/15 bg-white/10 px-3 py-2 text-black/90 shadow-md backdrop-blur-md">
+                    <div className="flex items-center gap-1">
+                      <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-sm" />
+                      <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-black/70">
+                        Followers
                       </p>
                     </div>
-
-                    {/* Bookings */}
-                    <div className="inline-flex min-w-[110px] flex-col rounded-2xl border border-white/15 bg-white/10 px-3.5 py-2.5 text-black/90 shadow-sm backdrop-blur-md">
-                      <div className="flex items-center gap-1.5">
-                        <span className="inline-flex h-1.5 w-1.5 rounded-full bg-sky-400 shadow-sm" />
-                        <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-black/70">
-                          Bookings
-                        </p>
-                      </div>
-                      <p className="mt-1 text-xl font-semibold leading-tight">
-                        {hostAllTimeBookingCount}
-                      </p>
-                    </div>
-
-                    {/* Likes */}
-                    <div className="inline-flex min-w-[130px] flex-col rounded-2xl border border-white/15 bg-white/10 px-3.5 py-2.5 text-black/90 shadow-sm backdrop-blur-md">
-                      <div className="flex items-center gap-1.5">
-                        <span className="inline-flex h-1.5 w-1.5 rounded-full bg-fuchsia-400 shadow-sm" />
-                        <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-black/70">
-                          LIKES
-                        </p>
-                      </div>
-                      <p className="mt-1 text-xl font-semibold leading-tight">
-                        {listingLikesCount}
-                      </p>
-                    </div>
+                    <p className="mt-0.5 text-lg font-semibold leading-tight">
+                      {hostFollowersCount}
+                    </p>
                   </div>
 
+                  {/* Bookings */}
+                  <div className="inline-flex shrink-0 min-w-[100px] flex-col rounded-2xl border border-white/15 bg-white/10 px-3 py-2 text-black/90 shadow-md backdrop-blur-md">
+                    <div className="flex items-center gap-1">
+                      <span className="inline-flex h-1.5 w-1.5 rounded-full bg-sky-400 shadow-sm" />
+                      <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-black/70">
+                        Bookings
+                      </p>
+                    </div>
+                    <p className="mt-0.5 text-lg font-semibold leading-tight">
+                      {hostAllTimeBookingCount}
+                    </p>
+                  </div>
+
+                  {/* Likes */}
+                  <div className="inline-flex shrink-0 min-w-[115px] flex-col rounded-2xl border border-white/15 bg-white/10 px-3 py-2 text-black/90 shadow-md backdrop-blur-md">
+                    <div className="flex items-center gap-1">
+                      <span className="inline-flex h-1.5 w-1.5 rounded-full bg-fuchsia-400 shadow-sm" />
+                      <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-black/70">
+                        Likes
+                      </p>
+                    </div>
+                    <p className="mt-0.5 text-lg font-semibold leading-tight">
+                      {listingLikesCount}
+                    </p>
+                  </div>
+                </div>
 
                         {hostDescription && (
                             <div>

@@ -42,7 +42,7 @@ const HeartButton: React.FC<HeartButtonProps> = ({
         }}
         aria-label={hasFavorited ? 'Remove from favorites' : 'Save to favorites'}
         className={`
-            p-4 rounded-full shadow-md backdrop-blur-sm transition hover:shadow-lg 
+            p-4 rounded-full shadow-md backdrop-blur-sm transition hover:shadow-lg bg-white/50
             ${hasFavorited ? 'bg-white/20' : 'bg-white/10'}
             cursor-pointer flex items-center justify-center
         `}

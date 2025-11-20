@@ -802,92 +802,97 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
               </p>
             )}
 
-            {/* STATS → DIRECT MESSAGE → TABS */}
-            <div className="flex w-full flex-col md:flex-row md:items-center md:justify-between gap-4">
-              {/* LEFT: Followers / Bookings / Likes */}
-              <div className="flex flex-row flex-nowrap gap-3 w-full overflow-x-auto scroll-smooth md:w-auto md:flex-wrap md:overflow-visible">
-                {/* Followers */}
-                <div className="inline-flex min-w-[110px] flex-col rounded-2xl border border-white/15 bg-white/10 px-3.5 py-2.5 text-black/90 shadow-sm backdrop-blur-md">
-                  <div className="flex items-center gap-1.5">
-                    <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-sm" />
-                    <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-black/70">
-                      Followers
-                    </p>
-                  </div>
-                  <p className="mt-1 text-xl font-semibold leading-tight">{followersCount}</p>
-                </div>
-
-                {/* Bookings */}
-                <div className="inline-flex min-w-[110px] flex-col rounded-2xl border border-white/15 bg-white/10 px-3.5 py-2.5 text-black/90 shadow-sm backdrop-blur-md">
-                  <div className="flex items-center gap-1.5">
-                    <span className="inline-flex h-1.5 w-1.5 rounded-full bg-sky-400 shadow-sm" />
-                    <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-black/70">
-                      Bookings
-                    </p>
-                  </div>
-                  <p className="mt-1 text-xl font-semibold leading-tight">
-                    {host.allTimeBookingCount ?? 0}
+          {/* STATS → DIRECT MESSAGE → TABS */}
+           <div className="flex w-full flex-col md:flex-row md:items-center md:justify-between gap-4">
+            {/* LEFT: Followers / Bookings / Likes */}
+            <div className="flex w-full flex-row flex-nowrap gap-2 overflow-x-auto scroll-smooth md:w-auto md:flex-wrap md:overflow-visible md:gap-3">
+              {/* Followers */}
+              <div className="inline-flex shrink-0 min-w-[100px] flex-col rounded-2xl border border-white/15 bg-white/10 px-3 py-2 text-black/90 shadow-md backdrop-blur-md">
+                <div className="flex items-center gap-1">
+                  <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-sm" />
+                  <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-black/70">
+                    Followers
                   </p>
                 </div>
-
-                {/* Likes */}
-                <div className="inline-flex min-w-[130px] flex-col rounded-2xl border border-white/15 bg-white/10 px-3.5 py-2.5 text-black/90 shadow-sm backdrop-blur-md">
-                  <div className="flex items-center gap-1.5">
-                    <span className="inline-flex h-1.5 w-1.5 rounded-full bg-fuchsia-400 shadow-sm" />
-                    <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-black/70">
-                      LIKES
-                    </p>
-                  </div>
-                  <p className="mt-1 text-xl font-semibold leading-tight">{listingLikesCount}</p>
-                </div>
+                <p className="mt-0.5 text-lg font-semibold leading-tight">
+                  {followersCount}
+                </p>
               </div>
 
-              {/* CENTER: Direct Message */}
-              <div className="w-full md:w-auto flex justify-center">
-                <button
-                  onClick={handleContactHost}
-                  className="w-full md:w-auto px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-white text-neutral-900 shadow-md border border-neutral-200 tracking-[0.14em] text-[11px] sm:text-xs font-semibold hover:shadow-lg transition text-center"
-                  title="Direct Message"
-                >
-                  DIRECT MESSAGE
-                </button>
+              {/* Bookings */}
+              <div className="inline-flex shrink-0 min-w-[100px] flex-col rounded-2xl border border-white/15 bg-white/10 px-3 py-2 text-black/90 shadow-md backdrop-blur-md">
+                <div className="flex items-center gap-1">
+                  <span className="inline-flex h-1.5 w-1.5 rounded-full bg-sky-400 shadow-sm" />
+                  <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-black/70">
+                    Bookings
+                  </p>
+                </div>
+                <p className="mt-0.5 text-lg font-semibold leading-tight">
+                  {host.allTimeBookingCount ?? 0}
+                </p>
               </div>
 
-              {/* RIGHT: Experiences / Reviews switcher */}
-              <div className="w-full md:flex-1 flex justify-center md:justify-end">
-                <div className="flex w-full md:w-auto rounded-full bg-neutral-50 p-1">
-                  {(['experiences', 'reviews'] as TabKey[]).map((tab) => {
-                    const reviewCount = reviews.length;
-                    const reviewLabel =
-                      reviewCount === 0 ? 'Reviews' :
-                      reviewCount === 1 ? '1 Review' :
-                      `${reviewCount} Reviews`;
-
-                    return (
-                      <button
-                        key={tab}
-                        type="button"
-                        onClick={() => handleTabChange(tab)}
-                        className={twMerge(
-                          'relative flex-1 md:flex-none px-4 py-2 text-sm font-medium rounded-full transition-all flex items-center gap-2 justify-center text-center',
-                          activeTab === tab
-                            ? 'bg-neutral-900 text-white shadow'
-                            : 'text-neutral-600 hover:text-neutral-900'
-                        )}
-                      >
-                        {tab === 'experiences' && activeTab === 'experiences' && (
-                          <div className="relative flex items-center justify-center">
-                            <span className="absolute inline-flex h-3.5 w-3.5 rounded-full bg-emerald-400 opacity-75 animate-ping" />
-                            <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 shadow-md" />
-                          </div>
-                        )}
-                        {tab === 'experiences' ? 'Experiences' : reviewLabel}
-                      </button>
-                    );
-                  })}
+              {/* Likes */}
+              <div className="inline-flex shrink-0 min-w-[115px] flex-col rounded-2xl border border-white/15 bg-white/10 px-3 py-2 text-black/90 shadow-md backdrop-blur-md">
+                <div className="flex items-center gap-1">
+                  <span className="inline-flex h-1.5 w-1.5 rounded-full bg-fuchsia-400 shadow-sm" />
+                  <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-black/70">
+                    Likes
+                  </p>
                 </div>
+                <p className="mt-0.5 text-lg font-semibold leading-tight">
+                  {listingLikesCount}
+                </p>
               </div>
             </div>
+
+            {/* CENTER: Direct Message */}
+            <div className="w-full md:w-auto flex justify-center">
+              <button
+                onClick={handleContactHost}
+                className="w-full md:w-auto px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg:white text-neutral-900 shadow-md border border-neutral-200 tracking-[0.14em] text-[11px] sm:text-xs font-semibold hover:shadow-lg transition text-center"
+                title="Direct Message"
+              >
+                DIRECT MESSAGE
+              </button>
+            </div>
+
+            {/* RIGHT: Experiences / Reviews switcher */}
+            <div className="w-full md:flex-1 flex justify-center md:justify-end">
+              <div className="flex w-full md:w-auto rounded-full bg-neutral-50 p-1">
+                {(['experiences', 'reviews'] as TabKey[]).map((tab) => {
+                  const reviewCount = reviews.length;
+                  const reviewLabel =
+                    reviewCount === 0 ? 'Reviews'
+                    : reviewCount === 1 ? '1 Review'
+                    : `${reviewCount} Reviews`;
+
+                  return (
+                    <button
+                      key={tab}
+                      type="button"
+                      onClick={() => handleTabChange(tab)}
+                      className={twMerge(
+                        'relative flex-1 md:flex-none px-4 py-2 text-sm font-medium rounded-full transition-all flex items-center gap-2 justify-center text-center',
+                        activeTab === tab
+                          ? 'bg-neutral-900 text-white shadow'
+                          : 'text-neutral-600 hover:text-neutral-900'
+                      )}
+                    >
+                      {tab === 'experiences' && activeTab === 'experiences' && (
+                        <div className="relative flex items-center justify-center">
+                          <span className="absolute inline-flex h-3.5 w-3.5 rounded-full bg-emerald-400 opacity-75 animate-ping" />
+                          <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 shadow-md" />
+                        </div>
+                      )}
+                      {tab === 'experiences' ? 'Experiences' : reviewLabel}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
 
             <div className="min-h-[220px]">
               <AnimatePresence mode="wait">

@@ -862,7 +862,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
             </div>
         </Container>
 
-        <div className="pointer-events-none fixed inset-x-0 bottom-5 z-40 flex justify-center px-4">
+        <div className="pointer-events-none fixed inset-x-0 bottom-5 z-40 flex justify-baseline px-4">
             <div className="pointer-events-auto w-full max-w-xl">
                 <AnimatePresence initial={false}>
                     {showPricingPopover && (
@@ -885,7 +885,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                     whileTap={{ scale: 0.97 }}
                     onClick={() => setShowPricingPopover((open) => !open)}
                     aria-expanded={showPricingPopover}
-                    className="pricing-toggle-button flex w-full items-center justify-between gap-4 rounded-full backdrop-blur-3xl px-6 py-3 text-left text-black shadow-[0_20px_45px_rgba(0,0,0,0.35)]"
+                    className="pricing-toggle-button flex w-full items-center justify-between gap-4 rounded-2xl backdrop-blur-3xl px-6 py-3 text-left text-black shadow-[0_20px_45px_rgba(0,0,0,0.35)]"
                 >
                     <div className="flex-1">
                         <p className="text-[8px] font-semibold uppercase tracking-[0.5em] text-black/60">{pricingIndicator.label}</p>
@@ -894,10 +894,10 @@ const ListingClient: React.FC<ListingClientProps> = ({
                     </div>
                     <motion.span
                         aria-hidden
-                        animate={{ rotate: showPricingPopover ? 180 : 0 }}
+                        initial={{ rotate: 180 }}
+                        animate={{ rotate: showPricingPopover ? 0 : 180 }}
                         transition={{ duration: 0.2 }}
-                        style={{rotate: '180deg'}}
-                        className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-lg"
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-lg shadow-md"
                     >
                         ▾
                     </motion.span>

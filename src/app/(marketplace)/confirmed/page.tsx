@@ -10,6 +10,8 @@ import useLoginModal from '@/app/(marketplace)/hooks/useLoginModal';
 import getCurrentUser from '../actions/getCurrentUser';
 import useCurrencyFormatter from '@/app/(marketplace)/hooks/useCurrencyFormatter';
 
+import { useRouter } from 'next/navigation';
+
 const BookingConfirmed = () => {
   const searchParams = useSearchParams();
   const [listing, setListing] = useState<any>(null);
@@ -32,6 +34,7 @@ const BookingConfirmed = () => {
   const reviewCount = getParam('reviewCount');
   const categoryLabel = getParam('categoryLabel');
   const startDate = getParam('startDate');
+  const endDate = getParam('endDate');
   const timeParam = getParam('time');
   const guestsParam = getParam('guests');
   const totalPriceParam = getParam('totalPrice');
@@ -41,6 +44,11 @@ const BookingConfirmed = () => {
   const loginModal = useLoginModal();
   const { formatConverted } = useCurrencyFormatter();
 
+  const router = useRouter();
+
+  const handleGoToTrips = () => {
+    router.push('/trips');
+  };
 
   useEffect(() => {
     const fetchListing = async () => {
@@ -215,24 +223,39 @@ const BookingConfirmed = () => {
                 </div>
                 )}
             {listing.imageSrc && listing.imageSrc.length > 0 && (
-              <Image
-                src={listing.imageSrc[0]}
-                alt={listing.title}
-                width={600}
-                height={400}
-                className="rounded-xl w-full h-64 object-cover"
-              />
+              <button
+                type="button"
+                onClick={handleGoToTrips}
+                className="group relative block w-full rounded-xl overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900"
+              >
+                <Image
+                  src={listing.imageSrc[0]}
+                  alt={listing.title}
+                  width={600}
+                  height={400}
+                  className="rounded-xl w-full h-64 object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                />
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <span className="pointer-events-none absolute bottom-3 right-3 inline-flex items-center rounded-full bg-black/55 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-white">
+                  View trips
+                </span>
+              </button>
             )}
 
             <div>
+              {categoryLabel && (
+                <p className="text-sm text-neutral-500 mt-1">
+                  Activity:{' '}
+                  <span className="font-normal text-black">{categoryLabel}</span>
+                </p>
+              )}
 
-            {categoryLabel && (
-                  <p className="text-sm text-neutral-500 mt-1">
-                    Activity: <span className="font-normal text-black">{categoryLabel}</span>
-                  </p>
-                  )}
-
-              <h2 className="text-xl font-semibold">{listing.title}</h2>
+              <h2
+                className="mt-2 text-xl font-semibold cursor-pointer hover:text-neutral-900 hover:underline decoration-neutral-400"
+                onClick={handleGoToTrips}
+              >
+                {listing.title}
+              </h2>
 
               <div className="flex items-center justify-between mt-6">
                 {/* Left side: Avatar and host info */}
@@ -247,7 +270,7 @@ const BookingConfirmed = () => {
                 {/* Right side: Message button */}
                 <button
                   onClick={handleContactHost}
-                  className="text-sm text-black p-4 shadow-md rounded-xl font-medium hover:shadow-lg"
+                  className="text-sm text-black px-4 py-2 shadow-md rounded-xl font-medium hover:shadow-lg border border-neutral-200 bg-white"
                 >
                   Message
                 </button>
@@ -301,10 +324,10 @@ const BookingConfirmed = () => {
               <Image
                 src={`/flags/${countryValue}.svg`}
                 alt={country}
-                width={24}
-                height={16}
-                style={{ width: 'auto', height: '16px' }}
-                className="rounded-full object-cover"
+                // width={24}
+                // height={16}
+                // style={{ width: 'auto', height: '16px' }}
+                className="h-4 w-6 rounded object-cover"
                 unoptimized
               />
             )}

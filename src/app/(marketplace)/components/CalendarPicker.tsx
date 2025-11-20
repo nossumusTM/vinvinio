@@ -1,9 +1,9 @@
-// MonthYearPicker.tsx
+// CalendarPicker.tsx
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 
-interface MonthYearPickerProps {
+interface CalendarPickerProps {
   selectedMonth: number;
   selectedYear: number;
   yearOptions: number[];
@@ -17,7 +17,7 @@ const months = [
   'July', 'August', 'September', 'October', 'November', 'December',
 ];
 
-const MonthYearPicker: React.FC<MonthYearPickerProps> = ({
+const CalendarPicker: React.FC<CalendarPickerProps> = ({
   selectedMonth,
   selectedYear,
   yearOptions,
@@ -28,13 +28,56 @@ const MonthYearPicker: React.FC<MonthYearPickerProps> = ({
   const [isMonthOpen, setIsMonthOpen] = useState(false);
   const [isYearOpen, setIsYearOpen] = useState(false);
 
+  const monthListRef = useRef<HTMLDivElement | null>(null);
+  const yearListRef = useRef<HTMLDivElement | null>(null);
+
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node | null;
+      if (wrapperRef.current && target && !wrapperRef.current.contains(target)) {
+        setIsMonthOpen(false);
+        setIsYearOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (isMonthOpen && monthListRef.current) {
+      const container = monthListRef.current;
+      const active = container.querySelector<HTMLElement>('[data-selected="true"]');
+      if (active) {
+        const offset =
+          active.offsetTop - container.clientHeight / 2 + active.clientHeight / 2;
+        container.scrollTo({ top: offset, behavior: 'smooth' });
+      }
+    }
+  }, [isMonthOpen, selectedMonth]);
+
+  useEffect(() => {
+    if (isYearOpen && yearListRef.current) {
+      const container = yearListRef.current;
+      const active = container.querySelector<HTMLElement>('[data-selected="true"]');
+      if (active) {
+        const offset =
+          active.offsetTop - container.clientHeight / 2 + active.clientHeight / 2;
+        container.scrollTo({ top: offset, behavior: 'smooth' });
+      }
+    }
+  }, [isYearOpen, selectedYear]);
+
   const currentYear = new Date().getFullYear();
 
   const extendedYearOptions = useMemo(() => {
     if (yearOptions && yearOptions.length) {
-      const min = Math.min(...yearOptions);
+      const rawMin = Math.min(...yearOptions);
       const max = Math.max(...yearOptions);
-      const extendTo = Math.max(max, currentYear + 5);
+      const min = Math.max(rawMin, 2025); // 👈 don't go below 2025
+      const extendTo = Math.max(max, currentYear + 5, 2025);
 
       const result: number[] = [];
       for (let y = min; y <= extendTo; y++) {
@@ -43,7 +86,7 @@ const MonthYearPicker: React.FC<MonthYearPickerProps> = ({
       return result;
     }
 
-    const start = currentYear - 5;
+    const start = Math.max(currentYear - 5, 2025); // 👈 min 2025 even without yearOptions
     return Array.from({ length: 11 }, (_, i) => start + i);
   }, [yearOptions, currentYear]);
 
@@ -53,20 +96,26 @@ const MonthYearPicker: React.FC<MonthYearPickerProps> = ({
       : 'top-[calc(100%+8px)] origin-top';
 
   return (
-    <div className="flex flex-col gap-3">
+    <div ref={wrapperRef} className="flex flex-row gap-3">
       {/* Month */}
       <div className="relative">
         <button
           type="button"
-          onClick={() => setIsMonthOpen((prev) => !prev)}
-          className="flex w-full items-center justify-between rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-900"
+          onClick={() =>
+            setIsMonthOpen((prev) => {
+              const next = !prev;
+              if (next) setIsYearOpen(false); // 👈 close year when month opens
+              return next;
+            })
+          }
+          className="flex w-full items-center justify-center rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-900"
         >
           <span>{months[selectedMonth] ?? 'Month'}</span>
-          <span className="text-xs text-neutral-500">▼</span>
         </button>
 
         {isMonthOpen && (
           <div
+            ref={monthListRef}
             className={`
               absolute
               ${dropdownPositionClass}
@@ -89,6 +138,7 @@ const MonthYearPicker: React.FC<MonthYearPickerProps> = ({
                   onMonthChange(index);
                   setIsMonthOpen(false);
                 }}
+                data-selected={index === selectedMonth ? 'true' : undefined}
                 className={`block w-full px-3 py-2 text-left text-sm hover:bg-neutral-100 ${
                   index === selectedMonth ? 'bg-neutral-50 font-semibold' : ''
                 }`}
@@ -104,15 +154,21 @@ const MonthYearPicker: React.FC<MonthYearPickerProps> = ({
       <div className="relative">
         <button
           type="button"
-          onClick={() => setIsYearOpen((prev) => !prev)}
-          className="flex w-full items-center justify-between rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-900"
+          onClick={() =>
+            setIsYearOpen((prev) => {
+              const next = !prev;
+              if (next) setIsMonthOpen(false); // 👈 close month when year opens
+              return next;
+            })
+          }
+          className="flex w-full items-center justify-center rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-900"
         >
           <span>{selectedYear}</span>
-          <span className="text-xs text-neutral-500">▼</span>
         </button>
 
         {isYearOpen && (
           <div
+            ref={yearListRef}
             className={`
               absolute
               ${dropdownPositionClass}
@@ -135,6 +191,7 @@ const MonthYearPicker: React.FC<MonthYearPickerProps> = ({
                   onYearChange(year);
                   setIsYearOpen(false);
                 }}
+                data-selected={year === selectedYear ? 'true' : undefined}
                 className={`block w-full px-3 py-2 text-left text-sm hover:bg-neutral-100 ${
                   year === selectedYear ? 'bg-neutral-50 font-semibold' : ''
                 }`}
@@ -149,4 +206,4 @@ const MonthYearPicker: React.FC<MonthYearPickerProps> = ({
   );
 };
 
-export default MonthYearPicker;
+export default CalendarPicker;

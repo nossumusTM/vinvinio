@@ -68,6 +68,7 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [showCustomPricing, setShowCustomPricing] = useState(false);
   const [hasConfirmedSlot, setHasConfirmedSlot] = useState(false);
+  const [forceOpenTimes, setForceOpenTimes] = useState(false);
   const { formatConverted } = useCurrencyFormatter();
 
   const isGroupPricing = pricingType === 'group' && !!groupPrice;
@@ -111,8 +112,20 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
       return;
     }
 
+    if (!dateRange.endDate) {
+      toast.error('Please select your full date range.');
+      return;
+    }
+
     if (!selectedTime) {
+      setForceOpenTimes(true);
       toast.error('Choose a time slot before booking.');
+      return;
+    }
+
+    if (!hasConfirmedSlot) {
+      setForceOpenTimes(true);
+      toast('Please double-check your booking time before continuing.');
       return;
     }
 
@@ -296,12 +309,16 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
           onTimeChange={(time, meta) => {
             if (meta?.userInitiated) {
               setHasConfirmedSlot(true);
+              setForceOpenTimes(false);
             } else {
               setHasConfirmedSlot(false);
             }
             onTimeChange?.(time ?? '');
           }}
           onChange={(value) => onChangeDate(value.selection)}
+          forceOpenTimes={forceOpenTimes}
+          reminderText="Please confirm the time of your booking before continuing."
+          onReminderDisplayed={() => setForceOpenTimes(false)}
           hoursInAdvance={hoursInAdvance ?? undefined}
         />
 
@@ -310,14 +327,16 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
         <div className="p-4">
           {isLoading ? (
             <div className="w-full text-center py-3">
-              <span className="loader inline-block w-5 h-5 mt-1 border-2 border-t-transparent border-black rounded-full animate-spin" />
+              <span className="loader inline-block w-5 h-5 mt-1 border-1 border-t-transparent border-black rounded-full animate-spin" />
             </div>
           ) : (
-            <Button
-              label="Book Now"
-              onClick={handleReserve}
-              disabled={disabled || isLoading}   // ✅ UPDATED
-            />
+            <div className={`w-full ${dateRange.startDate && dateRange.endDate && selectedTime ? 'animated-border' : ''}`}>
+              <Button
+                label="Book Now"
+                onClick={handleReserve}
+                disabled={disabled || isLoading}   // ✅ UPDATED
+              />
+            </div>
           )}
         </div>
 
@@ -326,7 +345,17 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
         <div className="p-4 flex flex-row items-center justify-center font-semibold text-lg">
           <div className="flex flex-row items-baseline gap-2">
             <div>Checkout:</div>
-            <div>{formatConverted(totalPrice)}</div>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={totalPrice}
+                initial={{ scale: 0.92, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ duration: 0.25 }}
+              >
+                {formatConverted(totalPrice)}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </div>

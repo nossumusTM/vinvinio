@@ -39,7 +39,7 @@ const ListingLikeButton: React.FC<ListingLikeButtonProps> = ({
   return (
     <div
       className={clsx(
-        'bg-white/10 group flex items-center gap-2 rounded-full backdrop-blur-sm transition px-4 py-3 text-white shadow-md backdrop-blur transition',
+        'bg-white/50 group flex items-center gap-2 rounded-full backdrop-blur-sm transition px-4 py-3 text-white shadow-md backdrop-blur transition',
         'hover:shadow-lg',
         inline ? 'static' : 'absolute top-3 right-3'
       )}

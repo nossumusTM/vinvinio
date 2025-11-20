@@ -18,6 +18,8 @@ import ConfirmPopup from '../ConfirmPopup';
 import { CountrySelectValue } from '../inputs/CountrySelect';
 import { useRouter } from 'next/navigation';
 import { LuArrowLeft } from 'react-icons/lu';
+import { LuX } from 'react-icons/lu';
+import clsx from 'clsx';
 
 interface ListingHeadProps {
   title: string;
@@ -268,6 +270,14 @@ const ListingHead: React.FC<ListingHeadProps> = ({
   const hasSingleImage = !videoSrc && imageGallery.length === 1;
 
   const [videoOrientation, setVideoOrientation] = useState<'portrait' | 'landscape' | null>(null);
+  const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
+
+  const handleImageLoaded = (src: string) => {
+    setLoadedImages((prev) => ({
+      ...prev,
+      [src]: true,
+    }));
+  };
 
   const handleVideoMetadata = (e: React.SyntheticEvent<HTMLVideoElement>) => {
     const v = e.currentTarget;
@@ -432,7 +442,7 @@ const ListingHead: React.FC<ListingHeadProps> = ({
                </svg>
 
                {/* Rating and count */}
-              <span className="text-lg text-neutral-700 font-normal hover:border-b border-neutral-800 transition">
+              <span className="text-lg text-neutral-700 font-normal border-b border-neutral-500 hover:border-neutral-800 transition">
                   {averageRating.toFixed(1)} · {reviews.length} review{reviews.length !== 1 ? 's' : ''}
                </span>
           </div>
@@ -459,7 +469,7 @@ const ListingHead: React.FC<ListingHeadProps> = ({
           <div className="pointer-events-none absolute inset-x-0 bottom-4 z-20 flex justify-center">
             <motion.div
               initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: [0.5, 1, 0.5], y: [16, 0, 8] }}
+              animate={{ opacity: [0.5, 1, 0.5], y: [8, 0, 4] }}
               transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
               className="inline-flex items-center gap-2 rounded-full bg-black/55 px-4 py-2 text-xs font-medium text-white backdrop-blur-sm shadow-md"
             >
@@ -609,13 +619,25 @@ const ListingHead: React.FC<ListingHeadProps> = ({
                             className="relative w-full h-full cursor-pointer"
                             onClick={() => handleMediaClick(primaryImage)}
                           >
+                            {/* shimmer skeleton */}
+                            <div
+                              className={clsx(
+                                'absolute inset-0 rounded-2xl bg-neutral-200 animate-pulse',
+                                loadedImages[primaryImage] && 'opacity-0'
+                              )}
+                            />
+
                             <Image
                               src={primaryImage}
                               alt="Main cover"
                               fill
-                              className="object-cover"
                               sizes="(max-width: 768px) 100vw, 60vw"
                               priority
+                              onLoadingComplete={() => handleImageLoaded(primaryImage)}
+                              className={clsx(
+                                'object-cover transition-opacity duration-300',
+                                loadedImages[primaryImage] ? 'opacity-100' : 'opacity-0'
+                              )}
                             />
                           </div>
                         )
@@ -703,14 +725,25 @@ const ListingHead: React.FC<ListingHeadProps> = ({
                             className="relative w-full h-full cursor-pointer group overflow-hidden rounded-xl"
                             onClick={() => handleMediaClick(src)}
                           >
+                            {/* skeleton */}
+                            <div
+                              className={clsx(
+                                'absolute inset-0 rounded-xl bg-neutral-200 animate-pulse',
+                                loadedImages[src] && 'opacity-0'
+                              )}
+                            />
+
                             <Image
                               src={src}
-                              alt={`gallery-extra-${slideIndex}-${index}`}
+                              alt={`gallery-${index}`}
                               fill
-                              className="object-cover select-none"
-                              sizes="(max-width: 768px) 50vw, 50vw"
+                              sizes="(max-width: 768px) 50vw, 40vw"
+                              onLoadingComplete={() => handleImageLoaded(src)}
+                              className={clsx(
+                                'object-cover select-none transition-opacity duration-300',
+                                loadedImages[src] ? 'opacity-100' : 'opacity-0'
+                              )}
                             />
-                            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                           </div>
                         ))}
                       </div>
@@ -765,7 +798,6 @@ const ListingHead: React.FC<ListingHeadProps> = ({
             const typed = slide as { src: string; kind?: "image" | "video" };
 
             return (
-              // ✅ clicking anywhere on this wrapper (outside image/video) closes
               <div
                 className="w-full h-full flex items-center justify-center bg-transparent"
                 onClick={() => setLightboxOpen(false)}
@@ -777,7 +809,6 @@ const ListingHead: React.FC<ListingHeadProps> = ({
                     controls
                     autoPlay
                     muted
-                    // ❗ stop click from bubbling so video controls don't close lightbox
                     onClick={(e) => e.stopPropagation()}
                   />
                 ) : (
@@ -785,7 +816,6 @@ const ListingHead: React.FC<ListingHeadProps> = ({
                     src={typed.src}
                     alt=""
                     className="max-h-[90vh] max-w-[90vw] object-contain"
-                    // ❗ same here, click on image should not close
                     onClick={(e) => e.stopPropagation()}
                   />
                 )}
@@ -816,12 +846,75 @@ const ListingHead: React.FC<ListingHeadProps> = ({
               />
             </svg>
           ),
+          // 👇 new close icon
+          iconClose: () => (
+            <LuX className="w-[20px] h-[20px]" />
+          ),
         }}
+
       />
 
       <style jsx global>{`
-        .yarl__root { z-index: 70 !important; } /* above our overlay (60) */
+        .yarl__root { z-index: 70 !important; }
+
+        /* Keep nav arrows styling if you like */
+        .yarl__iconButton,
+        .yarl__root button[aria-label="Previous"],
+        .yarl__root button[aria-label="Next"] {
+          background: rgba(255, 255, 255, 0.12) !important;
+          backdrop-filter: blur(6px);
+          border-radius: 9999px !important;
+          padding: 8px !important;
+          box-shadow: none !important;
+          transition: border-color .2s ease, background-color .2s ease;
+        }
+
+        .yarl__root button[aria-label="Previous"] {
+          left: 28px !important;
+        }
+        .yarl__root button[aria-label="Next"] {
+          right: 28px !important;
+        }
+
+        /* TOOLBAR → move it to top-right (this controls the close button position) */
+        .yarl__toolbar {
+          position: fixed !important;
+          top: 20px !important;
+          right: 20px !important;
+          left: auto !important;
+          width: auto !important;
+          background: transparent !important;
+          padding: 0 !important;
+          justify-content: flex-end !important;
+        }
+
+        /* CLOSE BUTTON → icon only, no pill, no border */
+        .yarl__root button[aria-label="Close"] {
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+        }
+
+        .yarl__root button[aria-label="Close"] svg {
+          width: 20px !important;
+          height: 20px !important;
+          color: #fff !important;
+        }
+
+        .yarl__root button[aria-label="Close"]:hover {
+          background: transparent !important;
+        }
+
+        .yarl__iconButton:focus-visible,
+        .yarl__root button[aria-label="Previous"]:focus-visible,
+        .yarl__root button[aria-label="Next"]:focus-visible,
+        .yarl__root button[aria-label="Close"]:focus-visible {
+          outline: none !important;
+        }
       `}</style>
+
+
 
       <style jsx global>{`
         /* Glass-pill buttons (Prev / Next / Close) */
@@ -871,8 +964,8 @@ const ListingHead: React.FC<ListingHeadProps> = ({
 
         /* Close button nice positioning */
         .yarl__root button[aria-label="Close"] {
-          top: 20px !important;
-          right: 20px !important;
+          top: 40px !important;
+          right: 40px !important;
         }
 
         /* No outline flash */

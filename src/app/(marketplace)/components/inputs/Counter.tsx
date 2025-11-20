@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 import { AiOutlineMinus, AiOutlinePlus } from "react-icons/ai";
+import { AnimatePresence, motion } from 'framer-motion';
 
 interface CounterProps {
     title: string;
@@ -55,15 +56,20 @@ const Counter: React.FC<CounterProps> = ({
                 >
                     <AiOutlineMinus />
                 </div>
-                <div
-                    className="
-            font-light 
-            text-xl 
-            text-neutral-600
-          "
-                >
-                    {value}
-                </div>
+                <div className="relative flex h-10 w-10 select-none items-center justify-center overflow-hidden">
+                    <AnimatePresence mode="popLayout" initial={false}>
+                        <motion.span
+                        key={value}
+                        initial={{ y: 8, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: -8, opacity: 0 }}
+                        transition={{ duration: 0.18 }}
+                        className="font-normal text-xl text-neutral-600"
+                        >
+                        {value}
+                        </motion.span>
+                    </AnimatePresence>
+                    </div>
                 <div
                     onClick={onAdd}
                     className="
