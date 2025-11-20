@@ -182,7 +182,7 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
     <div>
       <div className="bg-white rounded-2xl shadow-md hover:shadow-lg overflow-hidden">
         <div className="space-y-3 p-4">
-          {(isCustomPricing || isGroupPricing) && (
+          {/* {(isCustomPricing || isGroupPricing) && (
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex flex-wrap items-center gap-2">
                 {isCustomPricing && (
@@ -219,62 +219,6 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
                   </button>
                 )}
 
-                {/* {isGroupPricing && (
-                  <span className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-400 px-3 py-1.5 text-sm font-semibold text-white shadow-md">
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="opacity-90"
-                    >
-                      <path
-                        d="M6.5 11C7.88071 11 9 9.88071 9 8.5C9 7.11929 7.88071 6 6.5 6C5.11929 6 4 7.11929 4 8.5C4 9.88071 5.11929 11 6.5 11Z"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M17.5 11C18.8807 11 20 9.88071 20 8.5C20 7.11929 18.8807 6 17.5 6C16.1193 6 15 7.11929 15 8.5C15 9.88071 16.1193 11 17.5 11Z"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M5 18.9999C5 16.7908 6.79086 14.9999 9 14.9999H10"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M19 18.9999C19 16.7908 17.2091 14.9999 15 14.9999H14"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M12 14.5C13.3807 14.5 14.5 13.3807 14.5 12C14.5 10.6193 13.3807 9.5 12 9.5C10.6193 9.5 9.5 10.6193 9.5 12C9.5 13.3807 10.6193 14.5 12 14.5Z"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M8.5 19.9999C8.5 18.067 10.067 16.5 12 16.5C13.933 16.5 15.5 18.067 15.5 19.9999"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    Group Pricing
-                  </span>
-                )} */}
               </div>
               {isGroupPricing && (
                 <span className="inline-flex items-center rounded-lg border border-neutral-200 bg-white px-3 py-1 text-xs font-semibold text-neutral-800 shadow-sm">
@@ -282,7 +226,7 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
                 </span>
               )}
             </div>
-          )}
+          )} */}
 
           <div className="flex flex-row items-center justify-between">
             <div className="flex flex-row items-baseline gap-2">

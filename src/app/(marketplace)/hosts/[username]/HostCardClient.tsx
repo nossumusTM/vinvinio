@@ -5,7 +5,9 @@ import Image from 'next/image';
 import NextImage from 'next/image';
 import { FiCamera } from 'react-icons/fi';
 import { BiUpload } from "react-icons/bi";
+import { TbWorldUpload } from "react-icons/tb";
 import clsx from 'clsx';
+import toast from 'react-hot-toast';
 
 import { createPortal } from 'react-dom';
 import { FiChevronDown } from 'react-icons/fi';
@@ -49,7 +51,8 @@ interface HostCardClientProps {
   host: SafeUser;
   listings: SafeListing[];
   reviews: HostCardReview[];
-  currentUser?: SafeUser | null; // ← pass from server when possible
+  currentUser?: SafeUser | null;
+  isFollowing?: boolean;
 }
 
 type TabKey = 'experiences' | 'reviews';
@@ -72,7 +75,7 @@ const formatPrice = (price: number) => {
   }
 };
 
-const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews, currentUser }) => {
+const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews, currentUser, isFollowing }) => {
   const [activeTab, setActiveTab] = useState<TabKey>('experiences');
   const { getByValue } = useCountries();
 
@@ -86,6 +89,10 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
 
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
   const [coverLoaded, setCoverLoaded] = useState(false);
+
+  const [followersCount, setFollowersCount] = useState<number>(host.followersCount ?? 0);
+  const [isFollowingHost, setIsFollowingHost] = useState<boolean>(Boolean(isFollowing));
+  const [followBusy, setFollowBusy] = useState(false);
 
   const coverInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -176,6 +183,39 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
       loginModal.onOpen();
     }
   }, [host?.id, host?.name, host?.hostName, host?.image, loginModal, messenger]);
+
+  const handleToggleFollow = useCallback(async () => {
+    if (!currentUser) {
+      loginModal.onOpen();
+      return;
+    }
+
+    if (currentUser.id === host.id) {
+      toast.error("You can't follow yourself.");
+      return;
+    }
+
+    setFollowBusy(true);
+    try {
+      const response = isFollowingHost
+        ? await axios.delete(`/api/hosts/${host.id}/follow`)
+        : await axios.post(`/api/hosts/${host.id}/follow`);
+
+      const nextCount = typeof response.data?.followersCount === 'number'
+        ? response.data.followersCount
+        : isFollowingHost
+          ? Math.max(0, followersCount - 1)
+          : followersCount + 1;
+
+      setFollowersCount(nextCount);
+      setIsFollowingHost((prev) => !prev);
+    } catch (error) {
+      console.error(error);
+      toast.error('Unable to update follow status.');
+    } finally {
+      setFollowBusy(false);
+    }
+  }, [currentUser, followersCount, host.id, isFollowingHost, loginModal]);
 
   const coverImage = useMemo(() => {
     // 1) If user has uploaded a cover in profile
@@ -507,7 +547,7 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                   className="absolute aspect-square top-3 right-3 z-30 inline-flex items-center gap-2 rounded-full shadow-md text-white px-3 py-1.5 text-xs font-semibold hover:shadow-lg transition"
                   title=""
                 >
-                  <BiUpload className="font-semibold h-5 w-5" />
+                  <TbWorldUpload className="font-semibold h-5 w-5" />
                   {uploadingCover ? 'Uploading…' : ''}
                 </button>
                 {/* <input
@@ -592,7 +632,7 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                   {/* {host.legalName && (
                     <p className="ml-1 text-sm text-white/80">{host.legalName}</p>
                   )} */}
-                  {primaryLocation && ( <p className="border-b w-fit mr-3.5 text-sm text-white/80 flex flex-row gap-1"> Located In <p className='font-semibold'>{primaryLocation.label.toUpperCase()}</p> </p> )}
+                  {primaryLocation && ( <p className="w-fit mr-3.5 text-sm text-white/80 flex flex-row gap-1"> Located In <p className='font-semibold'>{primaryLocation.label.toUpperCase()}</p> </p> )}
                 </div>
               </div>
 
@@ -738,59 +778,77 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
               </p>
             )}
 
-            <div className="flex flex-col items-center md:flex-row md:items-center md:justify-between w-full">
-  
-            {/* Tabs group (center on mobile, left on desktop) */}
-            <div className="w-full md:w-auto flex justify-center md:justify-start">
-              <div className="flex w-full md:w-auto rounded-full border border-neutral-200 bg-neutral-50 p-1">
-                {(['experiences', 'reviews'] as TabKey[]).map((tab) => {
-                  const reviewCount = reviews.length;
-                  const reviewLabel =
-                    reviewCount === 0 ? 'Reviews' :
-                    reviewCount === 1 ? '1 Review' :
-                    `${reviewCount} Reviews`;
+           {/* STATS → TABS → DIRECT MESSAGE */}
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between w-full gap-4">
+              {/* Followers & bookings FIRST (left on desktop) */}
+              <div className="text-center px-4 py-4 flex flex-wrap gap-3 justify-center md:justify-start">
+                <div className="rounded-2xl border border-white/20 shadow-md px-3 py-2 text-black/90">
+                  <p className="text-[11px] uppercase tracking-wide text-black/70">Followers</p>
+                  <p className="text-lg font-semibold">{followersCount}</p>
+                </div>
+                <div className="rounded-2xl border border-white/20 shadow-md px-3 py-2 text-black/90">
+                  <p className="text-[11px] uppercase tracking-wide text-black/70">Bookings</p>
+                  <p className="text-lg font-semibold">{host.allTimeBookingCount ?? 0}</p>
+                </div>
 
-                  return (
-                    <button
-                      key={tab}
-                      type="button"
-                      onClick={() => handleTabChange(tab)}
-                      className={twMerge(
-                        'relative flex-1 md:flex-none px-4 py-2 text-sm font-medium rounded-full transition-all flex items-center gap-2 justify-center text-center',
-                        activeTab === tab
-                          ? 'bg-neutral-900 text-white shadow'
-                          : 'text-neutral-600 hover:text-neutral-900'
-                      )}
-                    >
-                      {/* Only show ping if Experiences tab is active */}
-                      {tab === 'experiences' && activeTab === 'experiences' && (
-                        <div className="relative flex items-center justify-center">
-                          <span className="absolute inline-flex h-3.5 w-3.5 rounded-full bg-emerald-400 opacity-75 animate-ping"></span>
-                          <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 shadow-md"></span>
-                        </div>
-                      )}
-                      
-                      {tab === 'experiences' ? 'Experiences' : reviewLabel}
-                    </button>
-                  );
-                })}
+                {!isOwner && (
+                  <button
+                    type="button"
+                    onClick={handleToggleFollow}
+                    disabled={followBusy}
+                    className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/20 px-4 py-2 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/30 disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {isFollowingHost ? 'Unfollow' : 'Follow'}
+                  </button>
+                )}
+              </div>
 
+              {/* Tabs group SECOND (center on desktop) */}
+              <div className="w-full md:flex-1 flex justify-center">
+                <div className="flex w-full md:w-auto rounded-full border border-neutral-200 bg-neutral-50 p-1">
+                  {(['experiences', 'reviews'] as TabKey[]).map((tab) => {
+                    const reviewCount = reviews.length;
+                    const reviewLabel =
+                      reviewCount === 0 ? 'Reviews' :
+                      reviewCount === 1 ? '1 Review' :
+                      `${reviewCount} Reviews`;
+
+                    return (
+                      <button
+                        key={tab}
+                        type="button"
+                        onClick={() => handleTabChange(tab)}
+                        className={twMerge(
+                          'relative flex-1 md:flex-none px-4 py-2 text-sm font-medium rounded-full transition-all flex items-center gap-2 justify-center text-center',
+                          activeTab === tab
+                            ? 'bg-neutral-900 text-white shadow'
+                            : 'text-neutral-600 hover:text-neutral-900'
+                        )}
+                      >
+                        {tab === 'experiences' && activeTab === 'experiences' && (
+                          <div className="relative flex items-center justify-center">
+                            <span className="absolute inline-flex h-3.5 w-3.5 rounded-full bg-emerald-400 opacity-75 animate-ping"></span>
+                            <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 shadow-md"></span>
+                          </div>
+                        )}
+                        {tab === 'experiences' ? 'Experiences' : reviewLabel}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* DIRECT MESSAGE LAST (right on desktop) */}
+              <div className="w-full md:w-auto flex justify-center md:justify-end">
+                <button
+                  onClick={handleContactHost}
+                  className="w-full md:w-auto px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-white text-neutral-900 shadow-md border border-neutral-200 tracking-[0.14em] text-[11px] sm:text-xs font-semibold hover:shadow-lg transition text-center"
+                  title="Direct Message"
+                >
+                  DIRECT MESSAGE
+                </button>
               </div>
             </div>
-
-            {/* Message button (center on mobile, right on desktop) */}
-            <div className="w-full md:w-auto flex justify-center md:justify-end mt-3 md:mt-0">
-              <button
-                onClick={handleContactHost}
-                className="w-full md:w-auto px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-white text-neutral-900 shadow-md border border-neutral-200 tracking-[0.14em] text-[11px] sm:text-xs font-semibold hover:shadow-lg transition text-center"
-                title="Direct Message"
-              >
-                DIRECT MESSAGE
-              </button>
-            </div>
-
-          </div>
-
 
             <div className="min-h-[220px]">
               <AnimatePresence mode="wait">
@@ -802,7 +860,7 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                     animate="animate"
                     exit="exit"
                     transition={{ duration: 0.25 }}
-                    className="grid gap-5 md:grid-cols-2"
+                    className="mt-4 grid gap-5 md:grid-cols-2"
                   >
                     {listings.length === 0 && (
                       <div className="col-span-full rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 p-6 text-center text-sm text-neutral-500">

@@ -54,6 +54,8 @@ export default async function getCurrentUser(): Promise<SafeUser | null> {
         emailVerified: true,
         passwordUpdatedAt: true,
         partnerCommission: true,
+        followersCount: true,
+        allTimeBookingCount: true,
       },
     });
 
@@ -94,6 +96,8 @@ export default async function getCurrentUser(): Promise<SafeUser | null> {
         typeof user.partnerCommission === "number"
           ? user.partnerCommission
           : MIN_PARTNER_COMMISSION,
+      followersCount: typeof user.followersCount === 'number' ? user.followersCount : 0,
+      allTimeBookingCount: typeof user.allTimeBookingCount === 'number' ? user.allTimeBookingCount : 0,
     };
   } catch (error) {
     console.error("getCurrentUser error:", error);

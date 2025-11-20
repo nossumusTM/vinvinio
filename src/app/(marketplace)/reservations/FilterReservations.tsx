@@ -1,16 +1,15 @@
 'use client';
 
-import SearchCalendar from '@/app/(marketplace)/components/inputs/SearchCalendar';
-import type { Range, RangeKeyDict } from 'react-date-range';
+import MonthYearPicker from '../components/MonthYearPicker';
 
 interface FilterReservationsProps {
   activeKeyword?: string | null;
   isLoading?: boolean;
-  range: Range;
   timeValue: string;
   selectedYear: number;
   yearOptions: number[];
-  onDateChange: (value: RangeKeyDict) => void;
+  selectedMonth: number;
+  onMonthChange: (month: number) => void;
   onTimeChange: (value: string) => void;
   onYearChange: (year: number) => void;
   onFilter: () => void;
@@ -20,11 +19,11 @@ interface FilterReservationsProps {
 const FilterReservations: React.FC<FilterReservationsProps> = ({
   activeKeyword,
   isLoading,
-  range,
   timeValue,
   selectedYear,
   yearOptions,
-  onDateChange,
+  selectedMonth,
+  onMonthChange,
   onTimeChange,
   onYearChange,
   onFilter,
@@ -33,19 +32,39 @@ const FilterReservations: React.FC<FilterReservationsProps> = ({
   const isActive = activeKeyword === 'reservations';
 
   return (
-    <div className="rounded-3xl border border-neutral-200 bg-gradient-to-br from-white via-neutral-50 to-white shadow-md p-5 space-y-6">
+    <div className="rounded-3xl border border-neutral-200 bg-gradient-to-br from-neutral-50 via-white to-neutral-100/80 shadow-md p-5 space-y-6">
       <div>
-        <p className="text-xs uppercase tracking-[0.2em] text-neutral-500">Booking filters</p>
-        <p className="text-base font-semibold text-neutral-900">Match requests to a moment in your calendar</p>
-        <p className="text-sm text-neutral-600">Pick a date, time, and year to only show the reservations that fit.</p>
+        <p className="text-xs uppercase tracking-[0.2em] text-neutral-500">
+          Booking filter
+        </p>
+        <p className="text-base font-semibold text-neutral-900">
+          Pick when this booking happens
+        </p>
+        <p className="text-sm text-neutral-600">
+          Select a month, preferred hour, and year to pull matching reservations.
+        </p>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[2fr,1fr]">
-        <SearchCalendar value={range} onChange={onDateChange} className="bg-white/95" />
+      <div className="grid gap-5 lg:grid-cols-[1.2fr,1fr]">
+        {/* Month & Year picker */}
+        <div className="rounded-2xl border border-neutral-200 bg-white/95 p-4 shadow-sm">
+          <MonthYearPicker
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            yearOptions={yearOptions}
+            onMonthChange={onMonthChange}
+            onYearChange={onYearChange}
+            placement="up"
+          />
+        </div>
 
+        {/* Time input */}
         <div className="rounded-2xl border border-neutral-200 bg-white/80 p-4 shadow-sm flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <label htmlFor="reservation-filter-time" className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+            <label
+              htmlFor="reservation-filter-time"
+              className="text-xs font-semibold uppercase tracking-wide text-neutral-500"
+            >
               Preferred time
             </label>
             <input
@@ -55,24 +74,9 @@ const FilterReservations: React.FC<FilterReservationsProps> = ({
               onChange={(event) => onTimeChange(event.target.value)}
               className="rounded-2xl border border-neutral-200 px-3 py-2 text-sm text-neutral-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-black"
             />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label htmlFor="reservation-filter-year" className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-              Year
-            </label>
-            <select
-              id="reservation-filter-year"
-              value={selectedYear}
-              onChange={(event) => onYearChange(Number(event.target.value))}
-              className="rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-black"
-            >
-              {yearOptions.map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </select>
+            <p className="text-[11px] text-neutral-500">
+              We’ll look for bookings around this hour in the chosen month.
+            </p>
           </div>
         </div>
       </div>
@@ -87,7 +91,10 @@ const FilterReservations: React.FC<FilterReservationsProps> = ({
           } ${isLoading ? 'opacity-70 cursor-wait' : ''}`}
         >
           {isLoading && (
-            <span className="h-4 w-4 border-2 border-white/60 border-t-transparent rounded-full animate-spin" aria-hidden="true"></span>
+            <span
+              className="h-4 w-4 border-2 border-white/60 border-t-transparent rounded-full animate-spin"
+              aria-hidden="true"
+            ></span>
           )}
           Filter Reservations
         </button>

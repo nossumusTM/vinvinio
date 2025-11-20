@@ -76,6 +76,13 @@ export async function POST(request: Request) {
 
     const listingWithSlug = await ensureListingSlug(fullListing);
 
+    await prisma.user.update({
+      where: { id: listingWithSlug.user.id },
+      data: {
+        allTimeBookingCount: { increment: 1 },
+      },
+    });
+
     // ✅ Update HostAnalytics (not User anymore)
     if (listingWithSlug?.user?.id) {
       await prisma.hostAnalytics.upsert({

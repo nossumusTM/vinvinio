@@ -432,7 +432,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
       <>
       <Container className="py-10">
   <div className="pageadjust px-5 space-y-6">
-    <div className="space-y-2 rounded-3xl border border-neutral-200 bg-white/90 shadow-md p-6">
+    <div className="mb-8 space-y-2 rounded-3xl border border-neutral-200 bg-white/90 shadow-md p-6">
       <Heading
         title="Activities"
         subtitle="Tracing your steps — behind and ahead"
@@ -839,12 +839,12 @@ const TripsClient: React.FC<TripsClientProps> = ({
             <button
               type="button"
               onClick={() => setIsFilterOpen((prev) => !prev)}
-              className="flex items-center gap-2 rounded-full bg-black text-neutral-50 px-5 py-3 shadow-lg transition text-sm font-semibold hover:shadow-xl"
+              className="flex items-center gap-2 rounded-full bg-transparent backdrop-blur-3xl text-neutral-900 px-5 py-3 shadow-lg transition text-sm font-semibold hover:shadow-xl"
             >
               <span className="inline-flex h-6 w-6 items-center shadow-md justify-center rounded-full text-[13px]">
                 {isFilterOpen ? '–' : '+'}
               </span>
-              <span>Filter activities</span>
+              <span>Filter By Date & Time</span>
             </button>
 
             {/* Dropup content — perfectly centered over the button */}
@@ -855,7 +855,6 @@ const TripsClient: React.FC<TripsClientProps> = ({
                     className="
                       absolute
                       bottom-[calc(100%+12px)]
-                      md:bottom-[calc(100%+100px)]
                       w-[min(100vw-32px,480px)]
                     "
                     initial={{ opacity: 0, y: 8, scale: 0.97 }}

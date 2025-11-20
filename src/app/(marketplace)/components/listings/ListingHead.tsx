@@ -8,6 +8,7 @@ import { PiShareFat } from "react-icons/pi";
 import { SafeUser } from '@/app/(marketplace)/types';
 import Heading from '../Heading';
 import HeartButton from '../HeartButton';
+import ListingLikeButton from './ListingLikeButton';
 import Lightbox from 'yet-another-react-lightbox';
 import { AnimatePresence, motion } from 'framer-motion';
 import 'yet-another-react-lightbox/styles.css';
@@ -23,6 +24,8 @@ interface ListingHeadProps {
   imageSrc: string[];
   id: string;
   currentUser?: SafeUser | null;
+  likesCount?: number;
+  isLikedByCurrentUser?: boolean;
 }
 
 const ListingHead: React.FC<ListingHeadProps> = ({
@@ -31,6 +34,8 @@ const ListingHead: React.FC<ListingHeadProps> = ({
   imageSrc,
   id,
   currentUser,
+  likesCount = 0,
+  isLikedByCurrentUser = false,
 }) => {
   const { getByValue } = useCountries();
   const router = useRouter();
@@ -468,6 +473,14 @@ const ListingHead: React.FC<ListingHeadProps> = ({
         {/* Top-right actions */}
         <div className="absolute top-3 right-4 z-20 flex items-center gap-1 pointer-events-auto">
           <HeartButton listingId={id} currentUser={currentUser} inline />
+
+          <ListingLikeButton
+            listingId={id}
+            currentUser={currentUser}
+            initialLikesCount={likesCount}
+            isInitiallyLiked={isLikedByCurrentUser}
+            inline
+          />
 
           <button
             onClick={() => {

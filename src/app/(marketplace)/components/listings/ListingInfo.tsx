@@ -55,6 +55,8 @@ interface ListingInfoProps {
     activityForms?: string[];
     seoKeywords?: string[];
     hoursInAdvance?: number | null;
+    hostFollowersCount?: number;
+    hostAllTimeBookingCount?: number;
 }
 
 const ListingInfo: React.FC<ListingInfoProps> = ({
@@ -78,6 +80,8 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
     activityForms,
     seoKeywords,
     hoursInAdvance,
+    hostFollowersCount = 0,
+    hostAllTimeBookingCount = 0,
 }) => {
     const { getByValue } = useCountries();
     const router = useRouter();
@@ -242,98 +246,109 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                     >
                     {/* <div className="w-full rounded-2xl p-8 rounded-xl flex items-center gap-3 justify-between items-center"> */}
                     <div className="relative w-full overflow-visible rounded-2xl pt-10 sm:pt-8">
-  {/* Cover area */}
-  <div className="relative h-48 sm:h-50 md:h-58 overflow-hidden rounded-2xl">
-    {/* Background cover */}
-    {coverImage ? (
-      <NextImage
-        src={coverImage}
-        alt={`${user?.username || 'host'} cover`}
-        fill
-        priority={false}
-        className={`object-cover transition-[opacity,filter,transform] duration-500 ease-out
-                    ${coverLoaded ? 'opacity-100 blur-0 scale-100' : 'opacity-80 blur-sm scale-[1.02]'}`}
-        onLoadingComplete={() => setCoverLoaded(true)}
-      />
-    ) : (
-      <div className="absolute inset-0 bg-neutral-200" />
-    )}
+                    {/* Cover area */}
+                    <div className="relative h-48 sm:h-50 md:h-58 overflow-hidden rounded-2xl">
+                      {/* Background cover */}
+                      {coverImage ? (
+                        <NextImage
+                          src={coverImage}
+                          alt={`${user?.username || 'host'} cover`}
+                          fill
+                          priority={false}
+                          className={`object-cover transition-[opacity,filter,transform] duration-500 ease-out
+                                      ${coverLoaded ? 'opacity-100 blur-0 scale-100' : 'opacity-80 blur-sm scale-[1.02]'}`}
+                          onLoadingComplete={() => setCoverLoaded(true)}
+                        />
+                      ) : (
+                        <div className="absolute inset-0 bg-neutral-200" />
+                      )}
 
-    {/* Soft gradient for legibility */}
-    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
+                      {/* Soft gradient for legibility */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
 
-    {/* Centered text content */}
-    <div className="mt-6 md:mt-10 absolute inset-0 z-10 flex flex-col pt-2 md:pt-0 items-center justify-center gap-1 px-4 text-center mt-0">
-      {/* Host name */}
-      <button
-        type="button"
-        onClick={handleHostNavigate}
-        className="rounded-full bg-white/90 px-4 py-1 text-sm font-semibold text-neutral-900 shadow-sm backdrop-blur transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300"
-      >
-        {user?.username || 'Host'}
-      </button>
+                      {/* Centered text content */}
+                      <div className="mt-6 md:mt-10 absolute inset-0 z-10 flex flex-col pt-2 md:pt-0 items-center justify-center gap-1 px-4 text-center mt-0">
+                        {/* Host name */}
+                        <button
+                          type="button"
+                          onClick={handleHostNavigate}
+                          className="rounded-full bg-white/90 px-4 py-1 text-sm font-semibold text-neutral-900 shadow-sm backdrop-blur transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300"
+                        >
+                          {user?.username || 'Host'}
+                        </button>
 
-      {/* Rating */}
-      {averageRating !== null && (
-  <div
-    onClick={scrollToReviews}
-    role="button"
-    tabIndex={0}
-    onKeyDown={(e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        scrollToReviews();
-      }
-    }}
-    aria-label="Scroll to reviews"
-    className="flex flex-col items-center cursor-pointer select-none"
-  >
-    <div className="flex items-center justify-center gap-2">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <defs>
-          <linearGradient id="starGradientHostHeaderTop">
-            <stop offset={`${(averageRating / 5) * 100}%`} stopColor="white" />
-            <stop offset={`${(averageRating / 5) * 100}%`} stopColor="rgba(255,255,255,0.35)" />
-          </linearGradient>
-        </defs>
-        <path
-          fill="url(#starGradientHostHeaderTop)"
-          d="M12 17.27L18.18 21 16.54 13.97 22 9.24 
-             14.81 8.63 12 2 9.19 8.63 2 9.24 
-             7.46 13.97 5.82 21 12 17.27z"
-        />
-      </svg>
-      <span className="text-base sm:text-lg font-normal text-white drop-shadow underline decoration-transparent hover:decoration-white/80">
-        {averageRating.toFixed(1)} / 5
-      </span>
-    </div>
+                        {/* Rating */}
+                        {averageRating !== null && (
+                    <div
+                      onClick={scrollToReviews}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          scrollToReviews();
+                        }
+                      }}
+                      aria-label="Scroll to reviews"
+                      className="flex flex-col items-center cursor-pointer select-none"
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                          <defs>
+                            <linearGradient id="starGradientHostHeaderTop">
+                              <stop offset={`${(averageRating / 5) * 100}%`} stopColor="white" />
+                              <stop offset={`${(averageRating / 5) * 100}%`} stopColor="rgba(255,255,255,0.35)" />
+                            </linearGradient>
+                          </defs>
+                          <path
+                            fill="url(#starGradientHostHeaderTop)"
+                            d="M12 17.27L18.18 21 16.54 13.97 22 9.24 
+                              14.81 8.63 12 2 9.19 8.63 2 9.24 
+                              7.46 13.97 5.82 21 12 17.27z"
+                          />
+                        </svg>
+                        <span className="text-base sm:text-lg font-normal text-white drop-shadow underline decoration-transparent hover:decoration-white/80">
+                          {averageRating.toFixed(1)} / 5
+                        </span>
+                      </div>
 
-    <span className="text-[11px] font-medium border-b border-white/85 text-white/85 drop-shadow-sm tracking-wide">
-      {reviewCount} TOTAL REVIEW{reviewCount !== 1 ? 'S' : ''}
-    </span>
-  </div>
-      )}
+                      <span className="text-[11px] font-medium border-b border-white/85 text-white/85 drop-shadow-sm tracking-wide">
+                        {reviewCount} TOTAL REVIEW{reviewCount !== 1 ? 'S' : ''}
+                      </span>
+                    </div>
+                        )}
 
-    </div>
-  </div>
+                      </div>
+                    </div>
 
-  {/* Avatar floating on top (half in, half out of the cover) */}
-  <button
-    type="button"
-    onClick={handleHostNavigate}
-    title={user?.username || 'Host'}
-    className="absolute left-1/2 -top-2 -translate-x-1/2 z-20 rounded-full outline-none focus:ring-2 focus:ring-black/30"
-  >
-    <div className="rounded-full ring-4 ring-white shadow-xl">
-      <Avatar
-        src={user?.image}
-        name={user?.username}
-        size={96} // adjust as needed
-      />
-    </div>
-  </button>
-</div>
+                    {/* Avatar floating on top (half in, half out of the cover) */}
+                    <button
+                      type="button"
+                      onClick={handleHostNavigate}
+                      title={user?.username || 'Host'}
+                      className="absolute left-1/2 -top-2 -translate-x-1/2 z-20 rounded-full outline-none focus:ring-2 focus:ring-black/30"
+                    >
+                      <div className="rounded-full ring-4 ring-white shadow-xl">
+                        <Avatar
+                          src={user?.image}
+                          name={user?.username}
+                          size={96} // adjust as needed
+                        />
+                      </div>
+                    </button>
+                  </div>
                         
+                        <div className="mt-4 flex flex-wrap gap-3">
+                          <div className="rounded-xl border border-neutral-200 bg-white/70 px-3 py-2 text-neutral-800 shadow-sm">
+                            <p className="text-[11px] uppercase tracking-wide text-neutral-500">Followers</p>
+                            <p className="text-lg font-semibold">{hostFollowersCount}</p>
+                          </div>
+                          <div className="rounded-xl border border-neutral-200 bg-white/70 px-3 py-2 text-neutral-800 shadow-sm">
+                            <p className="text-[11px] uppercase tracking-wide text-neutral-500">Bookings</p>
+                            <p className="text-lg font-semibold">{hostAllTimeBookingCount}</p>
+                          </div>
+                        </div>
+
                         {hostDescription && (
                             <div>
                              <div className="ml-4 mt-5">

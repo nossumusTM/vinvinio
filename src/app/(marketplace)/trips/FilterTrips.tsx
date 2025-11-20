@@ -50,6 +50,7 @@ const FilterTrips: React.FC<FilterTripsProps> = ({
             yearOptions={yearOptions}
             onMonthChange={onMonthChange}
             onYearChange={onYearChange}
+            placement='up'
           />
         </div>
 

@@ -692,13 +692,13 @@ const Categories = () => {
                 >
                   <div
                     className={clsx(
-                      'relative flex h-12 w-12 p-2 items-center justify-center rounded-full bg-transparent shadow-md shadow-neutral-300/40',
+                      'relative flex h-12 w-12 p-2 items-center justify-center rounded-full bg-black shadow-md shadow-neutral-300/40',
                       // 'relative flex h-12 w-12 items-center justify-center rounded-full bg-transparent shadow-md shadow-neutral-300/40',
                       hasActiveFilters && 'shadow-neutral-400/60'
                     )}
                   >
                     <LuSlidersHorizontal
-                      className={clsx('h-6 w-6', hasActiveFilters ? 'text-neutral-900' : 'text-neutral-600')}
+                      className={clsx('h-6 w-6', hasActiveFilters ? 'text-white' : 'text-white')}
                       aria-hidden="true"
                     />
                     {hasActiveFilters && (

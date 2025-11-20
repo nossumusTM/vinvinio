@@ -16,10 +16,12 @@ const FavoritesClient: React.FC<FavoritesClientProps> = ({
     return (
         <Container className="py-10">
             <div className="pageadjust px-5 space-y-6">
-                <Heading
-                    title="Bookmarks"
-                    subtitle="Experiences You've Saved"
-                />
+                <div className="mb-8 space-y-4 rounded-3xl border border-neutral-200 bg-white/90 shadow-md p-6">
+                    <Heading
+                        title="Bookmarks"
+                        subtitle="Experiences You've Saved"
+                    />
+                    </div>
                 <div
                     className="mt-6 grid grid-cols-1 gap-12 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4"
                 >

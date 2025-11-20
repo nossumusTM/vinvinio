@@ -3,6 +3,7 @@ import prisma from "@/app/(marketplace)/libs/prismadb";
 import { ensureListingSlug } from "@/app/(marketplace)/libs/ensureListingSlug";
 import { normalizePricingSnapshot } from "@/app/(marketplace)/libs/pricing";
 import type { Prisma } from '@prisma/client';
+import getCurrentUser from "@/app/(marketplace)/actions/getCurrentUser"; // 👈 NEW
 
 interface IParams {
   listingId?: string;
@@ -18,22 +19,19 @@ export default async function getListingById(params: IParams) {
   try {
     const { listingId } = params;
 
-    // const listing = await prisma.listing.findUnique({
-    //   where: {
-    //     id: listingId,
-    //   },
-    //   include: {
-    //     user: true,
-    //   },
-    // });
-
     const where = looksLikeObjectId(listingId)
       ? { id: listingId! }
       : { slug: listingId! };
 
     const listing = await prisma.listing.findFirst({
       where,
-      include: { user: true },
+      include: {
+        user: true,
+        likes: true, // 👈 make sure this matches your relation name
+        _count: {
+          select: { likes: true }, // 👈 same here
+        },
+      },
     });
 
     if (!listing) {
@@ -41,6 +39,16 @@ export default async function getListingById(params: IParams) {
     }
 
     const listingWithSlug = await ensureListingSlug(listing);
+
+    // 👇 Fetch current user on the server so we can compute likedByCurrentUser
+    const currentUser = await getCurrentUser();
+
+    const likesCount = listingWithSlug._count?.likes ?? 0;
+
+    const likedByCurrentUser =
+      !!currentUser &&
+      Array.isArray(listingWithSlug.likes) &&
+      listingWithSlug.likes.some((like) => like.userId === currentUser.id);
 
     type UserOptionals = {
       bio?: string | null;
@@ -67,7 +75,7 @@ export default async function getListingById(params: IParams) {
       : Number(listingWithSlug.price ?? 0);
 
     return {
-      ...listingWithSlug,
+      ...listingWithSlug, // includes slug, etc.
       price: normalizedBasePrice,
       hoursInAdvance: Math.max(0, Number(listingWithSlug.hoursInAdvance ?? 0)),
       updatedAt: listingWithSlug.updatedAt.toISOString(),
@@ -92,18 +100,16 @@ export default async function getListingById(params: IParams) {
       pricingType: pricingSnapshot.mode ?? null,
       groupPrice: pricingSnapshot.groupPrice,
       groupSize: pricingSnapshot.groupSize,
-      // customPricing: pricingSnapshot.tiers.length > 0 ? pricingSnapshot.tiers : null,
       customPricing:
         pricingSnapshot.tiers.length > 0
           ? (pricingSnapshot.tiers as SafePricingTier[])
           : null,
       createdAt: listingWithSlug.createdAt.toString(),
-      // user: {
-      //   ...listingWithSlug.user,
-      //   createdAt: listingWithSlug.user.createdAt.toString(),
-      //   updatedAt: listingWithSlug.user.updatedAt.toString(),
-      //   emailVerified: listingWithSlug.user.emailVerified?.toString() || null,
-      // },
+
+      // 💗 NEW: like info exposed to the client
+      likesCount,
+      likedByCurrentUser,
+
       user: {
         id: u.id,
         name: u.name,

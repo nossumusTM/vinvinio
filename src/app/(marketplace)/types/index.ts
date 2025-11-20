@@ -137,6 +137,8 @@ type SafeUserStrict = Omit<
   socialCardIsPublic: boolean;
   visitedPlaces: SocialCardVisitedPlace[] | null;
   partnerCommission: number;
+  followersCount: number;
+  allTimeBookingCount: number;
 };
 
 /**
@@ -183,6 +185,9 @@ export type SafeListing = Simplify<
 
     slug?: string | null;
     primaryCategory?: string | null;
+
+    likesCount?: number;
+    likedByCurrentUser?: boolean;
 
     status: Statusish;
     user: SafeUser;

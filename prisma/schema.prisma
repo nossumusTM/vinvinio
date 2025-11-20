@@ -97,6 +97,14 @@ model User {
   socialCardIsPublic  Boolean @default(true)
   visitedPlaces       Json?
 
+  followersCount      Int     @default(0)
+  allTimeBookingCount Int     @default(0)
+
+  following  Follow[] @relation("UserFollowsAsFollower")
+  followers  Follow[] @relation("UserFollowsAsHost")
+
+  listingLikes ListingLike[]
+
   resetTokens PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
   notificationDismissals NotificationDismissal[]
@@ -154,9 +162,11 @@ model Listing {
   customPricing       Json?
   hoursInAdvance      Int?          @default(0)
   punti               Int            @default(0)
+  likesCount          Int            @default(0)
   user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   reservations        Reservation[]
   reviews             Review[]
+  likes               ListingLike[]
 
   slug             String?    // ← temporarily nullable & not unique
   primaryCategory  String?    // ← optional
@@ -353,4 +363,28 @@ model Newsletter {
   createdAt DateTime       @default(now())
 
   @@unique([email, type])
+}
+
+model Follow {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  followerId String   @db.ObjectId
+  hostId     String   @db.ObjectId
+  createdAt  DateTime @default(now())
+
+  follower User @relation("UserFollowsAsFollower", fields: [followerId], references: [id], onDelete: Cascade)
+  host     User @relation("UserFollowsAsHost", fields: [hostId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, hostId])
+}
+
+model ListingLike {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String   @db.ObjectId
+  listingId  String   @db.ObjectId
+  createdAt  DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, listingId])
 }

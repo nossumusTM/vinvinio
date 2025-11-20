@@ -22,9 +22,10 @@ export interface HostCardData {
   host: SafeUser;
   listings: SafeListing[];
   reviews: HostCardReview[];
+  isFollowing?: boolean;
 }
 
-export default async function getHostCardData(identifier: string): Promise<HostCardData | null> {
+export default async function getHostCardData(identifier: string, currentUserId?: string): Promise<HostCardData | null> {
   if (!identifier) return null;
 
   let candidate = identifier;
@@ -87,6 +88,8 @@ export default async function getHostCardData(identifier: string): Promise<HostC
     hobbies: Array.isArray(host.hobbies) ? host.hobbies : [],
     preferredContacts: Array.isArray(host.preferredContacts) ? host.preferredContacts : [],
     identityVerified: typeof host.identityVerified === "boolean" ? host.identityVerified : false,
+    followersCount: typeof host.followersCount === 'number' ? host.followersCount : 0,
+    allTimeBookingCount: typeof host.allTimeBookingCount === 'number' ? host.allTimeBookingCount : 0,
   };
 
   const listingsWithSlug = await Promise.all(
@@ -157,10 +160,22 @@ export default async function getHostCardData(identifier: string): Promise<HostC
     reviewerImage: review.user?.image ?? null,
   }));
 
+  let isFollowing: boolean | undefined;
+  if (currentUserId) {
+    const followRecord = await prisma.follow.findFirst({
+      where: {
+        followerId: currentUserId,
+        hostId,
+      },
+    });
+    isFollowing = Boolean(followRecord);
+  }
+
   return {
     host: safeHost,
     listings,
     reviews,
+    isFollowing,
   };
 }
 

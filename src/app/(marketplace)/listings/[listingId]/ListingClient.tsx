@@ -638,10 +638,12 @@ const ListingClient: React.FC<ListingClientProps> = ({
                 <div className="flex flex-col gap-6">
                     <ListingHead
                         title={listing.title}
-                        imageSrc={Array.isArray(listing.imageSrc) ? listing.imageSrc : [listing.imageSrc]} // ✅ Fix here
+                        imageSrc={Array.isArray(listing.imageSrc) ? listing.imageSrc : [listing.imageSrc]}
                         locationValue={listing.locationValue}
                         id={listing.id}
                         currentUser={currentUser}
+                        likesCount={listing.likesCount ?? 0}
+                        isLikedByCurrentUser={listing.likedByCurrentUser ?? false}
                     />
 
                     <button
@@ -670,7 +672,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                             messenger.openChat(recipient);
                             }
                         }}
-                        className="text-md text-neutral-900 bg-neutral-50 hover:bg-neutral-100 p-4 rounded-xl transition font-normal mt-1 shadow-sm hover:shadow"
+                        className="text-md text-neutral-900 shadow-md hover:shadow-lg p-4 rounded-xl transition font-normal mt-1 shadow-sm hover:shadow"
                         >
                         Text @{listing.user?.username?.split(' ')[0] ?? 'Host'}
                     </button>
@@ -697,6 +699,8 @@ const ListingClient: React.FC<ListingClientProps> = ({
                                 activityForms={activityForms}
                                 seoKeywords={seoKeywords}
                                 hoursInAdvance={hoursInAdvance}
+                                hostFollowersCount={listing.user.followersCount ?? 0}
+                                hostAllTimeBookingCount={listing.user.allTimeBookingCount ?? 0}
                             />
 
                         </div>
@@ -879,7 +883,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                     whileTap={{ scale: 0.97 }}
                     onClick={() => setShowPricingPopover((open) => !open)}
                     aria-expanded={showPricingPopover}
-                    className="pricing-toggle-button flex w-full items-center justify-between gap-4 rounded-2xl backdrop-blur-md px-6 py-2 text-left text-neutral-900 shadow-[0_20px_45px_rgba(0,0,0,0.35)]"
+                    className="pricing-toggle-button flex w-full items-center justify-between gap-4 rounded-full backdrop-blur-3xl px-6 py-3 text-left text-black shadow-[0_20px_45px_rgba(0,0,0,0.35)]"
                 >
                     <div className="flex-1">
                         <p className="text-[8px] font-semibold uppercase tracking-[0.5em] text-black/60">{pricingIndicator.label}</p>
@@ -890,6 +894,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                         aria-hidden
                         animate={{ rotate: showPricingPopover ? 180 : 0 }}
                         transition={{ duration: 0.2 }}
+                        style={{rotate: '180deg'}}
                         className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-lg"
                     >
                         ▾

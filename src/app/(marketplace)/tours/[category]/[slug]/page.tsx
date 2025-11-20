@@ -98,12 +98,21 @@ export default async function ListingBySlugPage({ params, searchParams }: PagePr
   }
 
   const currentUser = await getCurrentUser();
+  const existingLike = currentUser
+    ? await prisma.listingLike.findFirst({
+        where: { listingId: ensured.id, userId: currentUser.id },
+      })
+    : null;
+  const listingWithEngagement = {
+    ...(ensured as any),
+    likedByCurrentUser: Boolean(existingLike),
+  };
   const reservations = await getListingReservations(ensured.id);
 
   return (
     <ClientOnly>
       <ListingClient
-        listing={ensured as any}
+        listing={listingWithEngagement as any}
         reservations={reservations as any}
         currentUser={currentUser as any}
       />
