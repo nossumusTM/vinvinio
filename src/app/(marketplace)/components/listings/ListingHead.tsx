@@ -8,6 +8,7 @@ import { PiShareFat } from "react-icons/pi";
 import { SafeUser } from '@/app/(marketplace)/types';
 import Heading from '../Heading';
 import HeartButton from '../HeartButton';
+import ShareButton from '../ShareButton';
 import ListingLikeButton from './ListingLikeButton';
 import Lightbox from 'yet-another-react-lightbox';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -401,7 +402,7 @@ const ListingHead: React.FC<ListingHeadProps> = ({
         <button
           type="button"
           onClick={handleBack}
-          className="mb-2 inline-flex items-center gap-2 rounded-full bg-neutral-50 px-3 py-2 text-sm font-medium text-neutral-700 shadow-sm transition hover:-translate-x-0.5 hover:bg-neutral-100"
+          className="mb-2 inline-flex items-center gap-2 rounded-full bg-neutral-50 px-3 py-1 text-sm font-medium text-neutral-700 shadow-sm transition hover:-translate-x-0.5 hover:bg-neutral-100"
         >
           <LuArrowLeft className="h-4 w-4" />
           Back
@@ -438,7 +439,7 @@ const ListingHead: React.FC<ListingHeadProps> = ({
           </div>
       )}
 
-      <p className='font-semibold text-sm mt-1 bg-neutral-100 rounded-full px-2 py-1'>
+      <p className='font-semibold text-sm mt-1 bg-neutral-50 rounded-full px-2 py-1'>
       <span>
           {location
             ? 'city' in location
@@ -457,8 +458,8 @@ const ListingHead: React.FC<ListingHeadProps> = ({
         {!hasInteractedGallery && imageGallery.length > 3 && (
           <div className="pointer-events-none absolute inset-x-0 bottom-4 z-20 flex justify-center">
             <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: [0.5, 1, 0.5], y: [8, 0, 4] }}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: [0.5, 1, 0.5], y: [16, 0, 8] }}
               transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
               className="inline-flex items-center gap-2 rounded-full bg-black/55 px-4 py-2 text-xs font-medium text-white backdrop-blur-sm shadow-md"
             >
@@ -471,8 +472,12 @@ const ListingHead: React.FC<ListingHeadProps> = ({
         )}
 
         {/* Top-right actions */}
-        <div className="absolute top-3 right-4 z-20 flex items-center gap-1 pointer-events-auto">
-          <HeartButton listingId={id} currentUser={currentUser} inline />
+        <div className="absolute top-3 right-4 z-20 flex items-center gap-2 pointer-events-auto">
+          <HeartButton
+            listingId={id}
+            currentUser={currentUser}
+            inline
+          />
 
           <ListingLikeButton
             listingId={id}
@@ -482,25 +487,14 @@ const ListingHead: React.FC<ListingHeadProps> = ({
             inline
           />
 
-          <button
+          <ShareButton 
+            inline
             onClick={() => {
               navigator.clipboard.writeText(window.location.href);
               setShowSharePopup(true);
               setTimeout(() => setShowSharePopup(false), 2500);
             }}
-            aria-label="Share"
-            className="
-              mt-2
-              p-2 rounded-full
-              hover:shadow-md
-              bg-white/10 backdrop-blur-sm
-              text-white
-              transition
-              flex items-center justify-center
-            "
-          >
-            <PiShareFat size={18} />
-          </button>
+          />
         </div>
 
         {/* 🎥 Pure video cover case */}
@@ -560,7 +554,6 @@ const ListingHead: React.FC<ListingHeadProps> = ({
               if (!hasInteractedGallery) setHasInteractedGallery(true);
             }}
             onClickCapture={(e) => {
-              // prevent clicks right after a drag
               if (suppressClick.current) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -571,7 +564,7 @@ const ListingHead: React.FC<ListingHeadProps> = ({
               relative flex w-full h-[70vh]
               overflow-x-auto overflow-y-hidden
               rounded-2xl
-              touch-pan-x
+              touch-auto md:touch-pan-x
               scrollbar-thin
               select-none
               gap-2

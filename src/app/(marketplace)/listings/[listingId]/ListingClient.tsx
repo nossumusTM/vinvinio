@@ -643,7 +643,8 @@ const ListingClient: React.FC<ListingClientProps> = ({
                         id={listing.id}
                         currentUser={currentUser}
                         likesCount={listing.likesCount ?? 0}
-                        isLikedByCurrentUser={listing.likedByCurrentUser ?? false}
+                        // isLikedByCurrentUser={listing.likedByCurrentUser ?? false}
+                        isLikedByCurrentUser={Boolean(listing.likedByCurrentUser)}
                     />
 
                     <button
@@ -672,7 +673,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                             messenger.openChat(recipient);
                             }
                         }}
-                        className="text-md text-neutral-900 shadow-md hover:shadow-lg p-4 rounded-xl transition font-normal mt-1 shadow-sm hover:shadow"
+                        className="text-md text-neutral-900 shadow-md hover:shadow-lg p-4 rounded-xl transition font-normal mt-1 shadow-md"
                         >
                         Text @{listing.user?.username?.split(' ')[0] ?? 'Host'}
                     </button>
@@ -701,6 +702,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                                 hoursInAdvance={hoursInAdvance}
                                 hostFollowersCount={listing.user.followersCount ?? 0}
                                 hostAllTimeBookingCount={listing.user.allTimeBookingCount ?? 0}
+                                listingLikesCount={listing.likesCount ?? 0}
                             />
 
                         </div>

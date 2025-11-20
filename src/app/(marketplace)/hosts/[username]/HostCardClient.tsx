@@ -34,6 +34,7 @@ import getCroppedImg from '@/app/(marketplace)/utils/cropImage';
 import useMessenger from '@/app/(marketplace)/hooks/useMessager';
 import useLoginModal from '@/app/(marketplace)/hooks/useLoginModal';
 import CountryFlagByLabel from '../../components/CountryFlagByLabel';
+import { FiUsers, FiCalendar, FiHeart } from 'react-icons/fi';
 import { useCallback } from 'react';
 
 type HostCardReviewWithImage = HostCardReview & {
@@ -108,6 +109,14 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
 
   const busy = isCropping;
+
+  const listingLikesCount = useMemo(
+    () =>
+      (typeof host.listingLikesCount === 'number'
+        ? host.listingLikesCount
+        : listings.reduce((sum, listing) => sum + (listing.likesCount ?? 0), 0)),
+    [host.listingLikesCount, listings]
+  );
 
   // local optimistic previews (optional)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -626,13 +635,28 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                         ID IN REVIEW
                       </div>
                     )}
+                  <div className='flex flex-row gap-1'>
                   <p className="text-2xl font-semibold flex items-center gap-2">
                     {host.username || host.name || 'Host'}
                   </p>
+
+                  {!isOwner && (
+                      <button
+                        type="button"
+                        onClick={handleToggleFollow}
+                        disabled={followBusy}
+                        className="inline-flex items-center gap-2 rounded-full shadow-lg px-2 py-0 text-xs font-semibold text-white backdrop-blur transition hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-70"
+                      >
+                        {isFollowingHost ? 'Unfollow' : '+ Follow'}
+                      </button>
+                    )}
+                  </div>
                   {/* {host.legalName && (
                     <p className="ml-1 text-sm text-white/80">{host.legalName}</p>
                   )} */}
                   {primaryLocation && ( <p className="w-fit mr-3.5 text-sm text-white/80 flex flex-row gap-1"> Located In <p className='font-semibold'>{primaryLocation.label.toUpperCase()}</p> </p> )}
+                
+                
                 </div>
               </div>
 
@@ -778,34 +802,60 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
               </p>
             )}
 
-           {/* STATS → TABS → DIRECT MESSAGE */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between w-full gap-4">
-              {/* Followers & bookings FIRST (left on desktop) */}
-              <div className="text-center px-4 py-4 flex flex-wrap gap-3 justify-center md:justify-start">
-                <div className="rounded-2xl border border-white/20 shadow-md px-3 py-2 text-black/90">
-                  <p className="text-[11px] uppercase tracking-wide text-black/70">Followers</p>
-                  <p className="text-lg font-semibold">{followersCount}</p>
-                </div>
-                <div className="rounded-2xl border border-white/20 shadow-md px-3 py-2 text-black/90">
-                  <p className="text-[11px] uppercase tracking-wide text-black/70">Bookings</p>
-                  <p className="text-lg font-semibold">{host.allTimeBookingCount ?? 0}</p>
+            {/* STATS → DIRECT MESSAGE → TABS */}
+            <div className="flex w-full flex-col md:flex-row md:items-center md:justify-between gap-4">
+              {/* LEFT: Followers / Bookings / Likes */}
+              <div className="flex flex-row flex-nowrap gap-3 w-full overflow-x-auto scroll-smooth md:w-auto md:flex-wrap md:overflow-visible">
+                {/* Followers */}
+                <div className="inline-flex min-w-[110px] flex-col rounded-2xl border border-white/15 bg-white/10 px-3.5 py-2.5 text-black/90 shadow-sm backdrop-blur-md">
+                  <div className="flex items-center gap-1.5">
+                    <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-sm" />
+                    <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-black/70">
+                      Followers
+                    </p>
+                  </div>
+                  <p className="mt-1 text-xl font-semibold leading-tight">{followersCount}</p>
                 </div>
 
-                {!isOwner && (
-                  <button
-                    type="button"
-                    onClick={handleToggleFollow}
-                    disabled={followBusy}
-                    className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/20 px-4 py-2 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/30 disabled:cursor-not-allowed disabled:opacity-70"
-                  >
-                    {isFollowingHost ? 'Unfollow' : 'Follow'}
-                  </button>
-                )}
+                {/* Bookings */}
+                <div className="inline-flex min-w-[110px] flex-col rounded-2xl border border-white/15 bg-white/10 px-3.5 py-2.5 text-black/90 shadow-sm backdrop-blur-md">
+                  <div className="flex items-center gap-1.5">
+                    <span className="inline-flex h-1.5 w-1.5 rounded-full bg-sky-400 shadow-sm" />
+                    <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-black/70">
+                      Bookings
+                    </p>
+                  </div>
+                  <p className="mt-1 text-xl font-semibold leading-tight">
+                    {host.allTimeBookingCount ?? 0}
+                  </p>
+                </div>
+
+                {/* Likes */}
+                <div className="inline-flex min-w-[130px] flex-col rounded-2xl border border-white/15 bg-white/10 px-3.5 py-2.5 text-black/90 shadow-sm backdrop-blur-md">
+                  <div className="flex items-center gap-1.5">
+                    <span className="inline-flex h-1.5 w-1.5 rounded-full bg-fuchsia-400 shadow-sm" />
+                    <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-black/70">
+                      LIKES
+                    </p>
+                  </div>
+                  <p className="mt-1 text-xl font-semibold leading-tight">{listingLikesCount}</p>
+                </div>
               </div>
 
-              {/* Tabs group SECOND (center on desktop) */}
-              <div className="w-full md:flex-1 flex justify-center">
-                <div className="flex w-full md:w-auto rounded-full border border-neutral-200 bg-neutral-50 p-1">
+              {/* CENTER: Direct Message */}
+              <div className="w-full md:w-auto flex justify-center">
+                <button
+                  onClick={handleContactHost}
+                  className="w-full md:w-auto px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-white text-neutral-900 shadow-md border border-neutral-200 tracking-[0.14em] text-[11px] sm:text-xs font-semibold hover:shadow-lg transition text-center"
+                  title="Direct Message"
+                >
+                  DIRECT MESSAGE
+                </button>
+              </div>
+
+              {/* RIGHT: Experiences / Reviews switcher */}
+              <div className="w-full md:flex-1 flex justify-center md:justify-end">
+                <div className="flex w-full md:w-auto rounded-full bg-neutral-50 p-1">
                   {(['experiences', 'reviews'] as TabKey[]).map((tab) => {
                     const reviewCount = reviews.length;
                     const reviewLabel =
@@ -827,8 +877,8 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                       >
                         {tab === 'experiences' && activeTab === 'experiences' && (
                           <div className="relative flex items-center justify-center">
-                            <span className="absolute inline-flex h-3.5 w-3.5 rounded-full bg-emerald-400 opacity-75 animate-ping"></span>
-                            <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 shadow-md"></span>
+                            <span className="absolute inline-flex h-3.5 w-3.5 rounded-full bg-emerald-400 opacity-75 animate-ping" />
+                            <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 shadow-md" />
                           </div>
                         )}
                         {tab === 'experiences' ? 'Experiences' : reviewLabel}
@@ -836,17 +886,6 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                     );
                   })}
                 </div>
-              </div>
-
-              {/* DIRECT MESSAGE LAST (right on desktop) */}
-              <div className="w-full md:w-auto flex justify-center md:justify-end">
-                <button
-                  onClick={handleContactHost}
-                  className="w-full md:w-auto px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-white text-neutral-900 shadow-md border border-neutral-200 tracking-[0.14em] text-[11px] sm:text-xs font-semibold hover:shadow-lg transition text-center"
-                  title="Direct Message"
-                >
-                  DIRECT MESSAGE
-                </button>
               </div>
             </div>
 

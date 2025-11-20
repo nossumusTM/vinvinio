@@ -8,6 +8,7 @@ import { BsTranslate } from "react-icons/bs";
 import { RiUserHeartFill } from "react-icons/ri";
 import { GiExtraTime } from "react-icons/gi";
 import LocationDescription from '../LocationDescription';
+import { FiUsers, FiCalendar, FiHeart } from 'react-icons/fi';
 import NextImage from 'next/image';
 
 import { useEffect, useState, useCallback } from "react";
@@ -57,6 +58,7 @@ interface ListingInfoProps {
     hoursInAdvance?: number | null;
     hostFollowersCount?: number;
     hostAllTimeBookingCount?: number;
+    listingLikesCount?: number;
 }
 
 const ListingInfo: React.FC<ListingInfoProps> = ({
@@ -82,6 +84,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
     hoursInAdvance,
     hostFollowersCount = 0,
     hostAllTimeBookingCount = 0,
+    listingLikesCount = 0,
 }) => {
     const { getByValue } = useCountries();
     const router = useRouter();
@@ -338,16 +341,47 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                     </button>
                   </div>
                         
-                        <div className="mt-4 flex flex-wrap gap-3">
-                          <div className="rounded-xl border border-neutral-200 bg-white/70 px-3 py-2 text-neutral-800 shadow-sm">
-                            <p className="text-[11px] uppercase tracking-wide text-neutral-500">Followers</p>
-                            <p className="text-lg font-semibold">{hostFollowersCount}</p>
-                          </div>
-                          <div className="rounded-xl border border-neutral-200 bg-white/70 px-3 py-2 text-neutral-800 shadow-sm">
-                            <p className="text-[11px] uppercase tracking-wide text-neutral-500">Bookings</p>
-                            <p className="text-lg font-semibold">{hostAllTimeBookingCount}</p>
-                          </div>
-                        </div>
+                  <div className="mt-4 flex w-full flex-row flex-nowrap justify-center items-center gap-3 overflow-x-auto scroll-smooth md:flex-wrap md:overflow-visible">
+                    {/* Followers */}
+                    <div className="inline-flex min-w-[110px] flex-col rounded-2xl border border-white/15 bg-white/10 px-3.5 py-2.5 text-black/90 shadow-sm backdrop-blur-md">
+                      <div className="flex items-center gap-1.5">
+                        <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-sm" />
+                        <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-black/70">
+                          Followers
+                        </p>
+                      </div>
+                      <p className="mt-1 text-xl font-semibold leading-tight">
+                        {hostFollowersCount}
+                      </p>
+                    </div>
+
+                    {/* Bookings */}
+                    <div className="inline-flex min-w-[110px] flex-col rounded-2xl border border-white/15 bg-white/10 px-3.5 py-2.5 text-black/90 shadow-sm backdrop-blur-md">
+                      <div className="flex items-center gap-1.5">
+                        <span className="inline-flex h-1.5 w-1.5 rounded-full bg-sky-400 shadow-sm" />
+                        <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-black/70">
+                          Bookings
+                        </p>
+                      </div>
+                      <p className="mt-1 text-xl font-semibold leading-tight">
+                        {hostAllTimeBookingCount}
+                      </p>
+                    </div>
+
+                    {/* Likes */}
+                    <div className="inline-flex min-w-[130px] flex-col rounded-2xl border border-white/15 bg-white/10 px-3.5 py-2.5 text-black/90 shadow-sm backdrop-blur-md">
+                      <div className="flex items-center gap-1.5">
+                        <span className="inline-flex h-1.5 w-1.5 rounded-full bg-fuchsia-400 shadow-sm" />
+                        <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-black/70">
+                          LIKES
+                        </p>
+                      </div>
+                      <p className="mt-1 text-xl font-semibold leading-tight">
+                        {listingLikesCount}
+                      </p>
+                    </div>
+                  </div>
+
 
                         {hostDescription && (
                             <div>
@@ -377,7 +411,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                 <div className="p-5 flex flex-col gap-4 text-left pt-5">
                 {/* Guest Count */}
                 <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 shrink-0 aspect-square shadow-md rounded-full flex items-center justify-center">
+                      <div className="w-12 h-12 shrink-0 aspect-square shadow-md rounded-2xl flex items-center justify-center">
                         <RiUserHeartFill size={20} className="text-neutral-600 mt-1" />
                     </div>
 
@@ -394,7 +428,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                 {/* Languages */}
                 {Array.isArray(languages) && languages.length > 0 && (
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 shrink-0 aspect-square shadow-md rounded-full flex items-center justify-center">
+                      <div className="w-12 h-12 shrink-0 aspect-square shadow-md rounded-2xl flex items-center justify-center">
                         <BsTranslate size={20} className="text-neutral-600 mt-1" />
                     </div>
                     <div>
@@ -411,7 +445,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                 {/* Experience Duration */}
                 {experienceHour && (
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 shrink-0 aspect-square shadow-md rounded-full flex items-center justify-center">
+                      <div className="w-12 h-12 shrink-0 aspect-square shadow-md rounded-2xl flex items-center justify-center">
                         <GiExtraTime size={20} className="text-neutral-600 mt-1" />
                     </div>
                     <div>
@@ -427,7 +461,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
 
                 {typeof hoursInAdvance === 'number' && hoursInAdvance > 0 && (
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 shrink-0 aspect-square shadow-md rounded-full flex items-center justify-center">
+                    <div className="w-12 h-12 shrink-0 aspect-square shadow-md rounded-2xl flex items-center justify-center">
                       <GiExtraTime size={20} className="text-neutral-600 mt-1" />
                     </div>
                     <div>

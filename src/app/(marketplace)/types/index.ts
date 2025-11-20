@@ -139,6 +139,7 @@ type SafeUserStrict = Omit<
   partnerCommission: number;
   followersCount: number;
   allTimeBookingCount: number;
+  listingLikesCount?: number;
 };
 
 /**

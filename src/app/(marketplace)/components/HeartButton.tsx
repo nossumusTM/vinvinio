@@ -1,9 +1,19 @@
 'use client';
 
 import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
+import { AnimatePresence, motion } from 'framer-motion';
 
 import useFavorite from "@/app/(marketplace)/hooks/useFavorite";
 import { SafeUser } from "@/app/(marketplace)/types";
+
+import { MdBookmarkBorder } from "react-icons/md";
+import { GoBookmark } from "react-icons/go";
+import { GoBookmarkFill } from "react-icons/go";
+import { TbBookmark } from "react-icons/tb";
+import { TbBookmarkFilled } from "react-icons/tb";
+import { LuBookmark } from "react-icons/lu";
+import { RiBookmark3Line } from "react-icons/ri";
+import { RiBookmark3Fill } from "react-icons/ri";
 
 import ClientOnly from "./ClientOnly";
 
@@ -14,62 +24,55 @@ interface HeartButtonProps {
 }
 
 const HeartButton: React.FC<HeartButtonProps> = ({
+  listingId,
+  currentUser,
+  inline = false,
+}) => {
+  const { hasFavorited, toggleFavorite } = useFavorite({
     listingId,
     currentUser,
-    inline = false,
-}) => {
-    const { hasFavorited, toggleFavorite } = useFavorite({
-        listingId,
-        currentUser
-    });
+  });
 
-    // return (
-    //     <div
-    //         onClick={toggleFavorite}
-    //         className="
-    //     relative
-    //     hover:opacity-80
-    //     transition
-    //     cursor-pointer
-    //   "
-    //     >
-    //         <AiOutlineHeart
-    //             size={28}
-    //             className="
-    //       fill-white
-    //       absolute
-    //       -top-[2px]
-    //       -right-[2px]
-    //     "
-    //         />
-    //         <AiFillHeart
-    //             size={24}
-    //             className={
-    //                 hasFavorited ? 'fill-[#3604ff]' : 'fill-transparent'
-    //             }
-    //         />
-    //     </div>
-    // );
-
-    return (
-        <div
-            onClick={toggleFavorite}
-            className={`${inline ? 'static relative' : 'absolute top-3 right-3'} top-1 right-1 z-30 cursor-pointer"`}
+  return (
+    <button
+        type="button"
+        onClick={(e) => {
+            e.stopPropagation();
+            toggleFavorite(e as any);
+        }}
+        aria-label={hasFavorited ? 'Remove from favorites' : 'Save to favorites'}
+        className={`
+            p-4 rounded-full shadow-md backdrop-blur-sm transition hover:shadow-lg 
+            ${hasFavorited ? 'bg-white/20' : 'bg-white/10'}
+            cursor-pointer flex items-center justify-center
+        `}
         >
-            <div
-            className={`
-                p-2 rounded-full backdrop-blur-sm transition hover:shadow-md 
-                ${hasFavorited ? 'bg-white/20' : 'bg-white/10'}
-            `}
-            >
+        <AnimatePresence mode="wait" initial={false}>
             {hasFavorited ? (
-                <AiFillHeart size={18} className="text-white drop-shadow-md" />
+            <motion.span
+                key="favorited"
+                initial={{ scale: 0.4, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.4, opacity: 0 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+            >
+                <RiBookmark3Fill size={18} className="text-white drop-shadow-md" />
+            </motion.span>
             ) : (
-                <AiOutlineHeart size={18} className="text-white drop-shadow-md" />
+            <motion.span
+                key="unfavorited"
+                initial={{ scale: 0.4, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.4, opacity: 0 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+            >
+                <RiBookmark3Line size={18} className="text-white drop-shadow-md" />
+            </motion.span>
             )}
-            </div>
-        </div>
-    );
-}
+        </AnimatePresence>
+        </button>
+  );
+};
+
 
 export default HeartButton;

@@ -62,6 +62,11 @@ export default async function getHostCardData(identifier: string, currentUserId?
     return null;
   }
 
+  const totalListingLikes = host.listings.reduce(
+    (sum, listing) => sum + (listing.likesCount ?? 0),
+    0
+  );
+
   const safeHost: SafeUser = {
     id: host.id,
     username: host.username ?? null,
@@ -90,6 +95,7 @@ export default async function getHostCardData(identifier: string, currentUserId?
     identityVerified: typeof host.identityVerified === "boolean" ? host.identityVerified : false,
     followersCount: typeof host.followersCount === 'number' ? host.followersCount : 0,
     allTimeBookingCount: typeof host.allTimeBookingCount === 'number' ? host.allTimeBookingCount : 0,
+    listingLikesCount: totalListingLikes,
   };
 
   const listingsWithSlug = await Promise.all(
@@ -128,6 +134,7 @@ export default async function getHostCardData(identifier: string, currentUserId?
       ...(rest as unknown as SafeListing),
       createdAt: listing.createdAt.toISOString(),
       updatedAt: listing.updatedAt?.toISOString() ?? listing.createdAt.toISOString(),
+      likesCount: typeof listing.likesCount === 'number' ? listing.likesCount : 0,
       price: pricingSnapshot.basePrice > 0 ? pricingSnapshot.basePrice : listing.price,
       pricingType: pricingSnapshot.mode ?? null,
       groupPrice: pricingSnapshot.groupPrice,

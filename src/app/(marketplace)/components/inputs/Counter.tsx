@@ -43,8 +43,7 @@ const Counter: React.FC<CounterProps> = ({
             w-10
             h-10
             rounded-full
-            border-[1px]
-            border-neutral-400
+            shadow-lg
             flex
             items-center
             justify-center
@@ -71,8 +70,7 @@ const Counter: React.FC<CounterProps> = ({
             w-10
             h-10
             rounded-full
-            border-[1px]
-            border-neutral-400
+            shadow-lg
             flex
             items-center
             justify-center
