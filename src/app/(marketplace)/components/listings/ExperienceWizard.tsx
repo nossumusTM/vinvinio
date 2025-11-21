@@ -29,6 +29,15 @@ import {
   GROUP_STYLE_OPTIONS,
   SEO_KEYWORD_OPTIONS,
 } from '@/app/(marketplace)/constants/experienceFilters';
+
+import {
+  DEFAULT_TIME_SLOTS,
+  formatTimeLabel,
+  ListingAvailabilityRules,
+  normalizeAvailabilityRules,
+  normalizeTimeSlot,
+} from '@/app/(marketplace)/utils/timeSlots';
+
 import { FiClock, FiDollarSign, FiFileText, FiGlobe, FiImage, FiList, FiMapPin, FiSliders, FiUsers } from 'react-icons/fi';
 
 
@@ -37,6 +46,12 @@ const hourOptions = [
   '10', '11', '12', '13', '14', '15', '16'
 ].map((h) => ({ label: `${h} hours`, value: h }));
 
+const timeSlotOptions = Array.from(DEFAULT_TIME_SLOTS).map((time) => ({
+  value: time,
+  label: formatTimeLabel(time),
+}));
+
+const weekdayLabels = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 const hoursNoticeOptions = Array.from({ length: 49 }, (_, i) => i).map((h) => ({
   value: h,
@@ -354,6 +369,82 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
     show: { opacity: 1, transition: { staggerChildren: 0.06 } },
   };
 
+  const [specificDateInput, setSpecificDateInput] = useState('');
+  const [specificDateTimes, setSpecificDateTimes] = useState<any[]>([]);
+  const [monthInput, setMonthInput] = useState('');
+  const [monthTimes, setMonthTimes] = useState<any[]>([]);
+  const [yearInput, setYearInput] = useState('');
+  const [yearTimes, setYearTimes] = useState<any[]>([]);
+
+  const toSelectValues = (times?: string[]) =>
+    (times ?? []).map((time) => ({ value: normalizeTimeSlot(time), label: formatTimeLabel(time) }));
+
+  const extractTimes = (values: any[]) =>
+    values
+      .map((v) => normalizeTimeSlot(typeof v === 'string' ? v : v?.value ?? ''))
+      .filter((value) => value && /^[0-2]\d:[0-5]\d$/.test(value));
+
+  const saveSpecificDateTimes = () => {
+    if (!specificDateInput) return;
+    const times = extractTimes(specificDateTimes);
+    updateAvailability((current) => ({
+      ...current,
+      specificDates: {
+        ...(current.specificDates ?? {}),
+        [specificDateInput]: times,
+      },
+    }));
+    setSpecificDateTimes([]);
+  };
+
+  const saveMonthTimes = () => {
+    if (!monthInput) return;
+    const times = extractTimes(monthTimes);
+    updateAvailability((current) => ({
+      ...current,
+      months: {
+        ...(current.months ?? {}),
+        [monthInput]: times,
+      },
+    }));
+  };
+
+  const saveYearTimes = () => {
+    if (!yearInput) return;
+    const times = extractTimes(yearTimes);
+    updateAvailability((current) => ({
+      ...current,
+      years: {
+        ...(current.years ?? {}),
+        [yearInput]: times,
+      },
+    }));
+  };
+
+    const removeSpecificDate = (dateKey: string) => {
+    updateAvailability((current) => {
+      const nextSpecific = { ...(current.specificDates ?? {}) };
+      delete nextSpecific[dateKey];
+      return { ...current, specificDates: nextSpecific };
+    });
+  };
+
+  const removeMonth = (monthKey: string) => {
+    updateAvailability((current) => {
+      const nextMonths = { ...(current.months ?? {}) };
+      delete nextMonths[monthKey];
+      return { ...current, months: nextMonths };
+    });
+  };
+
+  const removeYear = (yearKey: string) => {
+    updateAvailability((current) => {
+      const nextYears = { ...(current.years ?? {}) };
+      delete nextYears[yearKey];
+      return { ...current, years: nextYears };
+    });
+  };
+
   // const itemFade = {
   //   hidden: { opacity: 0, y: 8 },
   //   show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 380, damping: 30, mass: 0.6 } },
@@ -412,6 +503,13 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
       activityForms: [],
       primarySeoKeyword: null,
       seoKeywords: [],
+      availabilityRules: {
+        defaultTimes: Array.from(DEFAULT_TIME_SLOTS),
+        daysOfWeek: {},
+        months: {},
+        years: {},
+        specificDates: {},
+      },
       pricingType: PRICING_TYPES.FIXED,
       groupPrice: null,
       groupSize: null,
@@ -449,6 +547,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
   const seoKeywords = watch('seoKeywords');
   const primarySeoKeyword = watch('primarySeoKeyword');
   const hoursInAdvance = watch('hoursInAdvance');
+  const availabilityRules = watch('availabilityRules');
   const pricingType = watch('pricingType');
   const customPricing = watch('customPricing');
   const groupPrice = watch('groupPrice');
@@ -549,6 +648,10 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
     const resolvedDuration = editingListing.durationCategory
       ? toOption(editingListing.durationCategory, DURATION_OPTIONS)
       : null;
+
+    const resolvedAvailability =
+      normalizeAvailabilityRules(editingListing.availabilityRules) ??
+      defaultFormValues.availabilityRules;
 
     const experienceHourValue = (() => {
       if (typeof editingListing.experienceHour === 'number') {
@@ -679,6 +782,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
           typeof editingListing.hoursInAdvance === 'number'
             ? editingListing.hoursInAdvance
             : defaultFormValues.hoursInAdvance,
+        availabilityRules: resolvedAvailability,
         pricingType: pricingMode,
         groupPrice: editingListing.groupPrice ?? null,
         groupSize: editingListing.groupSize ?? null,
@@ -749,6 +853,26 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
 
   const onBack = () => setStep((prev) => prev - 1);
   const onNext = () => setStep((prev) => prev + 1);
+
+  const mergedAvailability = useMemo<ListingAvailabilityRules>(() => {
+    return (
+      normalizeAvailabilityRules(availabilityRules) ?? {
+        defaultTimes: Array.from(DEFAULT_TIME_SLOTS),
+        daysOfWeek: {},
+        months: {},
+        years: {},
+        specificDates: {},
+      }
+    );
+  }, [availabilityRules]);
+
+  const updateAvailability = useCallback(
+    (updater: (current: ListingAvailabilityRules) => ListingAvailabilityRules) => {
+      const next = updater(mergedAvailability);
+      setCustomValue('availabilityRules', next);
+    },
+    [mergedAvailability, setCustomValue],
+  );
 
   const onSubmit: SubmitHandler<FieldValues> = (data) => {
     if (step === STEPS.CATEGORY) {
@@ -989,6 +1113,8 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
           ? [...parsedCustomPricing].sort((a, b) => a.minGuests - b.minGuests)
           : [];
 
+      const normalizedAvailability = normalizeAvailabilityRules(availabilityRules) ?? null;
+
       const submissionData = {
         title: typeof data.title === 'string' ? data.title.trim() : '',
         description: typeof data.description === 'string' ? data.description.trim() : '',
@@ -1038,6 +1164,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
                 price: Math.max(1, Math.round(tier.price)),
               }))
             : null,
+            availabilityRules: normalizedAvailability,
       };
 
       const request = isEditing && editingListing
@@ -1363,6 +1490,205 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
             }}
           />
         </div>
+
+        <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white/70 p-4 shadow-sm">
+          <div>
+            <p className="text-md font-medium">When can guests book?</p>
+            <p className="text-sm text-neutral-600">Set the exact time slots you want to offer. Guests will only be able to pick these on the calendar.</p>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-semibold">Default time slots</label>
+            <CreatableSelect
+              isMulti
+              options={timeSlotOptions}
+              value={toSelectValues(mergedAvailability.defaultTimes)}
+              onChange={(values) => {
+                const times = extractTimes(values as any[]);
+                updateAvailability((current) => ({
+                  ...current,
+                  defaultTimes: times.length > 0 ? times : Array.from(DEFAULT_TIME_SLOTS),
+                }));
+              }}
+              placeholder="Add times like 09:00 or 2:30 PM"
+              styles={{
+                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                menu: (base) => ({ ...base, zIndex: 9999 }),
+              }}
+            />
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold">Weekly availability</p>
+              <span className="text-xs text-neutral-500">Choose different hours per weekday if needed.</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {weekdayLabels.map((label, index) => (
+                <div key={label} className="flex flex-col gap-1 rounded-lg border border-neutral-100 bg-neutral-50/70 p-3">
+                  <span className="text-xs font-semibold text-neutral-700">{label}</span>
+                  <CreatableSelect
+                    isMulti
+                    options={timeSlotOptions}
+                    value={toSelectValues(mergedAvailability.daysOfWeek?.[index.toString()])}
+                    onChange={(values) => {
+                      const times = extractTimes(values as any[]);
+                      updateAvailability((current) => ({
+                        ...current,
+                        daysOfWeek: {
+                          ...(current.daysOfWeek ?? {}),
+                          [index]: times,
+                        },
+                      }));
+                    }}
+                    placeholder="Use default"
+                    styles={{
+                      menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                      menu: (base) => ({ ...base, zIndex: 9999 }),
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="flex flex-col gap-2 rounded-lg border border-neutral-100 bg-neutral-50/70 p-3">
+              <label className="text-sm font-semibold">Date-specific slots</label>
+              <div className="flex flex-col gap-2">
+                <input
+                  type="date"
+                  value={specificDateInput}
+                  onChange={(e) => setSpecificDateInput(e.target.value)}
+                  className="rounded-lg border border-neutral-200 px-3 py-2 text-sm"
+                />
+                <CreatableSelect
+                  isMulti
+                  options={timeSlotOptions}
+                  value={specificDateTimes}
+                  onChange={(values) => setSpecificDateTimes(values as any[])}
+                  placeholder="Pick times for this date"
+                  styles={{
+                    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                    menu: (base) => ({ ...base, zIndex: 9999 }),
+                  }}
+                />
+                <Button label="Save date slots" onClick={saveSpecificDateTimes} small />
+                {Object.entries(mergedAvailability.specificDates ?? {}).length > 0 && (
+                  <div className="mt-1 flex gap-2 overflow-x-auto pb-1 text-xs text-neutral-600">
+                    {Object.entries(mergedAvailability.specificDates ?? {}).map(([date, times]) => (
+                      <div
+                        key={date}
+                        className="inline-flex shrink-0 items-center gap-2 rounded-full bg-neutral-100 px-3 py-1"
+                      >
+                        <span className="font-semibold whitespace-nowrap">{date}</span>
+                        <span className="whitespace-nowrap">{times.map(formatTimeLabel).join(', ')}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeSpecificDate(date)}
+                          className="ml-1 text-[11px] leading-none font-bold text-neutral-500 hover:text-rose-600"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2 rounded-lg border border-neutral-100 bg-neutral-50/70 p-3">
+                <label className="text-sm font-semibold">Month-specific slots</label>
+                <input
+                  type="month"
+                  value={monthInput}
+                  onChange={(e) => setMonthInput(e.target.value)}
+                  className="rounded-lg border border-neutral-200 px-3 py-2 text-sm"
+                />
+                <CreatableSelect
+                  isMulti
+                  options={timeSlotOptions}
+                  value={monthTimes}
+                  onChange={(values) => setMonthTimes(values as any[])}
+                  placeholder="Times for this month"
+                  styles={{
+                    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                    menu: (base) => ({ ...base, zIndex: 9999 }),
+                  }}
+                />
+                <Button label="Save month slots" onClick={saveMonthTimes} small />
+                {Object.entries(mergedAvailability.months ?? {}).length > 0 && (
+                  <div className="mt-1 flex gap-2 overflow-x-auto pb-1 text-xs text-neutral-600">
+                    {Object.entries(mergedAvailability.months ?? {}).map(([month, times]) => (
+                      <div
+                        key={month}
+                        className="inline-flex shrink-0 items-center gap-2 rounded-full bg-neutral-100 px-3 py-1"
+                      >
+                        <span className="font-semibold whitespace-nowrap">{month}</span>
+                        <span className="whitespace-nowrap">{times.map(formatTimeLabel).join(', ')}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeMonth(month)}
+                          className="ml-1 text-[11px] leading-none font-bold text-neutral-500 hover:text-rose-600"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-2 rounded-lg border border-neutral-100 bg-neutral-50/70 p-3">
+                <label className="text-sm font-semibold">Year-specific slots</label>
+                <input
+                  type="number"
+                  value={yearInput}
+                  onChange={(e) => setYearInput(e.target.value)}
+                  className="rounded-lg border border-neutral-200 px-3 py-2 text-sm"
+                  placeholder="e.g. 2025"
+                  min={new Date().getFullYear()}
+                />
+                <CreatableSelect
+                  isMulti
+                  options={timeSlotOptions}
+                  value={yearTimes}
+                  onChange={(values) => setYearTimes(values as any[])}
+                  placeholder="Times for this year"
+                  styles={{
+                    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                    menu: (base) => ({ ...base, zIndex: 9999 }),
+                  }}
+                />
+                <Button label="Save year slots" onClick={saveYearTimes} small />
+                {Object.entries(mergedAvailability.years ?? {}).length > 0 && (
+                  <div className="mt-1 flex gap-2 overflow-x-auto pb-1 text-xs text-neutral-600">
+                    {Object.entries(mergedAvailability.years ?? {}).map(([year, times]) => (
+                      <div
+                        key={year}
+                        className="inline-flex shrink-0 items-center gap-2 rounded-full bg-neutral-100 px-3 py-1"
+                      >
+                        <span className="font-semibold whitespace-nowrap">{year}</span>
+                        <span className="whitespace-nowrap">{times.map(formatTimeLabel).join(', ')}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeYear(year)}
+                          className="ml-1 text-[11px] leading-none font-bold text-neutral-500 hover:text-rose-600"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+              </div>
+            </div>
+          </div>
+        </div>
+
         <Controller
           control={control}
           name="meetingPoint"

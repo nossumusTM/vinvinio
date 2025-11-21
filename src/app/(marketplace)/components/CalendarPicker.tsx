@@ -108,7 +108,7 @@ const CalendarPicker: React.FC<CalendarPickerProps> = ({
               return next;
             })
           }
-          className="flex w-full items-center justify-center rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-900"
+          className="flex w-full items-center justify-center rounded-2xl shadow-md bg-white px-3 py-2 text-sm font-medium text-neutral-900"
         >
           <span>{months[selectedMonth] ?? 'Month'}</span>
         </button>
@@ -161,7 +161,7 @@ const CalendarPicker: React.FC<CalendarPickerProps> = ({
               return next;
             })
           }
-          className="flex w-full items-center justify-center rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-900"
+          className="flex w-full items-center justify-center rounded-2xl shadow-md bg-white px-3 py-2 text-sm font-medium text-neutral-900"
         >
           <span>{selectedYear}</span>
         </button>

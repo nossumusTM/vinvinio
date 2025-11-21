@@ -35,7 +35,7 @@ const Button: React.FC<ButtonProps> = ({
             w-full
             px-4
             py-2
-            ${outline ? 'bg-white' : 'text-white'}
+            ${outline ? 'bg-white' : 'text-black'}
             ${outline ? 'border-black text-black' : ''}
             ${small ? 'text-md' : 'text-lg'}
             ${small ? 'py-1' : 'py-3'}
@@ -43,7 +43,7 @@ const Button: React.FC<ButtonProps> = ({
             ${small ? 'shadow-md' : 'shadow-lg'}
         `}
         style={{
-            backgroundColor: outline ? 'white' : '#000',
+            backgroundColor: outline ? 'white' : '#fff',
             borderColor: outline ? 'black' : '#000'
         }}
         >

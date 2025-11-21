@@ -378,7 +378,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                     <div className="flex items-center gap-1">
                       <span className="inline-flex h-1.5 w-1.5 rounded-full bg-fuchsia-400 shadow-sm" />
                       <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-black/70">
-                        Likes
+                        Listing Likes
                       </p>
                     </div>
                     <p className="mt-0.5 text-lg font-semibold leading-tight">

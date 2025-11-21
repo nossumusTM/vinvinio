@@ -222,9 +222,32 @@ body:not(.has-announcement-bar) #layout-content-wrapper {
 
 .animated-border {
   position: relative;
-  padding: 2px;
+  padding: 1px;
   border-radius: 16px;
-  background: linear-gradient(120deg, #ff5f6d, #ffc371, #42a5f5, #7c4dff, #ff5f6d);
+  background: linear-gradient(
+    120deg,
+    #ff0015ff,
+    #ff4b00ff,
+    #ff9500ff,
+    #ffc800ff,
+    #ffe600ff,
+    #d4ff00ff,
+    #8dff00ff,
+    #00ff19ff,
+    #00ff88ff,
+    #00ffd5ff,
+    #00c4ffff,
+    #008cffff,
+    #005dffff,
+    #0027ffff,
+    #4400ffff,
+    #8100ffff,
+    #be00ffff,
+    #ff00f2ff,
+    #ff0080ff,
+    #ff004bff,
+    #ff0015ff
+  );
   background-size: 300% 300%;
   animation: borderGlow 18s linear infinite;
 }

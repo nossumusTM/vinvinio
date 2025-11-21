@@ -71,6 +71,7 @@
 // };
 
 import type { Listing, Reservation, User } from "@prisma/client";
+import type { ListingAvailabilityRules } from "../utils/timeSlots";
 
 /** Utility to make intersections read nicely in IDEs */
 type Simplify<T> = { [K in keyof T]: T[K] } & {};
@@ -177,6 +178,7 @@ export type SafeListing = Simplify<
     activityForms?: string[];
     seoKeywords?: string[];
 
+    availabilityRules?: ListingAvailabilityRules | null;
     // Tolerate any current UI enum/union/string for pricing
     pricingType?: Pricingish;
 

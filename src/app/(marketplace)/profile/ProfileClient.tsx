@@ -137,6 +137,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   const emailVerified = Boolean(currentUser?.emailVerified);
 
   const [viewRole, setViewRole] = useState<'customer' | 'host' | 'promoter' | 'moder'>(currentUser.role);
+  const [roleUpdating, setRoleUpdating] = useState(false);
 
   // --- OWNER & MEDIA STATE ---
 const [isOwner, setIsOwner] = useState(false);
@@ -275,7 +276,7 @@ const coverImage = useMemo(() => {
     },
   };
 
-  const canToggleRole = currentUser.role === 'host';
+  const canToggleRole = ['host', 'customer'].includes(currentUser.role);
   const isHostView = viewRole === 'host';
   const modeLabel = isHostView ? 'Host Mode' : 'Guest Mode';
   const modeGradient = isHostView
@@ -292,29 +293,43 @@ const coverImage = useMemo(() => {
 
   const lastRoleToastRef = useRef<'host' | 'customer' | null>(null);
 
-  const handleRoleToggle = (nextIsHost: boolean) => {
-    if (!canToggleRole) return;
+  const handleRoleToggle = async (nextIsHost: boolean) => {
+    if (!canToggleRole || roleUpdating) return;
 
     const target: 'host' | 'customer' = nextIsHost ? 'host' : 'customer';
 
-    setViewRole((prev) => {
-      if (prev === target) return prev; // no actual change → no toast
+    setRoleUpdating(true);
 
-      // prevent duplicate toast (Strict Mode / rapid clicks)
-      if (lastRoleToastRef.current !== target) {
-        lastRoleToastRef.current = target;
-        toast.success(`Switched to ${target === 'host' ? 'Host' : 'Guest'} mode`, {
-          iconTheme: { primary: '#2200ffff', secondary: '#fff' },
-        });
-        // release after a short delay
-        setTimeout(() => {
-          // only clear if nothing else changed meanwhile
-          if (lastRoleToastRef.current === target) lastRoleToastRef.current = null;
-        }, 400);
-      }
+     try {
+      const response = await axios.patch('/api/users/switch-role', {
+        targetRole: target,
+      });
 
-      return target;
-    });
+      const updatedRole = (response?.data?.role as 'host' | 'customer' | undefined) ?? target;
+
+      setViewRole((prev) => {
+        if (prev === updatedRole) return prev;
+
+      if (lastRoleToastRef.current !== updatedRole) {
+          lastRoleToastRef.current = updatedRole;
+          toast.success(`Switched to ${updatedRole === 'host' ? 'Host' : 'Guest'} mode`, {
+            iconTheme: { primary: '#2200ffff', secondary: '#fff' },
+          });
+          setTimeout(() => {
+            if (lastRoleToastRef.current === updatedRole) lastRoleToastRef.current = null;
+          }, 400);
+
+          window.location.reload();
+        }
+
+        return updatedRole;
+      });
+    } catch (error) {
+      console.error('Failed to update role', error);
+      toast.error('Unable to switch modes right now.');
+    } finally {
+      setRoleUpdating(false);
+    }
   };
 
   const handleEmailVerificationRequest = async () => {
@@ -1214,17 +1229,19 @@ const coverImage = useMemo(() => {
               <Switch
                 checked={isHostView} 
                 onChange={(checked) => handleRoleToggle(checked)}
+                disabled={!canToggleRole || roleUpdating}
+                aria-busy={roleUpdating}
                 aria-label="Toggle role"
                 className={twMerge(
-                  'relative inline-flex h-8 w-[64px] items-center rounded-full p-[3px]',
-                  'transition-colors duration-300 focus:outline-none overflow-visible', // allow pulse to extend
-                  isHostView
-                    ? 'bg-neutral-50 shadow-md'
-                    : 'bg-neutral-100 shadow-lg'
+                  'relative inline-flex h-12 w-[230px] items-center rounded-full px-1',
+                  'transition-all duration-500 focus:outline-none overflow-visible',
+                  'bg-gradient-to-b from-[#f5f5f7] via-[#eceef3] to-[#e3e6ed]',
+                  'focus-visible:ring-4 focus-visible:ring-black/10 focus-visible:ring-offset-2 focus-visible:ring-offset-white',
+                  (!canToggleRole || roleUpdating) && 'cursor-not-allowed opacity-60'
                 )}
               >
                 {/* BORDER PULSE — remounts on each state to retrigger animation */}
-                <motion.div
+                {/* <motion.div
                   key={isHostView ? 'pulse-host' : 'pulse-guest'}
                   className={twMerge(
                     'pointer-events-none absolute inset-0 -m-[2px] rounded-full z-10',
@@ -1233,22 +1250,48 @@ const coverImage = useMemo(() => {
                   initial={{ opacity: 0.55, scale: 1 }}
                   animate={{ opacity: 0, scale: 1.18 }}
                   transition={{ duration: 0.45, ease: 'easeOut' }}
+                /> */}
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-1 rounded-full bg-gradient-to-b from-white/90 to-[#e8ebf1] shadow-[inset_6px_6px_16px_rgba(0,0,0,0.08),inset_-6px_-6px_16px_rgba(255,255,255,0.92)]"
                 />
 
                 {/* SLIDING PILL */}
+                <div className="relative z-10 grid w-full grid-cols-2 px-4 text-[11px] font-semibold uppercase tracking-[0.18em]">
+                  <span
+                    className={twMerge(
+                      'text-center transition-colors duration-300',
+                      isHostView ? 'text-neutral-500' : 'text-neutral-900'
+                    )}
+                  >
+                    Guest
+                  </span>
+                  <span
+                    className={twMerge(
+                      'text-center transition-colors duration-300',
+                      isHostView ? 'text-neutral-900' : 'text-neutral-500'
+                    )}
+                  >
+                    Host
+                  </span>
+                </div>
+
                 <motion.span
                   layout
                   initial={false}
-                  transition={{ type: 'spring', stiffness: 340, damping: 23 }}
+                  transition={{ type: 'spring', stiffness: 340, damping: 26 }}
                   className={twMerge(
-                    'pointer-events-none absolute left-[3px] top-[3px] z-20',
-                    'flex h-[26px] w-[34px] items-center justify-center rounded-full',
-                    'px-[5px] text-[8px] font-semibold uppercase tracking-wide leading-none whitespace-nowrap',
-                    isHostView ? 'bg-white text-neutral-900' : 'bg-[#000] text-white'
+                    // 'pointer-events-none absolute left-[3px] top-[3px] z-20',
+                    // 'flex h-[26px] w-[34px] items-center justify-center rounded-full',
+                    // 'px-[5px] text-[8px] font-semibold uppercase tracking-wide leading-none whitespace-nowrap',
+                    // isHostView ? 'bg-white text-neutral-900' : 'bg-[#000] text-white'
+                    'absolute top-1 bottom-1 left-1 z-20 flex w-[108px] items-center justify-center rounded-full',
+                    'bg-gradient-to-b from-white to-[#e3e6ed]',
+                    'border border-white/50 text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-800'
                   )}
-                  animate={{ x: isHostView ? 24 : 0 }}
+                  animate={{ x: isHostView ? 115 : 0 }}
                 >
-                  {isHostView ? 'Host' : 'Guest'}
+                  {isHostView ? 'Host mode' : 'Guest mode'}
                 </motion.span>
               </Switch>
             </Switch.Group>

@@ -39,6 +39,8 @@ const SearchExperience = () => {
     'Barcelona, Spain',
   ];
 
+  const ROTATION_DELAY = 6000;
+
   const norm = (s: string) =>
     s.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/türkiye|turkiye/g, 'turkey').trim();
   const extractCountryFromText = (text: string) => {
@@ -64,20 +66,24 @@ const SearchExperience = () => {
   const roRef = useRef<ResizeObserver | null>(null);
 
   useEffect(() => {
-    let id: number, raf1: number, raf2: number;
-    const tick = () => {
-      const next = (placeholderIndex + 1) % ROTATING_ITEMS.length;
-      setMeasureText(ROTATING_ITEMS[next]);              // measure NEXT first
-      raf1 = requestAnimationFrame(() => {
-        raf2 = requestAnimationFrame(() => {
-          setPlaceholderIndex(next);                    // then show it
-          id = window.setTimeout(tick, 4200);
-        });
+  let id: number, raf1: number, raf2: number;
+  const tick = () => {
+    const next = (placeholderIndex + 1) % ROTATING_ITEMS.length;
+    setMeasureText(ROTATING_ITEMS[next]); // measure NEXT first
+    raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => {
+        setPlaceholderIndex(next);        // then show it
+        id = window.setTimeout(tick, ROTATION_DELAY);
       });
-    };
-    id = window.setTimeout(tick, 4200);
-    return () => { clearTimeout(id); cancelAnimationFrame(raf1); cancelAnimationFrame(raf2); };
-  }, [placeholderIndex]);
+    });
+  };
+  id = window.setTimeout(tick, ROTATION_DELAY);
+  return () => {
+    clearTimeout(id);
+    cancelAnimationFrame(raf1);
+    cancelAnimationFrame(raf2);
+  };
+}, [placeholderIndex]);
 
   useLayoutEffect(() => {
     const el = measureRef.current;
@@ -148,7 +154,7 @@ const SearchExperience = () => {
            style={{ width: labelW + SAFETY_PAD }}
            animate={{ width: labelW + SAFETY_PAD }}
            initial={false}
-           transition={{ type: "spring", stiffness: 360, damping: 30, mass: 0.35 }}
+           transition={{ type: "spring", stiffness: 60, damping: 30, mass: 0.35 }}
           >
             <AnimatePresence mode="wait" initial={false}>
               <motion.span
@@ -197,16 +203,54 @@ const SearchExperience = () => {
     return `${count} ${count === 1 ? 'Guest' : 'Guests'}`;
   }, [guestCount]);
 
+  // const durationLabel = useMemo(() => {
+  //   if (startDate && endDate) {
+  //     const start = new Date(startDate);
+  //     const end = new Date(endDate);
+  //     const sameDay = start.toDateString() === end.toDateString();
+  //     const formatToken = "d MMM ''yy";
+
+  //     return sameDay
+  //       ? format(start, formatToken)
+  //       : `${format(start, 'd MMM')} – ${format(end, formatToken)}`;
+  //   }
+
+  //   if (startDate) {
+  //     return format(new Date(startDate), "d MMM ''yy");
+  //   }
+
+  //   return 'Right Now';
+  // }, [endDate, startDate]);
+
   const durationLabel = useMemo(() => {
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
-      const sameDay = start.toDateString() === end.toDateString();
-      const formatToken = "d MMM ''yy";
 
-      return sameDay
-        ? format(start, formatToken)
-        : `${format(start, 'd MMM')} – ${format(end, formatToken)}`;
+      const sameDay =
+        start.getFullYear() === end.getFullYear() &&
+        start.getMonth() === end.getMonth() &&
+        start.getDate() === end.getDate();
+
+      const sameMonthYear =
+        start.getFullYear() === end.getFullYear() &&
+        start.getMonth() === end.getMonth();
+
+      const fullToken = "d MMM ''yy";
+
+      if (sameDay) {
+        return format(start, fullToken);
+      }
+
+      // e.g. 18–22 Nov 25'
+      if (sameMonthYear) {
+        const startDay = format(start, 'd');
+        const endPart = format(end, fullToken); // "22 Nov 25'"
+        return `${startDay}-${endPart}`;
+      }
+
+      // Different month/year → keep full range
+      return `${format(start, fullToken)} – ${format(end, fullToken)}`;
     }
 
     if (startDate) {
@@ -220,7 +264,7 @@ const SearchExperience = () => {
     <motion.button
           type="button"
           onClick={searchModal.onOpen}
-          className="flex w-full cursor-pointer select-none items-center justify-between rounded-full px-3 py-2 shadow-md backdrop-blur transition hover:shadow-lg md:w-auto lg:px-4"
+          className="flex w-fit cursor-pointer select-none items-center justify-between rounded-full px-3 py-2 shadow-md backdrop-blur transition hover:shadow-lg md:w-auto lg:px-4"
           layout
           transition={{ type: 'spring', stiffness: 420, damping: 32, mass: 0.4 }}
         >

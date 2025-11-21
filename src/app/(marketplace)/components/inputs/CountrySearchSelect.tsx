@@ -292,11 +292,15 @@ const CountrySearchSelect = forwardRef<CountrySearchSelectHandle, CountrySelectP
       active?.scrollIntoView({ block: 'nearest' });
     }, [highlightedIndex, isOpen]);
 
-     useEffect(() => {
-       if (query.trim().length > 0) return; // pause rotation while user types
-       const id = setInterval(() => {
-         setPlaceholderIndex((i) => (i + 1) % ROTATING_ITEMS.length);
-       }, 2200);
+    const ROTATION_DELAY = 6000;
+
+    useEffect(() => {
+      if (query.trim().length > 0) return; // pause rotation while user types
+
+      const id = setInterval(() => {
+        setPlaceholderIndex((i) => (i + 1) % ROTATING_ITEMS.length);
+      }, ROTATION_DELAY);
+
       return () => clearInterval(id);
     }, [query]);
 

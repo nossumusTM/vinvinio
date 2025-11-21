@@ -2,6 +2,11 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { TbTrash, TbSend } from 'react-icons/tb';
+import { AiOutlineSend } from "react-icons/ai";
+import { TbHttpDelete } from "react-icons/tb";
+import { BiSolidRightArrow } from "react-icons/bi";
+import { FaArrowRightFromBracket } from "react-icons/fa6";
+import { TbArrowElbowRight } from "react-icons/tb";
 import Picker from '@emoji-mart/react';
 import data from '@emoji-mart/data';
 import ConfirmPopup from './ConfirmPopup';
@@ -549,7 +554,7 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
         title="Remove from conversations"
         className="text-neutral-500 hover:text-red-600 transition"
         >
-            <TbTrash size={20} />
+            <TbHttpDelete size={20} />
         </button>
         </div>
 
@@ -702,7 +707,7 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
             e.preventDefault(); // prevent form reload
             handleSend();
             }}
-            className="flex w-full items-center gap-2"
+            className="flex w-full items-center gap-3"
         >
             {/* Emoji toggle button */}
             <div className="relative">
@@ -726,15 +731,15 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            className="flex-1 border rounded-xl px-3 py-1 text-base"
+            className="flex-1 shadow-md rounded-lg px-4 py-1 text-base"
             placeholder="Type your message"
             />
             <button
             type="submit"
-            className="text-neutral-600 hover:text-blue-600 transition"
+            className="text-neutral-600 hover:text-neutral-900 transition"
             aria-label="Send"
             >
-            <TbSend size={22} />
+            <TbArrowElbowRight size={22} />
             </button>
         </form>
         </div>

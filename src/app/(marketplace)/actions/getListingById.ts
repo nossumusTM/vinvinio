@@ -4,6 +4,7 @@ import { ensureListingSlug } from "@/app/(marketplace)/libs/ensureListingSlug";
 import { normalizePricingSnapshot } from "@/app/(marketplace)/libs/pricing";
 import type { Prisma } from '@prisma/client';
 import getCurrentUser from "@/app/(marketplace)/actions/getCurrentUser"; // 👈 NEW
+import { normalizeAvailabilityRules } from "@/app/(marketplace)/utils/timeSlots";
 
 interface IParams {
   listingId?: string;
@@ -97,6 +98,7 @@ export default async function getListingById(params: IParams) {
       seoKeywords: Array.isArray(listingWithSlug.seoKeywords)
         ? listingWithSlug.seoKeywords
         : [],
+      availabilityRules: normalizeAvailabilityRules(listingWithSlug.availabilityRules) ?? null,
       pricingType: pricingSnapshot.mode ?? null,
       groupPrice: pricingSnapshot.groupPrice,
       groupSize: pricingSnapshot.groupSize,

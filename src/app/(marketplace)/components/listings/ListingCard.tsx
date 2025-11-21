@@ -1037,9 +1037,9 @@ const ListingCard: React.FC<ListingCardProps> = ({
                     e.stopPropagation();
                     goPrev();
                   }}
-                  className="p-2 border border-white/30 hover:border-white rounded-full bg-white/0 backdrop-blur-sm transition"
+                  className="p-2 shadow-sm hover:shadow-md items-center justify-center rounded-full bg-black/20 backdrop-blur-sm transition"
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                     <path d="M15 18l-6-6 6-6" stroke="white" strokeWidth="2"
                           strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
@@ -1050,9 +1050,9 @@ const ListingCard: React.FC<ListingCardProps> = ({
                     e.stopPropagation();
                     goNext();
                   }}
-                  className="p-2 border border-white/30 hover:border-white rounded-full bg-white/0 backdrop-blur-sm transition"
+                  className="p-2 shadow-sm hover:shadow-md rounded-full bg-black/20 items-center justify-center backdrop-blur-sm transition"
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                     <path d="M9 6l6 6-6 6" stroke="white" strokeWidth="2"
                           strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
@@ -1080,13 +1080,13 @@ const ListingCard: React.FC<ListingCardProps> = ({
             <span>{reservationDate}</span>
           ) : (
             <>
-              <div className="flex flex-row items-center mb-1.5 gap-2 pt-1 text-neutral-500 text-xs md:text-sm flex-nowrap overflow-hidden">
+              <div className="flex flex-col items-start mb-1.5 gap-2 pt-1 text-neutral-500 text-xs md:text-sm flex-nowrap overflow-hidden">
                 {primaryCategory && (
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full border border-neutral-300 bg-white text-neutral-700 text-[11px] md:text-xs font-medium tracking-wide whitespace-nowrap">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg border border-neutral-300 bg-white text-neutral-700 text-[11px] md:text-xs font-medium tracking-wide whitespace-nowrap">
                     {primaryCategory}
                   </span>
                 )}
-                <span className="flex items-center border border-neutral-300 px-2.5 py-0.5 rounded-full gap-2 text-[11px] md:text-xs text-neutral-700 whitespace-nowrap overflow-hidden">
+                <span className="flex items-center border border-neutral-300 px-2.5 py-0.5 rounded-lg gap-2 text-[11px] md:text-xs text-neutral-700 whitespace-nowrap overflow-hidden">
 
                   {/* Hide flag + country when compact (mobile Grid 2) */}
                   {locationFlagSrc && (
@@ -1095,11 +1095,11 @@ const ListingCard: React.FC<ListingCardProps> = ({
                       alt={location?.label ?? 'Country flag'}
                       width={20}
                       height={14}
-                      className="h-auto w-3 rounded-sm object-cover"
+                      className="h-3 w-4 rounded object-cover"
                     />
                   )}
 
-                  <span className="truncate max-w-[55vw] md:max-w-none">
+                  <span className="truncate max-w-[55vw] md:max-w-none font-normal">
                     {location
                       ? compact
                         // mobile Grid 2 → show ONLY city

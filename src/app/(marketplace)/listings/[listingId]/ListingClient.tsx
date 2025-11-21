@@ -129,6 +129,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
         activityForms = [],
         seoKeywords = [],
         hoursInAdvance = 0,
+        availabilityRules = null,
       } = listing;
 
     const disabledDates = useMemo(() => {
@@ -735,6 +736,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                                 groupSize={listing.groupSize}
                                 customPricing={sortedCustomPricingTiers}
                                 hoursInAdvance={hoursInAdvance ?? undefined}
+                                availabilityRules={availabilityRules}
                             />
                             </div>
                         </div>

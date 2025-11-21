@@ -7,6 +7,7 @@ import nodemailer from "nodemailer";
 import { makeUniqueSlug } from "@/app/(marketplace)/libs/slugify";
 import { Prisma } from "@prisma/client";
 import { PRICING_MODES_SET, PricingMode } from "@/app/(marketplace)/libs/pricing";
+import { normalizeAvailabilityRules } from "@/app/(marketplace)/utils/timeSlots";
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
@@ -176,6 +177,8 @@ export async function POST(request: Request) {
       tiers: sortedCustomPricing,
     };
 
+    const availabilityRules = normalizeAvailabilityRules(body.availabilityRules);
+
     const baseListingData = {
       title,
       description,
@@ -207,6 +210,7 @@ export async function POST(request: Request) {
       environments: { set: normalizedEnvironments },
       activityForms: { set: normalizedActivityForms },
       seoKeywords: { set: normalizedSeoKeywords },
+      availabilityRules: availabilityRules ? { ...availabilityRules } : null,
       status: 'pending',
       user: {
         connect: {

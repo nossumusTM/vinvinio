@@ -2,8 +2,15 @@
 
 import { Calendar as DatePicker, DateRange } from 'react-date-range';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi";
 import CalendarPicker from '../CalendarPicker';
 import { format } from 'date-fns';
+import {
+  DEFAULT_TIME_SLOTS,
+  ListingAvailabilityRules,
+  normalizeAvailabilityRules,
+  normalizeTimeSlot,
+} from '@/app/(marketplace)/utils/timeSlots';
 
 import { Range, RangeKeyDict } from 'react-date-range';
 
@@ -22,6 +29,7 @@ interface CalendarProps {
   selectedTime?: string | null;
   onTimeChange?: (time: string | null, meta?: { userInitiated?: boolean }) => void;
   bookedSlots?: ReservationSlot[];
+  availabilityRules?: ListingAvailabilityRules | null;
   hoursInAdvance?: number;
   /** Force-open the time dropdown to nudge users to confirm time */
   forceOpenTimes?: boolean;
@@ -31,23 +39,7 @@ interface CalendarProps {
   onReminderDisplayed?: () => void;
 }
 
-const availableTimes = [
-  '08:00',
-  '09:00',
-  '10:00',
-  '11:00',
-  '12:00',
-  '13:00',
-  '14:00',
-  '15:00',
-  '16:00',
-  '17:00',
-];
-
-const normalizeTime = (time: string) => {
-  const [h, m] = time.split(':').slice(0, 2);
-  return `${h.padStart(2, '0')}:${m?.padStart(2, '0') ?? '00'}`;
-};
+const normalizeTime = normalizeTimeSlot;
 
 const getDateKey = (date: Date | string) =>
   typeof date === 'string' ? date.slice(0, 10) : format(date, 'yyyy-MM-dd');
@@ -58,6 +50,7 @@ const Calendar: React.FC<CalendarProps> = ({
   selectedTime,
   onTimeChange,
   bookedSlots = [],
+  availabilityRules,
   hoursInAdvance,
   forceOpenTimes,
   reminderText,
@@ -65,12 +58,48 @@ const Calendar: React.FC<CalendarProps> = ({
 }) => {
   const selectedDateKey = value.startDate ? format(value.startDate, 'yyyy-MM-dd') : '';
 
+  const normalizedAvailability = useMemo(
+    () => normalizeAvailabilityRules(availabilityRules) ?? null,
+    [availabilityRules],
+  );
+
+
   const userHasPickedTime = useRef(false);
   const [showTimes, setShowTimes] = useState(false);
   const [selectionMode, setSelectionMode] = useState<'single' | 'multiple'>(
     value.endDate && value.startDate && value.endDate !== value.startDate ? 'multiple' : 'single',
   );
   const [showReminder, setShowReminder] = useState(false);
+
+  const getBaseTimesForDate = useCallback(
+    (targetDate: Date | null) => {
+      if (!targetDate) {
+        return (normalizedAvailability?.defaultTimes ?? Array.from(DEFAULT_TIME_SLOTS)).map(normalizeTime);
+      }
+
+      const dateKey = getDateKey(targetDate);
+      const monthKey = format(targetDate, 'yyyy-MM');
+      const yearKey = format(targetDate, 'yyyy');
+      const weekdayKey = targetDate.getDay().toString();
+
+      const prioritized =
+        normalizedAvailability?.specificDates?.[dateKey] ??
+        normalizedAvailability?.months?.[monthKey] ??
+        normalizedAvailability?.years?.[yearKey] ??
+        normalizedAvailability?.daysOfWeek?.[weekdayKey] ??
+        normalizedAvailability?.defaultTimes;
+
+      const fallback = prioritized ?? Array.from(DEFAULT_TIME_SLOTS);
+      const unique = Array.from(new Set(fallback.map(normalizeTime)));
+      return unique;
+    },
+    [normalizedAvailability],
+  );
+
+  const availableTimesForSelectedDate = useMemo(
+    () => getBaseTimesForDate(value.startDate ?? null),
+    [getBaseTimesForDate, value.startDate],
+  );
 
   const bookedTimesForDate = useMemo(() => {
     return bookedSlots
@@ -104,13 +133,28 @@ const Calendar: React.FC<CalendarProps> = ({
       map[slot.date].add(time);
     }
 
-    return Object.entries(map)
-      .filter(([_, times]) => times.size >= availableTimes.length)
-      .map(([date]) => {
-        const parts = date.split('-').map(Number);
-        return new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
-      });
-  }, [bookedSlots]);
+    const disabled: Date[] = [];
+    const horizonDays = 365;
+    const today = new Date();
+
+    for (let i = 0; i < horizonDays; i++) {
+      const target = new Date(today);
+      target.setDate(today.getDate() + i);
+
+      const dateKey = getDateKey(target);
+      const baseTimes = getBaseTimesForDate(target);
+
+      const bookedTimes = map[dateKey] ?? new Set();
+      const remainingTimes = baseTimes.filter((time) => !bookedTimes.has(normalizeTime(time)));
+      const viableTimes = remainingTimes.filter((time) => !isSlotTooSoon(target, time));
+
+      if (viableTimes.length === 0) {
+        disabled.push(new Date(Date.UTC(target.getFullYear(), target.getMonth(), target.getDate())));
+      }
+    }
+
+    return disabled;
+  }, [bookedSlots, getBaseTimesForDate, isSlotTooSoon]);
 
   const hasAutoSelected = useRef(false);
 
@@ -129,7 +173,7 @@ const Calendar: React.FC<CalendarProps> = ({
         .filter((slot) => getDateKey(slot.date) === testDateKey)
         .map((slot) => normalizeTime(slot.time));
 
-      const candidateTime = availableTimes.find(
+      const candidateTime = getBaseTimesForDate(testDate).find(
         (t) => !bookedTimes.includes(t) && !isSlotTooSoon(testDate, t),
       );
 
@@ -146,7 +190,7 @@ const Calendar: React.FC<CalendarProps> = ({
         break;
       }
     }
-  }, [bookedSlots, isSlotTooSoon, onChange, onTimeChange, value.startDate]);
+  }, [bookedSlots, getBaseTimesForDate, isSlotTooSoon, onChange, onTimeChange, value.startDate]);
 
   useEffect(() => {
     if (!value.startDate || userHasPickedTime.current) return;
@@ -156,7 +200,7 @@ const Calendar: React.FC<CalendarProps> = ({
       .filter((slot) => slot.date === dateKey)
       .map((slot) => normalizeTime(slot.time));
 
-    const availableTimesForDate = availableTimes.filter(
+    const availableTimesForDate = getBaseTimesForDate(value.startDate ?? null).filter(
       (t) => !bookedTimes.includes(t) && !isSlotTooSoon(value.startDate ?? null, t),
     );
 
@@ -167,7 +211,7 @@ const Calendar: React.FC<CalendarProps> = ({
         onTimeChange?.('', { userInitiated: false });
       }
     }
-  }, [value.startDate, bookedSlots, selectedTime, onTimeChange, isSlotTooSoon]);
+  }, [value.startDate, bookedSlots, selectedTime, onTimeChange, isSlotTooSoon, getBaseTimesForDate]);
 
   useEffect(() => {
     userHasPickedTime.current = false;
@@ -301,7 +345,7 @@ const Calendar: React.FC<CalendarProps> = ({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="mt-4 flex items-center justify-center gap-2">
+      {/* <div className="mt-4 flex items-center justify-center gap-2">
         <button
           type="button"
           onClick={() => setSelectionMode('single')}
@@ -324,7 +368,7 @@ const Calendar: React.FC<CalendarProps> = ({
         >
           Multiple Days
         </button>
-      </div>
+      </div> */}
 
       <AnimatePresence mode="wait">
         <motion.div
@@ -337,13 +381,13 @@ const Calendar: React.FC<CalendarProps> = ({
         >
           <div className="flex flex-col gap-3">
             {/* Custom header: arrows + CalendarPicker in the middle */}
-            <div className="mb-2 flex items-center justify-between px-1">
+            <div className="mt-4 mb-2 flex items-center justify-between px-1">
               <button
                 type="button"
                 onClick={handlePrevMonth}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 bg-white text-sm text-neutral-700 hover:bg-neutral-100"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full shadow-md transition bg-white text-sm text-neutral-700 hover:bg-neutral-100"
               >
-                ‹
+                <BiSolidLeftArrow />
               </button>
 
               <div className="flex flex-row items-center gap-2">
@@ -372,9 +416,9 @@ const Calendar: React.FC<CalendarProps> = ({
               <button
                 type="button"
                 onClick={handleNextMonth}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 bg-white text-sm text-neutral-700 hover:bg-neutral-100"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full shadow-md transition bg-white text-sm text-neutral-700 hover:bg-neutral-100"
               >
-                ›
+                <BiSolidRightArrow />
               </button>
             </div>
 
@@ -437,7 +481,7 @@ const Calendar: React.FC<CalendarProps> = ({
             </motion.span>
           </button>
 
-          <AnimatePresence>
+          {/* <AnimatePresence>
             {showReminder && reminderText && (
               <motion.div
                 initial={{ opacity: 0, y: -6 }}
@@ -453,7 +497,7 @@ const Calendar: React.FC<CalendarProps> = ({
                 </div>
               </motion.div>
             )}
-          </AnimatePresence>
+          </AnimatePresence> */}
 
           <AnimatePresence initial={false}>
             {showTimes && (
@@ -464,7 +508,7 @@ const Calendar: React.FC<CalendarProps> = ({
                 transition={{ duration: 0.2 }}
               >
                 <div className="mt-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-                  {availableTimes.map((time) => {
+                  {availableTimesForSelectedDate.map((time) => {
                     const [hour, minute] = time.split(':').map(Number);
                     const isBooked = bookedTimesForDate.includes(time);
                     const isDisabled = isBooked || isSlotTooSoon(value.startDate ?? null, time);

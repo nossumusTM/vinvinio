@@ -153,42 +153,107 @@ const TripsClient: React.FC<TripsClientProps> = ({
   //   [router]
   // );
 
+  // const handleSubmitCancellation = async () => {
+  //   if (!selectedReservationId || !cancelReason) return;
+  
+  //    if (cancelReason === 'Other' && !customReason.trim()) {
+  //     setPopupMessage("Please share your reason for cancellation.");
+  //     return;
+  //   }
+
+  //   setIsSubmittingCancellation(true);
+
+  //   const reasonToSend = cancelReason === 'Other' ? customReason.trim() : cancelReason;
+  //   const reservation = reservations.find(r => r.id === selectedReservationId);
+  //   const formattedDate = format(new Date(reservation?.startDate || ''), 'PPP');
+  
+  //   const submitDate = format(new Date(), 'PPpp');
+
+  //   const emailText = `
+  //   🗓️ Reservation Cancellation Request
+
+  //   📌 Submitted On: ${submitDate}
+
+  //   👤 User Information:
+  //   - Username: ${currentUser?.name}
+  //   - Legal Name: ${currentUser?.legalName}
+  //   - Email: ${currentUser?.email}
+
+  //   🧾 Reservation Details:
+  //   - Reservation ID: ${selectedReservationId}
+  //   - Guest Count: ${reservation?.guestCount}
+  //   - Price: ${formatConverted(reservation?.totalPrice ?? 0)}
+  //   - Date of Reservation: ${formattedDate}
+
+  //   ❗ Reason for Cancellation:
+  //   ${reasonToSend}
+  //   `.trim();
+  
+  //   try {
+  //     await axios.post('/api/email/cancellation', {
+  //       to: 'vuoiaggio@gmail.com',
+  //       subject: `Cancellation request for reservation ${selectedReservationId}`,
+  //       bodyText: emailText,
+  //     });
+  //     toast.success('Cancellation request submitted.', {
+  //       iconTheme: {
+  //         primary: '#2200ffff',
+  //         secondary: '#fff',
+  //       }
+  //     });
+  //     setShowCancelModal(false);
+  //     setShowCancelConfirmPrompt(false);
+  //     setCancelReason('');
+  //     setCustomReason('');
+  //     setSelectedReservationId(null);
+  //   } catch (err) {
+  //     toast.error('Failed to send cancellation email.');
+  //   } finally {
+  //     setIsSubmittingCancellation(false);
+  //   }
+  // };  
+
   const handleSubmitCancellation = async () => {
     if (!selectedReservationId || !cancelReason) return;
-  
-     if (cancelReason === 'Other' && !customReason.trim()) {
+
+    if (cancelReason === 'Other' && !customReason.trim()) {
       setPopupMessage("Please share your reason for cancellation.");
+      return;
+    }
+
+    const reservation = reservations.find((r) => r.id === selectedReservationId);
+
+    if (!reservation || !reservation.startDate) {
+      setPopupMessage('We could not find details for this reservation. Please try again.');
       return;
     }
 
     setIsSubmittingCancellation(true);
 
     const reasonToSend = cancelReason === 'Other' ? customReason.trim() : cancelReason;
-    const reservation = reservations.find(r => r.id === selectedReservationId);
-    const formattedDate = format(new Date(reservation?.startDate || ''), 'PPP');
-  
+    const formattedDate = format(new Date(reservation.startDate), 'PPP');
     const submitDate = format(new Date(), 'PPpp');
 
     const emailText = `
-    🗓️ Reservation Cancellation Request
+      🗓️ Reservation Cancellation Request
 
-    📌 Submitted On: ${submitDate}
+      📌 Submitted On: ${submitDate}
 
-    👤 User Information:
-    - Username: ${currentUser?.name}
-    - Legal Name: ${currentUser?.legalName}
-    - Email: ${currentUser?.email}
+      👤 User Information:
+      - Username: ${currentUser?.name}
+      - Legal Name: ${currentUser?.legalName}
+      - Email: ${currentUser?.email}
 
-    🧾 Reservation Details:
-    - Reservation ID: ${selectedReservationId}
-    - Guest Count: ${reservation?.guestCount}
-    - Price: ${formatConverted(reservation?.totalPrice ?? 0)}
-    - Date of Reservation: ${formattedDate}
+      🧾 Reservation Details:
+      - Reservation ID: ${selectedReservationId}
+      - Guest Count: ${reservation.guestCount}
+      - Price: ${formatConverted(reservation.totalPrice ?? 0)}
+      - Date of Reservation: ${formattedDate}
 
-    ❗ Reason for Cancellation:
-    ${reasonToSend}
+      ❗ Reason for Cancellation:
+      ${reasonToSend}
     `.trim();
-  
+
     try {
       await axios.post('/api/email/cancellation', {
         to: 'vuoiaggio@gmail.com',
@@ -199,7 +264,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
         iconTheme: {
           primary: '#2200ffff',
           secondary: '#fff',
-        }
+        },
       });
       setShowCancelModal(false);
       setShowCancelConfirmPrompt(false);
@@ -211,7 +276,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
     } finally {
       setIsSubmittingCancellation(false);
     }
-  };  
+  };
 
   const openCancelModal = useCallback((id: string) => {
     setSelectedReservationId(id);

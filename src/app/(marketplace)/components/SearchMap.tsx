@@ -115,11 +115,15 @@ const Map: React.FC<MapProps> = ({ center, city, country }) => {
   }, [city, country, center]);
 
   useEffect(() => {
-    const onResize = () => mapRef.current?.invalidateSize();
+    const onResize = () => {
+      const map = mapRef.current as L.Map | null;
+      const container = (map as any)?._container;
+      if (!map || !container) return;
+      map.invalidateSize();
+    };
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
-
   // if (!isClient) return null;
 
   useEffect(() => {
@@ -179,7 +183,19 @@ const Map: React.FC<MapProps> = ({ center, city, country }) => {
           <CaptureMapRef
             onReady={(mapInstance) => {
               mapRef.current = mapInstance;
-              window.setTimeout(() => mapInstance.invalidateSize(), 80);
+
+              window.setTimeout(() => {
+                const map = mapRef.current as L.Map | null;
+                // Guard: map might be gone or not fully initialized yet
+                const container = (map as any)?._container;
+                if (!map || !container) return;
+
+                try {
+                  map.invalidateSize();
+                } catch (err) {
+                  console.warn('Leaflet invalidateSize skipped:', err);
+                }
+              }, 120); // slightly longer delay is fine
             }}
           />
           <TileLayer

@@ -163,6 +163,7 @@ model Listing {
   hoursInAdvance      Int?          @default(0)
   punti               Int            @default(0)
   likesCount          Int            @default(0)
+  availabilityRules   Json?
   user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   reservations        Reservation[]
   reviews             Review[]

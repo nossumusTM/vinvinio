@@ -1,4 +1,5 @@
 import { PRICING_MODES_SET, PricingMode } from '../../libs/pricing';
+import { normalizeAvailabilityRules } from '../../utils/timeSlots';
 
 export type ListingStatus =
   | 'pending'
@@ -228,6 +229,7 @@ export interface ListingUpdatePayload {
   groupPrice?: unknown;
   groupSize?: unknown;
   customPricing?: unknown;
+  availabilityRules?: unknown;
 }
 
 export interface NormalizedListingUpdate {
@@ -259,6 +261,7 @@ export interface NormalizedListingUpdate {
     environments: { set: string[] };
     activityForms: { set: string[] };
     seoKeywords: { set: string[] };
+    availabilityRules: Record<string, unknown> | null;
   };
   pricingMode: PricingMode;
   groupPrice: number | null;
@@ -308,6 +311,7 @@ export const normalizeListingUpdatePayload = (
   const environments = normalizeStringArray(payload.environments);
   const activityForms = normalizeStringArray(payload.activityForms);
   const seoKeywords = normalizeStringArray(payload.seoKeywords);
+  const availabilityRules = normalizeAvailabilityRules(payload.availabilityRules);
 
   const pricingSnapshot = {
     mode: pricingMode,
@@ -345,6 +349,7 @@ export const normalizeListingUpdatePayload = (
       environments: { set: environments },
       activityForms: { set: activityForms },
       seoKeywords: { set: seoKeywords },
+      availabilityRules: availabilityRules ? { ...availabilityRules } : null,
     },
     pricingMode,
     groupPrice: pricingSnapshot.groupPrice,

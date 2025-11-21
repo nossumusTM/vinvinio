@@ -56,7 +56,7 @@ const Counter: React.FC<CounterProps> = ({
                 >
                     <AiOutlineMinus />
                 </div>
-                <div className="relative flex h-10 w-10 select-none items-center justify-center overflow-hidden">
+                <div className="relative flex h-5 w-5 select-none items-center justify-center overflow-hidden">
                     <AnimatePresence mode="popLayout" initial={false}>
                         <motion.span
                         key={value}

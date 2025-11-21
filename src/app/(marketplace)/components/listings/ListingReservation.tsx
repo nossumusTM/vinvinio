@@ -9,6 +9,7 @@ import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import useCurrencyFormatter from '@/app/(marketplace)/hooks/useCurrencyFormatter';
 import { AnimatePresence, motion } from 'framer-motion';
+import { ListingAvailabilityRules } from '@/app/(marketplace)/utils/timeSlots';
 
 interface ReservationSlot {
   date: string;
@@ -39,6 +40,7 @@ interface ListingReservationProps {
   customPricing?: { minGuests: number; maxGuests: number; price: number }[] | null;
   /** Minimum hours before start that the experience can be booked */
   hoursInAdvance?: number | null;
+  availabilityRules?: ListingAvailabilityRules | null;
 }
 
 const ListingReservation: React.FC<ListingReservationProps> = ({
@@ -61,7 +63,8 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
   groupPrice,
   groupSize,
   customPricing,
-  hoursInAdvance
+  hoursInAdvance,
+  availabilityRules
 }) => {
   const router = useRouter();
 
@@ -319,6 +322,7 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
           forceOpenTimes={forceOpenTimes}
           reminderText="Please confirm the time of your booking before continuing."
           onReminderDisplayed={() => setForceOpenTimes(false)}
+          availabilityRules={availabilityRules}
           hoursInAdvance={hoursInAdvance ?? undefined}
         />
 

@@ -14,6 +14,8 @@ import { TbBookmarkFilled } from "react-icons/tb";
 import { LuBookmark } from "react-icons/lu";
 import { RiBookmark3Line } from "react-icons/ri";
 import { RiBookmark3Fill } from "react-icons/ri";
+import { FaRegBookmark } from "react-icons/fa";
+import { FaBookmark } from "react-icons/fa";
 
 import ClientOnly from "./ClientOnly";
 
@@ -42,8 +44,8 @@ const HeartButton: React.FC<HeartButtonProps> = ({
         }}
         aria-label={hasFavorited ? 'Remove from favorites' : 'Save to favorites'}
         className={`
-            p-4 rounded-full shadow-md backdrop-blur-sm transition hover:shadow-lg bg-white/50
-            ${hasFavorited ? 'bg-white/20' : 'bg-white/10'}
+            p-4 rounded-full shadow-md backdrop-blur-sm transition hover:shadow-lg bg-black/10
+            ${hasFavorited ? 'bg-black/20' : 'bg-black/10'}
             cursor-pointer flex items-center justify-center
         `}
         >
@@ -56,7 +58,7 @@ const HeartButton: React.FC<HeartButtonProps> = ({
                 exit={{ scale: 0.4, opacity: 0 }}
                 transition={{ duration: 0.15, ease: 'easeOut' }}
             >
-                <RiBookmark3Fill size={18} className="text-white drop-shadow-md" />
+                <FaBookmark size={18} className="text-white drop-shadow-md" />
             </motion.span>
             ) : (
             <motion.span
@@ -66,7 +68,7 @@ const HeartButton: React.FC<HeartButtonProps> = ({
                 exit={{ scale: 0.4, opacity: 0 }}
                 transition={{ duration: 0.15, ease: 'easeOut' }}
             >
-                <RiBookmark3Line size={18} className="text-white drop-shadow-md" />
+                <FaRegBookmark size={18} className="text-white drop-shadow-md" />
             </motion.span>
             )}
         </AnimatePresence>
