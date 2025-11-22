@@ -238,7 +238,7 @@ import { useRouter } from "next/navigation";
                </button> */}
              <div className="mb-4">
                <Heading
-                 title='Your Journey Starts Here'
+                 title=''
                  subtitle='Lights, camera… just need your info to run the show.'
                />
              </div>
@@ -274,10 +274,17 @@ import { useRouter } from "next/navigation";
               label="Username"
               disabled={isLoading}
               register={register}
-               errors={errors}
-               required
-               inputClassName="h-14 lg:h-[46px] text-base rounded-xl"
-             />
+              errors={errors}
+              required
+              validationOptions={{
+                pattern: {
+                  value: /^[A-Za-z0-9]+$/,
+                  message: 'Use only letters and numbers (no spaces or symbols).',
+                },
+                setValueAs: (value: string) => value?.trim() ?? '',
+              }}
+              inputClassName="h-14 lg:h-[46px] text-base rounded-xl"
+            />
              <Input
                id="password"
                label="Password"

@@ -32,10 +32,10 @@ export const computePuntiShare = (punti: number): number => {
   return Math.min(1, punti / MAX_PARTNER_POINT_VALUE);
 };
 
-export const getPuntiLabel = (punti: number): "Relevant" | "PUMP" | "FAIR" => {
+export const getPuntiLabel = (punti: number): "Relevant" | "TOP RATE" | "PUMP" => {
   if (punti >= 80) return "Relevant";
-  if (punti >= 40) return "PUMP";
-  return "FAIR";
+  if (punti >= 40) return "TOP RATE";
+  return "PUMP";
 };
 
 export const formatPuntiPercentage = (share: number): string => `${Math.round(share * 100)}%`;

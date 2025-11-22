@@ -3,7 +3,7 @@
 import { useCallback, useState, useRef, useEffect } from "react";
 import { AiOutlineMenu, AiOutlineBell } from "react-icons/ai";
 import { BiMessageSquareDots } from "react-icons/bi";
-import { RiNotification3Line } from "react-icons/ri";
+import { RiNotification3Line,RiNotificationLine, RiKeyboardLine } from "react-icons/ri";
 import { FaHandshake } from "react-icons/fa";
 import { FcBusinessContact } from "react-icons/fc";
 import { MdOutlineBusinessCenter } from "react-icons/md";
@@ -18,6 +18,9 @@ import useRegisterModal from "@/app/(marketplace)/hooks/useRegisterModal";
 import { SafeUser } from "@/app/(marketplace)/types";
 import { profilePathForUser } from "@/app/(marketplace)/utils/profilePath";
 import { motion, AnimatePresence } from 'framer-motion';
+import { LuScanFace, LuActivity } from "react-icons/lu";
+import { FcBookmark } from "react-icons/fc";
+import { SiWish } from "react-icons/si";
 
 import LocaleButton from "./LocaleButton";
 
@@ -309,7 +312,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
           </div>
         )} */}
 
-        {userRole === 'promoter' && (
+        {/* {userRole === 'promoter' && (
           <div
             onClick={onPromote}
             className="
@@ -327,7 +330,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
           >
             Vuola Passcode
           </div>
-        )}
+        )} */}
 
 <div
   onClick={toggleOpen}
@@ -434,7 +437,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
 
                     <MenuItem
                       label="Notifications"
-                      icon={<RiNotification3Line size={18} />}
+                      icon={<RiNotificationLine size={18} />}
                       badgeCount={notificationFreshCount > 0 ? notificationFreshCount : undefined}
                       onClick={handleNotificationsOpen}
                     />
@@ -501,21 +504,26 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                 {userRole === 'promoter' && (
                   <>
                     {/* Only render on mobile as MenuItems */}
-                    <div className="md:hidden">
-                      <MenuItem label="Vuola Passcode" 
+                    <div className="">
+                      <MenuItem label="VinVin Passcode" 
+                        icon={<LuScanFace size={18} />}
                         onClick={() => {
                           setIsOpen(false);
                           onPromote();
                         }} />
                     </div>
+
+                    <hr className="my-2" />
                     
                     <MenuItem label="Activities" 
+                      icon={<LuActivity size={18} />}
                       onClick={() => {
                         setIsOpen(false);
                       }}
                       href="/trips"
                     />
                     <MenuItem label="Wishlist"
+                      icon={<FcBookmark size={18}/>}
                       onClick={() => {
                         setIsOpen(false);
                       }}
@@ -525,6 +533,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                         <>
                         <hr className="my-2" />
                           <MenuItem label="Dashboard"
+                            icon={<RiKeyboardLine size={18}/>}
                             onClick={() => {
                               setIsOpen(false);
                             }}

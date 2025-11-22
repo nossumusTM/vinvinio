@@ -27,6 +27,12 @@ export async function POST(request: Request) {
     const trimmedName = String(name).trim();
     const sanitizedPhone = String(phone).trim();
 
+    if (!/^[A-Za-z0-9]+$/.test(trimmedName)) {
+      return NextResponse.json("Username must contain only letters and numbers.", {
+        status: 400,
+      });
+    }
+
     // Basic sanity: must start with + and have digits after it
     if (!/^(\+?[1-9]\d{6,20})$/.test(sanitizedPhone)) {
       return NextResponse.json("Phone number is invalid", { status: 400 });

@@ -41,7 +41,14 @@ export async function PUT(req: Request) {
   } = body;
 
   try {
-    const sanitizedUsername = typeof username === 'string' ? slugSegment(username).toLowerCase() : undefined;
+    const sanitizedUsername =
+      typeof username === 'string' ? username.trim().toLowerCase() : undefined;
+
+    if (sanitizedUsername !== undefined && !/^[a-z0-9]+$/.test(sanitizedUsername)) {
+      return NextResponse.json("Username must contain only letters and numbers.", {
+        status: 400,
+      });
+    }
 
     const updatedUser = await prisma.user.update({
       where: { id: currentUser.id },

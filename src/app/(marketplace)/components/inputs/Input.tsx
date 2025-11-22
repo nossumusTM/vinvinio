@@ -3,6 +3,7 @@
 import {
   FieldErrors,
   FieldValues,
+  RegisterOptions,
   UseFormRegister
 } from "react-hook-form";
 import { TbCurrencyEuro } from "react-icons/tb";
@@ -18,6 +19,7 @@ interface InputProps {
   disabled?: boolean;
   formatPrice?: boolean;
   required?: boolean;
+  validationOptions?: RegisterOptions;
   register: UseFormRegister<FieldValues>,
   errors: FieldErrors,
   maxLength?: number,
@@ -35,6 +37,7 @@ const Input: React.FC<InputProps> = ({
   formatPrice,
   register,
   required,
+  validationOptions,
   errors,
   textarea,
   inputClassName,
@@ -65,6 +68,14 @@ const Input: React.FC<InputProps> = ({
   const enableToggle = type === 'password' && withVisibilityToggle;
   const [isVisible, setIsVisible] = useState(false);
 
+  const registrationOptions = useMemo(
+    () => ({
+      ...(required ? { required: true } : {}),
+      ...(validationOptions || {}),
+    }),
+    [required, validationOptions]
+  );
+
   const resolvedType = useMemo(() => {
     if (!enableToggle) return type;
     return isVisible ? 'text' : 'password';
@@ -83,7 +94,7 @@ const Input: React.FC<InputProps> = ({
         <textarea
           id={id}
           disabled={disabled}
-          {...register(fieldName, { required })}
+          {...register(fieldName, registrationOptions)}
           placeholder=" "
           rows={6}
           className={`
@@ -99,7 +110,7 @@ const Input: React.FC<InputProps> = ({
         <input
           id={id}
           disabled={disabled}
-          {...register(fieldName, { required })}
+          {...register(fieldName, registrationOptions)}
           placeholder=" "
           type={resolvedType}
           className={`

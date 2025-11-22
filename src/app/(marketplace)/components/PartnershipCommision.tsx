@@ -47,8 +47,8 @@ const PartnershipCommision: React.FC<PartnershipCommisionProps> = ({
   const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
 
   const labelColors: Record<string, string> = {
-    "PUMP": "bg-[#8a2be2] text-white",   // violet
-    "FAIR": "bg-[#0000ff] text-white",   // neon blue
+    "TOP RATE": "bg-[#8a2be2] text-white",   // violet
+    "PUMP": "bg-[#0000ff] text-white",   // neon blue
   };
 
   useEffect(() => {
@@ -80,11 +80,11 @@ const PartnershipCommision: React.FC<PartnershipCommisionProps> = ({
 
     let labelClass = "bg-neutral-200 text-neutral-800";
 
-    if (effectiveLabel === "PUMP") {
+    if (effectiveLabel === "TOP RATE") {
       labelClass = "bg-[#8a2be2] text-white shadow-[0_0_8px_#8a2be2]";
     }
 
-    if (effectiveLabel === "FAIR") {
+    if (effectiveLabel === "PUMP") {
       labelClass = "bg-[#0000ff] text-white shadow-[0_0_8px_#0000ff]";
     }
 

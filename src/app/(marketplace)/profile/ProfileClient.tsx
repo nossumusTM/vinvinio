@@ -2706,7 +2706,7 @@ const coverImage = useMemo(() => {
                   onClick={() => setActiveSection(sectionKey)}
                   variants={cardVariants}
                   whileHover={{ y: -1 }}
-                  whileTap={{ scale: 0.008 }}
+                  whileTap={{ scale: 0.9 }}
                   className="flex h-full flex-col rounded-2xl bg-white p-6 text-left shadow-md transition hover:shadow-lg"
                 >
                   <div className="text-4xl text-black">{icon}</div>
