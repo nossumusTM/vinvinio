@@ -30,7 +30,7 @@ import { slugSegment } from '@/app/(marketplace)/libs/links';
 import { FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
 import Avatar from "../components/Avatar";
 import NextImage from 'next/image';
-import { BiUpload } from 'react-icons/bi';
+import CoverImageUploader from "../components/CoverImageUploader";
 import {
   MAX_PARTNER_COMMISSION,
   MAX_PARTNER_POINT_VALUE,
@@ -42,6 +42,7 @@ import {
 import VerificationBadge from "../components/VerificationBadge";
 import { maskPhoneNumber } from "@/app/(marketplace)/utils/phone";
 import { useSearchParams } from "next/navigation";
+import { TbWorldUpload } from "react-icons/tb";
 
 interface ProfileClientProps {
   currentUser: SafeUser;
@@ -285,6 +286,8 @@ const coverImage = useMemo(() => {
   const modeDescription = isHostView
     ? 'Manage listings, payouts and analytics without losing guest-facing data.'
     : 'Preview as a guest while we keep your host workspace untouched.';
+    
+  const paymentsTitle = viewRole === 'host' ? 'Payments & Withdrawals' : 'Payments & Vouchers';
 
   const lastPasswordUpdateDate = useMemo(
     () => (currentUser.passwordUpdatedAt ? new Date(currentUser.passwordUpdatedAt) : null),
@@ -1224,7 +1227,7 @@ const coverImage = useMemo(() => {
       <div className="rounded-3xl overflow-visible shadow-xl border border-neutral-100 bg-white">
         <div className="relative z-0 h-56 sm:h-64 md:h-72 overflow-visible">
           {/* ROLE SWITCH — bottom-center over the cover */}
-          <div className="absolute left-1/2 -bottom-3 translate-x-[-50%] z-[99999]">
+          <div className="absolute left-1/2 -bottom-4 translate-x-[-50%] z-[99999]">
             <Switch.Group as="div" className="flex flex-col items-center">
               <Switch
                 checked={isHostView} 
@@ -1320,16 +1323,32 @@ const coverImage = useMemo(() => {
 
                 {isOwner && (
                   <>
-                    <button
-                      type="button"
-                      onClick={pickCover}
+                    <CoverImageUploader
                       disabled={busy}
-                      className="aspect-square absolute top-3 right-3 z-[2] inline-flex items-center gap-2 rounded-full backdrop-blur-sm px-3 py-1.5 text-xs font-semibold text-white shadow-md hover:shadow-lg transition"
-                      title="Change cover"
-                    >
-                      <BiUpload className="h-5 w-5" />
-                      {uploadingCover ? '…' : ''}
-                    </button>
+                      onPreviewChange={(dataUrl) => {
+                          setCoverLoaded(false);
+                          setCoverPreview(dataUrl);
+                        }}
+                        onUploadStart={() => setUploadingCover(true)}
+                        onUploadEnd={() => setUploadingCover(false)}
+                        onUploadError={() => toast.error('Cover upload failed.')}
+                        onUpload={async (croppedDataUrl) => {
+                          const base64 = croppedDataUrl.replace(/^data:image\/\w+;base64,/, '');
+                          await axios.put('/api/users/cover', { image: base64 });
+                        }}
+                        renderTrigger={({ open, uploading }) => (
+                          <button
+                            type="button"
+                            onClick={open}
+                            disabled={busy || uploading}
+                            className="aspect-square absolute top-3 right-3 z-[2] inline-flex items-center gap-2 rounded-full backdrop-blur-sm px-3 py-1.5 text-xs font-semibold text-white shadow-md hover:shadow-lg transition"
+                            title="Change cover"
+                          >
+                            <TbWorldUpload className="h-5 w-5" />
+                            {uploading ? '…' : uploadingCover ? '…' : ''}
+                          </button>
+                        )}
+                      />
                     <input
                       ref={coverInputRef}
                       type="file"
@@ -1348,25 +1367,25 @@ const coverImage = useMemo(() => {
                           <>
                             <button
                               type="button"
-                              onClick={pickAvatar}
+                              onClick={() => fileInputRef.current?.click()}
                               disabled={busy}
                               className="group rounded-full outline-none focus:ring-2 focus:ring-white/80 focus:ring-offset-2 focus:ring-offset-black/20"
                               title="Change avatar"
                             >
                               <div className="rounded-full overflow-hidden ring-0 transition shadow-md hover:shadow-lg cursor-pointer">
                                 <Avatar
-                                  src={avatarPreview ?? currentUser?.image ?? undefined}
+                                  src={profileImage || currentUser?.image || undefined}
                                   name={currentUser?.name ?? currentUser?.username ?? 'User'}
                                   size={92}
                                 />
                               </div>
                             </button>
                             <input
-                              ref={avatarInputRef}
+                              ref={fileInputRef}
                               type="file"
                               accept="image/*"
                               className="hidden"
-                              onChange={handleAvatarSelect}
+                              onChange={handleImageUpload}   // 👈 uses crop flow
                             />
                           </>
                         ) : (
@@ -1997,7 +2016,7 @@ const coverImage = useMemo(() => {
                   >
                     ←
                   </button>
-                  <h2 className="text-md md:text-lg font-bold">Payments & Withdrawal</h2>
+                  <h2 className="text-md md:text-lg font-bold">{paymentsTitle}</h2>
                 </div>
               </div>
                 {/* Tabs */}
@@ -2696,7 +2715,7 @@ const coverImage = useMemo(() => {
                 {
                   sectionKey: 'payments',
                   icon: <RiSecurePaymentLine />,
-                  title: 'Payments & Withdrawal',
+                  title: paymentsTitle,
                   description: 'View and update your withdrawal methods',
                 },
               ].map(({ sectionKey, icon, title, description }) => (

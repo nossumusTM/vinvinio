@@ -1372,7 +1372,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
             <p><strong>Payout Number:</strong> {hostAnalytics.payoutNumber}</p>
             <p><strong>Partner Commission:</strong> {Math.round(hostAnalytics.partnerCommission ?? MIN_PARTNER_COMMISSION)}%</p>
             <p>
-              <strong>Punti Score:</strong> {Math.round(hostAnalytics.punti ?? 0)} / {MAX_PARTNER_POINT_VALUE}
+              <strong>VinVin Score:</strong> {Math.round(hostAnalytics.punti ?? 0)} / {MAX_PARTNER_POINT_VALUE}
               {hostAnalytics.puntiLabel ? ` (${hostAnalytics.puntiLabel})` : ''}
             </p>
             <p>
@@ -1389,7 +1389,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
       <div className="bg-white p-6 rounded-xl shadow-lg space-y-4">
           <h2 className="text-lg font-bold text-black">Adjust Listing Punti</h2>
           <p className="text-sm text-neutral-600">
-            Tune a listing&apos;s punti score (0 – {MAX_PARTNER_POINT_VALUE}). Host commission updates instantly.
+            Tune a listing&apos;s VinVin score (0 – {MAX_PARTNER_POINT_VALUE}). Host commission updates instantly.
           </p>
           <input
             type="text"

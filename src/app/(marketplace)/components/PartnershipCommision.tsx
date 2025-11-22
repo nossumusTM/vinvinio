@@ -141,6 +141,7 @@ const PartnershipCommision: React.FC<PartnershipCommisionProps> = ({
   }, [draftCommission, onCommissionChange]);
 
   const disableInteractions = loading || isSubmitting;
+  const progressPercent = Math.round(commissionShare * 100);
 
   return (
     <div
@@ -212,7 +213,7 @@ const PartnershipCommision: React.FC<PartnershipCommisionProps> = ({
 
       <div className="mt-6 grid grid-cols-1 gap-4 text-sm text-neutral-600 sm:grid-cols-3" onClick={(event) => event.stopPropagation()}>
         <div className="rounded-2xl bg-neutral-50 p-4">
-          <p className="text-xs uppercase tracking-wide text-neutral-500">Punti score</p>
+          <p className="text-xs uppercase tracking-wide text-neutral-500">VinVin score</p>
           <p className="mt-2 text-lg font-semibold text-neutral-900">
             {effectivePunti}
             <span className="text-sm text-neutral-500"> / {maxPointValue}</span>
@@ -227,9 +228,15 @@ const PartnershipCommision: React.FC<PartnershipCommisionProps> = ({
           <p className="mt-2 text-lg font-semibold text-neutral-900">
             {minCommission}% – {maxCommission}%
           </p>
-          <p className="mt-1 text-xs text-neutral-500">
-            You are {Math.round(commissionShare * 100)}% of the way to the top rate.
-          </p>
+          {progressPercent === 100 ? (
+            <p className="mt-1 text-xs text-neutral-500">
+              You are {progressPercent}% of the way to the top rate. Your services appears as the most relevant across the platform.
+            </p>
+          ) : (
+            <p className="mt-1 text-xs text-neutral-500">
+              You are {progressPercent}% of the way to the top rate.
+            </p>
+          )}
         </div>
       </div>
 

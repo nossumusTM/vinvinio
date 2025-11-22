@@ -20,6 +20,9 @@ import { profilePathForUser } from "@/app/(marketplace)/utils/profilePath";
 import { motion, AnimatePresence } from 'framer-motion';
 import { LuScanFace, LuActivity } from "react-icons/lu";
 import { FcBookmark } from "react-icons/fc";
+import { RiFolderReceivedLine } from "react-icons/ri";
+import { TiBusinessCard } from "react-icons/ti";
+import { GrServices } from "react-icons/gr";
 import { SiWish } from "react-icons/si";
 
 import LocaleButton from "./LocaleButton";
@@ -468,12 +471,15 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
 
                 {userRole === 'customer' && (
                   <>
-                    <MenuItem label="Activities" onClick={() => {
+                    <MenuItem 
+                      icon={<LuActivity size={18} />}
+                      label="Activities" onClick={() => {
                         setIsOpen(false);
                       }}
                       href="/trips"
                     />
                     <MenuItem label="Wishlist"
+                      icon={<FcBookmark size={18}/>}
                       onClick={() => {
                         setIsOpen(false);
                       }}
@@ -558,12 +564,14 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                     />
                     <hr className="my-2" />
                     <MenuItem label="Activities"
+                      icon={<LuActivity size={18} />}
                       onClick={() => {
                         setIsOpen(false);
                       }}
                       href="/trips"
                     />
                     <MenuItem label="Wishlist"
+                      icon={<FcBookmark size={18}/>}
                       onClick={() => {
                         setIsOpen(false);
                       }}
@@ -571,19 +579,22 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                     />
                           <hr className="my-2" />
                     <MenuItem label="Reservations"
+                      icon={<RiFolderReceivedLine size={18}/>}
                       onClick={() => {
                         setIsOpen(false);
                       }}
                       href="/reservations"
                     />
                     <MenuItem label="Manage Services"
+                      icon={<GrServices size={18}/>}
                       onClick={() => {
                         setIsOpen(false);
                       }}
                       href="/my-listings"
                     />
                     <MenuItem
-                      label="Manage Host"
+                      label="My Business Card"
+                      icon={<TiBusinessCard size={18}/>}
                       onClick={() => {
                         setIsOpen(false);
                       }}
@@ -593,6 +604,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                         <>
                         <hr className="my-2" />
                           <MenuItem label="Dashboard"
+                            icon={<RiKeyboardLine size={18}/>}
                             onClick={() => {
                               setIsOpen(false);
                             }}
@@ -613,13 +625,15 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                     }} /> */}
                     <hr className="my-2" />
                     </div>
-                    <MenuItem label="Activities" 
+                    <MenuItem label="Activities"
+                      icon={<LuActivity size={18} />}
                       onClick={() => {
                         setIsOpen(false);
                       }}
                       href="/trips"
                     />
                     <MenuItem label="Wishlist"
+                      icon={<FcBookmark size={18}/>}
                       onClick={() => {
                         setIsOpen(false);
                       }}
@@ -635,6 +649,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                           />
                           <hr className="my-2" />
                             <MenuItem label="Dashboard"
+                            icon={<RiKeyboardLine size={18}/>}
                             onClick={() => {
                               setIsOpen(false);
                             }}

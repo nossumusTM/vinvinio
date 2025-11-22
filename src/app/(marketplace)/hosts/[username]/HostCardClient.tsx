@@ -27,6 +27,7 @@ import { GiBoltShield } from "react-icons/gi";
 import { HiOutlineChatBubbleOvalLeft } from "react-icons/hi2";
 import { BiSolidPaperPlane } from "react-icons/bi";
 import Modal from '../../components/modals/Modal';
+import CoverImageUploader from "../../components/CoverImageUploader";
 
 import Cropper from 'react-easy-crop';
 import getCroppedImg from '@/app/(marketplace)/utils/cropImage';
@@ -327,6 +328,7 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
     // 2) optimistic local preview
     if (cropTarget === 'avatar') setAvatarPreview(croppedDataUrl);
     if (cropTarget === 'cover')  setCoverPreview(croppedDataUrl);
+    setAvatarPreview(croppedDataUrl);
 
     setIsCropping(false);
     setUploadedImage(null);
@@ -549,23 +551,32 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
 
             {isOwner && (
               <>
-                <button
-                  type="button"
-                  onClick={pickCover}
+                  <CoverImageUploader
                   disabled={busy}
-                  className="absolute aspect-square top-3 right-3 z-30 inline-flex items-center gap-2 rounded-full shadow-md text-white px-3 py-1.5 text-xs font-semibold hover:shadow-lg transition"
-                  title=""
-                >
-                  <TbWorldUpload className="font-semibold h-5 w-5" />
-                  {uploadingCover ? 'Uploading…' : ''}
-                </button>
-                {/* <input
-                  ref={coverInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => handleImageSelect(e, 'cover')}
-                /> */}
+                  onPreviewChange={(dataUrl) => {
+                    setCoverLoaded(false);
+                    setCoverPreview(dataUrl);
+                  }}
+                  onUploadStart={() => setUploadingCover(true)}
+                  onUploadEnd={() => setUploadingCover(false)}
+                  onUploadError={() => toast.error('Cover upload failed.')}
+                  onUpload={async (croppedDataUrl) => {
+                    const base64 = croppedDataUrl.replace(/^data:image\/\w+;base64,/, '');
+                    await axios.put('/api/users/cover', { image: base64 });
+                  }}
+                  renderTrigger={({ open, uploading }) => (
+                    <button
+                      type="button"
+                      onClick={open}
+                      disabled={busy || uploading}
+                      className="absolute aspect-square top-3 right-3 z-30 inline-flex items-center gap-2 rounded-full shadow-md text-white px-3 py-1.5 text-xs font-semibold hover:shadow-lg transition"
+                      title=""
+                    >
+                      <TbWorldUpload className="font-semibold h-5 w-5" />
+                      {uploading ? 'Uploading…' : uploadingCover ? 'Uploading…' : ''}
+                    </button>
+                  )}
+                />
               </>
             )}
           
