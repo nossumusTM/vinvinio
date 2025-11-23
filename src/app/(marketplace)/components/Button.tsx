@@ -57,12 +57,16 @@ const Button: React.FC<ButtonProps> = ({
         {loading ? (
             <span className="flex items-center justify-center gap-2">
                 <span
-                    className="h-4 w-4 border-2 border-t-transparent rounded-full animate-spin"
-                    style={{ borderColor: outline ? '#000' : '#fff', borderTopColor: 'transparent' }}
-                ></span>
+                className="h-4 w-4 border-2 border-t-transparent rounded-full animate-spin"
+                style={{
+                    // use a dark spinner so it’s visible on white buttons
+                    borderColor: outline ? '#000' : '#000',
+                    borderTopColor: 'transparent',
+                }}
+                />
                 <span>{label}</span>
             </span>
-        ) : (
+            ) : (
             label
         )}
     </button>

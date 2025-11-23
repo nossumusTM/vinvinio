@@ -73,7 +73,7 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
 
             <div className="mb-3 mt-3 flex flex-wrap gap-4 pt-3 sm:mb-0 sm:flex-row sm:justify-baseline">
               <div className="flex flex-col items-center justify-center">
-                <p className="select-none rounded-xl bg-[#0000ff] p-3 text-sm text-white">
+                <p className="select-none rounded-xl bg-gradient-to-r from-blue-200 to-cyan-200 p-3 text-sm text-white">
                   Today&#39;s Profit
                 </p>
                 <AnimatePresence mode="wait">
@@ -91,7 +91,7 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
               </div>
 
               <div className="flex flex-col items-center justify-center">
-                <p className="select-none rounded-xl bg-gradient-to-br from-gray-800 to-gray-700 p-3 text-sm text-white">
+                <p className="select-none rounded-xl bg-neutral-900 p-3 text-sm text-white">
                   {revenueLabel}
                 </p>
                 <AnimatePresence mode="wait">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { AiOutlineMinus, AiOutlinePlus } from "react-icons/ai";
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -17,20 +17,57 @@ const Counter: React.FC<CounterProps> = ({
     value,
     onChange,
 }) => {
-    const onAdd = useCallback(() => {
-        onChange(value + 1);
-    }, [onChange, value]);
+      const valueRef = useRef(value);
+  useEffect(() => {
+    valueRef.current = value;
+  }, [value]);
 
-    const onReduce = useCallback(() => {
-        if (value === 1) {
-            return;
-        }
+  const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-        onChange(value - 1);
-    }, [onChange, value]);
+  const changeBy = useCallback(
+    (delta: number) => {
+      const current = valueRef.current;
+      if (delta < 0 && current <= 1) return;
+      onChange(current + delta);
+    },
+    [onChange],
+  );
+
+  const startAutoChange = useCallback(
+    (delta: number) => {
+      // clear existing interval if any
+      if (holdIntervalRef.current) {
+        clearInterval(holdIntervalRef.current);
+      }
+
+      // immediate step
+      changeBy(delta);
+
+      // continuous steps while held
+      holdIntervalRef.current = setInterval(() => {
+        changeBy(delta);
+      }, 120);
+    },
+    [changeBy],
+  );
+
+  const stopAutoChange = useCallback(() => {
+    if (holdIntervalRef.current) {
+      clearInterval(holdIntervalRef.current);
+      holdIntervalRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (holdIntervalRef.current) {
+        clearInterval(holdIntervalRef.current);
+      }
+    };
+  }, []);
 
     return (
-        <div className="flex flex-row items-center justify-between">
+        <div className="flex flex-col md:flex-row items-center justify-between">
             <div className="flex flex-col">
                 <div className="font-medium">{title}</div>
                 <div className="font-light text-gray-600">
@@ -39,7 +76,11 @@ const Counter: React.FC<CounterProps> = ({
             </div>
             <div className="flex flex-row items-center gap-4">
                 <div
-                    onClick={onReduce}
+            onMouseDown={(e) => { e.preventDefault(); startAutoChange(-1); }}
+            onMouseUp={stopAutoChange}
+            onMouseLeave={stopAutoChange}
+            onTouchStart={(e) => { e.preventDefault(); startAutoChange(-1); }}
+            onTouchEnd={stopAutoChange}
                     className="
             w-10
             h-10
@@ -64,14 +105,18 @@ const Counter: React.FC<CounterProps> = ({
                         animate={{ y: 0, opacity: 1 }}
                         exit={{ y: -8, opacity: 0 }}
                         transition={{ duration: 0.18 }}
-                        className="font-normal text-xl text-neutral-600"
+                        className="font-normal text-sm text-neutral-600"
                         >
                         {value}
                         </motion.span>
                     </AnimatePresence>
                     </div>
-                <div
-                    onClick={onAdd}
+        <div
+            onMouseDown={(e) => { e.preventDefault(); startAutoChange(1); }}
+            onMouseUp={stopAutoChange}
+            onMouseLeave={stopAutoChange}
+            onTouchStart={(e) => { e.preventDefault(); startAutoChange(1); }}
+            onTouchEnd={stopAutoChange}
                     className="
             w-10
             h-10

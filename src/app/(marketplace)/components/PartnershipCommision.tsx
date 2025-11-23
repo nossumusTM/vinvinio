@@ -1,6 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState, useRef, type ChangeEvent } from 'react';
+import axios from "axios";
+import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+import { AnimatePresence, motion } from "framer-motion";
 
 import {
   MAX_PARTNER_COMMISSION,
@@ -12,6 +16,72 @@ import {
   sanitizePartnerCommission,
 } from "@/app/(marketplace)/constants/partner";
 
+import Counter from "./inputs/Counter";
+import Modal from "./modals/Modal";
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "");
+
+type VinvinPaymentFormProps = {
+  clientSecret: string;
+  amountLabel: string;
+  onSuccess: () => Promise<void> | void;
+  onError: (message: string) => void;
+  registerSubmit: (handler: () => Promise<void>) => void;
+};
+
+const VinvinPaymentForm: React.FC<VinvinPaymentFormProps> = ({
+  clientSecret,
+  amountLabel,
+  onSuccess,
+  onError,
+  registerSubmit,
+}) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [isConfirming, setIsConfirming] = useState(false);
+
+  useEffect(() => {
+    setIsConfirming(false);
+  }, [clientSecret]);
+
+  useEffect(() => {
+    registerSubmit(async () => {
+      if (!stripe || !elements) {
+        onError("Payment is still initializing. Please try again in a moment.");
+        return;
+      }
+
+      setIsConfirming(true);
+
+      const result = await stripe.confirmPayment({
+        elements,
+        redirect: "if_required",
+      });
+
+      if (result.error) {
+        setIsConfirming(false);
+        onError(result.error.message ?? "Payment failed. Please check your card and try again.");
+        return;
+      }
+
+      await onSuccess();
+      setIsConfirming(false);
+    });
+  }, [elements, onError, onSuccess, registerSubmit, stripe]);
+
+  return (
+    <div className="space-y-4">
+      <PaymentElement options={{ layout: "tabs" }} />
+      <p className="text-xs text-neutral-500">
+        You will be charged <span className="font-semibold text-neutral-700">{amountLabel}</span> to boost your VinVin score.
+      </p>
+      {isConfirming && (
+        <p className="text-xs text-indigo-600">Confirming payment, please wait…</p>
+      )}
+    </div>
+  );
+};
+
 interface PartnershipCommisionProps {
   punti: number;
   puntiShare: number;
@@ -22,6 +92,14 @@ interface PartnershipCommisionProps {
   maxCommission?: number;
   onCommissionChange?: (commission: number) => Promise<void> | void;
   loading?: boolean;
+  currentUserEmail?: string;
+
+  // 🔥 NEW: let parent control the VinVin modal
+  onOpenVinvinModal?: (payload: {
+    effectivePunti: number;
+    maxPointValue: number;
+    puntiShare: number;
+  }) => void;
 }
 
 const clamp = (value: number, min = 0, max = 1) => Math.min(max, Math.max(min, value));
@@ -36,6 +114,7 @@ const PartnershipCommision: React.FC<PartnershipCommisionProps> = ({
   maxCommission = MAX_PARTNER_COMMISSION,
   onCommissionChange,
   loading = false,
+  currentUserEmail,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [draftCommission, setDraftCommission] = useState(() => sanitizePartnerCommission(partnerCommission));
@@ -47,8 +126,9 @@ const PartnershipCommision: React.FC<PartnershipCommisionProps> = ({
   const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
 
   const labelColors: Record<string, string> = {
-    "TOP RATE": "bg-[#8a2be2] text-white",   // violet
-    "PUMP": "bg-[#0000ff] text-white",   // neon blue
+    "TOP RATE": "bg-gradient-to-r from-indigo-500 to-blue-500 text-white",   // violet
+    "STARTER": "bg-gradient-to-r from-blue-200 to-cyan-200 text-white",   // neon blue
+    "RELEVANT": "bg-gradient-to-r from-slate-900 to-slate-700 text-white",   // neon blue
   };
 
   useEffect(() => {
@@ -64,33 +144,48 @@ const PartnershipCommision: React.FC<PartnershipCommisionProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isEditing]);
 
-  const effectiveCommission = isEditing ? draftCommission : sanitizePartnerCommission(partnerCommission);
+  const baseCommission = sanitizePartnerCommission(partnerCommission);
+  const basePunti = Number.isFinite(punti)
+    ? Math.max(0, Math.round(punti))
+    : 0;
+  const baseShare = clamp(Number.isFinite(puntiShare) ? puntiShare : 0);
+
+  const effectiveCommission = isEditing ? draftCommission : baseCommission;
+
+  // how much user moved the slider from their real commission
+  const commissionDelta = effectiveCommission - baseCommission;
+
+  // 1% commission = 0.5 VinVin score, both up and down
   const effectivePunti = isEditing
-    ? computePuntiFromCommission(draftCommission)
-    : Number.isFinite(punti)
-      ? Math.max(0, Math.round(punti))
-      : 0;
+    ? Math.max(0, Math.round(basePunti + commissionDelta * 0.5))
+    : basePunti;
+
   const effectiveShare = isEditing
     ? computePuntiShare(effectivePunti)
-    : clamp(Number.isFinite(puntiShare) ? puntiShare : 0);
-    const effectiveLabel = isEditing ? getPuntiLabel(effectivePunti) : puntiLabel;
-    const commissionSpread = Math.max(1, maxCommission - minCommission);
-    const commissionShare = clamp((effectiveCommission - minCommission) / commissionSpread);
-    const fillPercent = Math.round(commissionShare * 100);
+    : baseShare;
 
+  const effectiveLabel = isEditing ? getPuntiLabel(effectivePunti) : puntiLabel;
+  const commissionSpread = Math.max(1, maxCommission - minCommission);
+  const commissionShare = clamp((effectiveCommission - minCommission) / commissionSpread);
+  const fillPercent = Math.round(commissionShare * 100);
+  
     let labelClass = "bg-neutral-200 text-neutral-800";
 
     if (effectiveLabel === "TOP RATE") {
-      labelClass = "bg-[#8a2be2] text-white shadow-[0_0_8px_#8a2be2]";
+      labelClass = "bg-gradient-to-r from-indigo-500 to-blue-500 text-white";
     }
 
-    if (effectiveLabel === "PUMP") {
-      labelClass = "bg-[#0000ff] text-white shadow-[0_0_8px_#0000ff]";
+    if (effectiveLabel === "STARTER") {
+      labelClass = "bg-gradient-to-r from-blue-200 to-cyan-200 text-white";
+    }
+
+    if (effectiveLabel === "RELEVANT") {
+      labelClass = "bg-gradient-to-r from-slate-900 to-slate-700 text-white";
     }
 
   const sliderTrackStyle = useMemo(
       () => ({
-        background: `linear-gradient(90deg, #0ea5e9 0%, #6366f1 ${fillPercent}%, #e5e7eb ${fillPercent}%)`,
+        background: `linear-gradient(90deg, #75abfbff 0%, #24deffff ${fillPercent}%, #e5e7eb ${fillPercent}%)`,
         transition: 'background 0.35s ease',
       }),
       [fillPercent],
@@ -189,7 +284,7 @@ const PartnershipCommision: React.FC<PartnershipCommisionProps> = ({
         {" "}
         thanks to
         {" "}
-        <span className="font-semibold text-neutral-900">{effectivePunti}</span> punti gathered across approved experiences.
+        <span className="font-semibold text-neutral-900">{effectivePunti}</span> points gathered across approved experiences.
       </p>
 
       <div className="mt-6" onClick={(event) => event.stopPropagation()}>
@@ -213,7 +308,7 @@ const PartnershipCommision: React.FC<PartnershipCommisionProps> = ({
 
       <div className="mt-6 grid grid-cols-1 gap-4 text-sm text-neutral-600 sm:grid-cols-3" onClick={(event) => event.stopPropagation()}>
         <div className="rounded-2xl bg-neutral-50 p-4">
-          <p className="text-xs uppercase tracking-wide text-neutral-500">VinVin score</p>
+          <p className="text-xs uppercase tracking-wide text-neutral-500">VINVIN POINTS</p>
           <p className="mt-2 text-lg font-semibold text-neutral-900">
             {effectivePunti}
             <span className="text-sm text-neutral-500"> / {maxPointValue}</span>

@@ -9,6 +9,7 @@ import {
   computePuntiShare,
   getPuntiLabel,
 } from "@/app/(marketplace)/constants/partner";
+import { resolvePartnerMetricsForHost } from "@/app/(marketplace)/libs/partnerMetrics";
 
 export async function POST(req: Request) {
   try {
@@ -68,13 +69,19 @@ export async function POST(req: Request) {
     const puntiShare = computePuntiShare(punti);
     const puntiLabel = getPuntiLabel(punti);
 
+    const partnerMetrics = await resolvePartnerMetricsForHost(currentUser.id);
+
     return NextResponse.json({
       totalBooks: analytics.totalBooks,
       totalRevenue: analytics.totalRevenue,
-      partnerCommission: updatedUser.partnerCommission,
-      punti,
-      puntiShare,
-      puntiLabel,
+      // partnerCommission: updatedUser.partnerCommission,
+      // punti,
+      // puntiShare,
+      // puntiLabel,
+      partnerCommission: partnerMetrics.partnerCommission,
+      punti: partnerMetrics.punti,
+      puntiShare: partnerMetrics.puntiShare,
+      puntiLabel: partnerMetrics.puntiLabel,
     });
 
   } catch (err) {

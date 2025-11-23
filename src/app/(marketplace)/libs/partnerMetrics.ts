@@ -20,9 +20,13 @@ const deriveMetrics = (
   commission: number | null | undefined,
   puntiValues: number[],
 ): PartnerMetrics => {
-  const highestListingPunti = puntiValues.reduce((max, value) => {
-    if (!Number.isFinite(value)) return max;
-    return Math.max(max, Math.max(0, Math.floor(value)));
+  // const highestListingPunti = puntiValues.reduce((max, value) => {
+  //   if (!Number.isFinite(value)) return max;
+  //   return Math.max(max, Math.max(0, Math.floor(value)));
+  // }, 0);
+  const totalListingPunti = puntiValues.reduce((sum, value) => {
+    if (!Number.isFinite(value)) return sum;
+    return sum + Math.max(0, Math.floor(value));
   }, 0);
 
   const sanitizedCommission =
@@ -30,15 +34,17 @@ const deriveMetrics = (
       ? sanitizePartnerCommission(commission)
       : null;
 
-  const puntiFromCommission = sanitizedCommission !== null ? computePuntiFromCommission(sanitizedCommission) : 0;
+  // const puntiFromCommission = sanitizedCommission !== null ? computePuntiFromCommission(sanitizedCommission) : 0;
+  const partnerCommission =
+    sanitizedCommission !== null ? sanitizedCommission : MIN_PARTNER_COMMISSION;
+
+  const commissionPunti =
+    sanitizedCommission !== null ? computePuntiFromCommission(sanitizedCommission) : 0;
   const punti = Math.min(
     MAX_PARTNER_POINT_VALUE,
-    Math.max(highestListingPunti, puntiFromCommission),
+    Math.max(0, totalListingPunti) + commissionPunti,
   );
-  const computedCommissionFromPunti = computePartnerCommission(punti);
-  const partnerCommission = sanitizePartnerCommission(
-    Math.max(sanitizedCommission ?? MIN_PARTNER_COMMISSION, computedCommissionFromPunti),
-  );
+
   const puntiShare = computePuntiShare(punti);
   const puntiLabel = getPuntiLabel(punti);
 
@@ -74,14 +80,10 @@ export const resolvePartnerMetricsForHost = async (userId: string): Promise<Part
     }),
   ]);
 
-  const metrics = deriveMetrics(existingCommission?.partnerCommission, listings.map((listing) => listing.punti ?? 0));
-
-  if (!existingCommission || existingCommission.partnerCommission !== metrics.partnerCommission) {
-    await prisma.user.update({
-      where: { id: userId },
-      data: { partnerCommission: metrics.partnerCommission },
-    });
-  }
+  const metrics = deriveMetrics(
+    existingCommission?.partnerCommission,
+    listings.map((listing) => listing.punti ?? 0),
+  );
 
   return metrics;
 };

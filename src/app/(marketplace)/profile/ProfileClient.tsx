@@ -5,6 +5,7 @@ import { SafeUser } from "@/app/(marketplace)/types";
 import Container from "@/app/(marketplace)/components/Container";
 import Heading from "@/app/(marketplace)/components/Heading";
 import PartnershipCommision from "@/app/(marketplace)/components/PartnershipCommision";
+import PaymentConfetti from "../components/PaymentConfetti";
 import Image from "next/image";
 import { twMerge } from "tailwind-merge";
 import CryptoJS from 'crypto-js';
@@ -31,6 +32,7 @@ import { FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
 import Avatar from "../components/Avatar";
 import NextImage from 'next/image';
 import CoverImageUploader from "../components/CoverImageUploader";
+import { HiMiniArrowLeft } from 'react-icons/hi2';
 import {
   MAX_PARTNER_COMMISSION,
   MAX_PARTNER_POINT_VALUE,
@@ -43,6 +45,76 @@ import VerificationBadge from "../components/VerificationBadge";
 import { maskPhoneNumber } from "@/app/(marketplace)/utils/phone";
 import { useSearchParams } from "next/navigation";
 import { TbWorldUpload } from "react-icons/tb";
+
+import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+import Counter from "../components/inputs/Counter";
+import Modal from "../components/modals/Modal";
+import { SiJsonwebtokens } from "react-icons/si";
+import { HiCheckCircle } from "react-icons/hi2";
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "");
+
+type VinvinPaymentFormProps = {
+  clientSecret: string;
+  amountLabel: string;
+  onSuccess: () => Promise<void> | void;
+  onError: (message: string) => void;
+  registerSubmit: (handler: () => Promise<void>) => void;
+};
+
+const VinvinPaymentForm: React.FC<VinvinPaymentFormProps> = ({
+  clientSecret,
+  amountLabel,
+  onSuccess,
+  onError,
+  registerSubmit,
+}) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [isConfirming, setIsConfirming] = useState(false);
+
+  useEffect(() => {
+    setIsConfirming(false);
+  }, [clientSecret]);
+
+  useEffect(() => {
+    registerSubmit(async () => {
+      if (!stripe || !elements) {
+        onError("Payment is still initializing. Please try again in a moment.");
+        return;
+      }
+
+      setIsConfirming(true);
+
+      const result = await stripe.confirmPayment({
+        elements,
+        redirect: "if_required",
+      });
+
+      if (result.error) {
+        setIsConfirming(false);
+        onError(result.error.message ?? "Payment failed. Please check your card and try again.");
+        return;
+      }
+
+      await onSuccess();
+      setIsConfirming(false);
+    });
+  }, [elements, onError, onSuccess, registerSubmit, stripe]);
+
+  return (
+    <div className="space-y-4">
+      <PaymentElement options={{ layout: "tabs" }} />
+      <p className="text-xs text-neutral-500">
+        You will be charged <span className="font-semibold text-neutral-700">{amountLabel}</span> to boost your vin point.
+      </p>
+      {isConfirming && (
+        <p className="text-xs text-indigo-600">Confirming payment, please wait…</p>
+      )}
+    </div>
+  );
+};
 
 interface ProfileClientProps {
   currentUser: SafeUser;
@@ -80,6 +152,14 @@ interface PartnershipCommisionProps {
   maxCommission?: number;
   onCommissionChange?: (commission: number) => Promise<void> | void;
   loading?: boolean;
+  currentUserEmail?: string;
+
+  // parent controls VinVin modal
+  onOpenVinvinModal?: (payload: {
+    effectivePunti: number;
+    maxPointValue: number;
+    puntiShare: number;
+  }) => void;
 }
 
 const DEFAULT_HOST_ANALYTICS: HostAnalytics = {
@@ -99,6 +179,11 @@ const getRandomColor = () => {
     'bg-[#08e2ff]'
   ];
   return colors[Math.floor(Math.random() * colors.length)];
+};
+
+const formatPuntiPercentage = (share: number | null | undefined) => {
+  const safe = Math.max(0, Math.min(1, share ?? 0));
+  return `${Math.round(safe * 100)}%`;
 };
 
 const ProfileClient: React.FC<ProfileClientProps> = ({
@@ -157,6 +242,498 @@ const [uploadingCover,  setUploadingCover]  = useState(false);
 const [hasMounted, setHasMounted] = useState(false);
 
 const busy = uploadingAvatar || uploadingCover;
+
+ 
+const [hostAnalytics, setHostAnalytics] = useState<HostAnalytics | null>(null);
+const effectiveHostAnalytics = hostAnalytics ?? DEFAULT_HOST_ANALYTICS;
+
+// Who is paying
+  const currentUserEmail = currentUser?.email ?? undefined;
+
+  // VinVin modal state: where the numbers come from
+  const [isVinvinModalOpen, setIsVinvinModalOpen] = useState(false);
+  const [vinvinContext, setVinvinContext] = useState<{
+    effectivePunti: number;
+    maxPointValue: number;
+    puntiShare: number;
+  } | null>(null);
+
+  // Derived values used everywhere in the VinVin flow
+  const effectivePunti =
+    vinvinContext?.effectivePunti ?? effectiveHostAnalytics.punti ?? 0;
+
+  const maxPointValue =
+    vinvinContext?.maxPointValue ?? MAX_PARTNER_POINT_VALUE;
+
+  const effectiveShare =
+    vinvinContext?.puntiShare ?? effectiveHostAnalytics.puntiShare ?? 0;
+
+const [vinvinStep, setVinvinStep] = useState<"info" | "amount" | "payment">("info");
+const [vinvinScoreTarget, setVinvinScoreTarget] = useState(() =>
+  Math.max(1, Math.round(effectivePunti || 1))
+);
+const [clientSecret, setClientSecret] = useState<string | null>(null);
+const [vinvinError, setVinvinError] = useState<string | null>(null);
+const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+const paymentSubmitRef = useRef<(() => Promise<void>) | null>(null);
+
+const [vinvinSuccess, setVinvinSuccess] = useState(false);
+const [vinvinCountdown, setVinvinCountdown] = useState(20);
+
+// keep score target aligned when base effective punti changes
+useEffect(() => {
+  setVinvinScoreTarget((prev) => {
+    const min = Math.max(1, Math.round(effectivePunti || 1));
+    return prev < min ? min : prev;
+  });
+}, [effectivePunti]);
+
+  const resetVinvinFlow = useCallback(() => {
+  setVinvinStep("info");
+  setVinvinError(null);
+  setClientSecret(null);
+  setIsProcessingPayment(false);
+  setVinvinSuccess(false);
+  setVinvinCountdown(20);
+}, []);
+
+const openVinvinModal = useCallback(
+  (payload?: { effectivePunti: number; maxPointValue: number; puntiShare: number }) => {
+    const basePayload = {
+      effectivePunti: effectiveHostAnalytics.punti ?? 0,
+      maxPointValue: MAX_PARTNER_POINT_VALUE,
+      puntiShare: effectiveHostAnalytics.puntiShare ?? 0,
+    };
+
+    const finalPayload = payload ?? basePayload;
+
+    setVinvinContext(finalPayload);
+    resetVinvinFlow();
+    setVinvinScoreTarget(Math.max(1, Math.round(finalPayload.effectivePunti || 1)));
+    setIsVinvinModalOpen(true);
+  },
+  [effectiveHostAnalytics.punti, effectiveHostAnalytics.puntiShare, resetVinvinFlow],
+);
+
+const handleVinvinClose = useCallback(() => {
+  resetVinvinFlow();
+  setIsVinvinModalOpen(false);
+}, [resetVinvinFlow]);
+
+  const registerPaymentSubmit = useCallback((handler: () => Promise<void>) => {
+    paymentSubmitRef.current = handler;
+  }, []);
+
+  const handlePaymentSuccess = useCallback(async () => {
+  try {
+    await axios.post("/api/analytics/host/vinvin-score", { vinvinScore: vinvinScoreTarget });
+    setVinvinError(null);
+    setVinvinSuccess(true);
+    setVinvinCountdown(20); // reset countdown
+  } catch (error) {
+    console.error("Failed to persist vin point", error);
+    setVinvinError(
+      "Payment succeeded but updating your vin point failed. Please refresh your profile."
+    );
+  } finally {
+    setIsProcessingPayment(false);
+  }
+}, [vinvinScoreTarget]);
+
+const handleBackToVinvinAmount = useCallback(() => {
+  // Don’t allow going back while payment is processing or after success
+  if (isProcessingPayment || vinvinSuccess) return;
+
+  setVinvinStep("amount");
+  setVinvinError(null);
+  // you can keep vinvinScoreTarget as-is so user doesn’t lose their chosen value
+}, [isProcessingPayment, vinvinSuccess]);
+
+const handleBackToVinvinInfo = useCallback(() => {
+  if (isProcessingPayment || vinvinSuccess) return;
+  setVinvinStep("info");
+  setVinvinError(null);
+}, [isProcessingPayment, vinvinSuccess]);
+
+useEffect(() => {
+  if (!vinvinSuccess) return;
+
+  if (vinvinCountdown <= 0) {
+    window.location.href = "/profile";
+    return;
+  }
+
+  const timer = setTimeout(() => {
+    setVinvinCountdown((prev) => prev - 1);
+  }, 1000);
+
+  return () => clearTimeout(timer);
+}, [vinvinSuccess, vinvinCountdown]);
+
+  const vinvinPurchaseAmount = Math.max(0, vinvinScoreTarget - effectivePunti);
+
+  const formattedVinvinAmount = useMemo(
+    () =>
+      new Intl.NumberFormat("en", {
+        style: "currency",
+        currency: "EUR",
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(vinvinPurchaseAmount),
+    [vinvinPurchaseAmount],
+  );
+
+  const handlePaymentError = useCallback((message: string) => {
+    setVinvinError(message);
+    setIsProcessingPayment(false);
+  }, []);
+
+  const handleVinvinAction = useCallback(async () => {
+    // STEP 1 → STEP 2 (info → amount)
+    if (vinvinStep === "info") {
+      setVinvinError(null);
+      setVinvinStep("amount");
+      return;
+    }
+
+    // STEP 2 → STEP 3 (amount → payment intent)
+    if (vinvinStep === "amount") {
+      if (vinvinPurchaseAmount <= 0) {
+        setVinvinError("Increase your vin point to proceed with payment.");
+        return;
+      }
+
+      try {
+        setIsProcessingPayment(true);
+        const response = await axios.post("/api/create-payment-intent", {
+          amount: vinvinPurchaseAmount * 100, // cents
+          email: currentUserEmail,
+        });
+
+        setClientSecret(response.data.clientSecret);
+        setVinvinStep("payment");
+        setVinvinError(null);
+        setIsProcessingPayment(false);
+      } catch (error) {
+        console.error("Failed to start VinVin payment", error);
+        setVinvinError("Unable to start payment. Please check your connection and try again.");
+        setIsProcessingPayment(false);
+      }
+      return;
+    }
+
+    // STEP 3: trigger Stripe confirm
+    if (vinvinStep === "payment") {
+      if (paymentSubmitRef.current) {
+        setVinvinError(null);
+        setIsProcessingPayment(true);
+        await paymentSubmitRef.current();
+      } else {
+        setVinvinError("Payment form is not ready yet. Please wait a moment.");
+      }
+    }
+  }, [vinvinStep, vinvinPurchaseAmount, currentUserEmail, paymentSubmitRef, axios]);
+
+    const vinvinRelevance = Math.min(
+    100,
+    Math.round((vinvinScoreTarget / maxPointValue) * 100),
+  );
+
+  const vinvinModalBody = (
+    <AnimatePresence mode="wait" initial={false}>
+      {vinvinStep === "info" && (
+        <motion.div
+          key="vinvin-info"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.2 }}
+          className="space-y-6"
+        >
+         {/* STEP BADGE ROW */}
+          <div className="flex flex-wrap items-center gap-2 text-[11px] font-medium uppercase tracking-[0.18em] text-neutral-500">
+            <button
+              type="button"
+              onClick={() => setVinvinStep("info")}
+              className="rounded-full bg-neutral-900 px-3 py-1 text-[10px] font-semibold text-white"
+            >
+              1 · OVERVIEW
+            </button>
+            <button
+              type="button"
+              onClick={() => setVinvinStep("amount")}
+              className="rounded-full bg-neutral-100 px-3 py-1 text-[10px] font-semibold text-neutral-600 hover:bg-neutral-200 transition"
+            >
+              2 · CHOOSE AMOUNT
+            </button>
+            <button
+              type="button"
+              onClick={() => clientSecret && setVinvinStep("payment")}
+              className="rounded-full bg-neutral-100 px-3 py-1 text-[10px] font-semibold text-neutral-400 hover:bg-neutral-200 transition disabled:opacity-50"
+              disabled={!clientSecret}
+            >
+              3 · CHECKOUT
+            </button>
+          </div>
+
+          {/* STEP 1 · INFO ABOUT VINVIN */}
+          <div className="rounded-3xl bg-transparent p-6 shadow-lg">
+            <div className="flex flex-col items-center text-center gap-4">
+
+              {/* Icon */}
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-600 shadow-md">
+                <SiJsonwebtokens size={30} />
+              </div>
+
+              {/* Title */}
+              <h3 className="text-base font-semibold tracking-tight text-neutral-900">
+                What is the vin point?
+              </h3>
+
+              {/* Description */}
+              <p className="text-start text-[13px] leading-relaxed text-neutral-600 max-w-sm">
+                VinVin is your listing&apos;s relevance score powered by our AI ranking model.
+                It’s independent from whether you use a partnership commission or a subscription,
+                and reflects{" "}
+                <span className="font-semibold text-neutral-900">
+                  how useful and attractive your experience is for travellers.
+                </span>
+              </p>
+
+              <p className="text-start text-[13px] leading-relaxed text-neutral-600 max-w-sm">
+                Higher vin points help your listings appear{" "}
+                <span className="font-semibold text-neutral-900">
+                  ahead of similar-rated experiences
+                </span>{" "}
+                and unlock access to the{" "}
+                <span className="font-semibold text-indigo-600">VinVin AI Whitelist</span>,
+                which boosts your relevance across the entire platform.
+              </p>
+            </div>
+          </div>
+
+        </motion.div>
+      )}
+
+      {vinvinStep === "amount" && (
+        <motion.div
+          key="vinvin-amount"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.2 }}
+          className="space-y-6"
+        >
+          {/* STEP BADGE ROW */}
+          <div className="flex flex-wrap items-center gap-2 text-[11px] font-medium uppercase tracking-[0.18em] text-neutral-500">
+            <button
+              type="button"
+              onClick={() => setVinvinStep("info")}
+              className="rounded-full bg-neutral-100 px-3 py-1 text-[10px] font-semibold text-neutral-600 hover:bg-neutral-200 transition"
+            >
+              1 · OVERVIEW
+            </button>
+            <button
+              type="button"
+              onClick={() => setVinvinStep("amount")}
+              className="rounded-full bg-neutral-900 px-3 py-1 text-[10px] font-semibold text-white"
+            >
+              2 · CHOOSE AMOUNT
+            </button>
+            <button
+              type="button"
+              onClick={() => clientSecret && setVinvinStep("payment")}
+              className="rounded-full bg-neutral-100 px-3 py-1 text-[10px] font-semibold text-neutral-400 hover:bg-neutral-200 transition disabled:opacity-50"
+              disabled={!clientSecret}
+            >
+              3 · CHECKOUT
+            </button>
+          </div>
+
+          {/* STEP 2 · VINVIN SCORE SELECTION */}
+          <div className="space-y-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-neutral-200/80">
+            <div className="space-y-1">
+              <h3 className="text-lg font-semibold text-neutral-900">
+                Choose how much to boost your vin point
+              </h3>
+              <p className="text-xs text-neutral-600">
+                Each vin point point costs 1€ and increases the visibility of your listings in
+                their category and rating group.
+              </p>
+            </div>
+
+            <Counter
+              title="Vin point boost"
+              subtitle="Increase your visibility — max 111 points"
+              value={vinvinScoreTarget}
+              onChange={(value) =>
+                setVinvinScoreTarget(
+                  Math.max(
+                    Math.round(effectivePunti || 1),
+                    Math.min(maxPointValue, Math.max(1, value)),
+                  ),
+                )
+              }
+            />
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-2xl bg-neutral-50 p-4 space-y-2">
+                <div className="flex items-center justify-between text-sm font-medium text-neutral-800">
+                  <span>VinVin score after purchase</span>
+                  <span>
+                    {vinvinScoreTarget} / {maxPointValue}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-sm text-neutral-700">
+                  <span>Estimated platform relevance</span>
+                  <span>{vinvinRelevance}%</span>
+                </div>
+                <p className="text-[11px] text-neutral-500">
+                  Closer to <span className="font-semibold">100%</span> means your listing will sit
+                  among the most relevant experiences in its segment.
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-neutral-50 p-4 space-y-2">
+                <div className="flex items-center justify-between text-sm text-neutral-700">
+                  <span>Current VinVin score</span>
+                  <span className="font-semibold text-neutral-900">
+                    {effectivePunti} / {maxPointValue}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-sm text-neutral-700">
+                  <span>Current platform relevance</span>
+                  <span className="font-semibold text-neutral-900">
+                    {formatPuntiPercentage(effectiveShare)}
+                  </span>
+                </div>
+                <p className="text-[11px] text-neutral-500">
+                  Your VinVin score interacts with our recommendation algorithm to position you
+                  among experiences with similar ratings but higher relevance.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between rounded-2xl bg-neutral-900 p-4 text-white shadow-sm">
+              <div>
+                <p className="text-sm font-semibold">Total to pay</p>
+                <p className="text-[11px] text-neutral-200">1 VinVin score = 1€</p>
+              </div>
+              <p className="text-lg font-semibold">{formattedVinvinAmount}</p>
+            </div>
+
+            {vinvinError && <p className="text-sm text-red-600">{vinvinError}</p>}
+          </div>
+        </motion.div>
+      )}
+
+      {vinvinStep === "payment" && (
+        <motion.div
+          key="vinvin-payment"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.2 }}
+          className="space-y-6"
+        >
+          {/* STEP BADGE ROW */}
+          <div className="flex flex-wrap items-center gap-2 text-[11px] font-medium uppercase tracking-[0.18em] text-neutral-500">
+            <button
+              type="button"
+              onClick={() => setVinvinStep("info")}
+              className="rounded-full bg-neutral-100 px-3 py-1 text-[10px] font-semibold text-neutral-600 hover:bg-neutral-200 transition"
+            >
+              1 · OVERVIEW
+            </button>
+            <button
+              type="button"
+              onClick={() => setVinvinStep("amount")}
+              className="rounded-full bg-neutral-100 px-3 py-1 text-[10px] font-semibold text-neutral-600 hover:bg-neutral-200 transition"
+            >
+              2 · CHOOSE AMOUNT
+            </button>
+            <button
+              type="button"
+              onClick={() => setVinvinStep("payment")}
+              className="rounded-full bg-neutral-900 px-3 py-1 text-[10px] font-semibold text-white"
+            >
+              3 · CHECKOUT
+            </button>
+          </div>
+
+          <div className="space-y-1">
+            <h3 className="text-xl font-semibold text-neutral-900">
+              {vinvinSuccess ? "" : "Confirm & Pay"}
+            </h3>
+            <p className="text-sm text-neutral-600">
+              {vinvinSuccess
+                ? ""
+                : "Secure your preferred payment method to enhance your platform relevance."}
+            </p>
+          </div>
+
+          {vinvinSuccess ? (
+            <>
+              <PaymentConfetti />
+
+              <motion.div
+                className="space-y-3 rounded-2xl p-4 flex flex-col items-center justify-center"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <motion.div
+                  initial={{ scale: 0, rotate: -45, opacity: 0 }}
+                  animate={{
+                    scale: [0, 1.2, 1],
+                    rotate: [-45, 0, 0],
+                    opacity: [0, 1, 1],
+                  }}
+                  transition={{
+                    duration: 3,
+                    ease: "easeOut",
+                  }}
+                  className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500 shadow-lg"
+                >
+                  <HiCheckCircle className="h-8 w-8 text-white" />
+                </motion.div>
+                <p className="mt-2 text-center text-lg font-semibold tracking-wide text-emerald-900">
+                  PAYMENT CONFIRMED!
+                </p>
+              </motion.div>
+            </>
+          ) : clientSecret && stripePromise ? (
+            <Elements stripe={stripePromise} options={{ clientSecret }}>
+              <VinvinPaymentForm
+                clientSecret={clientSecret}
+                amountLabel={formattedVinvinAmount}
+                onSuccess={handlePaymentSuccess}
+                onError={handlePaymentError}
+                registerSubmit={registerPaymentSubmit}
+              />
+            </Elements>
+          ) : (
+            <p className="text-sm text-neutral-600">Preparing payment details…</p>
+          )}
+
+          {vinvinError && (
+            <p className="text-sm text-red-600">{vinvinError}</p>
+          )}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+ const vinvinActionLabel =
+  vinvinSuccess
+    ? `Redirecting in ${vinvinCountdown}s`
+    : vinvinStep === "info"
+      ? "Next"
+      : vinvinStep === "amount"
+        ? "Proceed to payment"
+        : isProcessingPayment
+          ? "Processing…"
+          : `Pay ${formattedVinvinAmount}`;
 
 useEffect(() => {
   setHasMounted(true);
@@ -540,9 +1117,6 @@ const coverImage = useMemo(() => {
   //   totalBooks: 0,
   //   totalRevenue: 0,
   // }); 
-  
-  const [hostAnalytics, setHostAnalytics] = useState<HostAnalytics | null>(null);
-  const effectiveHostAnalytics = hostAnalytics ?? DEFAULT_HOST_ANALYTICS;
 
   useEffect(() => {
     if (initialSectionApplied) {
@@ -1238,7 +1812,7 @@ const coverImage = useMemo(() => {
                 className={twMerge(
                   'relative inline-flex h-12 w-[230px] items-center rounded-full px-1',
                   'transition-all duration-500 focus:outline-none overflow-visible',
-                  'bg-gradient-to-b from-[#f5f5f7] via-[#eceef3] to-[#e3e6ed]',
+                  'bg-white',
                   'focus-visible:ring-4 focus-visible:ring-black/10 focus-visible:ring-offset-2 focus-visible:ring-offset-white',
                   (!canToggleRole || roleUpdating) && 'cursor-not-allowed opacity-60'
                 )}
@@ -1256,11 +1830,11 @@ const coverImage = useMemo(() => {
                 /> */}
                 <span
                   aria-hidden
-                  className="pointer-events-none absolute inset-1 rounded-full bg-gradient-to-b from-white/90 to-[#e8ebf1] shadow-[inset_6px_6px_16px_rgba(0,0,0,0.08),inset_-6px_-6px_16px_rgba(255,255,255,0.92)]"
+                  className="pointer-events-none absolute inset-1 rounded-full bg-white"
                 />
 
                 {/* SLIDING PILL */}
-                <div className="relative z-10 grid w-full grid-cols-2 px-4 text-[11px] font-semibold uppercase tracking-[0.18em]">
+                <div className="relative z-10 grid w-full grid-cols-2 px-4 text-[8px] font-semibold uppercase tracking-[0.18em]">
                   <span
                     className={twMerge(
                       'text-center transition-colors duration-300',
@@ -2853,6 +3427,23 @@ const coverImage = useMemo(() => {
               </motion.div>
             )}
 
+           <div className="flex flex-col items-center justify-center gap-1">
+            <span className="text-[10px] font-semibold tracking-[0.28em] text-neutral-500">
+              VIN POINT
+            </span>
+
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                openVinvinModal(); // uses host analytics as default source
+              }}
+              className="rounded-full bg-gradient-to-r from-blue-200 to-cyan-200 px-4 py-1 text-xs font-semibold text-white shadow-md transition hover:bg-black"
+            >
+              BOOST RELEVANCE
+            </button>
+          </div>
+
             {viewRole === 'host' && hostAnalytics && (
               <motion.div variants={cardVariants} className="mt-6">
                 <PartnershipCommision
@@ -2865,9 +3456,30 @@ const coverImage = useMemo(() => {
                   maxCommission={MAX_PARTNER_COMMISSION}
                   onCommissionChange={handleCommissionUpdate}
                   loading={updatingCommission}
+                  currentUserEmail={currentUserEmail}
+                  onOpenVinvinModal={openVinvinModal}
                 />
               </motion.div>
             )}
+
+            <div className="w-full h-full">
+              <Modal
+                isOpen={isVinvinModalOpen}
+                onClose={handleVinvinClose}
+                onSubmit={handleVinvinAction}
+                closeOnSubmit={false}
+                actionLoading={isProcessingPayment}
+                title={vinvinStep === "amount" ? "Boost your vin point" : "Vin Point Manager "}
+                actionLabel={vinvinActionLabel}
+                body={vinvinModalBody}
+                footer={undefined}
+                disabled={isProcessingPayment || vinvinSuccess}
+                className=""
+                submitOnEnter={false}
+                // optional: keep modal from being closed mid-payment
+                // preventOutsideClose={isProcessingPayment}
+              />
+            </div>
 
             {viewRole === 'host' && (
               <motion.div

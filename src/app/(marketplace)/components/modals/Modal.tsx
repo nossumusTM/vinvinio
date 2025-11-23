@@ -77,7 +77,7 @@ const Modal: React.FC<ModalProps> = ({
   }, [isOpen, preventOutsideClose, handleClose]);
 
    const handleSubmit = useCallback(() => {
-    if (disabled) return;
+    if (disabled || actionLoading) return;
     if (!closeOnSubmit) {
       // intermediate step: DON'T close, just run submit
       onSubmit();
@@ -86,7 +86,8 @@ const Modal: React.FC<ModalProps> = ({
     // final step: animate out, then submit
     setExitIntent('submit');
     setShowModal(false);
-  }, [disabled, closeOnSubmit, onSubmit]);
+  }, [disabled, actionLoading, closeOnSubmit, onSubmit]);
+
 
   const handleSecondaryAction = useCallback(() => {
     if (disabled || !secondaryAction) return;
@@ -274,10 +275,10 @@ const Modal: React.FC<ModalProps> = ({
                       )}
                       {actionLabel.trim() !== '' && (
                         <Button
-                          disabled={disabled}
+                          disabled={disabled || actionLoading}
                           label={actionLabel}
-                          loading={actionLoading}
-                          onClick={onSubmit}
+                          loading={disabled || actionLoading}
+                          onClick={handleSubmit}
                         />
                       )}
                     </div>
