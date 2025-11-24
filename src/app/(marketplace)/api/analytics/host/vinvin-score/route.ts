@@ -7,6 +7,7 @@ import {
   computePartnerCommission,
   computePuntiShare,
   getPuntiLabel,
+  sanitizePartnerCommission
 } from "@/app/(marketplace)/constants/partner";
 
 export async function POST(req: Request) {
@@ -25,7 +26,14 @@ export async function POST(req: Request) {
     }
 
     const vinvinScore = Math.max(0, Math.min(MAX_PARTNER_POINT_VALUE, Math.floor(rawVinvinScore)));
-    const partnerCommission = computePartnerCommission(vinvinScore);
+
+    const safePartnerCommissionInput =
+        typeof currentUser.partnerCommission === 'number'
+            ? currentUser.partnerCommission
+            : computePartnerCommission(vinvinScore);
+
+    const partnerCommission = sanitizePartnerCommission(safePartnerCommissionInput);
+
     const vinvinScoreShare = computePuntiShare(vinvinScore);
     const vinvinScoreLabel = getPuntiLabel(vinvinScore);
 
@@ -34,10 +42,10 @@ export async function POST(req: Request) {
         where: { userId: currentUser.id },
         data: { punti: vinvinScore },
       }),
-      prisma.user.update({
-        where: { id: currentUser.id },
-        data: { partnerCommission },
-      }),
+    //   prisma.user.update({
+    //     where: { id: currentUser.id },
+    //     data: { partnerCommission },
+    //   }),
     ]);
 
     return NextResponse.json({

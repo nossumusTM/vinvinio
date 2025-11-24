@@ -24,7 +24,7 @@ export const computePartnerCommission = (vinvinScore: number): number => {
 export const computePuntiFromCommission = (commission: number): number => {
   const sanitized = sanitizePartnerCommission(commission);
   // const puntiFromCommission = (sanitized - MIN_PARTNER_COMMISSION) * PUNTI_PER_COMMISSION_STEP;
-  const puntiFromCommission = Math.floor(
+  const puntiFromCommission = Math.round(
     (sanitized - MIN_PARTNER_COMMISSION) * PUNTI_PER_COMMISSION_STEP,
   );
 

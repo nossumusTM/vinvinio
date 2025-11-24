@@ -1200,17 +1200,46 @@ const coverImage = useMemo(() => {
 
   const parsePeriodToDate = useCallback(
     (period: string, filter: HostAnalyticsFilter) => {
+
+      const normalized = String(period ?? '').trim();
+
+      const dayMatch = normalized.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+      const monthMatch = normalized.match(/^(\d{4})[-/](\d{1,2})/);
+      const yearMatch = normalized.match(/^(\d{4})/);
+
       if (filter === 'day') {
-        const iso = period.includes('T') ? period : `${period}T00:00:00Z`;
+        if (dayMatch) {
+          const [, y, m, d] = dayMatch;
+          return new Date(`${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}T00:00:00Z`);
+        }
+        const iso = normalized.includes('T') ? normalized : `${normalized}T00:00:00Z`;
         return new Date(iso);
       }
 
       if (filter === 'month') {
-        return new Date(`${period}-01T00:00:00Z`);
+        if (dayMatch || monthMatch) {
+          const [, y, m] = (dayMatch ?? monthMatch)!;
+          return new Date(`${y}-${m.padStart(2, '0')}-01T00:00:00Z`);
+        }
+        return new Date(`${normalized}-01T00:00:00Z`);
       }
 
-      const normalizedYear = period.split('-')[0];
-      return new Date(`${normalizedYear}-01-01T00:00:00Z`);
+      if (yearMatch) {
+        const [, y] = yearMatch;
+        return new Date(`${y}-01-01T00:00:00Z`);
+      }
+
+      const fallback = new Date(normalized);
+      return Number.isNaN(fallback.getTime()) ? new Date() : fallback;
+    },
+    [],
+  );
+  
+  const matchesPeriod = useCallback(
+    (period: string, filter: HostAnalyticsFilter, key: string) => {
+      if (filter === 'day') return period === key;
+      const prefix = filter === 'month' ? `${key}-` : `${key}`;
+      return period === key || period.startsWith(prefix);
     },
     [],
   );
@@ -1227,22 +1256,57 @@ const coverImage = useMemo(() => {
   }, [hostActivityDate, hostActivityFilter]);
 
   const hostFilteredEntries = useMemo(() => {
-    const entries = resolveEntriesForFilter(hostBreakdown, hostActivityFilter);
-    return entries.filter((entry) => entry.period === hostPeriodKey);
-  }, [hostActivityFilter, hostBreakdown, hostPeriodKey, resolveEntriesForFilter]);
+    const primaryEntries = resolveEntriesForFilter(hostBreakdown, hostActivityFilter);
+
+    let candidates = primaryEntries;
+    if (!candidates.length) {
+      if (hostActivityFilter === 'month') {
+        candidates = hostBreakdown.monthly.length ? hostBreakdown.monthly : hostBreakdown.daily;
+      } else if (hostActivityFilter === 'year') {
+        candidates =
+          hostBreakdown.yearly.length
+            ? hostBreakdown.yearly
+            : hostBreakdown.monthly.length
+            ? hostBreakdown.monthly
+            : hostBreakdown.daily;
+      }
+    }
+
+    return candidates.filter((entry) => matchesPeriod(entry.period, hostActivityFilter, hostPeriodKey));
+  }, [hostActivityDate, hostActivityFilter, hostBreakdown, hostPeriodKey, matchesPeriod, resolveEntriesForFilter]);
 
   useEffect(() => {
     const entries = resolveEntriesForFilter(hostBreakdown, hostActivityFilter);
-    if (!entries.length) return;
+    
+    // if (!entries.length) return;
 
-    const hasMatch = entries.some((entry) => entry.period === hostPeriodKey);
+    // const hasMatch = entries.some((entry) => entry.period === hostPeriodKey);
+    const candidateEntries =
+      entries.length || hostActivityFilter === 'day'
+        ? entries
+        : hostActivityFilter === 'month'
+        ? hostBreakdown.monthly.length
+          ? hostBreakdown.monthly
+          : hostBreakdown.daily
+        : hostBreakdown.yearly.length
+        ? hostBreakdown.yearly
+        : hostBreakdown.monthly.length
+        ? hostBreakdown.monthly
+        : hostBreakdown.daily;
+
+    if (!candidateEntries.length) return;
+
+    const hasMatch = candidateEntries.some((entry) =>
+      matchesPeriod(entry.period, hostActivityFilter, hostPeriodKey),
+    );
+
     if (hasMatch) return;
 
-    const nextDate = parsePeriodToDate(entries[0]?.period ?? '', hostActivityFilter);
+    const nextDate = parsePeriodToDate(candidateEntries[0]?.period ?? '', hostActivityFilter);
     if (!Number.isNaN(nextDate.getTime())) {
       setHostActivityDate(nextDate);
     }
-  }, [hostActivityDate, hostActivityFilter, hostBreakdown, hostPeriodKey, parsePeriodToDate, resolveEntriesForFilter]);
+  }, [hostActivityDate, hostActivityFilter, hostBreakdown, hostPeriodKey, matchesPeriod, parsePeriodToDate, resolveEntriesForFilter]);
 
   const hostActivityTotals = useMemo(
     () => summarizeEntries(hostFilteredEntries),
@@ -1307,95 +1371,118 @@ const coverImage = useMemo(() => {
     };
   }, []);
 
-  const normalizeEntries = (entries: any, mode: 'daily' | 'monthly' | 'yearly'): AggregateEntry[] => {
-  // Allow array, single object, or nothing
-  const list = Array.isArray(entries) ? entries : entries ? [entries] : [];
+  const normalizeEntries = (
+    entries: any,
+    mode: 'daily' | 'monthly' | 'yearly'
+  ): AggregateEntry[] => {
+    // --- FIXED: normalizePeriod now has proper access to `mode` ---
+    const normalizePeriod = (raw: unknown): string => {
+      const trimmed = String(raw ?? '').trim();
+      if (!trimmed) return '';
 
-  return list.map((entry) => {
-    // ---- 1) Try to build period from structured fields (Mongo-style _id) ----
-    const id = entry?._id ?? {};
-    const src = typeof id === 'object' && id !== null ? id : entry;
-
-    const yVal = src.year ?? src.y ?? src._year;
-    const mVal = src.month ?? src.m ?? src._month;
-    const dVal = src.day ?? src.d ?? src._day;
-
-    let year: string | null = yVal != null ? String(yVal) : null;
-    let month: string | null = mVal != null ? String(mVal).padStart(2, '0') : null;
-    let day: string | null = dVal != null ? String(dVal).padStart(2, '0') : null;
-
-    let period: string;
-
-    if (mode === 'daily' && year && month && day) {
-      period = `${year}-${month}-${day}`;
-    } else if (mode === 'monthly' && year && month) {
-      period = `${year}-${month}`;
-    } else if (mode === 'yearly' && year) {
-      period = year;
-    } else {
-      // ---- 2) Fallback: parse from string fields like before ----
-      const raw =
-        entry?.period ??
-        entry?.date ??
-        entry?.day ??
-        entry?.label ??
-        id?.period ??
-        id?.date ??
-        id?.day ??
-        '';
-
-      let p = String(raw);
+      const dayMatch = trimmed.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+      const monthMatch = trimmed.match(/^(\d{4})[-/](\d{1,2})/);
+      const yearMatch = trimmed.match(/^(\d{4})/);
 
       if (mode === 'daily') {
-        const match = p.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
-        if (match) {
-          const y = match[1];
-          const m = match[2].padStart(2, '0');
-          const d = match[3].padStart(2, '0');
-          p = `${y}-${m}-${d}`;
+        if (dayMatch) {
+          const [, y, m, d] = dayMatch;
+          return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
         }
-      } else if (mode === 'monthly') {
-        const match = p.match(/^(\d{4})-(\d{1,2})/);
-        if (match) {
-          const y = match[1];
-          const m = match[2].padStart(2, '0');
-          p = `${y}-${m}`;
-        }
-      } else if (mode === 'yearly') {
-        const match = p.match(/^(\d{4})/);
-        if (match) {
-          p = match[1];
-        }
+        const parsed = new Date(trimmed);
+        if (!Number.isNaN(parsed.getTime())) return parsed.toISOString().slice(0, 10);
+        return trimmed;
       }
 
-      period = p;
-    }
+      if (mode === 'monthly') {
+        if (dayMatch || monthMatch) {
+          const [, y, m] = (dayMatch ?? monthMatch)!;
+          return `${y}-${m.padStart(2, '0')}`;
+        }
+        const parsed = new Date(trimmed);
+        if (!Number.isNaN(parsed.getTime())) {
+          const y = parsed.getUTCFullYear();
+          const m = String(parsed.getUTCMonth() + 1).padStart(2, '0');
+          return `${y}-${m}`;
+        }
+        return trimmed;
+      }
 
-    // ---- 3) Be flexible about numeric fields ----
-    const bookingsRaw =
-      entry?.bookings ??
-      entry?.totalBooks ??
-      entry?.books ??
-      entry?.count ??
-      entry?.totalCount;
+      if (yearMatch) return yearMatch[1];
 
-    const revenueRaw =
-      entry?.revenue ??
-      entry?.totalRevenue ??
-      entry?.amount ??
-      entry?.totalAmount ??
-      entry?.grossRevenue;
+      const parsed = new Date(trimmed);
+      if (!Number.isNaN(parsed.getTime())) return String(parsed.getUTCFullYear());
 
-    const bookingsNum = Number(bookingsRaw);
-    const revenueNum = Number(revenueRaw);
-
-    return {
-      period,
-      bookings: Number.isFinite(bookingsNum) ? bookingsNum : 0,
-      revenue: Number.isFinite(revenueNum) ? revenueNum : 0,
+      return trimmed;
     };
-  });
-};
+
+    // --- FIXED: proper entry list creation ---
+    const list = Array.isArray(entries)
+      ? entries
+      : entries && typeof entries === 'object'
+      ? Object.entries(entries).map(([period, value]) => ({
+          period,
+          ...(value as Record<string, unknown>),
+        }))
+      : entries
+      ? [entries]
+      : [];
+
+    return list.map((entry: any) => {
+      const id = entry?._id ?? {};
+      const src = typeof id === 'object' && id !== null ? id : entry;
+
+      const yVal = src.year ?? src.y ?? src._year;
+      const mVal = src.month ?? src.m ?? src._month;
+      const dVal = src.day ?? src.d ?? src._day;
+
+      const year = yVal != null ? String(yVal) : null;
+      const month = mVal != null ? String(mVal).padStart(2, '0') : null;
+      const day = dVal != null ? String(dVal).padStart(2, '0') : null;
+
+      let period: string;
+
+      if (mode === 'daily' && year && month && day) {
+        period = `${year}-${month}-${day}`;
+      } else if (mode === 'monthly' && year && month) {
+        period = `${year}-${month}`;
+      } else if (mode === 'yearly' && year) {
+        period = year;
+      } else {
+        const raw =
+          entry?.period ??
+          entry?.date ??
+          entry?.day ??
+          entry?.label ??
+          id?.period ??
+          id?.date ??
+          id?.day ??
+          '';
+        period = normalizePeriod(raw);
+      }
+
+      const bookingsNum = Number(
+        entry?.bookings ??
+          entry?.totalBooks ??
+          entry?.books ??
+          entry?.count ??
+          entry?.totalCount
+      );
+      const revenueNum = Number(
+        entry?.revenue ??
+          entry?.totalRevenue ??
+          entry?.amount ??
+          entry?.totalAmount ??
+          entry?.grossRevenue
+      );
+
+      return {
+        period,
+        bookings: Number.isFinite(bookingsNum) ? bookingsNum : 0,
+        revenue: Number.isFinite(revenueNum) ? revenueNum : 0,
+      };
+    });
+  };
 
   const personalInfoFAQ = [
     {

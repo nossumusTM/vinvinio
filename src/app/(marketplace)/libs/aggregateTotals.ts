@@ -8,6 +8,46 @@ type AggregateMap = Record<string, { bookings?: number; revenue?: number }>;
 
 const clampNonNegative = (value: number) => (Number.isFinite(value) && value > 0 ? value : 0);
 
+const normalizePeriodKey = (key: string) => {
+  const trimmed = String(key ?? '').trim();
+
+  const dashDayMatch = trimmed.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (dashDayMatch) {
+    const [, y, m, d] = dashDayMatch;
+    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+  }
+
+  const slashDayMatch = trimmed.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})/);
+  if (slashDayMatch) {
+    const [, y, m, d] = slashDayMatch;
+    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+  }
+
+  const dashMonthMatch = trimmed.match(/^(\d{4})-(\d{1,2})/);
+  if (dashMonthMatch) {
+    const [, y, m] = dashMonthMatch;
+    return `${y}-${m.padStart(2, '0')}`;
+  }
+
+  const slashMonthMatch = trimmed.match(/^(\d{4})\/(\d{1,2})/);
+  if (slashMonthMatch) {
+    const [, y, m] = slashMonthMatch;
+    return `${y}-${m.padStart(2, '0')}`;
+  }
+
+  const yearMatch = trimmed.match(/^(\d{4})/);
+  if (yearMatch) {
+    return yearMatch[1];
+  }
+
+  const parsed = new Date(trimmed);
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed.toISOString().slice(0, 10);
+  }
+
+  return trimmed;
+};
+
 const sanitizeMap = (raw: unknown): AggregateMap => {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
     return {};
@@ -16,9 +56,10 @@ const sanitizeMap = (raw: unknown): AggregateMap => {
   const map: AggregateMap = {};
   for (const [key, value] of Object.entries(raw)) {
     if (!value || typeof value !== 'object' || Array.isArray(value)) continue;
+    const periodKey = normalizePeriodKey(key);
     const bookings = clampNonNegative(Number((value as any).bookings));
     const revenue = clampNonNegative(Number((value as any).revenue));
-    map[key] = { bookings, revenue };
+    map[periodKey] = { bookings, revenue };
   }
   return map;
 };
