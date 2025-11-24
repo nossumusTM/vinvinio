@@ -64,6 +64,62 @@ const sanitizeMap = (raw: unknown): AggregateMap => {
   return map;
 };
 
+const normalizeArrayEntries = (raw: unknown[]): AggregateEntry[] => {
+  return raw
+    .map((entry) => {
+      const id = (entry as any)?._id ?? {};
+      const src = typeof id === 'object' && id !== null ? id : (entry as any);
+
+      const y = src.year ?? src.y ?? src._year;
+      const m = src.month ?? src.m ?? src._month;
+      const d = src.day ?? src.d ?? src._day;
+
+      let period: string | undefined;
+
+      if (y != null && m != null && d != null) {
+        period = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      } else if (y != null && m != null) {
+        period = `${y}-${String(m).padStart(2, '0')}`;
+      } else if (y != null) {
+        period = String(y);
+      } else {
+        const rawPeriod =
+          (entry as any)?.period ||
+          (entry as any)?.date ||
+          (entry as any)?.label ||
+          (entry as any)?.day ||
+          (id as any)?.period ||
+          (id as any)?.date ||
+          (id as any)?.label ||
+          '';
+        period = normalizePeriodKey(String(rawPeriod));
+      }
+
+      const bookingsNum = Number(
+        (entry as any)?.bookings ??
+          (entry as any)?.totalBooks ??
+          (entry as any)?.books ??
+          (entry as any)?.count ??
+          (entry as any)?.totalCount,
+      );
+
+      const revenueNum = Number(
+        (entry as any)?.revenue ??
+          (entry as any)?.totalRevenue ??
+          (entry as any)?.amount ??
+          (entry as any)?.totalAmount ??
+          (entry as any)?.grossRevenue,
+      );
+
+      return {
+        period,
+        bookings: clampNonNegative(bookingsNum),
+        revenue: clampNonNegative(revenueNum),
+      } satisfies AggregateEntry;
+    })
+    .filter((entry) => Boolean(entry.period));
+};
+
 const buildKeys = (date: Date) => {
   const year = date.getUTCFullYear();
   const month = String(date.getUTCMonth() + 1).padStart(2, '0');
@@ -108,6 +164,11 @@ export const emptyAggregateMaps = () => ({
 });
 
 export const mapToEntries = (raw: unknown): AggregateEntry[] => {
+
+  if (Array.isArray(raw)) {
+    return normalizeArrayEntries(raw).sort((a, b) => (a.period < b.period ? 1 : -1));
+  }
+
   const map = sanitizeMap(raw);
   return Object.entries(map)
     .map(([period, value]) => ({

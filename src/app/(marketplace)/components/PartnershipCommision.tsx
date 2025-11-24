@@ -144,7 +144,7 @@ const PartnershipCommision: React.FC<PartnershipCommisionProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isEditing]);
 
-  const baseCommission = sanitizePartnerCommission(partnerCommission);
+    const baseCommission = sanitizePartnerCommission(partnerCommission);
   const basePunti = Number.isFinite(punti)
     ? Math.max(0, Math.round(punti))
     : 0;
@@ -160,11 +160,13 @@ const PartnershipCommision: React.FC<PartnershipCommisionProps> = ({
     ? Math.max(0, Math.round(basePunti + commissionDelta * 0.5))
     : basePunti;
 
+  // ✅ commission changes platform relevance (percentage) again
   const effectiveShare = isEditing
     ? computePuntiShare(effectivePunti)
     : baseShare;
 
   const effectiveLabel = isEditing ? getPuntiLabel(effectivePunti) : puntiLabel;
+
   const commissionSpread = Math.max(1, maxCommission - minCommission);
   const commissionShare = clamp((effectiveCommission - minCommission) / commissionSpread);
   const fillPercent = Math.round(commissionShare * 100);
@@ -278,13 +280,13 @@ const PartnershipCommision: React.FC<PartnershipCommisionProps> = ({
       </div>
 
       <p className="mt-4 text-sm leading-relaxed text-neutral-600">
-        Your listings {isEditing ? "will" : "currently"} earn a
+        Your listings {isEditing ? "will" : "currently"} receive a
         {" "}
-        <span className="font-semibold text-neutral-900">{Math.round(effectiveCommission)}%</span> share
+        <span className="font-semibold text-neutral-900">{Math.round(effectiveCommission)}%</span> share,
         {" "}
-        thanks to
+        driven by
         {" "}
-        <span className="font-semibold text-neutral-900">{effectivePunti}</span> points gathered across approved experiences.
+        <span className="font-semibold text-neutral-900">{formatPuntiPercentage(effectiveShare)}</span> the platform relevance accumulated from your approved services.
       </p>
 
       <div className="mt-6" onClick={(event) => event.stopPropagation()}>
@@ -306,17 +308,15 @@ const PartnershipCommision: React.FC<PartnershipCommisionProps> = ({
         />
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-4 text-sm text-neutral-600 sm:grid-cols-3" onClick={(event) => event.stopPropagation()}>
-        <div className="rounded-2xl bg-neutral-50 p-4">
-          <p className="text-xs uppercase tracking-wide text-neutral-500">VINVIN POINTS</p>
-          <p className="mt-2 text-lg font-semibold text-neutral-900">
-            {effectivePunti}
-            <span className="text-sm text-neutral-500"> / {maxPointValue}</span>
-          </p>
-        </div>
+            <div
+        className="mt-6 grid grid-cols-1 gap-4 text-sm text-neutral-600 sm:grid-cols-2"
+        onClick={(event) => event.stopPropagation()}
+      >
         <div className="rounded-2xl bg-neutral-50 p-4">
           <p className="text-xs uppercase tracking-wide text-neutral-500">Platform relevance</p>
-          <p className="mt-2 text-lg font-semibold text-neutral-900">{formatPuntiPercentage(effectiveShare)}</p>
+          <p className="mt-2 text-lg font-semibold text-neutral-900">
+            {formatPuntiPercentage(effectiveShare)}
+          </p>
         </div>
         <div className="rounded-2xl bg-neutral-50 p-4">
           <p className="text-xs uppercase tracking-wide text-neutral-500">Commission window</p>

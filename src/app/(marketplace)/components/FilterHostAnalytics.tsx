@@ -18,10 +18,7 @@ const toMonthValue = (date: Date) => {
   return `${year}-${month}`;
 };
 
-const toDateValue = (date: Date) => {
-  const year = date.getUTCFullYear();
-  return `${year}-01-01`;
-};
+const toDateValue = (date: Date) => date.toISOString().slice(0, 10);
 
 // ✅ NEW
 const toDayValue = (date: Date) => date.toISOString().slice(0, 10);
@@ -49,11 +46,8 @@ const FilterHostAnalytics: React.FC<FilterHostAnalyticsProps> = ({
 
     if (filter === 'month') {
         nextDate = new Date(`${value}-01T00:00:00Z`);
-    } else if (filter === 'year') {
-        const year = value.slice(0, 4);
-        nextDate = new Date(`${year}-01-01T00:00:00Z`);
     } else {
-        // day
+        // 'day' and 'year' – use the chosen full date
         nextDate = new Date(`${value}T00:00:00Z`);
     }
 
@@ -89,7 +83,13 @@ const FilterHostAnalytics: React.FC<FilterHostAnalyticsProps> = ({
 
 
       <label className="flex flex-col gap-1 text-xs font-semibold text-neutral-600">
-        <span>{filter === 'month' ? 'Select month' : 'Select year'}</span>
+        <span>
+          {filter === 'day'
+            ? 'Select day'
+            : filter === 'month'
+            ? 'Select month'
+            : 'Select year'}
+        </span>
         <input
           type={filter === 'month' ? 'month' : 'date'}
           value={inputValue}

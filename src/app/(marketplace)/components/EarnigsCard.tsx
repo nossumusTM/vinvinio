@@ -19,6 +19,7 @@ interface EarningsCardProps {
   yearlyData: EarningsEntry[];
   totalEarnings: number; // ✅ new field
   roleLabel: 'Host' | 'Promoter';
+  hostShare?: number;
 }
 
 const EarningsCard: React.FC<EarningsCardProps> = ({
@@ -27,7 +28,8 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
   monthlyData,
   yearlyData,
   roleLabel,
-  totalEarnings
+  totalEarnings,
+  hostShare = 1,
 }) => {
 
   const [view, setView] = useState<'daily' | 'monthly' | 'yearly' | 'all'>('daily');
@@ -50,8 +52,9 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
 
   const todaysProfitValue = useMemo(() => {
     const today = new Date().toDateString();
-    return dailyData.find((d) => new Date(d.date).toDateString() === today)?.amount || 0;
-  }, [dailyData]);
+    const todayEntry = dailyData.find((d) => new Date(d.date).toDateString() === today);
+    return todayEntry ? todayEntry.amount * hostShare : 0;
+  }, [dailyData, hostShare]);
 
   const totalDisplay = Number(total.toFixed(2));
   const revenueLabel = view === 'daily'

@@ -1189,6 +1189,14 @@ const coverImage = useMemo(() => {
     [effectiveHostAnalytics.partnerCommission],
   );
 
+  const selectPreferredEntry = useCallback((entries: AggregateEntry[]) => {
+    return (
+      entries.find((entry) => (entry.bookings ?? 0) > 0 || (entry.revenue ?? 0) > 0) ??
+      entries[0] ??
+      null
+    );
+  }, []);
+
   const resolveEntriesForFilter = useCallback(
     (breakdown: AggregateBuckets, filter: 'day' | 'month' | 'year') => {
       if (filter === 'month') return breakdown.monthly;
@@ -1244,6 +1252,23 @@ const coverImage = useMemo(() => {
     [],
   );
 
+  const handleHostFilterChange = useCallback(
+    (nextFilter: HostAnalyticsFilter) => {
+      setHostActivityFilter(nextFilter);
+
+      const candidates = resolveEntriesForFilter(hostBreakdown, nextFilter);
+      const preferred = selectPreferredEntry(candidates);
+
+      if (!preferred) return;
+
+      const nextDate = parsePeriodToDate(preferred.period, nextFilter);
+      if (!Number.isNaN(nextDate.getTime())) {
+        setHostActivityDate(nextDate);
+      }
+    },
+    [hostBreakdown, parsePeriodToDate, resolveEntriesForFilter, selectPreferredEntry],
+  );
+
   const hostPeriodKey = useMemo(() => {
     const date = hostActivityDate ?? new Date();
     const year = date.getUTCFullYear();
@@ -1273,14 +1298,23 @@ const coverImage = useMemo(() => {
     }
 
     return candidates.filter((entry) => matchesPeriod(entry.period, hostActivityFilter, hostPeriodKey));
-  }, [hostActivityDate, hostActivityFilter, hostBreakdown, hostPeriodKey, matchesPeriod, resolveEntriesForFilter]);
+  }, [hostActivityDate, hostActivityFilter, hostBreakdown, hostPeriodKey, matchesPeriod, resolveEntriesForFilter, selectPreferredEntry]);
 
   useEffect(() => {
-    const entries = resolveEntriesForFilter(hostBreakdown, hostActivityFilter);
-    
-    // if (!entries.length) return;
+    const date = hostActivityDate ?? new Date();
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
 
-    // const hasMatch = entries.some((entry) => entry.period === hostPeriodKey);
+    const hostPeriodKey =
+      hostActivityFilter === 'day'
+        ? `${year}-${month}-${day}`
+        : hostActivityFilter === 'month'
+        ? `${year}-${month}`
+        : `${year}`;
+
+    const entries = resolveEntriesForFilter(hostBreakdown, hostActivityFilter);
+
     const candidateEntries =
       entries.length || hostActivityFilter === 'day'
         ? entries
@@ -1296,17 +1330,27 @@ const coverImage = useMemo(() => {
 
     if (!candidateEntries.length) return;
 
+    const preferred = selectPreferredEntry(candidateEntries);
+    if (!preferred) return;
+
     const hasMatch = candidateEntries.some((entry) =>
       matchesPeriod(entry.period, hostActivityFilter, hostPeriodKey),
     );
 
-    if (hasMatch) return;
+    if (hasMatch && matchesPeriod(preferred.period, hostActivityFilter, hostPeriodKey)) return;
 
-    const nextDate = parsePeriodToDate(candidateEntries[0]?.period ?? '', hostActivityFilter);
+    const nextDate = parsePeriodToDate(preferred.period ?? '', hostActivityFilter);
     if (!Number.isNaN(nextDate.getTime())) {
       setHostActivityDate(nextDate);
     }
-  }, [hostActivityDate, hostActivityFilter, hostBreakdown, hostPeriodKey, matchesPeriod, parsePeriodToDate, resolveEntriesForFilter]);
+  }, [
+    hostBreakdown,
+    hostActivityFilter,
+    matchesPeriod,
+    parsePeriodToDate,
+    resolveEntriesForFilter,
+    selectPreferredEntry,
+  ]);
 
   const hostActivityTotals = useMemo(
     () => summarizeEntries(hostFilteredEntries),
@@ -3888,7 +3932,7 @@ const coverImage = useMemo(() => {
                     <FilterHostAnalytics
                       filter={hostActivityFilter}
                       selectedDate={hostActivityDate}
-                      onFilterChange={setHostActivityFilter}
+                      onFilterChange={handleHostFilterChange}
                       onDateChange={setHostActivityDate}
                     />
                   </div>
@@ -3907,7 +3951,7 @@ const coverImage = useMemo(() => {
                         {formatConverted(hostActivityTotals.revenue ?? 0)}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800 shadow-sm">
+                    {/* <div className="flex items-center justify-between rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800 shadow-sm">
                       <div className="flex flex-col">
                         <span className="font-medium">Pre-Withdrawal Revenue</span>
                         <span className="text-xs text-neutral-500">
@@ -3917,7 +3961,7 @@ const coverImage = useMemo(() => {
                       <span className="text-lg font-semibold text-black">
                         {formatConverted(hostPreWithdrawalValue)}
                       </span>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
 
@@ -3926,8 +3970,7 @@ const coverImage = useMemo(() => {
                     <p className="text-lg font-semibold text-neutral-900">Pre-Withdrawal Revenue</p>
                     <p className="mt-2 text-sm text-neutral-600 md:text-base">
                       As a host, your partnership commission is {Math.round(effectiveHostAnalytics.partnerCommission)}%,
-                      giving you {Math.round(hostRevenueShare * 100)}% of each booking before withdrawal. The value below
-                      follows your {hostFilterLabel} filter above.
+                      giving you {Math.round(hostRevenueShare * 100)}% of each booking before withdrawal.
                     </p>
                   </div>
                   <div className="mt-6 flex flex-col items-center justify-center rounded-xl bg-neutral-50 p-10 text-center md:h-52">
@@ -4025,6 +4068,7 @@ const coverImage = useMemo(() => {
                   monthlyData={earnings.monthly}
                   yearlyData={earnings.yearly}
                   totalEarnings={earnings.totalEarnings}
+                  hostShare={hostRevenueShare}
                 />
               </motion.div>
             )}

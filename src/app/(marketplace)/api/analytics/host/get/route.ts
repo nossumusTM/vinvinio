@@ -116,6 +116,41 @@ const getUserFromIdentifier = async (identifier: string) => {
   });
 };
 
+const parseJsonMaybe = (raw: unknown) => {
+  if (typeof raw !== 'string') return raw;
+
+  try {
+    return JSON.parse(raw);
+  } catch (error) {
+    console.warn('[HOST_ANALYTICS_PARSE_FAILED]', { error, raw });
+    return raw;
+  }
+};
+
+const buildFallbackBreakdown = (
+  analytics: { totalBooks?: number | null; totalRevenue?: number | null; createdAt?: Date; updatedAt?: Date },
+) => {
+  const bookings = Number(analytics.totalBooks ?? 0);
+  const revenue = Number(analytics.totalRevenue ?? 0);
+
+  if (!(bookings > 0 || revenue > 0)) {
+    return { daily: [], monthly: [], yearly: [] };
+  }
+
+  const anchor = analytics.updatedAt ?? analytics.createdAt ?? new Date();
+  const year = anchor.getUTCFullYear();
+  const month = String(anchor.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(anchor.getUTCDate()).padStart(2, '0');
+
+  const entry = { period: `${year}-${month}-${day}`, bookings, revenue };
+
+  return {
+    daily: [entry],
+    monthly: [{ ...entry, period: `${year}-${month}` }],
+    yearly: [{ ...entry, period: `${year}` }],
+  };
+};
+
 export async function GET(request: Request) {
   const currentUser = await getCurrentUser();
 
@@ -151,19 +186,37 @@ export async function GET(request: Request) {
         ? partnerMetrics.puntiLabel
         : 'No punti yet';
 
+    const dailyEntries = mapToEntries(parseJsonMaybe(analytics?.dailyTotals));
+    const monthlyEntries = mapToEntries(parseJsonMaybe(analytics?.monthlyTotals));
+    const yearlyEntries = mapToEntries(parseJsonMaybe(analytics?.yearlyTotals));
+
+    const fallback = buildFallbackBreakdown(analytics ?? {});
+
+    const breakdown = {
+      daily: dailyEntries.length ? dailyEntries : fallback.daily,
+      monthly: monthlyEntries.length ? monthlyEntries : fallback.monthly,
+      yearly: yearlyEntries.length ? yearlyEntries : fallback.yearly,
+      granularity,
+    };
+
     return NextResponse.json({
       totalBooks: analytics?.totalBooks || 0,
       totalRevenue: analytics?.totalRevenue || 0,
-      partnerCommission: partnerMetrics.partnerCommission,
-      punti: partnerMetrics.punti,
-      puntiShare: partnerMetrics.puntiShare,
-      puntiLabel: partnerMetrics.puntiLabel,
-      breakdown: {
-        daily: mapToEntries(analytics?.dailyTotals),
-        monthly: mapToEntries(analytics?.monthlyTotals),
-        yearly: mapToEntries(analytics?.yearlyTotals),
-        granularity,
-      },
+      // partnerCommission: partnerMetrics.partnerCommission,
+      // punti: partnerMetrics.punti,
+      // puntiShare: partnerMetrics.puntiShare,
+      // puntiLabel: partnerMetrics.puntiLabel,
+      // breakdown: {
+      //   daily: mapToEntries(analytics?.dailyTotals),
+      //   monthly: mapToEntries(analytics?.monthlyTotals),
+      //   yearly: mapToEntries(analytics?.yearlyTotals),
+      //   granularity,
+      // },
+      partnerCommission: partnerCommission,
+      punti,
+      puntiShare,
+      puntiLabel,
+      breakdown,
     });
   } catch (error) {
     console.error('[HOST_ANALYTICS_GET]', error);
@@ -208,19 +261,36 @@ export async function POST(req: Request) {
         ? partnerMetrics.puntiLabel
         : 'No punti yet';
 
+    const dailyEntries = mapToEntries(parseJsonMaybe(analytics?.dailyTotals));
+    const monthlyEntries = mapToEntries(parseJsonMaybe(analytics?.monthlyTotals));
+    const yearlyEntries = mapToEntries(parseJsonMaybe(analytics?.yearlyTotals));
+
+    const fallback = buildFallbackBreakdown(analytics ?? {});
+
+    const breakdown = {
+      daily: dailyEntries.length ? dailyEntries : fallback.daily,
+      monthly: monthlyEntries.length ? monthlyEntries : fallback.monthly,
+      yearly: yearlyEntries.length ? yearlyEntries : fallback.yearly,
+    };
+
     return NextResponse.json({
       userId: user.id,
       totalBooks: analytics?.totalBooks || 0,
       totalRevenue: analytics?.totalRevenue || 0,
-      partnerCommission: partnerMetrics.partnerCommission,
-      punti: partnerMetrics.punti,
-      puntiShare: partnerMetrics.puntiShare,
-      puntiLabel: partnerMetrics.puntiLabel,
-      breakdown: {
-        daily: mapToEntries(analytics?.dailyTotals),
-        monthly: mapToEntries(analytics?.monthlyTotals),
-        yearly: mapToEntries(analytics?.yearlyTotals),
-      },
+      // partnerCommission: partnerMetrics.partnerCommission,
+      // punti: partnerMetrics.punti,
+      // puntiShare: partnerMetrics.puntiShare,
+      // puntiLabel: partnerMetrics.puntiLabel,
+      // breakdown: {
+      //   daily: mapToEntries(analytics?.dailyTotals),
+      //   monthly: mapToEntries(analytics?.monthlyTotals),
+      //   yearly: mapToEntries(analytics?.yearlyTotals),
+      // },
+      partnerCommission: partnerCommission,
+      punti,
+      puntiShare,
+      puntiLabel,
+      breakdown,
     });
   } catch (error) {
     console.error('[HOST_ANALYTICS_POST]', error);
