@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 import prisma from '@/app/(marketplace)/libs/prismadb';
+import { computeAggregateMaps } from '@/app/(marketplace)/libs/aggregateTotals';
 
 export async function POST(req: Request) {
   const { reservationId } = await req.json();
@@ -32,11 +33,24 @@ export async function POST(req: Request) {
   });
 
   if (analytics) {
+
+    const { dailyTotals, monthlyTotals, yearlyTotals } = computeAggregateMaps(
+      analytics.dailyTotals,
+      analytics.monthlyTotals,
+      analytics.yearlyTotals,
+      new Date(),
+      -1,
+      -totalPrice,
+    );
+
     await prisma.referralAnalytics.update({
       where: { userId: user.id },
       data: {
         totalBooks: Math.max(analytics.totalBooks - 1, 0),
         totalRevenue: Math.max(analytics.totalRevenue - totalPrice, 0),
+        dailyTotals,
+        monthlyTotals,
+        yearlyTotals,
       },
     });
   } else {

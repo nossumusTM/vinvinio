@@ -45,6 +45,8 @@ import VerificationBadge from "../components/VerificationBadge";
 import { maskPhoneNumber } from "@/app/(marketplace)/utils/phone";
 import { useSearchParams } from "next/navigation";
 import { TbWorldUpload } from "react-icons/tb";
+import { AggregateEntry, summarizeEntries } from "@/app/(marketplace)/libs/aggregateTotals";
+import FilterHostAnalytics, { HostAnalyticsFilter } from "../components/FilterHostAnalytics";
 
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
@@ -54,6 +56,17 @@ import { SiJsonwebtokens } from "react-icons/si";
 import { HiCheckCircle } from "react-icons/hi2";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "");
+
+type PromoterAnalyticsState = {
+  totalBooks: number;
+  qrScans: number;
+  totalRevenue: number;
+  partnerCommission: number;
+  punti: number;
+  puntiShare: number;
+  puntiLabel: string;
+  breakdown: AggregateBuckets;
+};
 
 type VinvinPaymentFormProps = {
   clientSecret: string;
@@ -140,6 +153,13 @@ type HostAnalytics = {
   payoutMethod?: string;
   payoutNumber?: string;
   userId?: string;
+  breakdown?: AggregateBuckets;
+  };
+
+  type AggregateBuckets = {
+    daily: AggregateEntry[];
+    monthly: AggregateEntry[];
+    yearly: AggregateEntry[];
 };
 
 interface PartnershipCommisionProps {
@@ -172,6 +192,11 @@ const DEFAULT_HOST_ANALYTICS: HostAnalytics = {
   payoutMethod: undefined,
   payoutNumber: undefined,
   userId: undefined,
+  breakdown: {
+    daily: [],
+    monthly: [],
+    yearly: [],
+  },
 };
 
 const getRandomColor = () => {
@@ -246,6 +271,10 @@ const busy = uploadingAvatar || uploadingCover;
  
 const [hostAnalytics, setHostAnalytics] = useState<HostAnalytics | null>(null);
 const effectiveHostAnalytics = hostAnalytics ?? DEFAULT_HOST_ANALYTICS;
+const [hostBreakdown, setHostBreakdown] = useState<AggregateBuckets>(DEFAULT_HOST_ANALYTICS.breakdown!);
+  const [hostActivityFilter, setHostActivityFilter] = useState<HostAnalyticsFilter>('day');
+  const [hostActivityDate, setHostActivityDate] = useState<Date>(new Date());
+  const [promoterActivityFilter, setPromoterActivityFilter] = useState<'day' | 'month' | 'year'>('day');
 
 // Who is paying
   const currentUserEmail = currentUser?.email ?? undefined;
@@ -1103,7 +1132,22 @@ const coverImage = useMemo(() => {
   const [confirmDeactivation, setConfirmDeactivation] = useState(false);
   const [targetUserId, setTargetUserId] = useState('');
 
-  const [analytics, setAnalytics] = useState({
+  // const [analytics, setAnalytics] = useState({
+  //   totalBooks: 0,
+  //   qrScans: 0,
+  //   totalRevenue: 0,
+  //   partnerCommission: MIN_PARTNER_COMMISSION,
+  //   punti: 0,
+  //   puntiShare: 0,
+  //   puntiLabel: getPuntiLabel(0),
+  //   breakdown: {
+  //     daily: [],
+  //     monthly: [],
+  //     yearly: [],
+  //   },
+  // });
+
+  const [analytics, setAnalytics] = useState<PromoterAnalyticsState>({
     totalBooks: 0,
     qrScans: 0,
     totalRevenue: 0,
@@ -1111,6 +1155,11 @@ const coverImage = useMemo(() => {
     punti: 0,
     puntiShare: 0,
     puntiLabel: getPuntiLabel(0),
+    breakdown: {
+      daily: [],
+      monthly: [],
+      yearly: [],
+    },
   });
 
   // const [hostAnalytics, setHostAnalytics] = useState({
@@ -1139,6 +1188,214 @@ const coverImage = useMemo(() => {
     () => computeHostShareFromCommission(effectiveHostAnalytics.partnerCommission),
     [effectiveHostAnalytics.partnerCommission],
   );
+
+  const resolveEntriesForFilter = useCallback(
+    (breakdown: AggregateBuckets, filter: 'day' | 'month' | 'year') => {
+      if (filter === 'month') return breakdown.monthly;
+      if (filter === 'year') return breakdown.yearly;
+      return breakdown.daily;
+    },
+    [],
+  );
+
+  const parsePeriodToDate = useCallback(
+    (period: string, filter: HostAnalyticsFilter) => {
+      if (filter === 'day') {
+        const iso = period.includes('T') ? period : `${period}T00:00:00Z`;
+        return new Date(iso);
+      }
+
+      if (filter === 'month') {
+        return new Date(`${period}-01T00:00:00Z`);
+      }
+
+      const normalizedYear = period.split('-')[0];
+      return new Date(`${normalizedYear}-01-01T00:00:00Z`);
+    },
+    [],
+  );
+
+  const hostPeriodKey = useMemo(() => {
+    const date = hostActivityDate ?? new Date();
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
+
+    if (hostActivityFilter === 'day') return `${year}-${month}-${day}`;
+    if (hostActivityFilter === 'month') return `${year}-${month}`;
+    return `${year}`;
+  }, [hostActivityDate, hostActivityFilter]);
+
+  const hostFilteredEntries = useMemo(() => {
+    const entries = resolveEntriesForFilter(hostBreakdown, hostActivityFilter);
+    return entries.filter((entry) => entry.period === hostPeriodKey);
+  }, [hostActivityFilter, hostBreakdown, hostPeriodKey, resolveEntriesForFilter]);
+
+  useEffect(() => {
+    const entries = resolveEntriesForFilter(hostBreakdown, hostActivityFilter);
+    if (!entries.length) return;
+
+    const hasMatch = entries.some((entry) => entry.period === hostPeriodKey);
+    if (hasMatch) return;
+
+    const nextDate = parsePeriodToDate(entries[0]?.period ?? '', hostActivityFilter);
+    if (!Number.isNaN(nextDate.getTime())) {
+      setHostActivityDate(nextDate);
+    }
+  }, [hostActivityDate, hostActivityFilter, hostBreakdown, hostPeriodKey, parsePeriodToDate, resolveEntriesForFilter]);
+
+  const hostActivityTotals = useMemo(
+    () => summarizeEntries(hostFilteredEntries),
+    [hostFilteredEntries],
+  );
+
+  const hostFilterLabel = useMemo(() => {
+    const date = hostActivityDate ?? new Date();
+
+    if (hostActivityFilter === 'day') {
+      return new Intl.DateTimeFormat('en', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      }).format(date);
+    }
+
+    if (hostActivityFilter === 'month') {
+      return new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(date);
+    }
+
+    return String(date.getUTCFullYear());
+  }, [hostActivityDate, hostActivityFilter]);
+
+  const hostPreWithdrawalValue = useMemo(
+    () => (hostActivityTotals.revenue ?? 0) * hostRevenueShare,
+    [hostActivityTotals.revenue, hostRevenueShare],
+  );
+
+  const promoterActivityTotals = useMemo(
+    () => summarizeEntries(resolveEntriesForFilter(analytics.breakdown, promoterActivityFilter)),
+    [analytics.breakdown, promoterActivityFilter, resolveEntriesForFilter],
+  );
+
+  const normalizeBreakdown = useCallback((raw: any, granularity?: 'day' | 'month' | 'year'): AggregateBuckets => {
+    // 1) Already in { daily, monthly, yearly } form
+    if (raw && (raw.daily || raw.monthly || raw.yearly)) {
+      return {
+        daily: normalizeEntries(raw.daily ?? [], 'daily'),
+        monthly: normalizeEntries(raw.monthly ?? [], 'monthly'),
+        yearly: normalizeEntries(raw.yearly ?? [], 'yearly'),
+      };
+    }
+
+    // 2) Flat array (API already filtered by granularity)
+    if (Array.isArray(raw)) {
+      const mode: 'day' | 'month' | 'year' = granularity ?? 'day';
+      const normalized = normalizeEntries(raw, mode === 'day' ? 'daily' : mode === 'month' ? 'monthly' : 'yearly');
+
+      return {
+        daily: mode === 'day' ? normalized : [],
+        monthly: mode === 'month' ? normalized : [],
+        yearly: mode === 'year' ? normalized : [],
+      };
+    }
+
+    // 3) Fallback: nothing usable
+    return {
+      daily: [],
+      monthly: [],
+      yearly: [],
+    };
+  }, []);
+
+  const normalizeEntries = (entries: any, mode: 'daily' | 'monthly' | 'yearly'): AggregateEntry[] => {
+  // Allow array, single object, or nothing
+  const list = Array.isArray(entries) ? entries : entries ? [entries] : [];
+
+  return list.map((entry) => {
+    // ---- 1) Try to build period from structured fields (Mongo-style _id) ----
+    const id = entry?._id ?? {};
+    const src = typeof id === 'object' && id !== null ? id : entry;
+
+    const yVal = src.year ?? src.y ?? src._year;
+    const mVal = src.month ?? src.m ?? src._month;
+    const dVal = src.day ?? src.d ?? src._day;
+
+    let year: string | null = yVal != null ? String(yVal) : null;
+    let month: string | null = mVal != null ? String(mVal).padStart(2, '0') : null;
+    let day: string | null = dVal != null ? String(dVal).padStart(2, '0') : null;
+
+    let period: string;
+
+    if (mode === 'daily' && year && month && day) {
+      period = `${year}-${month}-${day}`;
+    } else if (mode === 'monthly' && year && month) {
+      period = `${year}-${month}`;
+    } else if (mode === 'yearly' && year) {
+      period = year;
+    } else {
+      // ---- 2) Fallback: parse from string fields like before ----
+      const raw =
+        entry?.period ??
+        entry?.date ??
+        entry?.day ??
+        entry?.label ??
+        id?.period ??
+        id?.date ??
+        id?.day ??
+        '';
+
+      let p = String(raw);
+
+      if (mode === 'daily') {
+        const match = p.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+        if (match) {
+          const y = match[1];
+          const m = match[2].padStart(2, '0');
+          const d = match[3].padStart(2, '0');
+          p = `${y}-${m}-${d}`;
+        }
+      } else if (mode === 'monthly') {
+        const match = p.match(/^(\d{4})-(\d{1,2})/);
+        if (match) {
+          const y = match[1];
+          const m = match[2].padStart(2, '0');
+          p = `${y}-${m}`;
+        }
+      } else if (mode === 'yearly') {
+        const match = p.match(/^(\d{4})/);
+        if (match) {
+          p = match[1];
+        }
+      }
+
+      period = p;
+    }
+
+    // ---- 3) Be flexible about numeric fields ----
+    const bookingsRaw =
+      entry?.bookings ??
+      entry?.totalBooks ??
+      entry?.books ??
+      entry?.count ??
+      entry?.totalCount;
+
+    const revenueRaw =
+      entry?.revenue ??
+      entry?.totalRevenue ??
+      entry?.amount ??
+      entry?.totalAmount ??
+      entry?.grossRevenue;
+
+    const bookingsNum = Number(bookingsRaw);
+    const revenueNum = Number(revenueRaw);
+
+    return {
+      period,
+      bookings: Number.isFinite(bookingsNum) ? bookingsNum : 0,
+      revenue: Number.isFinite(revenueNum) ? revenueNum : 0,
+    };
+  });
+};
 
   const personalInfoFAQ = [
     {
@@ -1279,9 +1536,23 @@ const coverImage = useMemo(() => {
 
     const fetchAnalytics = async () => {
       try {
-        const res = await axios.get('/api/analytics/get', { timeout: 10000 });
+        const res = await axios.get('/api/analytics/get', {
+          timeout: 10000,
+          params: { granularity: promoterActivityFilter },
+        });
         const data = res.data ?? {};
-        setAnalytics(res.data);
+        const breakdown = normalizeBreakdown(data.breakdown, promoterActivityFilter);
+
+        setAnalytics({
+          totalBooks: Number(data.totalBooks ?? 0),
+          qrScans: Number(data.qrScans ?? 0),
+          totalRevenue: Number(data.totalRevenue ?? 0),
+          partnerCommission: MIN_PARTNER_COMMISSION,
+          punti: 0,
+          puntiShare: 0,
+          puntiLabel: getPuntiLabel(0),
+          breakdown
+        });
       } catch (error) {
         console.error('Error fetching analytics:', error);
       }
@@ -1295,7 +1566,7 @@ const coverImage = useMemo(() => {
   
     // Clear interval on unmount
     return () => clearInterval(interval);
-  }, [currentUser?.role]);
+  }, [currentUser?.role, promoterActivityFilter, normalizeBreakdown]);
 
   useEffect(() => {
     const fetchUserCoupon = async () => {
@@ -1421,7 +1692,10 @@ const coverImage = useMemo(() => {
   
     const fetchHostAnalytics = async () => {
       try {
-        const res = await axios.get('/api/analytics/host/get', { timeout: 10000 });
+        const res = await axios.get('/api/analytics/host/get', {
+          timeout: 10000,
+          params: { granularity: hostActivityFilter },
+        });
         // setHostAnalytics(res.data);
         const data = res.data ?? {};
         const puntiValue = Number(data.punti);
@@ -1432,6 +1706,15 @@ const coverImage = useMemo(() => {
           : 0;
         const partnerCommissionValue = Number(data.partnerCommission);
 
+        const breakdown = normalizeBreakdown(
+          data.breakdown,
+          hostActivityFilter === 'day'
+            ? 'day'
+            : hostActivityFilter === 'month'
+            ? 'month'
+            : 'year',
+        );
+
         setHostAnalytics({
           totalBooks: Number(data.totalBooks ?? 0),
           totalRevenue: Number(data.totalRevenue ?? 0),
@@ -1441,7 +1724,10 @@ const coverImage = useMemo(() => {
           punti,
           puntiShare,
           puntiLabel: typeof data.puntiLabel === 'string' ? data.puntiLabel : getPuntiLabel(punti),
+          breakdown
         });
+
+        setHostBreakdown(breakdown);
 
       } catch (error) {
         console.error('Error fetching host analytics:', error);
@@ -1452,7 +1738,7 @@ const coverImage = useMemo(() => {
     const interval = setInterval(fetchHostAnalytics, 20000);
   
     return () => clearInterval(interval);
-  }, [currentUser?.role]);
+  }, [currentUser?.role, hostActivityFilter, normalizeBreakdown]);
 
   useEffect(() => {
     try {
@@ -3320,10 +3606,28 @@ const coverImage = useMemo(() => {
                     Performance and earnings overview — renewed twice a month.
                   </p>
 
+                  <div className="mt-4 flex gap-2">
+                    {[['day', 'Day'], ['month', 'Month'], ['year', 'Year']].map(([value, label]) => (
+                      <button
+                        key={value}
+                        onClick={() => setPromoterActivityFilter(value as 'day' | 'month' | 'year')}
+                        className={twMerge(
+                          'rounded-full border px-3 py-1 text-xs font-semibold transition',
+                          promoterActivityFilter === value
+                            ? 'border-black bg-black text-white'
+                            : 'border-neutral-200 text-neutral-700 hover:border-neutral-400',
+                        )}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+
                   <div className="mt-5 space-y-4">
                     <div className="flex items-center justify-between rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800 shadow-sm">
                       <span className="font-medium">Total Books</span>
-                      <span className="text-lg font-semibold text-black">{analytics.totalBooks}</span>
+                      {/* <span className="text-lg font-semibold text-black">{analytics.totalBooks}</span> */}
+                      <span className="text-lg font-semibold text-black">{promoterActivityTotals.bookings}</span>
                     </div>
                     <div className="flex items-center justify-between rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800 shadow-sm">
                       <span className="font-medium">QR Code Scanned</span>
@@ -3332,7 +3636,8 @@ const coverImage = useMemo(() => {
                     <div className="flex items-center justify-between rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800 shadow-sm">
                       <span className="font-medium">Total Books Revenue</span>
                       <span className="text-lg font-semibold text-black">
-                        {formatConverted(analytics.totalRevenue)}
+                        {/* {formatConverted(analytics.totalRevenue)} */}
+                        {formatConverted(promoterActivityTotals.revenue)}
                       </span>
                     </div>
                   </div>
@@ -3492,17 +3797,38 @@ const coverImage = useMemo(() => {
                     Earnings and bookings overview — renewed twice a month.
                   </p>
 
+                  <div className="mt-4">
+                    <FilterHostAnalytics
+                      filter={hostActivityFilter}
+                      selectedDate={hostActivityDate}
+                      onFilterChange={setHostActivityFilter}
+                      onDateChange={setHostActivityDate}
+                    />
+                  </div>
+
                   <div className="mt-5 space-y-4">
                     <div className="flex items-center justify-between rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800 shadow-sm">
                       <span className="font-medium">Total Bookings</span>
                       <span className="text-lg font-semibold text-black">
-                        {effectiveHostAnalytics.totalBooks ?? 0}
+                        {/* {effectiveHostAnalytics.totalBooks ?? 0} */}
+                        {hostActivityTotals.bookings ?? 0}
                       </span>
                     </div>
                     <div className="flex items-center justify-between rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800 shadow-sm">
                       <span className="font-medium">Total Revenue</span>
                       <span className="text-lg font-semibold text-black">
-                        {formatConverted(effectiveHostAnalytics.totalRevenue ?? 0)}
+                        {formatConverted(hostActivityTotals.revenue ?? 0)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800 shadow-sm">
+                      <div className="flex flex-col">
+                        <span className="font-medium">Pre-Withdrawal Revenue</span>
+                        <span className="text-xs text-neutral-500">
+                          Based on your {hostFilterLabel} totals and current commission share
+                        </span>
+                      </div>
+                      <span className="text-lg font-semibold text-black">
+                        {formatConverted(hostPreWithdrawalValue)}
                       </span>
                     </div>
                   </div>
@@ -3513,13 +3839,17 @@ const coverImage = useMemo(() => {
                     <p className="text-lg font-semibold text-neutral-900">Pre-Withdrawal Revenue</p>
                     <p className="mt-2 text-sm text-neutral-600 md:text-base">
                       As a host, your partnership commission is {Math.round(effectiveHostAnalytics.partnerCommission)}%,
-                      giving you {Math.round(hostRevenueShare * 100)}% of each booking before withdrawal.
+                      giving you {Math.round(hostRevenueShare * 100)}% of each booking before withdrawal. The value below
+                      follows your {hostFilterLabel} filter above.
                     </p>
                   </div>
-                  <div className="mt-6 flex items-center justify-center rounded-xl bg-neutral-50 p-10 md:h-52">
+                  <div className="mt-6 flex flex-col items-center justify-center rounded-xl bg-neutral-50 p-10 text-center md:h-52">
                     <p className="text-3xl font-semibold text-black">
                       {/* {formatConverted((hostAnalytics?.totalRevenue || 0) * 0.9)} */}
-                      {formatConverted((hostAnalytics?.totalRevenue || 0) * hostRevenueShare)}
+                      {formatConverted(hostPreWithdrawalValue)}
+                    </p>
+                    <p className="mt-3 text-xs text-neutral-500">
+                      Calculated from your {hostFilterLabel} revenue snapshot and current commission share.
                     </p>
                   </div>
                 </div>

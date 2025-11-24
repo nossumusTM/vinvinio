@@ -257,6 +257,9 @@ model ReferralAnalytics {
   totalBooks   Int    @default(0)
   qrScans      Int    @default(0)
   totalRevenue Float  @default(0)
+  dailyTotals  Json   @default("{}")
+  monthlyTotals Json   @default("{}")
+  yearlyTotals Json   @default("{}")
   user         User   @relation(fields: [userId], references: [id])
 
   createdAt DateTime @default(now())
@@ -268,6 +271,9 @@ model HostAnalytics {
   userId       String @unique @db.ObjectId
   totalBooks   Int    @default(0)
   totalRevenue Int    @default(0)
+  dailyTotals  Json   @default("{}")
+  monthlyTotals Json   @default("{}")
+  yearlyTotals Json   @default("{}")
   user         User   @relation(fields: [userId], references: [id])
 
   createdAt DateTime @default(now())

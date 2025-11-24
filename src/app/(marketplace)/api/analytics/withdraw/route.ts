@@ -45,6 +45,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/app/(marketplace)/libs/prismadb';
 import getCurrentUser from '@/app/(marketplace)/actions/getCurrentUser';
 import nodemailer from 'nodemailer';
+import { emptyAggregateMaps } from '@/app/(marketplace)/libs/aggregateTotals';
 
 export const dynamic = 'force-dynamic';
 
@@ -70,12 +71,17 @@ export async function POST(req: Request) {
       return new NextResponse('User not found or not eligible', { status: 404 });
     }
 
+    const aggregatesReset = emptyAggregateMaps();
+
     await prisma.referralAnalytics.update({
       where: { userId },
       data: {
         totalBooks: 0,
         qrScans: 0,
         totalRevenue: 0,
+        dailyTotals: aggregatesReset.dailyTotals,
+        monthlyTotals: aggregatesReset.monthlyTotals,
+        yearlyTotals: aggregatesReset.yearlyTotals,
       }
     });
 

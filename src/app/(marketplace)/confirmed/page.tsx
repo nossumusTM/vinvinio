@@ -324,8 +324,8 @@ const BookingConfirmed = () => {
               <Image
                 src={`/flags/${countryValue}.svg`}
                 alt={country}
-                // width={24}
-                // height={16}
+                width={24}
+                height={16}
                 // style={{ width: 'auto', height: '16px' }}
                 className="h-4 w-6 rounded object-cover"
                 unoptimized

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/app/(marketplace)/libs/prismadb';
 import getCurrentUser from '@/app/(marketplace)/actions/getCurrentUser';
+import { emptyAggregateMaps } from '@/app/(marketplace)/libs/aggregateTotals';
 import nodemailer from 'nodemailer';
 
 export const dynamic = 'force-dynamic';
@@ -28,11 +29,15 @@ export async function POST(req: Request) {
     }
 
     // ✅ Reset HostAnalytics data
+    const aggregatesReset = emptyAggregateMaps();
     await prisma.hostAnalytics.updateMany({
       where: { userId },
       data: {
         totalBooks: 0,
         totalRevenue: 0,
+        dailyTotals: aggregatesReset.dailyTotals,
+        monthlyTotals: aggregatesReset.monthlyTotals,
+        yearlyTotals: aggregatesReset.yearlyTotals,
       },
     });
 

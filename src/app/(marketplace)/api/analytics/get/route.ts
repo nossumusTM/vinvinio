@@ -5,6 +5,7 @@ import prisma from '@/app/(marketplace)/libs/prismadb';
  import getCurrentUser from  '@/app/(marketplace)/actions/getCurrentUser';
  import { Prisma } from '@prisma/client';
  import { ObjectId } from 'mongodb';
+ import { mapToEntries } from '@/app/(marketplace)/libs/aggregateTotals';
 
 const isValidObjectId = (value: string) => /^[0-9a-fA-F]{24}$/.test(value);
 
@@ -37,7 +38,16 @@ export async function GET() {
     where: { userId: currentUser.id }
   });
 
-  return NextResponse.json(analytics || { totalBooks: 0, qrScans: 0, totalRevenue: 0 });
+  return NextResponse.json({
+    totalBooks: analytics?.totalBooks || 0,
+    qrScans: analytics?.qrScans || 0,
+    totalRevenue: analytics?.totalRevenue || 0,
+    breakdown: {
+      daily: mapToEntries(analytics?.dailyTotals),
+      monthly: mapToEntries(analytics?.monthlyTotals),
+      yearly: mapToEntries(analytics?.yearlyTotals),
+    },
+  });
 }
 
 export async function POST(req: Request) {
@@ -57,6 +67,11 @@ export async function POST(req: Request) {
       totalBooks: analytics?.totalBooks || 0,
       qrScans: analytics?.qrScans || 0,
       totalRevenue: analytics?.totalRevenue || 0,
+      breakdown: {
+        daily: mapToEntries(analytics?.dailyTotals),
+        monthly: mapToEntries(analytics?.monthlyTotals),
+        yearly: mapToEntries(analytics?.yearlyTotals),
+      },
     });
   } catch (error) {
     console.error('[PROMOTER_ANALYTICS_GET]', error);

@@ -93,6 +93,7 @@ import prisma from '@/app/(marketplace)/libs/prismadb';
 import { resolvePartnerMetricsForHost } from '@/app/(marketplace)/libs/partnerMetrics';
 import { Prisma } from '@prisma/client';
 import { MIN_PARTNER_COMMISSION } from '@/app/(marketplace)/constants/partner';
+import { mapToEntries } from '@/app/(marketplace)/libs/aggregateTotals';
 
 export const dynamic = 'force-dynamic';
 
@@ -115,12 +116,14 @@ const getUserFromIdentifier = async (identifier: string) => {
   });
 };
 
-export async function GET() {
+export async function GET(request: Request) {
   const currentUser = await getCurrentUser();
 
   if (!currentUser || currentUser.role !== 'host') {
     return new NextResponse('Unauthorized', { status: 403 });
   }
+
+  const granularity = new URL(request.url).searchParams.get('granularity');
 
   try {
     const [analytics, partnerMetrics] = await Promise.all([
@@ -155,6 +158,12 @@ export async function GET() {
       punti: partnerMetrics.punti,
       puntiShare: partnerMetrics.puntiShare,
       puntiLabel: partnerMetrics.puntiLabel,
+      breakdown: {
+        daily: mapToEntries(analytics?.dailyTotals),
+        monthly: mapToEntries(analytics?.monthlyTotals),
+        yearly: mapToEntries(analytics?.yearlyTotals),
+        granularity,
+      },
     });
   } catch (error) {
     console.error('[HOST_ANALYTICS_GET]', error);
@@ -207,6 +216,11 @@ export async function POST(req: Request) {
       punti: partnerMetrics.punti,
       puntiShare: partnerMetrics.puntiShare,
       puntiLabel: partnerMetrics.puntiLabel,
+      breakdown: {
+        daily: mapToEntries(analytics?.dailyTotals),
+        monthly: mapToEntries(analytics?.monthlyTotals),
+        yearly: mapToEntries(analytics?.yearlyTotals),
+      },
     });
   } catch (error) {
     console.error('[HOST_ANALYTICS_POST]', error);

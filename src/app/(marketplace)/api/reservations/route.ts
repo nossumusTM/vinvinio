@@ -3,6 +3,7 @@ import prisma from "@/app/(marketplace)/libs/prismadb";
 import getCurrentUser from "@/app/(marketplace)/actions/getCurrentUser";
 import { hrefForListing } from "@/app/(marketplace)/libs/links";
 import { ensureListingSlug } from "@/app/(marketplace)/libs/ensureListingSlug";
+import { computeAggregateMaps } from "@/app/(marketplace)/libs/aggregateTotals";
 export const dynamic = 'force-dynamic';
 import { Prisma } from '@prisma/client';
 import { Role } from '@prisma/client';
@@ -100,17 +101,18 @@ export async function POST(request: Request) {
     }
 
     // ✅ Track host earnings
-    await prisma.earning.create({
-      data: {
-        userId: listingWithSlug.user.id,
-        amount: totalPrice * 0.9,
-        totalBooks: 1,
-        reservationId: reservation.id,
-        role: Role.host,
-      }
-    });
+    // await prisma.earning.create({
+    //   data: {
+    //     userId: listingWithSlug.user.id,
+    //     amount: totalPrice * 0.9,
+    //     totalBooks: 1,
+    //     reservationId: reservation.id,
+    //     role: Role.host,
+    //   }
+    // });
 
     // ✅ Track promoter earnings if applicable
+        // ✅ Track promoter earnings if applicable
     if (referralId) {
       const promoterUser = await prisma.user.findFirst({
         where: { referenceId: referralId },
@@ -119,6 +121,7 @@ export async function POST(request: Request) {
       if (promoterUser?.id) {
         const promoterCut = totalPrice * 0.1;
 
+        // Track promoter earning
         await prisma.earning.create({
           data: {
             userId: promoterUser.id,
@@ -126,8 +129,47 @@ export async function POST(request: Request) {
             totalBooks: 1,
             reservationId: reservation.id,
             role: Role.promoter,
-          }
+          },
         });
+
+        // Update or create referral analytics for this promoter
+        const promoterAnalytics = await prisma.referralAnalytics.findUnique({
+          where: { userId: promoterUser.id },
+        });
+
+        const { dailyTotals, monthlyTotals, yearlyTotals } = computeAggregateMaps(
+          promoterAnalytics?.dailyTotals,
+          promoterAnalytics?.monthlyTotals,
+          promoterAnalytics?.yearlyTotals,
+          new Date(),
+          1,
+          promoterCut,
+        );
+
+        if (promoterAnalytics) {
+          await prisma.referralAnalytics.update({
+            where: { userId: promoterUser.id },
+            data: {
+              totalBooks: { increment: 1 },
+              totalRevenue: { increment: promoterCut },
+              dailyTotals,
+              monthlyTotals,
+              yearlyTotals,
+            },
+          });
+        } else {
+          await prisma.referralAnalytics.create({
+            data: {
+              userId: promoterUser.id,
+              totalBooks: 1,
+              totalRevenue: promoterCut,
+              qrScans: 0,
+              dailyTotals,
+              monthlyTotals,
+              yearlyTotals,
+            },
+          });
+        }
       }
     }
     
