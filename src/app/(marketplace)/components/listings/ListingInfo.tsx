@@ -58,6 +58,7 @@ interface ListingInfoProps {
     hoursInAdvance?: number | null;
     hostFollowersCount?: number;
     hostAllTimeBookingCount?: number;
+    listingBookingCount?: number;
     listingLikesCount?: number;
 }
 
@@ -84,6 +85,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
     hoursInAdvance,
     hostFollowersCount = 0,
     hostAllTimeBookingCount = 0,
+    listingBookingCount = 0,
     listingLikesCount = 0,
 }) => {
     const { getByValue } = useCountries();
@@ -369,7 +371,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                       </p>
                     </div>
                     <p className="mt-0.5 text-lg font-semibold leading-tight">
-                      {hostAllTimeBookingCount}
+                      {listingBookingCount}
                     </p>
                   </div>
 

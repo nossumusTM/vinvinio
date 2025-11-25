@@ -208,8 +208,8 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
     setFollowBusy(true);
     try {
       const response = isFollowingHost
-        ? await axios.delete(`/api/hosts/${host.id}/follow`)
-        : await axios.post(`/api/hosts/${host.id}/follow`);
+        ? await axios.delete(`/api/hosts/${host.id}/follow`, { withCredentials: true })
+        : await axios.post(`/api/hosts/${host.id}/follow`, undefined, { withCredentials: true });
 
       const nextCount = typeof response.data?.followersCount === 'number'
         ? response.data.followersCount
@@ -218,7 +218,7 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
           : followersCount + 1;
 
       setFollowersCount(nextCount);
-      setIsFollowingHost((prev) => !prev);
+      setIsFollowingHost(response.data?.followed ?? ((prev) => !prev));
     } catch (error) {
       console.error(error);
       toast.error('Unable to update follow status.');
@@ -290,7 +290,7 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
       const cat = listing.primaryCategory
         ? slugifySegment(listing.primaryCategory)
         : "experience";
-      return `/tours/${cat}/${listing.slug}`;
+      return `/services/${cat}/${listing.slug}`;
     }
     return `/listings/${listing.id}`;
   };

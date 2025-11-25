@@ -55,6 +55,9 @@ model User {
   updatedAt         DateTime           @updatedAt
   role              Role               @default(customer)
   partnerCommission Int                @default(15)
+  platformRelevance Int                @default(0)
+  partnerCommissionChangeCount Int     @default(0)
+  partnerCommissionChangeWindowStart DateTime?
   alternateRole     Role?
   referenceId       String?
   favoriteIds       String[]           @db.ObjectId

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/app/(marketplace)/libs/prismadb';
 import getCurrentUser from '@/app/(marketplace)/actions/getCurrentUser';
+import { computeAggregateMaps } from '@/app/(marketplace)/libs/aggregateTotals';
+import { MIN_PARTNER_COMMISSION, computeHostShareFromCommission } from '@/app/(marketplace)/constants/partner';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,19 +20,45 @@ export async function POST(req: Request) {
   }
 
   try {
+    
+    const hostUser = await prisma.user.findUnique({
+      where: { id: hostId },
+      select: { partnerCommission: true },
+    });
+
+    const partnerCommission = Number.isFinite(hostUser?.partnerCommission)
+      ? (hostUser?.partnerCommission as number)
+      : MIN_PARTNER_COMMISSION;
+    const hostShare = computeHostShareFromCommission(partnerCommission);
+    const revenueDelta = (totalPrice || 0) * hostShare;
+
     // Get current values to prevent negative numbers
     const current = await prisma.hostAnalytics.findUnique({
       where: { userId: hostId },
     });
 
     const newBooks = Math.max(0, (current?.totalBooks || 0) - 1);
-    const newRevenue = Math.max(0, (current?.totalRevenue || 0) - (totalPrice || 0));
+    // const newRevenue = Math.max(0, (current?.totalRevenue || 0) - (totalPrice || 0));
+    const newRevenue = Math.max(0, (current?.totalRevenue || 0) - revenueDelta);
+
+    const { dailyTotals, monthlyTotals, yearlyTotals } = computeAggregateMaps(
+      current?.dailyTotals,
+      current?.monthlyTotals,
+      current?.yearlyTotals,
+      new Date(),
+      -1,
+      -revenueDelta,
+      -partnerCommission,
+    );
 
     await prisma.hostAnalytics.upsert({
       where: { userId: hostId },
       update: {
         totalBooks: newBooks,
         totalRevenue: newRevenue,
+        dailyTotals,
+        monthlyTotals,
+        yearlyTotals,
       },
       create: {
         userId: hostId,

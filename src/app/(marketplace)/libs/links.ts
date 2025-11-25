@@ -86,7 +86,7 @@ export function hrefForListing(listing: ListingLike) {
   const { categorySegment, slug, requiresIdQuery } = canonicalSegmentsForListing(listing);
 
   const resolvedSlug = slug && slug.length > 0 ? slug : "listing";
-  const pathname = `/tours/${categorySegment}/${encodeURIComponent(resolvedSlug)}`;
+  const pathname = `/services/${categorySegment}/${encodeURIComponent(resolvedSlug)}`;
 
   if (!requiresIdQuery || !listing.id) {
     return pathname;

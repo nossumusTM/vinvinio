@@ -84,7 +84,7 @@ const Counter: React.FC<CounterProps> = ({
                     className="
             w-10
             h-10
-            rounded-full
+            rounded-xl
             shadow-lg
             flex
             items-center
@@ -120,7 +120,7 @@ const Counter: React.FC<CounterProps> = ({
                     className="
             w-10
             h-10
-            rounded-full
+            rounded-xl
             shadow-lg
             flex
             items-center

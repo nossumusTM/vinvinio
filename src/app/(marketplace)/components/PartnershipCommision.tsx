@@ -87,12 +87,18 @@ interface PartnershipCommisionProps {
   puntiShare: number;
   puntiLabel: string;
   partnerCommission: number;
+  platformRelevance: number;
   maxPointValue: number;
   minCommission?: number;
   maxCommission?: number;
   onCommissionChange?: (commission: number) => Promise<void> | void;
   loading?: boolean;
   currentUserEmail?: string;
+
+  // 🔥 NEW
+  commissionChangesUsed?: number;
+  commissionChangesLimit?: number;
+  partnerCommissionChangeWindowStart?: string | Date | null;
 
   // 🔥 NEW: let parent control the VinVin modal
   onOpenVinvinModal?: (payload: {
@@ -106,15 +112,19 @@ const clamp = (value: number, min = 0, max = 1) => Math.min(max, Math.max(min, v
 
 const PartnershipCommision: React.FC<PartnershipCommisionProps> = ({
   punti,
-  puntiShare,
+  puntiShare: _puntiShare,
   puntiLabel,
   partnerCommission,
+  platformRelevance,
   maxPointValue,
   minCommission = MIN_PARTNER_COMMISSION,
   maxCommission = MAX_PARTNER_COMMISSION,
   onCommissionChange,
   loading = false,
   currentUserEmail,
+  commissionChangesUsed, 
+  commissionChangesLimit,
+  partnerCommissionChangeWindowStart,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [draftCommission, setDraftCommission] = useState(() => sanitizePartnerCommission(partnerCommission));
@@ -144,11 +154,13 @@ const PartnershipCommision: React.FC<PartnershipCommisionProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isEditing]);
 
-    const baseCommission = sanitizePartnerCommission(partnerCommission);
+  const baseCommission = sanitizePartnerCommission(partnerCommission);
   const basePunti = Number.isFinite(punti)
     ? Math.max(0, Math.round(punti))
     : 0;
-  const baseShare = clamp(Number.isFinite(puntiShare) ? puntiShare : 0);
+  const basePlatformRelevance = Number.isFinite(platformRelevance)
+    ? Math.max(0, Math.round(platformRelevance))
+    : 0;
 
   const effectiveCommission = isEditing ? draftCommission : baseCommission;
 
@@ -161,29 +173,67 @@ const PartnershipCommision: React.FC<PartnershipCommisionProps> = ({
     : basePunti;
 
   // ✅ commission changes platform relevance (percentage) again
-  const effectiveShare = isEditing
-    ? computePuntiShare(effectivePunti)
-    : baseShare;
+  const effectivePlatformRelevance = isEditing
+    ? Math.max(0, basePlatformRelevance + commissionDelta)
+    : basePlatformRelevance;
 
-  const effectiveLabel = isEditing ? getPuntiLabel(effectivePunti) : puntiLabel;
-
-  const commissionSpread = Math.max(1, maxCommission - minCommission);
-  const commissionShare = clamp((effectiveCommission - minCommission) / commissionSpread);
-  const fillPercent = Math.round(commissionShare * 100);
   
-    let labelClass = "bg-neutral-200 text-neutral-800";
+    const getCommissionTierLabel = (commission: number): string => {
+      if (commission >= 30) return "TOP RATE";
+      if (commission >= 25) return "PRIME";
+      if (commission >= 20) return "PREFERRED";
+      if (commission >= 15) return "GROWTH";
+      if (commission >= 10) return "ESSENTIAL";
+      if (commission >= 5) return "STARTER";
+      return "ENTRY";
+    };
 
-    if (effectiveLabel === "TOP RATE") {
-      labelClass = "bg-gradient-to-r from-indigo-500 to-blue-500 text-white";
+    const COMMISSION_LABEL_STYLES: Record<string, string> = {
+      "TOP RATE": "bg-gradient-to-r from-indigo-500 to-blue-500 text-white",
+      PRIME: "bg-gradient-to-r from-blue-500 to-cyan-500 text-white",
+      PREFERRED: "bg-gradient-to-r from-sky-500 to-emerald-500 text-white",
+      GROWTH: "bg-gradient-to-r from-emerald-500 to-lime-500 text-white",
+      ESSENTIAL: "bg-gradient-to-r from-cyan-400 to-sky-400 text-white",
+      STARTER: "bg-gradient-to-r from-blue-200 to-cyan-200 text-slate-900",
+      ENTRY: "bg-gradient-to-r from-slate-200 to-slate-300 text-slate-900",
+    };
+
+    const effectiveLabel = getCommissionTierLabel(effectiveCommission);
+
+    const commissionSpread = Math.max(1, maxCommission - minCommission);
+    const commissionShare = clamp((effectiveCommission - minCommission) / commissionSpread);
+    const fillPercent = Math.round(commissionShare * 100);
+
+    const changesLimit =
+      typeof commissionChangesLimit === "number" ? commissionChangesLimit : 2;
+
+    // derive "this month" changes using the same logic as updateHostPartnerCommission
+    let changesUsedThisMonth = 0;
+
+    if (partnerCommissionChangeWindowStart) {
+      const windowStart = new Date(partnerCommissionChangeWindowStart);
+      const now = new Date();
+
+      const isSameMonth =
+        windowStart.getUTCFullYear() === now.getUTCFullYear() &&
+        windowStart.getUTCMonth() === now.getUTCMonth();
+
+      if (isSameMonth) {
+        const raw =
+          typeof commissionChangesUsed === "number" ? commissionChangesUsed : 0;
+        changesUsedThisMonth = Math.min(
+          changesLimit,
+          Math.max(0, raw),
+        );
+      }
     }
 
-    if (effectiveLabel === "STARTER") {
-      labelClass = "bg-gradient-to-r from-blue-200 to-cyan-200 text-white";
-    }
+    const changesRemaining = Math.max(0, changesLimit - changesUsedThisMonth);
+    const noChangesLeft = changesRemaining <= 0;
 
-    if (effectiveLabel === "RELEVANT") {
-      labelClass = "bg-gradient-to-r from-slate-900 to-slate-700 text-white";
-    }
+    const labelClass =
+      COMMISSION_LABEL_STYLES[effectiveLabel.toUpperCase()] ??
+      "bg-neutral-200 text-neutral-800";
 
   const sliderTrackStyle = useMemo(
       () => ({
@@ -211,9 +261,9 @@ const PartnershipCommision: React.FC<PartnershipCommisionProps> = ({
   }, [effectiveLabel]);
 
   const handleToggle = useCallback(() => {
-    if (loading) return;
+    if (loading || noChangesLeft) return;
     setIsEditing(true);
-  }, [loading]);
+  }, [loading, noChangesLeft]);
 
   const handleSliderChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     const next = sanitizePartnerCommission(Number(event.target.value));
@@ -260,24 +310,37 @@ const PartnershipCommision: React.FC<PartnershipCommisionProps> = ({
       `}
       onClick={handleToggle}
     >
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-wide text-neutral-500">Partnership commission</p>
-          <p className="text-3xl font-semibold text-neutral-900">
-            {Math.round(effectiveCommission)}%
-          </p>
-        </div>
-        <span
-          className={`
-            rounded-full px-4 py-1 text-xs font-semibold tracking-widest 
-            transition-transform
-            ${isBooming ? 'animate-boom' : ''}
-            ${labelClass}
-          `}
-        >
-          {effectiveLabel.toUpperCase()}
-        </span>
-      </div>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-neutral-500">
+                  Partnership commission
+                </p>
+                <p className="text-3xl font-semibold text-neutral-900">
+                  {Math.round(effectiveCommission)}%
+                </p>
+              </div>
+
+              <div className="flex flex-col items-end gap-1">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-neutral-400">
+                  Monthly commission change limit
+                </p>
+                <p className="text-[11px] font-medium text-neutral-600">
+                  {noChangesLeft
+                    ? `0 of ${changesLimit} changes available · limit reached this month`
+                    : `${changesRemaining} of ${changesLimit} changes available`}
+                </p>
+                <span
+                  className={`
+                    rounded-full px-4 py-1 text-xs font-semibold tracking-widest 
+                    transition-transform
+                    ${isBooming ? 'animate-boom' : ''}
+                    ${labelClass}
+                  `}
+                >
+                  {effectiveLabel}
+                </span>
+              </div>
+            </div>
 
       <p className="mt-4 text-sm leading-relaxed text-neutral-600">
         Your listings {isEditing ? "will" : "currently"} receive a
@@ -286,7 +349,7 @@ const PartnershipCommision: React.FC<PartnershipCommisionProps> = ({
         {" "}
         driven by
         {" "}
-        <span className="font-semibold text-neutral-900">{formatPuntiPercentage(effectiveShare)}</span> the platform relevance accumulated from your approved services.
+        <span className="font-semibold text-neutral-900">{effectivePlatformRelevance}%</span> platform relevance accumulated from your approved services.
       </p>
 
       <div className="mt-6" onClick={(event) => event.stopPropagation()}>
@@ -315,7 +378,7 @@ const PartnershipCommision: React.FC<PartnershipCommisionProps> = ({
         <div className="rounded-2xl bg-neutral-50 p-4">
           <p className="text-xs uppercase tracking-wide text-neutral-500">Platform relevance</p>
           <p className="mt-2 text-lg font-semibold text-neutral-900">
-            {formatPuntiPercentage(effectiveShare)}
+            {effectivePlatformRelevance}%
           </p>
         </div>
         <div className="rounded-2xl bg-neutral-50 p-4">

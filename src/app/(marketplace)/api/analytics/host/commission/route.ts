@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 
 import getCurrentUser from "@/app/(marketplace)/actions/getCurrentUser";
 import prisma from "@/app/(marketplace)/libs/prismadb";
-import { updateHostPartnerCommission } from "@/app/(marketplace)/libs/partnerMetrics";
+import {
+  CommissionChangeLimitError,
+  updateHostPartnerCommission,
+} from "@/app/(marketplace)/libs/partnerMetrics";
 import { sanitizePartnerCommission } from "@/app/(marketplace)/constants/partner";
 
 export const dynamic = 'force-dynamic';
@@ -22,10 +25,19 @@ export async function POST(request: Request) {
     }
 
     const sanitizedCommission = sanitizePartnerCommission(Number(partnerCommission));
-    const { metrics } = await updateHostPartnerCommission(currentUser.id, sanitizedCommission);
+    // const { metrics } = await updateHostPartnerCommission(currentUser.id, sanitizedCommission);
+    const { metrics, platformRelevance } = await updateHostPartnerCommission(
+      currentUser.id,
+      sanitizedCommission,
+    );
 
     const analytics = await prisma.hostAnalytics.findUnique({
       where: { userId: currentUser.id },
+    });
+
+    const updatedUser = await prisma.user.findUnique({
+      where: { id: currentUser.id },
+      select: { platformRelevance: true },
     });
 
     return NextResponse.json({
@@ -35,8 +47,12 @@ export async function POST(request: Request) {
       punti: metrics.punti,
       puntiShare: metrics.puntiShare,
       puntiLabel: metrics.puntiLabel,
+      platformRelevance,
     });
   } catch (error) {
+    if (error instanceof CommissionChangeLimitError) {
+      return NextResponse.json({ message: error.message }, { status: 429 });
+    }
     console.error("[HOST_COMMISSION_UPDATE]", error);
     return new NextResponse("Internal Server Error", { status: 500 });
   }

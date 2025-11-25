@@ -96,6 +96,7 @@ interface ListingClientProps {
     reservations?: SafeReservation[];
     listing: SafeListing & {
         user: SafeUser;
+        bookingCount?: number;
     };
     currentUser?: SafeUser | null;
 }
@@ -630,7 +631,12 @@ const ListingClient: React.FC<ListingClientProps> = ({
         if (reviews.length === 0) return 0;
         const total = reviews.reduce((sum, review) => sum + review.rating, 0);
         return total / reviews.length;
-    }, [reviews]);     
+    }, [reviews]);
+
+    const listingBookingCount = useMemo(() => {
+        if (typeof listing.bookingCount === 'number') return listing.bookingCount;
+        return reservations.filter((reservation) => reservation.status !== 'cancelled').length;
+    }, [listing.bookingCount, reservations]);
 
     return (
         <>
@@ -703,6 +709,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                                 hoursInAdvance={hoursInAdvance}
                                 hostFollowersCount={listing.user.followersCount ?? 0}
                                 hostAllTimeBookingCount={listing.user.allTimeBookingCount ?? 0}
+                                listingBookingCount={listingBookingCount}
                                 listingLikesCount={listing.likesCount ?? 0}
                             />
 

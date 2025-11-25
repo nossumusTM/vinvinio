@@ -4,6 +4,7 @@ import getCurrentUser from "@/app/(marketplace)/actions/getCurrentUser";
 import { hrefForListing } from "@/app/(marketplace)/libs/links";
 import { ensureListingSlug } from "@/app/(marketplace)/libs/ensureListingSlug";
 import { computeAggregateMaps } from "@/app/(marketplace)/libs/aggregateTotals";
+import { MIN_PARTNER_COMMISSION, computeHostShareFromCommission } from "@/app/(marketplace)/constants/partner";
 export const dynamic = 'force-dynamic';
 import { Prisma } from '@prisma/client';
 import { Role } from '@prisma/client';
@@ -86,16 +87,42 @@ export async function POST(request: Request) {
 
     // ✅ Update HostAnalytics (not User anymore)
     if (listingWithSlug?.user?.id) {
+      const partnerCommission = Number.isFinite(listingWithSlug.user.partnerCommission)
+        ? listingWithSlug.user.partnerCommission
+        : MIN_PARTNER_COMMISSION;
+      const hostShare = computeHostShareFromCommission(partnerCommission);
+      const revenueDelta = (totalPrice || 0) * hostShare;
+
+      const existingHostAnalytics = await prisma.hostAnalytics.findUnique({
+        where: { userId: listingWithSlug.user.id },
+      });
+
+      const { dailyTotals, monthlyTotals, yearlyTotals } = computeAggregateMaps(
+        existingHostAnalytics?.dailyTotals,
+        existingHostAnalytics?.monthlyTotals,
+        existingHostAnalytics?.yearlyTotals,
+        reservation.createdAt ?? new Date(),
+        1,
+        revenueDelta,
+        partnerCommission,
+      );
+
       await prisma.hostAnalytics.upsert({
         where: { userId: listingWithSlug.user.id },
         update: {
           totalBooks: { increment: 1 },
-          totalRevenue: { increment: totalPrice || 0 },
+          totalRevenue: { increment: revenueDelta },
+          dailyTotals,
+          monthlyTotals,
+          yearlyTotals,
         },
         create: {
           userId: listingWithSlug.user.id,
           totalBooks: 1,
-          totalRevenue: totalPrice || 0,
+          totalRevenue: revenueDelta,
+          dailyTotals,
+          monthlyTotals,
+          yearlyTotals,
         },
       });
     }
@@ -144,6 +171,7 @@ export async function POST(request: Request) {
           new Date(),
           1,
           promoterCut,
+          0,
         );
 
         if (promoterAnalytics) {

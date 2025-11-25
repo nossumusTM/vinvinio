@@ -264,7 +264,7 @@ const SearchExperience = () => {
     <motion.button
           type="button"
           onClick={searchModal.onOpen}
-          className="flex w-fit cursor-pointer select-none items-center justify-between rounded-full px-3 py-2 shadow-md backdrop-blur transition hover:shadow-lg md:w-auto lg:px-4"
+          className="flex w-fit cursor-pointer select-none items-center justify-between rounded-2xl px-3 py-2 shadow-md backdrop-blur transition hover:shadow-lg md:w-auto lg:px-4"
           layout
           transition={{ type: 'spring', stiffness: 420, damping: 32, mass: 0.4 }}
         >

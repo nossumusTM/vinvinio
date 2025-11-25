@@ -129,6 +129,7 @@ const parseJsonMaybe = (raw: unknown) => {
 
 const buildFallbackBreakdown = (
   analytics: { totalBooks?: number | null; totalRevenue?: number | null; createdAt?: Date; updatedAt?: Date },
+  commission: number,
 ) => {
   const bookings = Number(analytics.totalBooks ?? 0);
   const revenue = Number(analytics.totalRevenue ?? 0);
@@ -142,7 +143,7 @@ const buildFallbackBreakdown = (
   const month = String(anchor.getUTCMonth() + 1).padStart(2, '0');
   const day = String(anchor.getUTCDate()).padStart(2, '0');
 
-  const entry = { period: `${year}-${month}-${day}`, bookings, revenue };
+  const entry = { period: `${year}-${month}-${day}`, bookings, revenue, commission };
 
   return {
     daily: [entry],
@@ -186,11 +187,16 @@ export async function GET(request: Request) {
         ? partnerMetrics.puntiLabel
         : 'No punti yet';
 
+    const platformRelevance =
+      typeof currentUser.platformRelevance === 'number'
+        ? currentUser.platformRelevance
+        : 0;
+
     const dailyEntries = mapToEntries(parseJsonMaybe(analytics?.dailyTotals));
     const monthlyEntries = mapToEntries(parseJsonMaybe(analytics?.monthlyTotals));
     const yearlyEntries = mapToEntries(parseJsonMaybe(analytics?.yearlyTotals));
 
-    const fallback = buildFallbackBreakdown(analytics ?? {});
+    const fallback = buildFallbackBreakdown(analytics ?? {}, partnerCommission);
 
     const breakdown = {
       daily: dailyEntries.length ? dailyEntries : fallback.daily,
@@ -216,6 +222,7 @@ export async function GET(request: Request) {
       punti,
       puntiShare,
       puntiLabel,
+      platformRelevance,
       breakdown,
     });
   } catch (error) {
@@ -261,11 +268,14 @@ export async function POST(req: Request) {
         ? partnerMetrics.puntiLabel
         : 'No punti yet';
 
+    const platformRelevance =
+      typeof user.platformRelevance === 'number' ? user.platformRelevance : 0;
+
     const dailyEntries = mapToEntries(parseJsonMaybe(analytics?.dailyTotals));
     const monthlyEntries = mapToEntries(parseJsonMaybe(analytics?.monthlyTotals));
     const yearlyEntries = mapToEntries(parseJsonMaybe(analytics?.yearlyTotals));
 
-    const fallback = buildFallbackBreakdown(analytics ?? {});
+    const fallback = buildFallbackBreakdown(analytics ?? {}, partnerCommission);
 
     const breakdown = {
       daily: dailyEntries.length ? dailyEntries : fallback.daily,
@@ -290,6 +300,7 @@ export async function POST(req: Request) {
       punti,
       puntiShare,
       puntiLabel,
+      platformRelevance,
       breakdown,
     });
   } catch (error) {

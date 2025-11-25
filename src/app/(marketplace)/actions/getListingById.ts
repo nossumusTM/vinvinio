@@ -41,6 +41,13 @@ export default async function getListingById(params: IParams) {
 
     const listingWithSlug = await ensureListingSlug(listing);
 
+    const bookingCount = await prisma.reservation.count({
+      where: {
+        listingId: listingWithSlug.id,
+        status: { not: 'cancelled' },
+      },
+    });
+
     // 👇 Fetch current user on the server so we can compute likedByCurrentUser
     const currentUser = await getCurrentUser();
 
@@ -110,6 +117,7 @@ export default async function getListingById(params: IParams) {
 
       // 💗 NEW: like info exposed to the client
       likesCount,
+      bookingCount,
       likedByCurrentUser,
 
       user: {
@@ -135,6 +143,8 @@ export default async function getListingById(params: IParams) {
         visitedCities: u.visitedCities ?? [],
         profession: u.profession ?? null,
         identityVerified: Boolean(u.identityVerified),
+        followersCount: typeof u.followersCount === 'number' ? u.followersCount : 0,
+        allTimeBookingCount: typeof u.allTimeBookingCount === 'number' ? u.allTimeBookingCount : 0,
       },
     };
   } catch (error: any) {

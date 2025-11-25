@@ -43,7 +43,7 @@ export async function generateMetadata({ params, searchParams }: PageProps) {
 
   if (!slug) return { title: ensured.title };
 
-  const canonical = `${baseUrl}/tours/${categorySegment}/${encodeURIComponent(slug)}`;
+  const canonical = `${baseUrl}/services/${categorySegment}/${encodeURIComponent(slug)}`;
 
   const images = Array.isArray(ensured.imageSrc)
     ? ensured.imageSrc
@@ -106,6 +106,9 @@ export default async function ListingBySlugPage({ params, searchParams }: PagePr
   const listingWithEngagement = {
     ...(ensured as any),
     likedByCurrentUser: Boolean(existingLike),
+    bookingCount: await prisma.reservation.count({
+      where: { listingId: ensured.id, status: { not: 'cancelled' } },
+    }),
   };
   const reservations = await getListingReservations(ensured.id);
 

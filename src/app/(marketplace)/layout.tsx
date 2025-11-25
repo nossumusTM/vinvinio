@@ -79,33 +79,23 @@ export default async function RootLayout({
           <PromoteModal currentUser={currentUser} />
           {currentUser && <Messenger currentUser={currentUser} />}
         </ClientOnly>
-        <>
-        {/* <div className="pb-20 pt-28 min-h-screen"> */}
-        <PageReadyProvider>
-          {/* overlay on top of everything until ready */}
-          <FullScreenLoader />
-
-          {/* hide everything visually until ready */}
-          <GateShell>
-          <SessionProviderWrapper>
-            <Suspense fallback={<Loader />}>
-              <main className="flex-grow pb-0 pt-28">
+        <SessionProviderWrapper>
+          <Suspense fallback={<Loader />}>
+            <main className="flex flex-col flex-1 pb-0 pt-28">
+              <div className="flex-1">
                 {children}
-              </main>
-              <div className="w-full pt-20">
-                <Footer currentUser={currentUser}/>
+                </div>
+                <div className="w-full pt-20 mt-auto">
+                <Footer currentUser={currentUser} />
               </div>
-            </Suspense>
-          </SessionProviderWrapper>
-          </GateShell>
-        </PageReadyProvider>
+            </main>
+          </Suspense>
+        </SessionProviderWrapper>
 
         <ClientOnly>
           <LocaleModal />
         </ClientOnly>
-        </>
 
-        
       </body>
     </html>
   );

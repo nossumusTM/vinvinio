@@ -243,7 +243,7 @@ const ListingFilter: React.FC<ListingFilterProps> = ({ gridSize, onGridChange })
     { value: 'rating', label: 'Review' },
     { value: 'priceLow', label: 'Price: Low to High' },
     { value: 'priceHigh', label: 'Price: High to Low' },
-    { value: 'random', label: 'Random' },
+    { value: 'random', label: 'Random (VIN first)' },
   ] as const;
 
   useEffect(() => {

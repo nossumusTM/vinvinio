@@ -229,89 +229,89 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
   //   }
   // }, [messages, recipient.id, currentUserId, hasSentGreeting]);  
 
-  useEffect(() => {
-    if (
-      hasSentGreeting ||
-      greetingTriggeredRef.current ||
-      recipient.id !== CUSTOMER_SERVICE_ID
-    )
-      return;
+  // useEffect(() => {
+  //   if (
+  //     hasSentGreeting ||
+  //     greetingTriggeredRef.current ||
+  //     recipient.id !== CUSTOMER_SERVICE_ID
+  //   )
+  //     return;
   
-    const greetingText = 'please specify the topic of assistance';
-    const localGreetingKey = `greetingSent-${currentUserId}`;
+  //   const greetingText = 'please specify the topic of assistance';
+  //   const localGreetingKey = `greetingSent-${currentUserId}`;
   
-    const hasGreeting = messages.some(
-      (msg) =>
-        msg.senderId === CUSTOMER_SERVICE_ID &&
-        msg.recipientId === currentUserId &&
-        msg.text.toLowerCase().includes(greetingText)
-    );
+  //   const hasGreeting = messages.some(
+  //     (msg) =>
+  //       msg.senderId === CUSTOMER_SERVICE_ID &&
+  //       msg.recipientId === currentUserId &&
+  //       msg.text.toLowerCase().includes(greetingText)
+  //   );
   
-    if (hasGreeting) {
-      if (!hasSentGreeting) {
-        const alreadyRespondedWithTopic = messages.some(
-          (msg) =>
-            msg.senderId === CUSTOMER_SERVICE_ID &&
-            msg.recipientId === currentUserId &&
-            msg.text.toLowerCase().includes('could you please describe your issue')
-        );
+  //   if (hasGreeting) {
+  //     if (!hasSentGreeting) {
+  //       const alreadyRespondedWithTopic = messages.some(
+  //         (msg) =>
+  //           msg.senderId === CUSTOMER_SERVICE_ID &&
+  //           msg.recipientId === currentUserId &&
+  //           msg.text.toLowerCase().includes('could you please describe your issue')
+  //       );
   
-        setHasSentGreeting(true);
-        setAwaitingTopic(!alreadyRespondedWithTopic);
-        setAwaitingIssue(alreadyRespondedWithTopic);
-        localStorage.setItem(localGreetingKey, 'true');
-      }
-      return;
-    }
+  //       setHasSentGreeting(true);
+  //       setAwaitingTopic(!alreadyRespondedWithTopic);
+  //       setAwaitingIssue(alreadyRespondedWithTopic);
+  //       localStorage.setItem(localGreetingKey, 'true');
+  //     }
+  //     return;
+  //   }
   
-    const hasBeenSentBefore = localStorage.getItem(localGreetingKey);
+  //   const hasBeenSentBefore = localStorage.getItem(localGreetingKey);
   
-    const hasMessagesBetweenUserAndCS = messages.some(
-      (msg) =>
-        (msg.senderId === CUSTOMER_SERVICE_ID && msg.recipientId === currentUserId) ||
-        (msg.senderId === currentUserId && msg.recipientId === CUSTOMER_SERVICE_ID)
-    );
+  //   const hasMessagesBetweenUserAndCS = messages.some(
+  //     (msg) =>
+  //       (msg.senderId === CUSTOMER_SERVICE_ID && msg.recipientId === currentUserId) ||
+  //       (msg.senderId === currentUserId && msg.recipientId === CUSTOMER_SERVICE_ID)
+  //   );
   
-    if (!hasBeenSentBefore && !hasSentGreeting && !hasMessagesBetweenUserAndCS) {
-      greetingTriggeredRef.current = true; // ⬅️ Prevent future re-triggers
+  //   if (!hasBeenSentBefore && !hasSentGreeting && !hasMessagesBetweenUserAndCS) {
+  //     greetingTriggeredRef.current = true; // ⬅️ Prevent future re-triggers
   
-      const sendGreeting = async () => {
-        const greeting = `${getGreeting()}, nice to meet you here. Before we proceed, please specify the topic of assistance:`;
+  //     const sendGreeting = async () => {
+  //       const greeting = `${getGreeting()}, nice to meet you here. Before we proceed, please specify the topic of assistance:`;
   
-        try {
-          await fetch('/api/messages/system', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              senderId: CUSTOMER_SERVICE_ID,
-              recipientId: currentUserId,
-              text: greeting,
-            }),
-          });
+  //       try {
+  //         await fetch('/api/messages/system', {
+  //           method: 'POST',
+  //           headers: { 'Content-Type': 'application/json' },
+  //           body: JSON.stringify({
+  //             senderId: CUSTOMER_SERVICE_ID,
+  //             recipientId: currentUserId,
+  //             text: greeting,
+  //           }),
+  //         });
   
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: `greeting-${Date.now()}`,
-              senderId: CUSTOMER_SERVICE_ID,
-              recipientId: currentUserId,
-              text: greeting,
-              createdAt: new Date().toISOString(),
-              seen: true,
-            },
-          ]);
+  //         setMessages((prev) => [
+  //           ...prev,
+  //           {
+  //             id: `greeting-${Date.now()}`,
+  //             senderId: CUSTOMER_SERVICE_ID,
+  //             recipientId: currentUserId,
+  //             text: greeting,
+  //             createdAt: new Date().toISOString(),
+  //             seen: true,
+  //           },
+  //         ]);
   
-          setHasSentGreeting(true);
-          setAwaitingTopic(true);
-          localStorage.setItem(localGreetingKey, 'true');
-        } catch (err) {
-          console.error('Failed to send greeting:', err);
-        }
-      };
+  //         setHasSentGreeting(true);
+  //         setAwaitingTopic(true);
+  //         localStorage.setItem(localGreetingKey, 'true');
+  //       } catch (err) {
+  //         console.error('Failed to send greeting:', err);
+  //       }
+  //     };
   
-      sendGreeting();
-    }
-  }, [messages, recipient.id, currentUserId, hasSentGreeting]);
+  //     sendGreeting();
+  //   }
+  // }, [messages, recipient.id, currentUserId, hasSentGreeting]);
   
   useEffect(() => {
     if (recipient.id !== CUSTOMER_SERVICE_ID || messages.length === 0) return;

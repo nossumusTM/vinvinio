@@ -16,6 +16,13 @@ export type PartnerMetrics = {
   partnerCommission: number;
 };
 
+export class CommissionChangeLimitError extends Error {
+  constructor(message = "Monthly commission change limit reached") {
+    super(message);
+    this.name = "CommissionChangeLimitError";
+  }
+}
+
 const deriveMetrics = (
   commission: number | null | undefined,
   puntiValues: number[],
@@ -38,11 +45,12 @@ const deriveMetrics = (
   const partnerCommission =
     sanitizedCommission !== null ? sanitizedCommission : MIN_PARTNER_COMMISSION;
 
-  const commissionPunti =
-    sanitizedCommission !== null ? computePuntiFromCommission(sanitizedCommission) : 0;
+  // const commissionPunti =
+  //   sanitizedCommission !== null ? computePuntiFromCommission(sanitizedCommission) : 0;
   const punti = Math.min(
     MAX_PARTNER_POINT_VALUE,
-    Math.max(0, totalListingPunti) + commissionPunti,
+    // Math.max(0, totalListingPunti) + commissionPunti,
+    Math.max(0, totalListingPunti),
   );
 
   const puntiShare = computePuntiShare(punti);
@@ -137,11 +145,62 @@ export const ensureListingApprovalPunti = async (listingId: string) => {
 };
 
 export const updateHostPartnerCommission = async (userId: string, commission: number) => {
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      partnerCommission: true,
+      platformRelevance: true,
+      partnerCommissionChangeCount: true,
+      partnerCommissionChangeWindowStart: true,
+    },
+  });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  const previousCommission = sanitizePartnerCommission(
+    typeof user.partnerCommission === "number"
+      ? user.partnerCommission
+      : MIN_PARTNER_COMMISSION,
+  );
+
   const sanitizedCommission = sanitizePartnerCommission(commission);
+
+  const now = new Date();
+  const lastWindowStart = user.partnerCommissionChangeWindowStart
+    ? new Date(user.partnerCommissionChangeWindowStart)
+    : null;
+
+  const isSameMonth =
+    lastWindowStart !== null &&
+    lastWindowStart.getUTCFullYear() === now.getUTCFullYear() &&
+    lastWindowStart.getUTCMonth() === now.getUTCMonth();
+
+  const changesThisMonth = isSameMonth ? user.partnerCommissionChangeCount ?? 0 : 0;
+
+  if (changesThisMonth >= 2) {
+    throw new CommissionChangeLimitError();
+  }
+
+  const nextChangeCount = changesThisMonth + 1;
+  const nextWindowStart = isSameMonth ? lastWindowStart ?? now : now;
+  const platformRelevance = Math.max(
+    0,
+    (typeof user.platformRelevance === "number" ? user.platformRelevance : 0) +
+      (sanitizedCommission - previousCommission),
+  );
 
   await prisma.user.update({
     where: { id: userId },
-    data: { partnerCommission: sanitizedCommission },
+    // data: { partnerCommission: sanitizedCommission },
+    data: {
+      partnerCommission: sanitizedCommission,
+      platformRelevance,
+      partnerCommissionChangeCount: nextChangeCount,
+      partnerCommissionChangeWindowStart: nextWindowStart,
+    },
   });
 
   const metrics = await resolvePartnerMetricsForHost(userId);
@@ -149,5 +208,6 @@ export const updateHostPartnerCommission = async (userId: string, commission: nu
   return {
     userId,
     metrics,
+    platformRelevance,
   };
 };

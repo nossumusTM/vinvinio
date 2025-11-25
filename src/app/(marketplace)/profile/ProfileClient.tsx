@@ -150,6 +150,7 @@ type HostAnalytics = {
   punti: number;
   puntiShare: number;
   puntiLabel: string;
+  platformRelevance: number;
   payoutMethod?: string;
   payoutNumber?: string;
   userId?: string;
@@ -189,6 +190,7 @@ const DEFAULT_HOST_ANALYTICS: HostAnalytics = {
   punti: 0,
   puntiShare: 0,
   puntiLabel: getPuntiLabel(0),
+  platformRelevance: 0,
   payoutMethod: undefined,
   payoutNumber: undefined,
   userId: undefined,
@@ -1206,50 +1208,141 @@ const coverImage = useMemo(() => {
     [],
   );
 
+  const normalizePeriodKey = useCallback((period: string) => {
+    const normalized = String(period ?? '').trim();
+
+    const dayMatch = normalized.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+    const monthMatch = normalized.match(/^(\d{4})[-/](\d{1,2})/);
+    const yearMatch = normalized.match(/^(\d{4})/);
+
+    if (dayMatch) {
+      const [, y, m, d] = dayMatch;
+      return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+    }
+
+    if (monthMatch) {
+      const [, y, m] = monthMatch;
+      return `${y}-${m.padStart(2, '0')}`;
+    }
+
+    if (yearMatch) {
+      return yearMatch[1];
+    }
+
+    const parsed = new Date(normalized.includes('T') ? normalized : `${normalized}T00:00:00Z`);
+    if (!Number.isNaN(parsed.getTime())) {
+      const year = parsed.getUTCFullYear();
+      const month = String(parsed.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(parsed.getUTCDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    return '';
+  }, []);
+
+  const parsePeriodKeyParts = useCallback((key: string) => {
+    const segments = key.split('-');
+
+    if (!segments.length) return { year: null, month: null, day: null };
+
+    const [yearRaw, monthRaw, dayRaw] = segments;
+
+    const year = Number.isFinite(Number(yearRaw)) ? Number(yearRaw) : null;
+    const month = Number.isFinite(Number(monthRaw)) ? Number(monthRaw) : null;
+    const day = Number.isFinite(Number(dayRaw)) ? Number(dayRaw) : null;
+
+    return { year, month, day };
+  }, []);
+
+  const toDateKeys = useCallback((date: Date) => {
+    const year = date.getUTCFullYear();
+    const month = date.getUTCMonth() + 1;
+    const day = date.getUTCDate();
+
+    return {
+      year,
+      month,
+      day,
+      dayKey: `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+      monthKey: `${year}-${String(month).padStart(2, '0')}`,
+    };
+  }, []);
+
   const parsePeriodToDate = useCallback(
     (period: string, filter: HostAnalyticsFilter) => {
+      const key = normalizePeriodKey(period);
 
-      const normalized = String(period ?? '').trim();
+      const { year, month, day } = parsePeriodKeyParts(key);
 
-      const dayMatch = normalized.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
-      const monthMatch = normalized.match(/^(\d{4})[-/](\d{1,2})/);
-      const yearMatch = normalized.match(/^(\d{4})/);
-
-      if (filter === 'day') {
-        if (dayMatch) {
-          const [, y, m, d] = dayMatch;
-          return new Date(`${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}T00:00:00Z`);
-        }
-        const iso = normalized.includes('T') ? normalized : `${normalized}T00:00:00Z`;
-        return new Date(iso);
+      if (filter === 'day' && year && month && day) {
+        return new Date(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T00:00:00Z`);
       }
 
-      if (filter === 'month') {
-        if (dayMatch || monthMatch) {
-          const [, y, m] = (dayMatch ?? monthMatch)!;
-          return new Date(`${y}-${m.padStart(2, '0')}-01T00:00:00Z`);
-        }
-        return new Date(`${normalized}-01T00:00:00Z`);
+      if (filter === 'month' && year && month) {
+        return new Date(`${year}-${String(month).padStart(2, '0')}-01T00:00:00Z`);
       }
 
-      if (yearMatch) {
-        const [, y] = yearMatch;
-        return new Date(`${y}-01-01T00:00:00Z`);
+      if (year) {
+        return new Date(`${year}-01-01T00:00:00Z`);
       }
 
-      const fallback = new Date(normalized);
-      return Number.isNaN(fallback.getTime()) ? new Date() : fallback;
+      const fallback = new Date();
+      return fallback;
     },
     [],
   );
+
+  const normalizePeriodToDate = useCallback((period: string) => {
+    const normalized = String(period ?? '').trim();
+
+    const dayMatch = normalized.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+    const monthMatch = normalized.match(/^(\d{4})[-/](\d{1,2})/);
+    const yearMatch = normalized.match(/^(\d{4})/);
+
+    if (dayMatch) {
+      const [, y, m, d] = dayMatch;
+      return new Date(`${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}T00:00:00Z`);
+    }
+
+    if (monthMatch) {
+      const [, y, m] = monthMatch;
+      return new Date(`${y}-${m.padStart(2, '0')}-01T00:00:00Z`);
+    }
+
+    if (yearMatch) {
+      return new Date(`${yearMatch[1]}-01-01T00:00:00Z`);
+    }
+
+    const iso = normalized.includes('T') ? normalized : `${normalized}T00:00:00Z`;
+    const parsed = new Date(iso);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }, []);
   
   const matchesPeriod = useCallback(
-    (period: string, filter: HostAnalyticsFilter, key: string) => {
-      if (filter === 'day') return period === key;
-      const prefix = filter === 'month' ? `${key}-` : `${key}`;
-      return period === key || period.startsWith(prefix);
+    (period: string, filter: HostAnalyticsFilter, targetDate: Date | null) => {
+      if (!targetDate) return false;
+
+      const key = normalizePeriodKey(period);
+      if (!key) return false;
+
+      const entryParts = parsePeriodKeyParts(key);
+      const targetParts = toDateKeys(targetDate);
+
+      if (filter === 'day') {
+        return (
+          entryParts.year === targetParts.year &&
+          entryParts.month === targetParts.month &&
+          entryParts.day === targetParts.day
+        );
+      }
+
+      if (filter === 'month') {
+        return entryParts.year === targetParts.year && entryParts.month === targetParts.month;
+      }
+
+      return entryParts.year === targetParts.year;
     },
-    [],
+    [normalizePeriodKey, parsePeriodKeyParts, toDateKeys],
   );
 
   const handleHostFilterChange = useCallback(
@@ -1297,21 +1390,21 @@ const coverImage = useMemo(() => {
       }
     }
 
-    return candidates.filter((entry) => matchesPeriod(entry.period, hostActivityFilter, hostPeriodKey));
-  }, [hostActivityDate, hostActivityFilter, hostBreakdown, hostPeriodKey, matchesPeriod, resolveEntriesForFilter, selectPreferredEntry]);
+    return candidates.filter((entry) => matchesPeriod(entry.period, hostActivityFilter, hostActivityDate));
+  }, [hostActivityDate, hostActivityFilter, hostBreakdown, matchesPeriod, resolveEntriesForFilter, selectPreferredEntry]);
 
   useEffect(() => {
-    const date = hostActivityDate ?? new Date();
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(date.getUTCDate()).padStart(2, '0');
+    // const date = hostActivityDate ?? new Date();
+    // const year = date.getUTCFullYear();
+    // const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    // const day = String(date.getUTCDate()).padStart(2, '0');
 
-    const hostPeriodKey =
-      hostActivityFilter === 'day'
-        ? `${year}-${month}-${day}`
-        : hostActivityFilter === 'month'
-        ? `${year}-${month}`
-        : `${year}`;
+    // const hostPeriodKey =
+    //   hostActivityFilter === 'day'
+    //     ? `${year}-${month}-${day}`
+    //     : hostActivityFilter === 'month'
+    //     ? `${year}-${month}`
+    //     : `${year}`;
 
     const entries = resolveEntriesForFilter(hostBreakdown, hostActivityFilter);
 
@@ -1330,20 +1423,26 @@ const coverImage = useMemo(() => {
 
     if (!candidateEntries.length) return;
 
+    const hasMatch = candidateEntries.some((entry) =>
+      // matchesPeriod(entry.period, hostActivityFilter, hostPeriodKey),
+      matchesPeriod(entry.period, hostActivityFilter, hostActivityDate),
+    );
+
+    // if (hasMatch && matchesPeriod(preferred.period, hostActivityFilter, hostPeriodKey)) return;
+    if (hasMatch || hostActivityFilter === 'day') return;
+
     const preferred = selectPreferredEntry(candidateEntries);
     if (!preferred) return;
 
-    const hasMatch = candidateEntries.some((entry) =>
-      matchesPeriod(entry.period, hostActivityFilter, hostPeriodKey),
-    );
-
-    if (hasMatch && matchesPeriod(preferred.period, hostActivityFilter, hostPeriodKey)) return;
+    // const preferred = selectPreferredEntry(candidateEntries);
+    // if (!preferred) return;
 
     const nextDate = parsePeriodToDate(preferred.period ?? '', hostActivityFilter);
     if (!Number.isNaN(nextDate.getTime())) {
       setHostActivityDate(nextDate);
     }
   }, [
+    hostActivityDate,
     hostBreakdown,
     hostActivityFilter,
     matchesPeriod,
@@ -1375,10 +1474,59 @@ const coverImage = useMemo(() => {
     return String(date.getUTCFullYear());
   }, [hostActivityDate, hostActivityFilter]);
 
-  const hostPreWithdrawalValue = useMemo(
-    () => (hostActivityTotals.revenue ?? 0) * hostRevenueShare,
-    [hostActivityTotals.revenue, hostRevenueShare],
-  );
+  const normalizeCommissionValue = useCallback((value?: number) => {
+    return Number.isFinite(value) && (value as number) > 0 ? (value as number) : undefined;
+  }, []);
+
+  const hostCommissionForFilter = useMemo(() => {
+    const matchingEntry = hostFilteredEntries.find((entry) =>
+      matchesPeriod(entry.period, hostActivityFilter, hostActivityDate),
+    );
+
+    const normalizedMatching = normalizeCommissionValue(matchingEntry?.commission);
+    if (normalizedMatching != null) {
+      return normalizedMatching;
+    }
+
+    const normalizedTotals = normalizeCommissionValue(hostActivityTotals.commission);
+    if (normalizedTotals != null) {
+      return normalizedTotals;
+    }
+
+    return normalizeCommissionValue(effectiveHostAnalytics.partnerCommission);
+  }, [
+    effectiveHostAnalytics.partnerCommission,
+    hostActivityFilter,
+    hostActivityTotals.commission,
+    hostFilteredEntries,
+    hostPeriodKey,
+    matchesPeriod,
+    normalizeCommissionValue,
+  ]);
+
+  const hostPreWithdrawalValue = useMemo(() => {
+    const revenue = hostActivityTotals.revenue ?? 0;
+
+    // If the breakdown already includes commission data, revenue is commission-aware.
+    const hasCommissionedEntries =
+      hostFilteredEntries.some((entry) => normalizeCommissionValue(entry.commission) != null) ||
+      normalizeCommissionValue(hostActivityTotals.commission) != null;
+
+    if (hasCommissionedEntries) {
+      return revenue;
+    }
+
+    const commissionForPeriod = hostCommissionForFilter ?? effectiveHostAnalytics.partnerCommission;
+    const hostShare = computeHostShareFromCommission(commissionForPeriod);
+    return revenue * hostShare;
+  }, [
+    effectiveHostAnalytics.partnerCommission,
+    hostActivityTotals.commission,
+    hostActivityTotals.revenue,
+    hostCommissionForFilter,
+    hostFilteredEntries,
+    normalizeCommissionValue,
+  ]);
 
   const promoterActivityTotals = useMemo(
     () => summarizeEntries(resolveEntriesForFilter(analytics.breakdown, promoterActivityFilter)),
@@ -1520,10 +1668,17 @@ const coverImage = useMemo(() => {
           entry?.grossRevenue
       );
 
+      const commissionValue = Number(
+        entry?.commission ?? entry?.partnerCommission ?? entry?.commissionSum,
+      );
+
       return {
         period,
         bookings: Number.isFinite(bookingsNum) ? bookingsNum : 0,
         revenue: Number.isFinite(revenueNum) ? revenueNum : 0,
+        commission: Number.isFinite(commissionValue)
+          ? Math.max(0, commissionValue)
+          : undefined,
       };
     });
   };
@@ -1747,6 +1902,7 @@ const coverImage = useMemo(() => {
         const puntiShareValue = Number(data.puntiShare);
         const puntiLabelValue =
           typeof data.puntiLabel === "string" ? data.puntiLabel : undefined;
+          const platformRelevanceValue = Number(data.platformRelevance);
 
         setHostAnalytics((prev) => {
           const fallback = {
@@ -1756,6 +1912,7 @@ const coverImage = useMemo(() => {
             punti: 0,
             puntiShare: 0,
             puntiLabel: getPuntiLabel(0),
+            platformRelevance: 0,
           };
 
           const base = prev ?? fallback;
@@ -1776,6 +1933,9 @@ const coverImage = useMemo(() => {
             : base.puntiShare;
 
           const nextPuntiLabel = puntiLabelValue ?? getPuntiLabel(nextPunti);
+          const nextPlatformRelevance = Number.isFinite(platformRelevanceValue)
+            ? Math.max(0, platformRelevanceValue)
+            : base.platformRelevance;
 
           return {
             totalBooks: Number.isFinite(totalBooksValue)
@@ -1788,6 +1948,7 @@ const coverImage = useMemo(() => {
             punti: nextPunti,
             puntiShare: nextPuntiShare,
             puntiLabel: nextPuntiLabel,
+            platformRelevance: nextPlatformRelevance,
           };
         });
 
@@ -1835,7 +1996,7 @@ const coverImage = useMemo(() => {
         const puntiShare = Number.isFinite(puntiShareValue)
           ? Math.min(1, Math.max(0, puntiShareValue))
           : 0;
-        const partnerCommissionValue = Number(data.partnerCommission);
+        const platformRelevanceValue = Number(data.platformRelevance);
 
         const breakdown = normalizeBreakdown(
           data.breakdown,
@@ -1846,6 +2007,8 @@ const coverImage = useMemo(() => {
             : 'year',
         );
 
+        const partnerCommissionValue = Number(data.partnerCommission);
+
         setHostAnalytics({
           totalBooks: Number(data.totalBooks ?? 0),
           totalRevenue: Number(data.totalRevenue ?? 0),
@@ -1855,6 +2018,9 @@ const coverImage = useMemo(() => {
           punti,
           puntiShare,
           puntiLabel: typeof data.puntiLabel === 'string' ? data.puntiLabel : getPuntiLabel(punti),
+          platformRelevance: Number.isFinite(platformRelevanceValue)
+            ? Math.max(0, platformRelevanceValue)
+            : 0,
           breakdown
         });
 
@@ -2218,7 +2384,7 @@ const coverImage = useMemo(() => {
       <div className="rounded-3xl overflow-visible shadow-xl border border-neutral-100 bg-white">
         <div className="relative z-0 h-56 sm:h-64 md:h-72 overflow-visible">
           {/* ROLE SWITCH — bottom-center over the cover */}
-          <div className="absolute left-1/2 -bottom-4 translate-x-[-50%] z-[99999]">
+          <div className="absolute left-1/2 -bottom-6 translate-x-[-50%] z-[99999]">
             <Switch.Group as="div" className="flex flex-col items-center">
               <Switch
                 checked={isHostView} 
@@ -2227,7 +2393,7 @@ const coverImage = useMemo(() => {
                 aria-busy={roleUpdating}
                 aria-label="Toggle role"
                 className={twMerge(
-                  'relative inline-flex h-12 w-[230px] items-center rounded-full px-1',
+                  'relative inline-flex h-12 w-[230px] items-center rounded-2xl px-1',
                   'transition-all duration-500 focus:outline-none overflow-visible',
                   'bg-white',
                   'focus-visible:ring-4 focus-visible:ring-black/10 focus-visible:ring-offset-2 focus-visible:ring-offset-white',
@@ -2279,11 +2445,11 @@ const coverImage = useMemo(() => {
                     // 'flex h-[26px] w-[34px] items-center justify-center rounded-full',
                     // 'px-[5px] text-[8px] font-semibold uppercase tracking-wide leading-none whitespace-nowrap',
                     // isHostView ? 'bg-white text-neutral-900' : 'bg-[#000] text-white'
-                    'absolute top-1 bottom-1 left-1 z-20 flex w-[108px] items-center justify-center rounded-full',
+                    'absolute top-1 bottom-1 left-1 z-20 flex w-[108px] items-center justify-center rounded-xl',
                     'bg-gradient-to-b from-white to-[#e3e6ed]',
                     'border border-white/50 text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-800'
                   )}
-                  animate={{ x: isHostView ? 115 : 0 }}
+                  animate={{ x: isHostView ? 113 : 0 }}
                 >
                   {isHostView ? 'Host mode' : 'Guest mode'}
                 </motion.span>
@@ -3863,7 +4029,7 @@ const coverImage = useMemo(() => {
               </motion.div>
             )}
 
-           <div className="flex flex-col items-center justify-center gap-1">
+           {/* <div className="flex flex-col items-center justify-center gap-1">
             <span className="text-[10px] font-semibold tracking-[0.28em] text-neutral-500">
               VIN POINT
             </span>
@@ -3878,7 +4044,7 @@ const coverImage = useMemo(() => {
             >
               BOOST RELEVANCE
             </button>
-          </div>
+          </div> */}
 
             {viewRole === 'host' && hostAnalytics && (
               <motion.div variants={cardVariants} className="mt-6">
@@ -3887,18 +4053,19 @@ const coverImage = useMemo(() => {
                   puntiShare={hostAnalytics.puntiShare}
                   puntiLabel={hostAnalytics.puntiLabel}
                   partnerCommission={effectiveHostAnalytics.partnerCommission}
+                  platformRelevance={effectiveHostAnalytics.platformRelevance}
                   maxPointValue={MAX_PARTNER_POINT_VALUE}
                   minCommission={MIN_PARTNER_COMMISSION}
                   maxCommission={MAX_PARTNER_COMMISSION}
                   onCommissionChange={handleCommissionUpdate}
                   loading={updatingCommission}
                   currentUserEmail={currentUserEmail}
-                  onOpenVinvinModal={openVinvinModal}
+                  // onOpenVinvinModal={openVinvinModal}
                 />
               </motion.div>
             )}
 
-            <div className="w-full h-full">
+            {/* <div className="w-full h-full">
               <Modal
                 isOpen={isVinvinModalOpen}
                 onClose={handleVinvinClose}
@@ -3915,7 +4082,7 @@ const coverImage = useMemo(() => {
                 // optional: keep modal from being closed mid-payment
                 // preventOutsideClose={isProcessingPayment}
               />
-            </div>
+            </div> */}
 
             {viewRole === 'host' && (
               <motion.div
@@ -3940,16 +4107,34 @@ const coverImage = useMemo(() => {
                   <div className="mt-5 space-y-4">
                     <div className="flex items-center justify-between rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800 shadow-sm">
                       <span className="font-medium">Total Bookings</span>
-                      <span className="text-lg font-semibold text-black">
-                        {/* {effectiveHostAnalytics.totalBooks ?? 0} */}
-                        {hostActivityTotals.bookings ?? 0}
-                      </span>
+                      <AnimatePresence mode="wait" initial={false}>
+                        <motion.span
+                          key={`${hostActivityFilter}-${hostPeriodKey}-bookings-${hostActivityTotals.bookings ?? 0}`}
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -6 }}
+                          transition={{ duration: 0.2, ease: 'easeOut' }}
+                          className="text-lg font-semibold text-black inline-block"
+                        >
+                          {/* {effectiveHostAnalytics.totalBooks ?? 0} */}
+                          {hostActivityTotals.bookings ?? 0}
+                        </motion.span>
+                      </AnimatePresence>
                     </div>
                     <div className="flex items-center justify-between rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800 shadow-sm">
                       <span className="font-medium">Total Revenue</span>
-                      <span className="text-lg font-semibold text-black">
-                        {formatConverted(hostActivityTotals.revenue ?? 0)}
-                      </span>
+                      <AnimatePresence mode="wait" initial={false}>
+                        <motion.span
+                          key={`${hostActivityFilter}-${hostPeriodKey}-revenue-${hostActivityTotals.revenue ?? 0}`}
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -6 }}
+                          transition={{ duration: 0.2, ease: 'easeOut' }}
+                          className="text-lg font-semibold text-black inline-block"
+                        >
+                          {formatConverted(hostActivityTotals.revenue ?? 0)}
+                        </motion.span>
+                      </AnimatePresence>
                     </div>
                     {/* <div className="flex items-center justify-between rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800 shadow-sm">
                       <div className="flex flex-col">
@@ -3974,13 +4159,30 @@ const coverImage = useMemo(() => {
                     </p>
                   </div>
                   <div className="mt-6 flex flex-col items-center justify-center rounded-xl bg-neutral-50 p-10 text-center md:h-52">
-                    <p className="text-3xl font-semibold text-black">
-                      {/* {formatConverted((hostAnalytics?.totalRevenue || 0) * 0.9)} */}
-                      {formatConverted(hostPreWithdrawalValue)}
-                    </p>
+                    <AnimatePresence mode="wait" initial={false}>
+                      <motion.p
+                        key={`${hostActivityFilter}-${hostPeriodKey}-prewithdraw-${hostPreWithdrawalValue * hostRevenueShare}`}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.25, ease: 'easeOut' }}
+                        className="text-3xl font-semibold text-black"
+                      >
+                        {/* {formatConverted((hostAnalytics?.totalRevenue || 0) * 0.9)} */}
+                        {formatConverted(hostPreWithdrawalValue)}
+                      </motion.p>
+                    </AnimatePresence>
                     <p className="mt-3 text-xs text-neutral-500">
-                      Calculated from your {hostFilterLabel} revenue snapshot and current commission share.
+                      Calculated from your {hostFilterLabel} revenue snapshot using the commission applied when each booking was
+                      made.
                     </p>
+                    <div className="mt-4 text-center text-sm text-neutral-700">
+                      <p className="font-semibold">Partner commission for {hostFilterLabel}</p>
+                      <p className="text-xs text-neutral-500">
+                        {Math.round(hostCommissionForFilter ?? effectiveHostAnalytics.partnerCommission)}% applied to bookings in
+                        this period.
+                      </p>
+                    </div>
                   </div>
                 </div>
 

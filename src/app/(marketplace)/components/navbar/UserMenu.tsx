@@ -347,7 +347,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
     items-center 
     backdrop-blur
     gap-3 
-    rounded-full 
+    rounded-2xl 
     cursor-pointer
     shadow-md 
     hover:shadow-lg

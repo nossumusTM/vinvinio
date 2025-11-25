@@ -24,7 +24,7 @@ const NavBar: React.FC<NavBarProps> = ({ currentUser }) => {
   const [visible, setVisible] = useState(true);
 
   const pathname = usePathname();
-  const isListingPage = pathname?.startsWith('/listings/') || pathname?.startsWith('/tours/');
+  const isListingPage = pathname?.startsWith('/listings/') || pathname?.startsWith('/services/');
   const isCheckoutPage = pathname?.startsWith('/checkout');
   const isHomePage = pathname === '/';
   const keepVisible = isListingPage || isCheckoutPage;

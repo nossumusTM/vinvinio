@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import getCurrentUser from '@/app/(marketplace)/actions/getCurrentUser';
 import prisma from '@/app/(marketplace)/libs/prismadb';
 import { computeAggregateMaps } from '@/app/(marketplace)/libs/aggregateTotals';
+import { MIN_PARTNER_COMMISSION, computeHostShareFromCommission } from '@/app/(marketplace)/constants/partner';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,6 +15,16 @@ export async function POST(req: Request) {
   const { totalPrice } = await req.json(); // expects totalPrice from reservation
 
   try {
+
+   const partnerCommission: number =
+      typeof currentUser.partnerCommission === 'number' &&
+      Number.isFinite(currentUser.partnerCommission)
+        ? currentUser.partnerCommission
+        : MIN_PARTNER_COMMISSION;
+
+    const hostShare = computeHostShareFromCommission(partnerCommission);
+    const revenueDelta = (totalPrice || 0) * hostShare;
+
     // Ensure HostAnalytics exists for this host
     const existing = await prisma.hostAnalytics.findUnique({
       where: { userId: currentUser.id },
@@ -34,7 +45,9 @@ export async function POST(req: Request) {
       existing?.yearlyTotals,
       new Date(),
       1,
-      totalPrice || 0,
+      // totalPrice || 0,
+      revenueDelta,
+      partnerCommission,
     );
 
     if (existing) {
@@ -42,7 +55,7 @@ export async function POST(req: Request) {
         where: { userId: currentUser.id },
         data: {
           totalBooks: { increment: 1 },
-          totalRevenue: { increment: totalPrice || 0 },
+          totalRevenue: { increment: revenueDelta },
           dailyTotals,
           monthlyTotals,
           yearlyTotals,
@@ -53,7 +66,7 @@ export async function POST(req: Request) {
         data: {
           userId: currentUser.id,
           totalBooks: 1,
-          totalRevenue: totalPrice || 0,
+          totalRevenue: revenueDelta,
           dailyTotals,
           monthlyTotals,
           yearlyTotals,

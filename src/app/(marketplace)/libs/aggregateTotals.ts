@@ -2,9 +2,13 @@ export type AggregateEntry = {
   period: string;
   bookings: number;
   revenue: number;
+  commission?: number;
 };
 
-type AggregateMap = Record<string, { bookings?: number; revenue?: number }>;
+type AggregateMap = Record<
+  string,
+  { bookings?: number; revenue?: number; commissionSum?: number; commission?: number }
+>;
 
 const clampNonNegative = (value: number) => (Number.isFinite(value) && value > 0 ? value : 0);
 
@@ -59,7 +63,17 @@ const sanitizeMap = (raw: unknown): AggregateMap => {
     const periodKey = normalizePeriodKey(key);
     const bookings = clampNonNegative(Number((value as any).bookings));
     const revenue = clampNonNegative(Number((value as any).revenue));
-    map[periodKey] = { bookings, revenue };
+
+    const commissionRaw =
+      (value as any).commissionSum ?? (value as any).commission ?? undefined;
+    const hasCommission = commissionRaw !== undefined && commissionRaw !== null;
+    const commissionSum = hasCommission
+      ? clampNonNegative(Number(commissionRaw))
+      : undefined;
+
+    map[periodKey] = hasCommission
+      ? { bookings, revenue, commissionSum }
+      : { bookings, revenue };
   }
   return map;
 };
@@ -111,10 +125,15 @@ const normalizeArrayEntries = (raw: unknown[]): AggregateEntry[] => {
           (entry as any)?.grossRevenue,
       );
 
+      const commissionValue = Number(
+        (entry as any)?.commission ?? (entry as any)?.partnerCommission ?? (entry as any)?.commissionSum,
+      );
+
       return {
         period,
         bookings: clampNonNegative(bookingsNum),
         revenue: clampNonNegative(revenueNum),
+        commission: Number.isFinite(commissionValue) ? clampNonNegative(commissionValue) : undefined,
       } satisfies AggregateEntry;
     })
     .filter((entry) => Boolean(entry.period));
@@ -132,11 +151,23 @@ const buildKeys = (date: Date) => {
   };
 };
 
-const applyDelta = (map: AggregateMap, key: string, bookingsDelta: number, revenueDelta: number) => {
-  const current = map[key] ?? { bookings: 0, revenue: 0 };
+const applyDelta = (
+  map: AggregateMap,
+  key: string,
+  bookingsDelta: number,
+  revenueDelta: number,
+  commissionDelta: number,
+) => {
+  const current = map[key] ?? { bookings: 0, revenue: 0, commissionSum: 0 };
   const nextBookings = Math.max(0, (current.bookings ?? 0) + bookingsDelta);
   const nextRevenue = Math.max(0, (current.revenue ?? 0) + revenueDelta);
-  map[key] = { bookings: nextBookings, revenue: nextRevenue };
+
+  const currentCommissionSum = clampNonNegative(
+    Number(current.commissionSum ?? current.commission ?? 0),
+  );
+  const nextCommissionSum = Math.max(0, currentCommissionSum + commissionDelta);
+
+  map[key] = { bookings: nextBookings, revenue: nextRevenue, commissionSum: nextCommissionSum };
   return map;
 };
 
@@ -147,12 +178,31 @@ export const computeAggregateMaps = (
   date: Date,
   bookingsDelta: number,
   revenueDelta: number,
+  commissionDelta = 0,
 ) => {
   const { dayKey, monthKey, yearKey } = buildKeys(date);
 
-  const dailyTotals = applyDelta(sanitizeMap(rawDaily), dayKey, bookingsDelta, revenueDelta);
-  const monthlyTotals = applyDelta(sanitizeMap(rawMonthly), monthKey, bookingsDelta, revenueDelta);
-  const yearlyTotals = applyDelta(sanitizeMap(rawYearly), yearKey, bookingsDelta, revenueDelta);
+  const dailyTotals = applyDelta(
+    sanitizeMap(rawDaily),
+    dayKey,
+    bookingsDelta,
+    revenueDelta,
+    commissionDelta,
+  );
+  const monthlyTotals = applyDelta(
+    sanitizeMap(rawMonthly),
+    monthKey,
+    bookingsDelta,
+    revenueDelta,
+    commissionDelta,
+  );
+  const yearlyTotals = applyDelta(
+    sanitizeMap(rawYearly),
+    yearKey,
+    bookingsDelta,
+    revenueDelta,
+    commissionDelta,
+  );
 
   return { dailyTotals, monthlyTotals, yearlyTotals };
 };
@@ -171,19 +221,40 @@ export const mapToEntries = (raw: unknown): AggregateEntry[] => {
 
   const map = sanitizeMap(raw);
   return Object.entries(map)
-    .map(([period, value]) => ({
-      period,
-      bookings: clampNonNegative(Number(value.bookings ?? 0)),
-      revenue: clampNonNegative(Number(value.revenue ?? 0)),
-    }))
+    .map(([period, value]) => {
+      const bookings = clampNonNegative(Number(value.bookings ?? 0));
+      const revenue = clampNonNegative(Number(value.revenue ?? 0));
+      const hasCommission = value.commissionSum != null || value.commission != null;
+      const commissionSum = hasCommission
+        ? clampNonNegative(Number(value.commissionSum ?? value.commission ?? 0))
+        : undefined;
+      const commission = bookings > 0 && hasCommission ? commissionSum / bookings : undefined;
+
+      return {
+        period,
+        bookings,
+        revenue,
+        commission,
+      } satisfies AggregateEntry;
+    })
     .sort((a, b) => (a.period < b.period ? 1 : -1));
 };
 
-export const summarizeEntries = (entries: AggregateEntry[]) =>
-  entries.reduce(
+export const summarizeEntries = (entries: AggregateEntry[]) => {
+  const totals = entries.reduce(
     (acc, entry) => ({
       bookings: acc.bookings + entry.bookings,
       revenue: acc.revenue + entry.revenue,
+      commissionSum:
+        acc.commissionSum +
+        (Number.isFinite(entry.commission) ? (entry.commission as number) : 0) * entry.bookings,
+      commissionCount:
+        acc.commissionCount + (Number.isFinite(entry.commission) ? entry.bookings : 0),
     }),
-    { bookings: 0, revenue: 0 },
+    { bookings: 0, revenue: 0, commissionSum: 0, commissionCount: 0 },
   );
+
+  const commission = totals.commissionCount > 0 ? totals.commissionSum / totals.commissionCount : undefined;
+
+  return { ...totals, commission };
+};

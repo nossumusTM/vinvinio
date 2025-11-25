@@ -55,6 +55,9 @@ export default async function getCurrentUser(): Promise<SafeUser | null> {
         passwordUpdatedAt: true,
         partnerCommission: true,
         followersCount: true,
+        platformRelevance: true,
+        partnerCommissionChangeCount: true,
+        partnerCommissionChangeWindowStart: true,
         allTimeBookingCount: true,
       },
     });
@@ -96,6 +99,16 @@ export default async function getCurrentUser(): Promise<SafeUser | null> {
         typeof user.partnerCommission === "number"
           ? user.partnerCommission
           : MIN_PARTNER_COMMISSION,
+      platformRelevance:
+        typeof user.platformRelevance === "number"
+          ? user.platformRelevance
+          : 0,
+      partnerCommissionChangeCount:
+        typeof user.partnerCommissionChangeCount === "number"
+          ? user.partnerCommissionChangeCount
+          : 0,
+      partnerCommissionChangeWindowStart:
+        user.partnerCommissionChangeWindowStart?.toISOString() || null,
       followersCount: typeof user.followersCount === 'number' ? user.followersCount : 0,
       allTimeBookingCount: typeof user.allTimeBookingCount === 'number' ? user.allTimeBookingCount : 0,
     };

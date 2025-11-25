@@ -2,11 +2,13 @@ import { NextResponse } from "next/server";
 import getCurrentUser from "@/app/(marketplace)/actions/getCurrentUser";
 import { updateListingPunti } from "@/app/(marketplace)/libs/partnerMetrics";
 import { MAX_PARTNER_POINT_VALUE } from "@/app/(marketplace)/constants/partner";
+import prisma from "@/app/(marketplace)/libs/prismadb";
 
 export async function POST(request: Request) {
   const currentUser = await getCurrentUser();
 
-  if (!currentUser || currentUser.role !== "moder") {
+  // if (!currentUser || currentUser.role !== "moder") {
+  if (!currentUser) {
     return new NextResponse("Unauthorized", { status: 403 });
   }
 
@@ -20,6 +22,22 @@ export async function POST(request: Request) {
     const puntiValue = Number(punti);
     if (!Number.isFinite(puntiValue)) {
       return new NextResponse("Invalid punti value", { status: 400 });
+    }
+
+    const listing = await prisma.listing.findUnique({
+      where: { id: listingId },
+      select: { userId: true },
+    });
+
+    if (!listing) {
+      return new NextResponse("Listing not found", { status: 404 });
+    }
+
+    const isOwner = currentUser.role === "host" && listing.userId === currentUser.id;
+    const isModerator = currentUser.role === "moder";
+
+    if (!isOwner && !isModerator) {
+      return new NextResponse("Unauthorized", { status: 403 });
     }
 
     const result = await updateListingPunti(listingId, puntiValue);

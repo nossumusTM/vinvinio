@@ -56,7 +56,7 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
     return todayEntry ? todayEntry.amount * hostShare : 0;
   }, [dailyData, hostShare]);
 
-  const totalDisplay = Number(total.toFixed(2));
+  const totalDisplay = Number((total * hostShare).toFixed(2));
   const revenueLabel = view === 'daily'
     ? 'Total Revenue'
     : view === 'all'

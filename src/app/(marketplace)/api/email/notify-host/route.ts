@@ -47,7 +47,7 @@ export async function POST(req: Request) {
     }
 
     if (!resolvedPath && listingId) {
-      resolvedPath = `/tours/general/${encodeURIComponent(listingId)}`;
+      resolvedPath = `/services/general/${encodeURIComponent(listingId)}`;
     }
 
     const listingUrl = `${baseUrl}${resolvedPath && resolvedPath.startsWith('/') ? resolvedPath : `/${resolvedPath ?? ''}`}`;

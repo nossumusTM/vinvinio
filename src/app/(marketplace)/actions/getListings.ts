@@ -147,7 +147,9 @@ export default async function getListings(
 
     const decoratedListings = listingsWithSlug.map((listing) => {
       const totalRating = listing.reviews.reduce((sum, r) => sum + (r.rating || 0), 0);
-      const avgRating = listing.reviews.length > 0 ? totalRating / listing.reviews.length : 0;
+      // const avgRating = listing.reviews.length > 0 ? totalRating / listing.reviews.length : 0;
+      const reviewsCount = listing.reviews.length;
+      const avgRating = reviewsCount > 0 ? totalRating / reviewsCount : 0;
 
       const pricingSnapshot = normalizePricingSnapshot(listing.customPricing, listing.price);
 
@@ -192,12 +194,23 @@ export default async function getListings(
         hobbies: Array.isArray(prismaUser.hobbies) ? [...prismaUser.hobbies] : [],
         preferredContacts: Array.isArray(prismaUser.preferredContacts) ? [...prismaUser.preferredContacts] : [],
         identityVerified: typeof prismaUser.identityVerified === 'boolean' ? prismaUser.identityVerified : false,
+        followersCount: typeof prismaUser.followersCount === 'number' ? prismaUser.followersCount : 0,
+        allTimeBookingCount: typeof prismaUser.allTimeBookingCount === 'number' ? prismaUser.allTimeBookingCount : 0,
+        platformRelevance: typeof prismaUser.platformRelevance === 'number' ? prismaUser.platformRelevance : 0,
+        partnerCommissionChangeCount:
+          typeof prismaUser.partnerCommissionChangeCount === 'number'
+            ? prismaUser.partnerCommissionChangeCount
+            : 0,
+        partnerCommissionChangeWindowStart: user.partnerCommissionChangeWindowStart ?? null,
       };
 
       const safeListing: SafeListing = {
         ...baseListing,
         createdAt: listing.createdAt.toISOString(),
         updatedAt: (listing.updatedAt ?? listing.createdAt).toISOString(),
+        platformRelevance: typeof safeUser.platformRelevance === 'number' ? safeUser.platformRelevance : 0,
+        reviewsCount,
+        avgRating,
         price: pricingSnapshot.basePrice > 0 ? pricingSnapshot.basePrice : listing.price,
         pricingType: pricingSnapshot.mode ?? null,
         groupPrice: pricingSnapshot.groupPrice,
@@ -215,18 +228,50 @@ export default async function getListings(
       return { listing: safeListing, avgRating };
     });
 
+    const compareByRelevance = (
+      a: { listing: SafeListing; avgRating: number },
+      b: { listing: SafeListing; avgRating: number },
+    ) => {
+      const puntiDiff = Number(b.listing.punti ?? 0) - Number(a.listing.punti ?? 0);
+      if (puntiDiff !== 0) return puntiDiff;
+
+      const platformDiff = Number(b.listing.platformRelevance ?? 0) - Number(a.listing.platformRelevance ?? 0);
+      if (platformDiff !== 0) return platformDiff;
+
+      const bookingDiff = Number(b.listing.user?.allTimeBookingCount ?? 0) - Number(a.listing.user?.allTimeBookingCount ?? 0);
+      if (bookingDiff !== 0) return bookingDiff;
+
+      const likeDiff = Number(b.listing.likesCount ?? 0) - Number(a.listing.likesCount ?? 0);
+      if (likeDiff !== 0) return likeDiff;
+
+      const ratingDiff = (b.avgRating || 0) - (a.avgRating || 0);
+      if (ratingDiff !== 0) return ratingDiff > 0 ? 1 : -1;
+
+      const reviewsDiff = Number(b.listing.reviewsCount ?? 0) - Number(a.listing.reviewsCount ?? 0);
+      if (reviewsDiff !== 0) return reviewsDiff;
+
+      return 0;
+    };
+
     if (sort === 'rating') {
       decoratedListings.sort((a, b) => (b.avgRating || 0) - (a.avgRating || 0));
     } else if (sort === 'priceLow') {
       decoratedListings.sort((a, b) => a.listing.price - b.listing.price);
     } else if (sort === 'priceHigh') {
       decoratedListings.sort((a, b) => b.listing.price - a.listing.price);
+    } else if (sort === 'random') {
+      decoratedListings.sort((a, b) => {
+        const priority = compareByRelevance(a, b);
+        if (priority !== 0) return priority;
+        return Math.random() - 0.5;
+      });
     } else {
       // decoratedListings.sort(() => Math.random() - 0.5);
-      decoratedListings.sort(
-        (a, b) => (Number(b.listing.punti ?? 0) - Number(a.listing.punti ?? 0)) ||
-          new Date(b.listing.createdAt).getTime() - new Date(a.listing.createdAt).getTime(),
-      );
+      // decoratedListings.sort(
+      //   (a, b) => (Number(b.listing.punti ?? 0) - Number(a.listing.punti ?? 0)) ||
+      //     new Date(b.listing.createdAt).getTime() - new Date(a.listing.createdAt).getTime(),
+      // );
+      decoratedListings.sort(compareByRelevance);
     }
 
     return decoratedListings.map((entry) => entry.listing);

@@ -385,7 +385,7 @@ const Calendar: React.FC<CalendarProps> = ({
               <button
                 type="button"
                 onClick={handlePrevMonth}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-full shadow-md transition bg-white text-sm text-neutral-700 hover:bg-neutral-100"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-xl shadow-md transition bg-white text-sm text-neutral-700 hover:bg-neutral-100"
               >
                 <BiSolidLeftArrow />
               </button>
@@ -416,7 +416,7 @@ const Calendar: React.FC<CalendarProps> = ({
               <button
                 type="button"
                 onClick={handleNextMonth}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-full shadow-md transition bg-white text-sm text-neutral-700 hover:bg-neutral-100"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-xl shadow-md transition bg-white text-sm text-neutral-700 hover:bg-neutral-100"
               >
                 <BiSolidRightArrow />
               </button>

@@ -134,10 +134,21 @@ type SafeUserStrict = Omit<
 
   isSuspended: boolean;
   suspendedAt: Date | string | null;
+  // socialCardVisibility: SocialCardVisibility | null;
+  // socialCardIsPublic: boolean;
+  // visitedPlaces: SocialCardVisitedPlace[] | null;
+  // partnerCommission: number;
+  // followersCount: number;
+  // allTimeBookingCount: number;
+  // listingLikesCount?: number;
+
   socialCardVisibility: SocialCardVisibility | null;
   socialCardIsPublic: boolean;
   visitedPlaces: SocialCardVisitedPlace[] | null;
   partnerCommission: number;
+  platformRelevance: number;
+  partnerCommissionChangeCount: number;
+  partnerCommissionChangeWindowStart: Date | string | null;
   followersCount: number;
   allTimeBookingCount: number;
   listingLikesCount?: number;
@@ -162,6 +173,8 @@ export type SafeListing = Simplify<
   Omit<Listing, "createdAt" | "updatedAt"> & {
     createdAt: string;
     updatedAt: string;
+    
+    bookingCount?: number;
 
     // Keep your custom fields, but make them permissive
     hostDescription?: string | null;
@@ -191,6 +204,10 @@ export type SafeListing = Simplify<
 
     likesCount?: number;
     likedByCurrentUser?: boolean;
+
+    platformRelevance?: number;
+    reviewsCount?: number;
+    avgRating?: number;
 
     status: Statusish;
     user: SafeUser;

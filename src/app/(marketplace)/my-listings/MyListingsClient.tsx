@@ -17,12 +17,15 @@ import { TiSortAlphabeticallyOutline } from "react-icons/ti";
 import { RiLockPasswordLine } from "react-icons/ri";
 
 import ConfirmPopup from '../components/ConfirmPopup';
+import Modal from '@/app/(marketplace)/components/modals/Modal';
 
 import Container from '@/app/(marketplace)/components/Container';
 import Heading from '@/app/(marketplace)/components/Heading';
 import Button from '@/app/(marketplace)/components/Button';
 
+import { MAX_PARTNER_POINT_VALUE } from '@/app/(marketplace)/constants/partner';
 import type { SafeListing, SafeUser } from '@/app/(marketplace)/types';
+import VinPointBoostModal from '../components/VinPointBoostModal';
 
 type KnownListingStatus = Extract<SafeListing['status'], string>;
 
@@ -133,6 +136,9 @@ const MyListingsClient: React.FC<MyListingsClientProps> = ({ listings, currentUs
   const [showDeactivate, setShowDeactivate] = useState(false);
   const [selectedListing, setSelectedListing] = useState<SafeListing | null>(null);
   const [deactivatePassword, setDeactivatePassword] = useState('');
+  const [boostValue, setBoostValue] = useState<number>(0);
+  const [isBoosting, setIsBoosting] = useState(false);
+  const [boostListing, setBoostListing] = useState<SafeListing | null>(null);
 
   const cap = (s?: string | null) => (typeof s === 'string' && s.length ? s[0].toUpperCase() + s.slice(1) : s ?? '');
 
@@ -201,6 +207,36 @@ const MyListingsClient: React.FC<MyListingsClientProps> = ({ listings, currentUs
       toast.error(error?.response?.data || 'Failed to deactivate listing.');
     } finally {
       setProcessingId(null);
+    }
+  };
+
+  const openBoostModal = (listing: SafeListing) => {
+    setBoostListing(listing);
+  };
+
+  const handleBoostSubmit = async () => {
+    if (!boostListing) return;
+
+    const sanitizedValue = Math.min(
+      MAX_PARTNER_POINT_VALUE,
+      Math.max(0, Math.round(boostValue)),
+    );
+
+    setIsBoosting(true);
+    try {
+      await axios.post('/api/listings/punti', {
+        listingId: boostListing.id,
+        punti: sanitizedValue,
+      });
+
+      toast.success('VIN points updated for your listing.');
+      setBoostListing(null);
+      router.refresh();
+    } catch (error: any) {
+      const message = error?.response?.data?.message || error?.response?.data || 'Unable to update VIN points.';
+      toast.error(message);
+    } finally {
+      setIsBoosting(false);
     }
   };
 
@@ -387,6 +423,16 @@ const MyListingsClient: React.FC<MyListingsClientProps> = ({ listings, currentUs
               <div className="sm:w-40">
                 <Button
                   small
+                  label="Boost Listing"
+                  onClick={() => openBoostModal(listing)}
+                  outline
+                  disabled={processingId === listing.id}
+                />
+              </div>
+
+              <div className="sm:w-40">
+                <Button
+                  small
                   label="Edit listing"
                   onClick={() => handleEdit(listing)}
                   outline
@@ -496,6 +542,35 @@ const MyListingsClient: React.FC<MyListingsClientProps> = ({ listings, currentUs
             </AnimatePresence>
           </div>
         )}
+
+        {/* <div className="w-full h-full">
+              <Modal
+                isOpen={isVinvinModalOpen}
+                onClose={handleVinvinClose}
+                onSubmit={handleVinvinAction}
+                closeOnSubmit={false}
+                actionLoading={isProcessingPayment}
+                title={vinvinStep === "amount" ? "Boost your vin point" : "Vin Point Manager "}
+                actionLabel={vinvinActionLabel}
+                body={vinvinModalBody}
+                footer={undefined}
+                disabled={isProcessingPayment || vinvinSuccess}
+                className=""
+                submitOnEnter={false}
+                // optional: keep modal from being closed mid-payment
+                // preventOutsideClose={isProcessingPayment}
+              />
+            </div> */}
+
+        <VinPointBoostModal
+          listing={boostListing}
+          currentUserEmail={currentUser?.email}
+          onClose={() => setBoostListing(null)}
+          onSuccess={() => {
+            setBoostListing(null);
+            router.refresh();
+          }}
+        />
 
         {showDeactivate && selectedListing && (
           <ConfirmPopup
