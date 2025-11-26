@@ -20,6 +20,7 @@ interface EarningsCardProps {
   totalEarnings: number; // ✅ new field
   roleLabel: 'Host' | 'Promoter';
   hostShare?: number;
+  sourceCurrency?: string;
 }
 
 const EarningsCard: React.FC<EarningsCardProps> = ({
@@ -30,10 +31,12 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
   roleLabel,
   totalEarnings,
   hostShare = 1,
+  sourceCurrency
 }) => {
 
   const [view, setView] = useState<'daily' | 'monthly' | 'yearly' | 'all'>('daily');
-  const { formatConverted, currency } = useCurrencyFormatter();
+  const { formatConverted, currency, baseCurrency } = useCurrencyFormatter();
+  const fromCurrency = sourceCurrency ?? baseCurrency;
 
   const dataMap = {
     daily: dailyData,
@@ -46,7 +49,7 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
         .map((date) => dailyData.find((d) => d.date === date)!)
     : dataMap[view];
 
-  const total = view === 'daily'
+  const totalBase = view === 'all'
     ? totalEarnings
     : currentData.reduce((sum, entry) => sum + entry.amount, 0);
 
@@ -56,7 +59,7 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
     return todayEntry ? todayEntry.amount * hostShare : 0;
   }, [dailyData, hostShare]);
 
-  const totalDisplay = Number((total * hostShare).toFixed(2));
+  const totalDisplay = Number((totalBase * hostShare).toFixed(2));
   const revenueLabel = view === 'daily'
     ? 'Total Revenue'
     : view === 'all'
@@ -88,7 +91,7 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
                     transition={{ duration: 0.2 }}
                     className="text-lg font-semibold text-black"
                   >
-                    {formatConverted(todaysProfitValue)}
+                    {formatConverted(todaysProfitValue, fromCurrency)}
                   </motion.span>
                 </AnimatePresence>
               </div>
@@ -106,7 +109,7 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
                     transition={{ duration: 0.2 }}
                     className="text-lg font-semibold text-black"
                   >
-                    {formatConverted(totalDisplay)}
+                    {formatConverted(totalDisplay, fromCurrency)}
                   </motion.span>
                 </AnimatePresence>
               </div>
@@ -137,14 +140,14 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
               <LineChart data={currentData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
                 <CartesianGrid strokeDasharray="6 6" />
                 <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                <YAxis tickFormatter={(val) => formatConverted(val)} />
+                <YAxis tickFormatter={(val) => formatConverted(val, fromCurrency)} />
                 <YAxis label={{ value: `Income (${currency})`, angle: -90, position: 'insideLeft' }} />
-                <YAxis yAxisId="left" tickFormatter={(val) => formatConverted(val)} />
+                <YAxis yAxisId="left" tickFormatter={(val) => formatConverted(val, fromCurrency)} />
                 <YAxis yAxisId="right" orientation="right" tickFormatter={(val) => `${val} books`} />
                 <Tooltip
                   formatter={(value: number, name: string, props: any) => {
                     if (name === 'amount') {
-                      return [formatConverted(value), 'Income'];
+                      return [formatConverted(value, fromCurrency), 'Income'];
                     }
                     if (name === 'books') {
                       return [`${value} ${value === 1 ? 'Booking' : 'Bookings'}`, 'Books'];

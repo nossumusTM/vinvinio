@@ -165,14 +165,14 @@ model Listing {
   customPricing       Json?
   hoursInAdvance      Int?          @default(0)
   punti               Int            @default(0)
-  viewCount           Int            @default(0)
   likesCount          Int            @default(0)
+  viewCount           Int           @default(0)   // 👈 ADD THIS
   availabilityRules   Json?
   user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   reservations        Reservation[]
   reviews             Review[]
   likes               ListingLike[]
-  listingViews        ListingView[]
+  views               ListingView[]
 
   slug             String?    // ← temporarily nullable & not unique
   primaryCategory  String?    // ← optional
@@ -409,10 +409,9 @@ model ListingLike {
 }
 
 model ListingView {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  listingId String   @db.ObjectId
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  listingId String  @db.ObjectId
   ip        String
-  createdAt DateTime @default(now())
 
   listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 

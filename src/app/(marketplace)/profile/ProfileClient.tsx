@@ -40,6 +40,7 @@ import {
   computeHostShareFromCommission,
   getPuntiLabel,
 } from "@/app/(marketplace)/constants/partner";
+import { BASE_CURRENCY } from "@/app/(marketplace)/constants/locale";
 
 import VerificationBadge from "../components/VerificationBadge";
 import { maskPhoneNumber } from "@/app/(marketplace)/utils/phone";
@@ -155,6 +156,7 @@ type HostAnalytics = {
   payoutNumber?: string;
   userId?: string;
   breakdown?: AggregateBuckets;
+  currency?: string;
   };
 
   type AggregateBuckets = {
@@ -194,6 +196,7 @@ const DEFAULT_HOST_ANALYTICS: HostAnalytics = {
   payoutMethod: undefined,
   payoutNumber: undefined,
   userId: undefined,
+  currency: BASE_CURRENCY,
   breakdown: {
     daily: [],
     monthly: [],
@@ -218,7 +221,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   referralBookings,
 }) => {
   const searchParams = useSearchParams();
-  const { formatConverted } = useCurrencyFormatter();
+  const { formatConverted, baseCurrency } = useCurrencyFormatter();
   const suspensionDate = useMemo(() => {
     const raw = currentUser?.suspendedAt;
     if (!raw) return null;
@@ -273,6 +276,7 @@ const busy = uploadingAvatar || uploadingCover;
  
 const [hostAnalytics, setHostAnalytics] = useState<HostAnalytics | null>(null);
 const effectiveHostAnalytics = hostAnalytics ?? DEFAULT_HOST_ANALYTICS;
+const hostCurrency = effectiveHostAnalytics.currency ?? baseCurrency;
 const [hostBreakdown, setHostBreakdown] = useState<AggregateBuckets>(DEFAULT_HOST_ANALYTICS.breakdown!);
   const [hostActivityFilter, setHostActivityFilter] = useState<HostAnalyticsFilter>('day');
   const [hostActivityDate, setHostActivityDate] = useState<Date>(new Date());
@@ -1050,13 +1054,17 @@ const coverImage = useMemo(() => {
     yearly: EarningsEntry[];
     dailyProfit: number;
     totalEarnings: number;
+    currency: string;
   }>({
     daily: [],
     monthly: [],
     yearly: [],
     dailyProfit: 0,
     totalEarnings: 0,
+    currency: BASE_CURRENCY,
   });  
+
+  const earningsCurrency = earnings.currency ?? baseCurrency;
 
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [initialSectionApplied, setInitialSectionApplied] = useState(false);
@@ -1190,6 +1198,30 @@ const coverImage = useMemo(() => {
     () => computeHostShareFromCommission(effectiveHostAnalytics.partnerCommission),
     [effectiveHostAnalytics.partnerCommission],
   );
+
+  const commissionAdjustedEntries = useMemo(() => {
+    const applyCommission = (entries: AggregateEntry[]) => {
+      return entries.map((entry) => {
+        const commission = Number.isFinite(entry.commission)
+          ? (entry.commission as number)
+          : effectiveHostAnalytics.partnerCommission;
+
+        const hostShare = computeHostShareFromCommission(commission);
+
+        return {
+          date: entry.period,
+          amount: (entry.revenue ?? 0) * hostShare,
+          books: entry.bookings ?? 0,
+        } satisfies EarningsEntry;
+      });
+    };
+
+    return {
+      daily: applyCommission(hostBreakdown.daily),
+      monthly: applyCommission(hostBreakdown.monthly),
+      yearly: applyCommission(hostBreakdown.yearly),
+    };
+  }, [effectiveHostAnalytics.partnerCommission, hostBreakdown.daily, hostBreakdown.monthly, hostBreakdown.yearly]);
 
   const selectPreferredEntry = useCallback((entries: AggregateEntry[]) => {
     return (
@@ -1782,6 +1814,7 @@ const coverImage = useMemo(() => {
           yearly: res.data.yearly,
           dailyProfit,
           totalEarnings: res.data.totalEarnings,
+          currency: res.data.currency ?? BASE_CURRENCY,
         });
       } catch (err) {
         console.error("Earnings fetch failed:", err);
@@ -1792,6 +1825,35 @@ const coverImage = useMemo(() => {
       fetchEarnings();
     }
   }, [currentUser.role]);  
+
+  useEffect(() => {
+    if (currentUser.role !== 'host') return;
+
+    const todayKey = new Date().toISOString().split('T')[0];
+
+    const dailyProfit =
+      commissionAdjustedEntries.daily.find((entry) => entry.date === todayKey)?.amount ?? 0;
+
+    const totalEarnings = commissionAdjustedEntries.daily.reduce(
+      (sum, entry) => sum + entry.amount,
+      0,
+    );
+
+    setEarnings((prev) => ({
+      daily: commissionAdjustedEntries.daily,
+      monthly: commissionAdjustedEntries.monthly,
+      yearly: commissionAdjustedEntries.yearly,
+      dailyProfit,
+      totalEarnings,
+      currency: prev?.currency ?? hostCurrency ?? BASE_CURRENCY,
+    }));
+  }, [
+    commissionAdjustedEntries.daily,
+    commissionAdjustedEntries.monthly,
+    commissionAdjustedEntries.yearly,
+    currentUser.role,
+    hostCurrency,
+  ]);
 
   useEffect(() => {
     const fetchSavedCard = async () => {
@@ -2021,7 +2083,8 @@ const coverImage = useMemo(() => {
           platformRelevance: Number.isFinite(platformRelevanceValue)
             ? Math.max(0, platformRelevanceValue)
             : 0,
-          breakdown
+          breakdown,
+          currency: typeof data.currency === 'string' ? data.currency : BASE_CURRENCY,
         });
 
         setHostBreakdown(breakdown);
@@ -3934,7 +3997,7 @@ const coverImage = useMemo(() => {
                       <span className="font-medium">Total Books Revenue</span>
                       <span className="text-lg font-semibold text-black">
                         {/* {formatConverted(analytics.totalRevenue)} */}
-                        {formatConverted(promoterActivityTotals.revenue)}
+                        {formatConverted(promoterActivityTotals.revenue, baseCurrency)}
                       </span>
                     </div>
                   </div>
@@ -3949,7 +4012,7 @@ const coverImage = useMemo(() => {
                   </div>
                   <div className="mt-6 flex items-center justify-center rounded-xl bg-neutral-50 p-10 md:h-52">
                     <p className="text-3xl font-semibold text-black">
-                      {formatConverted((analytics.totalRevenue || 0) * 0.1)}
+                      {formatConverted((analytics.totalRevenue || 0) * 0.1, baseCurrency)}
                     </p>
                   </div>
                 </div>
@@ -4132,7 +4195,7 @@ const coverImage = useMemo(() => {
                           transition={{ duration: 0.2, ease: 'easeOut' }}
                           className="text-lg font-semibold text-black inline-block"
                         >
-                          {formatConverted(hostActivityTotals.revenue ?? 0)}
+                          {formatConverted(hostActivityTotals.revenue ?? 0, hostCurrency)}
                         </motion.span>
                       </AnimatePresence>
                     </div>
@@ -4144,7 +4207,7 @@ const coverImage = useMemo(() => {
                         </span>
                       </div>
                       <span className="text-lg font-semibold text-black">
-                        {formatConverted(hostPreWithdrawalValue)}
+                        {formatConverted(hostPreWithdrawalValue, hostCurrency)}
                       </span>
                     </div> */}
                   </div>
@@ -4169,7 +4232,7 @@ const coverImage = useMemo(() => {
                         className="text-3xl font-semibold text-black"
                       >
                         {/* {formatConverted((hostAnalytics?.totalRevenue || 0) * 0.9)} */}
-                        {formatConverted(hostPreWithdrawalValue * (effectiveHostAnalytics.partnerCommission / 100))}
+                        {formatConverted(hostPreWithdrawalValue * hostRevenueShare)}
                       </motion.p>
                     </AnimatePresence>
                     <p className="mt-3 text-xs text-neutral-500">
@@ -4270,7 +4333,8 @@ const coverImage = useMemo(() => {
                   monthlyData={earnings.monthly}
                   yearlyData={earnings.yearly}
                   totalEarnings={earnings.totalEarnings}
-                  hostShare={hostRevenueShare}
+                  hostShare={viewRole === 'host' ? 1 : hostRevenueShare}
+                  sourceCurrency={earningsCurrency}
                 />
               </motion.div>
             )}

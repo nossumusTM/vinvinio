@@ -94,6 +94,7 @@ import { resolvePartnerMetricsForHost } from '@/app/(marketplace)/libs/partnerMe
 import { Prisma } from '@prisma/client';
 import { MIN_PARTNER_COMMISSION } from '@/app/(marketplace)/constants/partner';
 import { mapToEntries } from '@/app/(marketplace)/libs/aggregateTotals';
+import { BASE_CURRENCY } from '@/app/(marketplace)/constants/locale';
 
 export const dynamic = 'force-dynamic';
 
@@ -224,6 +225,7 @@ export async function GET(request: Request) {
       puntiLabel,
       platformRelevance,
       breakdown,
+      currency: BASE_CURRENCY,
     });
   } catch (error) {
     console.error('[HOST_ANALYTICS_GET]', error);
@@ -302,6 +304,7 @@ export async function POST(req: Request) {
       puntiLabel,
       platformRelevance,
       breakdown,
+      currency: BASE_CURRENCY,
     });
   } catch (error) {
     console.error('[HOST_ANALYTICS_POST]', error);

@@ -63,6 +63,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/app/(marketplace)/libs/prismadb';
 import getCurrentUser from '@/app/(marketplace)/actions/getCurrentUser';
 import { mapToEntries } from '@/app/(marketplace)/libs/aggregateTotals';
+import { BASE_CURRENCY } from '@/app/(marketplace)/constants/locale';
 
 type RawEarning = {
   amount: number;
@@ -223,11 +224,27 @@ export async function GET() {
     ? earnings.reduce((sum, entry) => sum + entry.totalBooks, 0)
     : Number(hostAnalytics?.totalBooks ?? 0);
 
+    const sumAmounts = (entries: { amount: number }[]) =>
+    entries.reduce((sum, entry) => sum + entry.amount, 0);
+
+  const revenueTotals = {
+    daily: sumAmounts(daily),
+    monthly: sumAmounts(monthly),
+    yearly: sumAmounts(yearly),
+    all: totalEarnings,
+  };
+
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const todaysProfit = daily.find((entry) => entry.date === todayKey)?.amount ?? 0;
+
   return NextResponse.json({
     daily,
     monthly,
     yearly,
     totalEarnings,
     totalBooks,
+    currency: BASE_CURRENCY,
+    revenueTotals,
+    todaysProfit,
   });
 }

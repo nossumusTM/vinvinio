@@ -63,6 +63,7 @@ export const CURRENCY_OPTIONS: CurrencyOption[] = [
 
 export const DEFAULT_LANGUAGE = LANGUAGE_OPTIONS[0];
 export const DEFAULT_CURRENCY = CURRENCY_OPTIONS[0];
+export const BASE_CURRENCY = process.env.NEXT_PUBLIC_BASE_CURRENCY ?? DEFAULT_CURRENCY.currency;
 
 export const CURRENCY_RATES: Record<string, number> = {
   USD: 1,

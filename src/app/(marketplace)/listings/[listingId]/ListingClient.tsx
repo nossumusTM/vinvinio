@@ -506,8 +506,10 @@ const ListingClient: React.FC<ListingClientProps> = ({
       }, [getByValue, listing.locationValue, setLocation]);
 
       useEffect(() => {
+        // Reset local counter whenever we switch to a different listing so the
+        // following increment effect starts from the correct baseline.
         setViewCount(listing.viewCount ?? 0);
-      }, [listing.viewCount]);
+      }, [listing.id, listing.viewCount]);
 
       useEffect(() => {
         let cancelled = false;
