@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import CalendarPicker from './CalendarPicker';
 import type { HostAnalyticsFilter } from './FilterHostAnalytics';
 
@@ -54,6 +55,12 @@ const AnalyticsPicker: React.FC<AnalyticsPickerProps> = ({
     const [viewYear, setViewYear] = useState(selectedDate.getUTCFullYear());
     const [viewMonth, setViewMonth] = useState(selectedDate.getUTCMonth());
 
+    const calendarVariants = {
+        hidden: { opacity: 0, y: -8, scale: 0.98 },
+        visible: { opacity: 1, y: 0, scale: 1 },
+        exit: { opacity: 0, y: -8, scale: 0.98 },
+    };
+
     // keep calendar view in sync if selectedDate changes from outside
     useEffect(() => {
       setViewYear(selectedDate.getUTCFullYear());
@@ -103,11 +110,11 @@ const AnalyticsPicker: React.FC<AnalyticsPickerProps> = ({
         </span>
 
         {/* compact header with stepper */}
-        <div className="flex items-center justify-between rounded-lg border border-neutral-200 bg-white px-2 py-1 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.75),0_8px_20px_rgba(0,0,0,0.04)]">
+        <div className="flex items-center justify-between rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.75),0_8px_20px_rgba(0,0,0,0.04)]">
           <button
             type="button"
             onClick={() => handleStep(-1)}
-            className="flex h-7 w-7 items-center justify-center rounded-full border border-neutral-200 bg-neutral-50 text-xs font-semibold text-neutral-700 transition hover:bg-neutral-100"
+            className="flex h-7 w-7 items-center justify-center rounded-full shadow-md bg-neutral-50 text-xs font-semibold text-neutral-700 transition hover:bg-neutral-100"
           >
             ‹
           </button>
@@ -121,89 +128,94 @@ const AnalyticsPicker: React.FC<AnalyticsPickerProps> = ({
           <button
             type="button"
             onClick={() => handleStep(1)}
-            className="flex h-7 w-7 items-center justify-center rounded-full border border-neutral-200 bg-neutral-50 text-xs font-semibold text-neutral-700 transition hover:bg-neutral-100"
+            className="flex h-7 w-7 items-center justify-center rounded-full shadow-md bg-neutral-50 text-xs font-semibold text-neutral-700 transition hover:bg-neutral-100"
           >
             ›
           </button>
         </div>
 
         {/* inline calendar popover */}
-        {isCalendarOpen && (
-          <div
-            className={`mt-3 rounded-xl border border-neutral-200 bg-white p-3 text-[11px] shadow-[0_16px_40px_rgba(0,0,0,0.14)] ${
-              placement === 'up' ? 'origin-bottom' : 'origin-top'
-            }`}
-          >
-            <div className="mb-2 flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => handleMonthStep(-1)}
-                className="flex h-7 w-7 items-center justify-center rounded-full border border-neutral-200 bg-neutral-50 text-[11px] font-semibold text-neutral-700 transition hover:bg-neutral-100"
-              >
-                ‹
-              </button>
-              <span className="px-2 text-[12px] font-semibold text-neutral-900">
-                {monthLabel}
-              </span>
-              <button
-                type="button"
-                onClick={() => handleMonthStep(1)}
-                className="flex h-7 w-7 items-center justify-center rounded-full border border-neutral-200 bg-neutral-50 text-[11px] font-semibold text-neutral-700 transition hover:bg-neutral-100"
-              >
-                ›
-              </button>
-            </div>
+        <AnimatePresence>
+          {isCalendarOpen && (
+            <motion.div
+              key="day-calendar"
+              variants={calendarVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+              className="absolute left-0 right-0 top-full z-20 mt-2 rounded-xl border border-neutral-200 bg-white p-3 text-[11px] shadow-[0_16px_40px_rgba(0,0,0,0.14)] origin-top"
+            >
+              <div className="mb-2 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => handleMonthStep(-1)}
+                  className="flex h-7 w-7 items-center justify-center rounded-full border border-neutral-200 bg-neutral-50 text-[11px] font-semibold text-neutral-700 transition hover:bg-neutral-100"
+                >
+                  ‹
+                </button>
+                <span className="px-2 text-[12px] font-semibold text-neutral-900">
+                  {monthLabel}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleMonthStep(1)}
+                  className="flex h-7 w-7 items-center justify-center rounded-full border border-neutral-200 bg-neutral-50 text-[11px] font-semibold text-neutral-700 transition hover:bg-neutral-100"
+                >
+                  ›
+                </button>
+              </div>
 
-            {/* weekday header */}
-            <div className="mb-1 grid grid-cols-7 gap-1 text-center text-[10px] font-semibold text-neutral-500">
-              {weekDayLabels.map((d) => (
-                <span key={d}>{d}</span>
-              ))}
-            </div>
+              {/* weekday header */}
+              <div className="mb-1 grid grid-cols-7 gap-1 text-center text-[10px] font-semibold text-neutral-500">
+                {weekDayLabels.map((d) => (
+                  <span key={d}>{d}</span>
+                ))}
+              </div>
 
-            {/* days grid */}
-            <div className="grid grid-cols-7 gap-1 text-center text-[11px]">
-              {cells.map((day, idx) => {
-                if (day == null) {
+              {/* days grid */}
+              <div className="grid grid-cols-7 gap-1 text-center text-[11px]">
+                {cells.map((day, idx) => {
+                  if (day == null) {
+                    return (
+                      <div
+                        key={idx}
+                        className="h-7 w-7 text-[10px] text-transparent"
+                      >
+                        ·
+                      </div>
+                    );
+                  }
+
+                  const isSelected =
+                    isSameMonthView && day === selectedDay;
+
                   return (
-                    <div
+                    <button
                       key={idx}
-                      className="h-7 w-7 text-[10px] text-transparent"
+                      type="button"
+                      onClick={() => {
+                        const next = new Date(
+                          Date.UTC(viewYear, viewMonth, day),
+                        );
+                        onDateChange(next);
+                        setIsCalendarOpen(false);
+                      }}
+                      className={[
+                        'flex h-7 w-7 items-center justify-center rounded-full text-[11px] transition',
+                        isSelected
+                          ? 'bg-black text-white'
+                          : 'bg-neutral-50 text-neutral-800 hover:bg-neutral-100',
+                      ].join(' ')}
                     >
-                      ·
-                    </div>
+                      {day}
+                    </button>
                   );
-                }
-
-                const isSelected =
-                  isSameMonthView && day === selectedDay;
-
-                return (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => {
-                      const next = new Date(
-                        Date.UTC(viewYear, viewMonth, day),
-                      );
-                      onDateChange(next);
-                      // close after selection
-                      setIsCalendarOpen(false);
-                    }}
-                    className={[
-                      'flex h-7 w-7 items-center justify-center rounded-full text-[11px] transition',
-                      isSelected
-                        ? 'bg-black text-white'
-                        : 'bg-neutral-50 text-neutral-800 hover:bg-neutral-100',
-                    ].join(' ')}
-                  >
-                    {day}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
+                })}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     );
   }
@@ -240,11 +252,11 @@ const AnalyticsPicker: React.FC<AnalyticsPickerProps> = ({
         {filter === 'month' ? 'Select month' : 'Select year'}
       </span>
 
-      <div className="flex items-center justify-between rounded-lg border border-neutral-200 bg-white px-2 py-1 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.75),0_8px_20px_rgba(0,0,0,0.04)]">
+      <div className="flex items-center justify-between rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.75),0_8px_20px_rgba(0,0,0,0.04)]">
         <button
           type="button"
           onClick={() => (filter === 'month' ? handleMonthStep(-1) : handleYearStep(-1))}
-          className="flex h-7 w-7 items-center justify-center rounded-full border border-neutral-200 bg-neutral-50 text-xs font-semibold text-neutral-700 transition hover:bg-neutral-100"
+          className="flex h-7 w-7 items-center justify-center rounded-full shadow-md bg-neutral-50 text-xs font-semibold text-neutral-700 transition hover:bg-neutral-100"
         >
           ‹
         </button>
@@ -256,7 +268,7 @@ const AnalyticsPicker: React.FC<AnalyticsPickerProps> = ({
         <button
           type="button"
           onClick={() => (filter === 'month' ? handleMonthStep(1) : handleYearStep(1))}
-          className="flex h-7 w-7 items-center justify-center rounded-full border border-neutral-200 bg-neutral-50 text-xs font-semibold text-neutral-700 transition hover:bg-neutral-100"
+          className="flex h-7 w-7 items-center justify-center rounded-full shadow-md bg-neutral-50 text-xs font-semibold text-neutral-700 transition hover:bg-neutral-100"
         >
           ›
         </button>
