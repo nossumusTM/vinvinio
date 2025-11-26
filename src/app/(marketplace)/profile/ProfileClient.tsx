@@ -1203,39 +1203,39 @@ const coverImage = useMemo(() => {
 
   const [updatingCommission, setUpdatingCommission] = useState(false);
 
-  const commissionAdjustedEntries = useMemo(() => {
-    const fallbackCommission =
-      typeof currentUser.partnerCommission === 'number'
-        ? currentUser.partnerCommission
-        : MIN_PARTNER_COMMISSION;
+  // const commissionAdjustedEntries = useMemo(() => {
+  //   const fallbackCommission =
+  //     typeof currentUser.partnerCommission === 'number'
+  //       ? currentUser.partnerCommission
+  //       : MIN_PARTNER_COMMISSION;
 
-    const applyCommission = (entries: AggregateEntry[]) => {
-      return entries.map((entry) => {
-        const commission = Number.isFinite(entry.commission)
-          ? (entry.commission as number)
-          : fallbackCommission; // 👈 use User.partnerCommission here
+  //   const applyCommission = (entries: AggregateEntry[]) => {
+  //     return entries.map((entry) => {
+  //       const commission = Number.isFinite(entry.commission)
+  //         ? (entry.commission as number)
+  //         : fallbackCommission; // 👈 use User.partnerCommission here
 
-        const hostShare = computeHostShareFromCommission(commission);
+  //       const hostShare = computeHostShareFromCommission(commission);
 
-        return {
-          date: entry.period,
-          amount: (entry.revenue ?? 0) * hostShare,
-          books: entry.bookings ?? 0,
-        } satisfies EarningsEntry;
-      });
-    };
+  //       return {
+  //         date: entry.period,
+  //         amount: (entry.revenue ?? 0) * hostShare,
+  //         books: entry.bookings ?? 0,
+  //       } satisfies EarningsEntry;
+  //     });
+  //   };
 
-    return {
-      daily: applyCommission(hostBreakdown.daily),
-      monthly: applyCommission(hostBreakdown.monthly),
-      yearly: applyCommission(hostBreakdown.yearly),
-    };
-  }, [
-    currentUser.partnerCommission,
-    hostBreakdown.daily,
-    hostBreakdown.monthly,
-    hostBreakdown.yearly,
-  ]);
+  //   return {
+  //     daily: applyCommission(hostBreakdown.daily),
+  //     monthly: applyCommission(hostBreakdown.monthly),
+  //     yearly: applyCommission(hostBreakdown.yearly),
+  //   };
+  // }, [
+  //   currentUser.partnerCommission,
+  //   hostBreakdown.daily,
+  //   hostBreakdown.monthly,
+  //   hostBreakdown.yearly,
+  // ]);
 
   const selectPreferredEntry = useCallback((entries: AggregateEntry[]) => {
     return (
@@ -1865,56 +1865,56 @@ const coverImage = useMemo(() => {
     }
   }, [currentUser.role]);  
 
-  useEffect(() => {
-    if (currentUser.role !== 'host') return;
+  // useEffect(() => {
+  //   if (currentUser.role !== 'host') return;
 
-    const todayKey = new Date().toISOString().split('T')[0];
+  //   const todayKey = new Date().toISOString().split('T')[0];
 
-    const todaysProfit =
-      commissionAdjustedEntries.daily.find((entry) => entry.date === todayKey)?.amount ?? 0;
+  //   const todaysProfit =
+  //     commissionAdjustedEntries.daily.find((entry) => entry.date === todayKey)?.amount ?? 0;
 
-    // This is the host-share sum, but we’ll treat it as “pre-withdrawal earnings”,
-    // NOT the canonical lifetime total.
-    const hostShareTotal = commissionAdjustedEntries.daily.reduce(
-      (sum, entry) => sum + entry.amount,
-      0,
-    );
+  //   // This is the host-share sum, but we’ll treat it as “pre-withdrawal earnings”,
+  //   // NOT the canonical lifetime total.
+  //   const hostShareTotal = commissionAdjustedEntries.daily.reduce(
+  //     (sum, entry) => sum + entry.amount,
+  //     0,
+  //   );
 
-    const breakdownTotals = {
-      daily: commissionAdjustedEntries.daily.reduce((sum, entry) => sum + entry.amount, 0),
-      monthly: commissionAdjustedEntries.monthly.reduce((sum, entry) => sum + entry.amount, 0),
-      yearly: commissionAdjustedEntries.yearly.reduce((sum, entry) => sum + entry.amount, 0),
-    };
+  //   const breakdownTotals = {
+  //     daily: commissionAdjustedEntries.daily.reduce((sum, entry) => sum + entry.amount, 0),
+  //     monthly: commissionAdjustedEntries.monthly.reduce((sum, entry) => sum + entry.amount, 0),
+  //     yearly: commissionAdjustedEntries.yearly.reduce((sum, entry) => sum + entry.amount, 0),
+  //   };
 
-    setEarnings((prev) => {
-      const baseTotal = prev?.totalEarnings ?? hostShareTotal; // keep 195.50 if we already have it
+  //   setEarnings((prev) => {
+  //     const baseTotal = prev?.totalEarnings ?? hostShareTotal; // keep 195.50 if we already have it
 
-      const revenueTotals: Record<'daily' | 'monthly' | 'yearly' | 'all', number> = {
-        daily: breakdownTotals.daily,
-        monthly: breakdownTotals.monthly,
-        yearly: breakdownTotals.yearly,
-        // IMPORTANT: “all” stays tied to the backend total (195.50), not the host-share sum
-        all: prev?.revenueTotals?.all ?? baseTotal,
-      };
+  //     const revenueTotals: Record<'daily' | 'monthly' | 'yearly' | 'all', number> = {
+  //       daily: breakdownTotals.daily,
+  //       monthly: breakdownTotals.monthly,
+  //       yearly: breakdownTotals.yearly,
+  //       // IMPORTANT: “all” stays tied to the backend total (195.50), not the host-share sum
+  //       all: prev?.revenueTotals?.all ?? baseTotal,
+  //     };
 
-      return {
-        daily: commissionAdjustedEntries.daily,
-        monthly: commissionAdjustedEntries.monthly,
-        yearly: commissionAdjustedEntries.yearly,
-        dailyProfit: todaysProfit,
-        todaysProfit,
-        totalEarnings: baseTotal,                           // ← keep backend 195.50
-        currency: prev?.currency ?? hostCurrency ?? BASE_CURRENCY,
-        revenueTotals,
-      };
-    });
-  }, [
-    commissionAdjustedEntries.daily,
-    commissionAdjustedEntries.monthly,
-    commissionAdjustedEntries.yearly,
-    currentUser.role,
-    hostCurrency,
-  ]);
+  //     return {
+  //       daily: commissionAdjustedEntries.daily,
+  //       monthly: commissionAdjustedEntries.monthly,
+  //       yearly: commissionAdjustedEntries.yearly,
+  //       dailyProfit: todaysProfit,
+  //       todaysProfit,
+  //       totalEarnings: baseTotal,                           // ← keep backend 195.50
+  //       currency: prev?.currency ?? hostCurrency ?? BASE_CURRENCY,
+  //       revenueTotals,
+  //     };
+  //   });
+  // }, [
+  //   commissionAdjustedEntries.daily,
+  //   commissionAdjustedEntries.monthly,
+  //   commissionAdjustedEntries.yearly,
+  //   currentUser.role,
+  //   hostCurrency,
+  // ]);
 
   useEffect(() => {
     const fetchSavedCard = async () => {

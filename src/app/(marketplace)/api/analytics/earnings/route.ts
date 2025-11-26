@@ -1,65 +1,3 @@
-// // /api/analytics/earnings/route.ts
-// import { NextResponse } from 'next/server';
-// import prisma from '@/app/libs/prismadb';
-// import getCurrentUser from '@/app/actions/getCurrentUser';
-
-// type RawEarning = {
-//   amount: number;
-//   createdAt: Date;
-// };
-
-// function groupByDate(data: RawEarning[], type: 'daily' | 'monthly' | 'yearly') {
-//   const map = new Map<string, number>();
-
-//   data.forEach(entry => {
-//     const date = new Date(entry.createdAt);
-//     let key = '';
-
-//     if (type === 'daily') {
-//       // key = date.toISOString().split('T')[0]; // 'YYYY-MM-DD'
-//       key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-//     } else if (type === 'monthly') {
-//       key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`; // 'YYYY-MM'
-//     } else if (type === 'yearly') {
-//       key = `${date.getFullYear()}`;
-//     }
-
-//     map.set(key, (map.get(key) || 0) + entry.amount);
-//   });
-
-//   return Array.from(map.entries()).map(([date, amount]) => ({
-//     date,
-//     amount,
-//   })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-// }
-
-// export async function GET() {
-//   const currentUser = await getCurrentUser();
-//   if (!currentUser?.id) {
-//     return new NextResponse("Unauthorized", { status: 401 });
-//   }
-
-//   const earnings = await prisma.earning.findMany({
-//     where: { userId: currentUser.id },
-//     orderBy: { createdAt: 'asc' },
-//   });
-
-//   const daily = groupByDate(earnings, 'daily');
-//   const monthly = groupByDate(earnings, 'monthly');
-//   const yearly = groupByDate(earnings, 'yearly');
-
-//   const totalEarnings = earnings.reduce((sum, entry) => sum + entry.amount, 0);
-
-//   return NextResponse.json({
-//     daily,
-//     monthly,
-//     yearly,
-//     totalEarnings,
-//   });
-// }
-
-// /api/analytics/earnings/route.ts
-// /api/analytics/earnings/route.ts
 // /api/analytics/earnings/route.ts
 import { NextResponse } from 'next/server';
 import prisma from '@/app/(marketplace)/libs/prismadb';
@@ -237,7 +175,7 @@ export async function GET() {
     }
   }
 
-  const hasLedgerEarnings = earnings.length > 0;
+    const hasLedgerEarnings = earnings.length > 0;
 
   const normalizeEntries = (entries: {
     date: string;
@@ -250,25 +188,47 @@ export async function GET() {
       books: Number(entry.books ?? 0),
     }));
 
-  const daily = normalizeEntries(
+  // 🤝 canonical bucket type
+  type EarningsBucket = { date: string; amount: number; books: number };
+
+  let daily: EarningsBucket[] = normalizeEntries(
     hasLedgerEarnings ? groupByDate(earnings, 'daily') : hostDaily,
   );
-  const monthly = normalizeEntries(
+  let monthly: EarningsBucket[] = normalizeEntries(
     hasLedgerEarnings ? groupByDate(earnings, 'monthly') : hostMonthly,
   );
-  const yearly = normalizeEntries(
+  let yearly: EarningsBucket[] = normalizeEntries(
     hasLedgerEarnings ? groupByDate(earnings, 'yearly') : hostYearly,
   );
 
   // NOTE: `earnings.amount` is whatever you've stored in Earning
-  // (platform gross or user share) — don't multiply by hostShare here
-  const totalEarnings = hasLedgerEarnings
+  // (platform gross or user share) — base total before any hostShare tweak
+  let totalEarnings = hasLedgerEarnings
     ? earnings.reduce((sum, entry) => sum + entry.amount, 0)
-    : Number(hostAnalytics?.totalRevenue ?? 0);
+    : daily.reduce((sum, entry) => sum + entry.amount, 0);
+
+  if (!hasLedgerEarnings && !totalEarnings) {
+    totalEarnings = Number(hostAnalytics?.totalRevenue ?? 0);
+  }
 
   const totalBooks = hasLedgerEarnings
     ? earnings.reduce((sum, entry) => sum + entry.totalBooks, 0)
     : Number(hostAnalytics?.totalBooks ?? 0);
+
+  // 👇 correctly typed hostShare application – preserves date & books
+  if (hostShare != null) {
+    const applyHostShare = (entries: EarningsBucket[]): EarningsBucket[] =>
+      entries.map((entry) => ({
+        ...entry,
+        amount: Number(entry.amount ?? 0) * hostShare,
+      }));
+
+    daily = applyHostShare(daily);
+    monthly = applyHostShare(monthly);
+    yearly = applyHostShare(yearly);
+
+    totalEarnings = totalEarnings * hostShare;
+  }
 
   const sumAmounts = (entries: { amount: number }[]) =>
     entries.reduce((sum, entry) => sum + entry.amount, 0);
@@ -293,7 +253,6 @@ export async function GET() {
     currency: BASE_CURRENCY,
     revenueTotals,
     todaysProfit,
-    // 👇 new fields for the frontend
     partnerCommission,
     hostShare,
   });

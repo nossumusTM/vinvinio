@@ -52,9 +52,8 @@ export const formatPuntiPercentage = (share: number): string => `${Math.round(sh
 
 // in constants/partner.ts
 export const computeHostShareFromCommission = (commission: number): number => {
-  const safe = Math.min(
-    MAX_PARTNER_COMMISSION,
-    Math.max(MIN_PARTNER_COMMISSION, commission),
-  );
+  if (!Number.isFinite(commission)) return 0;
+
+  const safe = Math.min(100, Math.max(0, commission));
   return (100 - safe) / 100;
 };

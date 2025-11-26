@@ -39,6 +39,7 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
 }) => {
 
   const [view, setView] = useState<'daily' | 'monthly' | 'yearly' | 'all'>('daily');
+  const [activeInfo, setActiveInfo] = useState<'profit' | 'total' | null>(null);
   const { formatConverted, currency, baseCurrency } = useCurrencyFormatter();
   const fromCurrency = sourceCurrency ?? baseCurrency;
 
@@ -108,8 +109,13 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
             </div>
 
             <div className="mb-3 mt-3 flex flex-wrap gap-4 pt-3 sm:mb-0 sm:flex-row sm:justify-baseline">
-              <div className="flex flex-col items-center justify-center">
-                <p className="select-none rounded-xl bg-gradient-to-r from-blue-200 to-cyan-200 p-3 text-sm text-white">
+              <div className="relative flex flex-col items-center justify-center">
+                <p
+                  className="select-none rounded-xl bg-gradient-to-r from-blue-200 to-cyan-200 p-3 text-sm text-white cursor-pointer"
+                  onMouseEnter={() => setActiveInfo('profit')}
+                  onMouseLeave={() => setActiveInfo((prev) => (prev === 'profit' ? null : prev))}
+                  onClick={() => setActiveInfo((prev) => (prev === 'profit' ? null : 'profit'))}
+                >
                   Today&#39;s Profit
                 </p>
                 <AnimatePresence mode="wait">
@@ -124,10 +130,32 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
                     {formatConverted(todaysProfitValue, fromCurrency)}
                   </motion.span>
                 </AnimatePresence>
+
+                <AnimatePresence>
+                  {activeInfo === 'profit' && (
+                    <motion.div
+                      key="info-profit"
+                      initial={{ opacity: 0, y: 6, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 6, scale: 0.98 }}
+                      transition={{ duration: 0.18, ease: 'easeOut' }}
+                      className="absolute top-full mt-2 w-52 rounded-xl bg-black text-white text-[11px] sm:text-xs px-3 py-2 shadow-lg z-20"
+                    >
+                      <span className="font-semibold">Today&#39;s Profit</span> – Your net
+                      earnings recorded for today based on your host share.
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
               </div>
 
-              <div className="flex flex-col items-center justify-center">
-                <p className="select-none rounded-xl bg-neutral-900 p-3 text-sm text-white">
+              <div className="relative flex flex-col items-center justify-center">
+                <p
+                  className="select-none rounded-xl bg-neutral-900 p-3 text-sm text-white cursor-pointer"
+                  onMouseEnter={() => setActiveInfo('total')}
+                  onMouseLeave={() => setActiveInfo((prev) => (prev === 'total' ? null : prev))}
+                  onClick={() => setActiveInfo((prev) => (prev === 'total' ? null : 'total'))}
+                >
                   {revenueLabel}
                 </p>
                 <AnimatePresence mode="wait">
@@ -142,6 +170,23 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
                     {formatConverted(totalBase, fromCurrency)}
                   </motion.span>
                 </AnimatePresence>
+
+                <AnimatePresence>
+                  {activeInfo === 'total' && (
+                    <motion.div
+                      key="info-total"
+                      initial={{ opacity: 0, y: 6, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 6, scale: 0.98 }}
+                      transition={{ duration: 0.18, ease: 'easeOut' }}
+                      className="absolute top-full mt-2 w-56 rounded-xl bg-black text-white text-[11px] sm:text-xs px-3 py-2 shadow-lg z-20"
+                    >
+                      <span className="font-semibold">{revenueLabel}</span> – Net revenue
+                      for the selected range; "All" shows your all-time earnings.
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                
               </div>
             </div>
 
