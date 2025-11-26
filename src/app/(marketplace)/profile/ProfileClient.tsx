@@ -4169,7 +4169,7 @@ const coverImage = useMemo(() => {
                         className="text-3xl font-semibold text-black"
                       >
                         {/* {formatConverted((hostAnalytics?.totalRevenue || 0) * 0.9)} */}
-                        {formatConverted(hostPreWithdrawalValue)}
+                        {formatConverted(hostPreWithdrawalValue * (effectiveHostAnalytics.partnerCommission / 100))}
                       </motion.p>
                     </AnimatePresence>
                     <p className="mt-3 text-xs text-neutral-500">
@@ -4179,7 +4179,7 @@ const coverImage = useMemo(() => {
                     <div className="mt-4 text-center text-sm text-neutral-700">
                       <p className="font-semibold">Partner commission for {hostFilterLabel}</p>
                       <p className="text-xs text-neutral-500">
-                        {Math.round(hostCommissionForFilter ?? effectiveHostAnalytics.partnerCommission)}% applied to bookings in
+                        {Math.round(effectiveHostAnalytics.partnerCommission)}% applied to bookings in
                         this period.
                       </p>
                     </div>

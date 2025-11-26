@@ -60,6 +60,7 @@ interface ListingInfoProps {
     hostAllTimeBookingCount?: number;
     listingBookingCount?: number;
     listingLikesCount?: number;
+    listingViewCount?: number;
 }
 
 const ListingInfo: React.FC<ListingInfoProps> = ({
@@ -87,6 +88,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
     hostAllTimeBookingCount = 0,
     listingBookingCount = 0,
     listingLikesCount = 0,
+    listingViewCount = 0,
 }) => {
     const { getByValue } = useCountries();
     const router = useRouter();
@@ -388,6 +390,19 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                     </p>
                   </div>
                 </div>
+
+                {/* Views */}
+                  <div className="inline-flex shrink-0 min-w-[100px] flex-col rounded-2xl border border-white/15 bg-white/10 px-3 py-2 text-black/90 shadow-md backdrop-blur-md">
+                    <div className="flex items-center gap-1">
+                      <span className="inline-flex h-1.5 w-1.5 rounded-full bg-amber-400 shadow-sm" />
+                      <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-black/70">
+                        Views
+                      </p>
+                    </div>
+                    <p className="mt-0.5 text-lg font-semibold leading-tight">
+                      {listingViewCount}
+                    </p>
+                  </div>
 
                         {hostDescription && (
                             <div>

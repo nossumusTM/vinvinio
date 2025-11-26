@@ -217,6 +217,8 @@ const ListingClient: React.FC<ListingClientProps> = ({
         createdAt: string;
     }[]>([]);
 
+    const [viewCount, setViewCount] = useState<number>(listing.viewCount ?? 0);
+
     const messenger = useMessenger();
     const [useDarkButton, setUseDarkButton] = useState(false);
 
@@ -504,6 +506,38 @@ const ListingClient: React.FC<ListingClientProps> = ({
       }, [getByValue, listing.locationValue, setLocation]);
 
       useEffect(() => {
+        setViewCount(listing.viewCount ?? 0);
+      }, [listing.viewCount]);
+
+      useEffect(() => {
+        let cancelled = false;
+
+        const incrementView = async () => {
+          try {
+            const res = await fetch(`/api/listings/${listing.id}/view`, {
+              method: 'POST',
+              cache: 'no-store',
+            });
+
+            if (!res.ok) return;
+
+            const data = await res.json();
+            if (!cancelled && typeof data?.viewCount === 'number') {
+              setViewCount(data.viewCount);
+            }
+          } catch (error) {
+            console.error('Failed to increment listing views', error);
+          }
+        };
+
+        incrementView();
+
+        return () => {
+          cancelled = true;
+        };
+      }, [listing.id]);
+
+      useEffect(() => {
         const fetchUserImages = async () => {
           const updatedReviews = await Promise.all(
             reviews.map(async (review) => {
@@ -711,6 +745,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                                 hostAllTimeBookingCount={listing.user.allTimeBookingCount ?? 0}
                                 listingBookingCount={listingBookingCount}
                                 listingLikesCount={listing.likesCount ?? 0}
+                                listingViewCount={viewCount}
                             />
 
                         </div>

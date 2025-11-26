@@ -12,7 +12,18 @@ export async function POST(req: Request) {
     return new NextResponse('Unauthorized', { status: 403 });
   }
 
-  const { totalPrice } = await req.json(); // expects totalPrice from reservation
+  // const { totalPrice } = await req.json(); // expects totalPrice from reservation
+  const { totalPrice, reservationDate } = await req.json(); // expects totalPrice from reservation
+
+  const parsedDate = reservationDate
+    ? new Date(
+        typeof reservationDate === 'string'
+          ? `${reservationDate}T00:00:00Z`
+          : reservationDate,
+      )
+    : null;
+
+  const analyticsDate = parsedDate && !Number.isNaN(parsedDate.getTime()) ? parsedDate : new Date();
 
   try {
 
@@ -43,7 +54,8 @@ export async function POST(req: Request) {
       existing?.dailyTotals,
       existing?.monthlyTotals,
       existing?.yearlyTotals,
-      new Date(),
+      // new Date(),
+      analyticsDate,
       1,
       // totalPrice || 0,
       revenueDelta,

@@ -228,7 +228,10 @@ export const mapToEntries = (raw: unknown): AggregateEntry[] => {
       const commissionSum = hasCommission
         ? clampNonNegative(Number(value.commissionSum ?? value.commission ?? 0))
         : undefined;
-      const commission = bookings > 0 && hasCommission ? commissionSum / bookings : undefined;
+      const commission =
+        bookings > 0 && hasCommission && commissionSum != null
+          ? commissionSum / bookings
+          : undefined;
 
       return {
         period,

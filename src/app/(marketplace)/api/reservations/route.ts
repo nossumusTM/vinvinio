@@ -97,11 +97,13 @@ export async function POST(request: Request) {
         where: { userId: listingWithSlug.user.id },
       });
 
+      const aggregateDate = reservation.startDate ?? new Date(`${startDate}T00:00:00.000Z`);
+
       const { dailyTotals, monthlyTotals, yearlyTotals } = computeAggregateMaps(
         existingHostAnalytics?.dailyTotals,
         existingHostAnalytics?.monthlyTotals,
         existingHostAnalytics?.yearlyTotals,
-        reservation.createdAt ?? new Date(),
+        aggregateDate,
         1,
         revenueDelta,
         partnerCommission,

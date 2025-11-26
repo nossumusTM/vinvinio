@@ -173,7 +173,7 @@ export type SafeListing = Simplify<
   Omit<Listing, "createdAt" | "updatedAt"> & {
     createdAt: string;
     updatedAt: string;
-    
+
     bookingCount?: number;
 
     // Keep your custom fields, but make them permissive
@@ -204,6 +204,8 @@ export type SafeListing = Simplify<
 
     likesCount?: number;
     likedByCurrentUser?: boolean;
+
+    viewCount?: number;
 
     platformRelevance?: number;
     reviewsCount?: number;

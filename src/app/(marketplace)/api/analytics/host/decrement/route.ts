@@ -13,7 +13,18 @@ export async function POST(req: Request) {
     return new NextResponse('Unauthorized', { status: 403 });
   }
 
-  const { hostId, totalPrice } = await req.json();
+  // const { hostId, totalPrice } = await req.json();
+  const { hostId, totalPrice, reservationDate } = await req.json();
+
+  const parsedDate = reservationDate
+    ? new Date(
+        typeof reservationDate === 'string'
+          ? `${reservationDate}T00:00:00Z`
+          : reservationDate,
+      )
+    : null;
+
+  const analyticsDate = parsedDate && !Number.isNaN(parsedDate.getTime()) ? parsedDate : new Date();
 
   if (!hostId) {
     return new NextResponse('Missing hostId', { status: 400 });
@@ -45,7 +56,8 @@ export async function POST(req: Request) {
       current?.dailyTotals,
       current?.monthlyTotals,
       current?.yearlyTotals,
-      new Date(),
+      // new Date(),
+      analyticsDate,
       -1,
       -revenueDelta,
       -partnerCommission,

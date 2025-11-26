@@ -58,6 +58,10 @@ export default async function getListingById(params: IParams) {
       Array.isArray(listingWithSlug.likes) &&
       listingWithSlug.likes.some((like) => like.userId === currentUser.id);
 
+    const viewCount = typeof (listingWithSlug as any).viewCount === 'number'
+      ? (listingWithSlug as any).viewCount
+      : 0;
+
     type UserOptionals = {
       bio?: string | null;
       visitedCountries?: string[];
@@ -119,6 +123,7 @@ export default async function getListingById(params: IParams) {
       likesCount,
       bookingCount,
       likedByCurrentUser,
+      viewCount,
 
       user: {
         id: u.id,
