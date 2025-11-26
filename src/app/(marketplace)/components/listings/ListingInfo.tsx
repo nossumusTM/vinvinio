@@ -352,7 +352,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                         
                   <div className="mt-4 pb-4 md:pb-0 flex w-full flex-row flex-nowrap justify-center items-center gap-2 overflow-x-auto scroll-smooth md:flex-wrap md:overflow-visible md:gap-3">
                   {/* Followers */}
-                  <div className="inline-flex shrink-0 min-w-[100px] flex-col rounded-2xl border border-white/15 bg-white/10 px-3 py-2 text-black/90 shadow-md backdrop-blur-md">
+                  {/* <div className="inline-flex shrink-0 min-w-[100px] flex-col rounded-2xl border border-white/15 bg-white/10 px-3 py-2 text-black/90 shadow-md backdrop-blur-md">
                     <div className="flex items-center gap-1">
                       <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-sm" />
                       <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-black/70">
@@ -361,6 +361,19 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                     </div>
                     <p className="mt-0.5 text-lg font-semibold leading-tight">
                       {hostFollowersCount}
+                    </p>
+                  </div> */}
+
+                  {/* Views */}
+                  <div className="inline-flex shrink-0 min-w-[100px] flex-col rounded-2xl border border-white/15 bg-white/10 px-3 py-2 text-black/90 shadow-md backdrop-blur-md">
+                    <div className="flex items-center gap-1">
+                      <span className="inline-flex h-1.5 w-1.5 rounded-full bg-amber-400 shadow-sm" />
+                      <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-black/70">
+                        Views
+                      </p>
+                    </div>
+                    <p className="mt-0.5 text-lg font-semibold leading-tight">
+                      {listingViewCount}
                     </p>
                   </div>
 
@@ -382,7 +395,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                     <div className="flex items-center gap-1">
                       <span className="inline-flex h-1.5 w-1.5 rounded-full bg-fuchsia-400 shadow-sm" />
                       <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-black/70">
-                        Listing Likes
+                        Likes
                       </p>
                     </div>
                     <p className="mt-0.5 text-lg font-semibold leading-tight">
@@ -390,19 +403,6 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                     </p>
                   </div>
                 </div>
-
-                {/* Views */}
-                  <div className="inline-flex shrink-0 min-w-[100px] flex-col rounded-2xl border border-white/15 bg-white/10 px-3 py-2 text-black/90 shadow-md backdrop-blur-md">
-                    <div className="flex items-center gap-1">
-                      <span className="inline-flex h-1.5 w-1.5 rounded-full bg-amber-400 shadow-sm" />
-                      <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-black/70">
-                        Views
-                      </p>
-                    </div>
-                    <p className="mt-0.5 text-lg font-semibold leading-tight">
-                      {listingViewCount}
-                    </p>
-                  </div>
 
                         {hostDescription && (
                             <div>

@@ -97,7 +97,15 @@ export async function POST(request: Request) {
         where: { userId: listingWithSlug.user.id },
       });
 
-      const aggregateDate = reservation.startDate ?? new Date(`${startDate}T00:00:00.000Z`);
+      const aggregateDateBase =
+        reservation.startDate ?? new Date(`${startDate}T00:00:00.000Z`);
+      const aggregateDate = new Date(
+        Date.UTC(
+          aggregateDateBase.getUTCFullYear(),
+          aggregateDateBase.getUTCMonth(),
+          aggregateDateBase.getUTCDate(),
+        ),
+      );
 
       const { dailyTotals, monthlyTotals, yearlyTotals } = computeAggregateMaps(
         existingHostAnalytics?.dailyTotals,

@@ -86,7 +86,7 @@ export default async function RootLayout({
                 {children}
                 </div>
                 <div className="w-full pt-20 mt-auto">
-                <Footer currentUser={currentUser} />
+                {/* <Footer currentUser={currentUser} /> */}
               </div>
             </main>
           </Suspense>

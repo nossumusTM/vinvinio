@@ -180,7 +180,11 @@ export const computeAggregateMaps = (
   revenueDelta: number,
   commissionDelta = 0,
 ) => {
-  const { dayKey, monthKey, yearKey } = buildKeys(date);
+  const normalizedDate = new Date(
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
+  );
+
+  const { dayKey, monthKey, yearKey } = buildKeys(normalizedDate);
 
   const dailyTotals = applyDelta(
     sanitizeMap(rawDaily),

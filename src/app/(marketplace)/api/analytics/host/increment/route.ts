@@ -23,7 +23,14 @@ export async function POST(req: Request) {
       )
     : null;
 
-  const analyticsDate = parsedDate && !Number.isNaN(parsedDate.getTime()) ? parsedDate : new Date();
+  const analyticsDate = (() => {
+    const baseDate =
+      parsedDate && !Number.isNaN(parsedDate.getTime()) ? parsedDate : new Date();
+
+    return new Date(
+      Date.UTC(baseDate.getUTCFullYear(), baseDate.getUTCMonth(), baseDate.getUTCDate()),
+    );
+  })();
 
   try {
 

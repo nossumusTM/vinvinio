@@ -172,6 +172,7 @@ model Listing {
   reservations        Reservation[]
   reviews             Review[]
   likes               ListingLike[]
+  listingViews        ListingView[]
 
   slug             String?    // ← temporarily nullable & not unique
   primaryCategory  String?    // ← optional
@@ -405,4 +406,16 @@ model ListingLike {
   listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
   @@unique([userId, listingId])
+}
+
+model ListingView {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  listingId String   @db.ObjectId
+  ip        String
+  createdAt DateTime @default(now())
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([listingId, ip])
+  @@map("ListingView")
 }
