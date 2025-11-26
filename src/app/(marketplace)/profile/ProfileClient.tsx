@@ -1053,15 +1053,24 @@ const coverImage = useMemo(() => {
     monthly: EarningsEntry[];
     yearly: EarningsEntry[];
     dailyProfit: number;
+    todaysProfit: number;
     totalEarnings: number;
     currency: string;
+    revenueTotals: Record<'daily' | 'monthly' | 'yearly' | 'all', number>;
   }>({
     daily: [],
     monthly: [],
     yearly: [],
     dailyProfit: 0,
+    todaysProfit: 0,
     totalEarnings: 0,
     currency: BASE_CURRENCY,
+    revenueTotals: {
+    daily: 0,
+    monthly: 0,
+    yearly: 0,
+    all: 0,
+  },
   });  
 
   const earningsCurrency = earnings.currency ?? baseCurrency;
@@ -1194,17 +1203,17 @@ const coverImage = useMemo(() => {
 
   const [updatingCommission, setUpdatingCommission] = useState(false);
 
-  const hostRevenueShare = useMemo(
-    () => computeHostShareFromCommission(effectiveHostAnalytics.partnerCommission),
-    [effectiveHostAnalytics.partnerCommission],
-  );
-
   const commissionAdjustedEntries = useMemo(() => {
+    const fallbackCommission =
+      typeof currentUser.partnerCommission === 'number'
+        ? currentUser.partnerCommission
+        : MIN_PARTNER_COMMISSION;
+
     const applyCommission = (entries: AggregateEntry[]) => {
       return entries.map((entry) => {
         const commission = Number.isFinite(entry.commission)
           ? (entry.commission as number)
-          : effectiveHostAnalytics.partnerCommission;
+          : fallbackCommission; // 👈 use User.partnerCommission here
 
         const hostShare = computeHostShareFromCommission(commission);
 
@@ -1221,7 +1230,12 @@ const coverImage = useMemo(() => {
       monthly: applyCommission(hostBreakdown.monthly),
       yearly: applyCommission(hostBreakdown.yearly),
     };
-  }, [effectiveHostAnalytics.partnerCommission, hostBreakdown.daily, hostBreakdown.monthly, hostBreakdown.yearly]);
+  }, [
+    currentUser.partnerCommission,
+    hostBreakdown.daily,
+    hostBreakdown.monthly,
+    hostBreakdown.yearly,
+  ]);
 
   const selectPreferredEntry = useCallback((entries: AggregateEntry[]) => {
     return (
@@ -1536,20 +1550,30 @@ const coverImage = useMemo(() => {
     normalizeCommissionValue,
   ]);
 
+  // share for the label & EarningsCard
+  const hostRevenueShare = useMemo(() => {
+    const commission = effectiveHostAnalytics.partnerCommission ?? 0;
+    const clamped = Math.max(0, Math.min(100, commission));
+    return (100 - clamped) / 100;
+  }, [effectiveHostAnalytics.partnerCommission]);
+
+  // share used when we have to reconstruct revenue from raw totals:
   const hostPreWithdrawalValue = useMemo(() => {
     const revenue = hostActivityTotals.revenue ?? 0;
 
-    // If the breakdown already includes commission data, revenue is commission-aware.
     const hasCommissionedEntries =
       hostFilteredEntries.some((entry) => normalizeCommissionValue(entry.commission) != null) ||
       normalizeCommissionValue(hostActivityTotals.commission) != null;
 
     if (hasCommissionedEntries) {
+      // breakdown already has per-booking commission baked in
       return revenue;
     }
 
     const commissionForPeriod = hostCommissionForFilter ?? effectiveHostAnalytics.partnerCommission;
-    const hostShare = computeHostShareFromCommission(commissionForPeriod);
+    const clamped = Math.max(0, Math.min(100, commissionForPeriod ?? 0));
+    const hostShare = (100 - clamped) / 100;
+
     return revenue * hostShare;
   }, [
     effectiveHostAnalytics.partnerCommission,
@@ -1806,15 +1830,30 @@ const coverImage = useMemo(() => {
   
         const today = new Date().toISOString().split('T')[0];
         const todayEntry = daily.find((entry: { date: string }) => entry.date === today);
-        const dailyProfit = todayEntry?.amount || 0;
+        // const dailyProfit = todayEntry?.amount || 0;
+        const todaysProfit = todayEntry?.amount || 0;
+
+        const revenueTotals = res.data.revenueTotals ?? {
+          daily: Array.isArray(daily) ? daily.reduce((sum: number, entry: any) => sum + Number(entry?.amount ?? 0), 0) : 0,
+          monthly: Array.isArray(res.data.monthly)
+            ? res.data.monthly.reduce((sum: number, entry: any) => sum + Number(entry?.amount ?? 0), 0)
+            : 0,
+          yearly: Array.isArray(res.data.yearly)
+            ? res.data.yearly.reduce((sum: number, entry: any) => sum + Number(entry?.amount ?? 0), 0)
+            : 0,
+          all: Number(res.data.totalEarnings ?? 0),
+        };
+
   
         setEarnings({
           daily,
           monthly: res.data.monthly,
           yearly: res.data.yearly,
-          dailyProfit,
+          dailyProfit: todaysProfit,
+          todaysProfit,
           totalEarnings: res.data.totalEarnings,
           currency: res.data.currency ?? BASE_CURRENCY,
+          revenueTotals,
         });
       } catch (err) {
         console.error("Earnings fetch failed:", err);
@@ -1831,22 +1870,44 @@ const coverImage = useMemo(() => {
 
     const todayKey = new Date().toISOString().split('T')[0];
 
-    const dailyProfit =
+    const todaysProfit =
       commissionAdjustedEntries.daily.find((entry) => entry.date === todayKey)?.amount ?? 0;
 
-    const totalEarnings = commissionAdjustedEntries.daily.reduce(
+    // This is the host-share sum, but we’ll treat it as “pre-withdrawal earnings”,
+    // NOT the canonical lifetime total.
+    const hostShareTotal = commissionAdjustedEntries.daily.reduce(
       (sum, entry) => sum + entry.amount,
       0,
     );
 
-    setEarnings((prev) => ({
-      daily: commissionAdjustedEntries.daily,
-      monthly: commissionAdjustedEntries.monthly,
-      yearly: commissionAdjustedEntries.yearly,
-      dailyProfit,
-      totalEarnings,
-      currency: prev?.currency ?? hostCurrency ?? BASE_CURRENCY,
-    }));
+    const breakdownTotals = {
+      daily: commissionAdjustedEntries.daily.reduce((sum, entry) => sum + entry.amount, 0),
+      monthly: commissionAdjustedEntries.monthly.reduce((sum, entry) => sum + entry.amount, 0),
+      yearly: commissionAdjustedEntries.yearly.reduce((sum, entry) => sum + entry.amount, 0),
+    };
+
+    setEarnings((prev) => {
+      const baseTotal = prev?.totalEarnings ?? hostShareTotal; // keep 195.50 if we already have it
+
+      const revenueTotals: Record<'daily' | 'monthly' | 'yearly' | 'all', number> = {
+        daily: breakdownTotals.daily,
+        monthly: breakdownTotals.monthly,
+        yearly: breakdownTotals.yearly,
+        // IMPORTANT: “all” stays tied to the backend total (195.50), not the host-share sum
+        all: prev?.revenueTotals?.all ?? baseTotal,
+      };
+
+      return {
+        daily: commissionAdjustedEntries.daily,
+        monthly: commissionAdjustedEntries.monthly,
+        yearly: commissionAdjustedEntries.yearly,
+        dailyProfit: todaysProfit,
+        todaysProfit,
+        totalEarnings: baseTotal,                           // ← keep backend 195.50
+        currency: prev?.currency ?? hostCurrency ?? BASE_CURRENCY,
+        revenueTotals,
+      };
+    });
   }, [
     commissionAdjustedEntries.daily,
     commissionAdjustedEntries.monthly,
@@ -4332,8 +4393,10 @@ const coverImage = useMemo(() => {
                   dailyData={earnings.daily}
                   monthlyData={earnings.monthly}
                   yearlyData={earnings.yearly}
+                  revenueTotals={earnings.revenueTotals}
+                  todaysProfit={earnings.todaysProfit}
                   totalEarnings={earnings.totalEarnings}
-                  hostShare={viewRole === 'host' ? 1 : hostRevenueShare}
+                  // hostShare={viewRole === 'host' ? 1 : hostRevenueShare}
                   sourceCurrency={earningsCurrency}
                 />
               </motion.div>

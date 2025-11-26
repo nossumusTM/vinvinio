@@ -50,8 +50,11 @@ export const getVinvinScoreLabel = getPuntiLabel;
 
 export const formatPuntiPercentage = (share: number): string => `${Math.round(share * 100)}%`;
 
+// in constants/partner.ts
 export const computeHostShareFromCommission = (commission: number): number => {
-  const sanitized = sanitizePartnerCommission(commission);
-  const hostShare = 1 - sanitized / 100;
-  return Number.isFinite(hostShare) ? Math.min(1, Math.max(0, hostShare)) : 0;
+  const safe = Math.min(
+    MAX_PARTNER_COMMISSION,
+    Math.max(MIN_PARTNER_COMMISSION, commission),
+  );
+  return (100 - safe) / 100;
 };

@@ -18,6 +18,8 @@ interface EarningsCardProps {
   monthlyData: EarningsEntry[];
   yearlyData: EarningsEntry[];
   totalEarnings: number; // ✅ new field
+  revenueTotals?: Record<'daily' | 'monthly' | 'yearly' | 'all', number>;
+  todaysProfit?: number;
   roleLabel: 'Host' | 'Promoter';
   hostShare?: number;
   sourceCurrency?: string;
@@ -30,7 +32,9 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
   yearlyData,
   roleLabel,
   totalEarnings,
-  hostShare = 1,
+  revenueTotals,
+  todaysProfit,
+  hostShare = 0,
   sourceCurrency
 }) => {
 
@@ -49,22 +53,48 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
         .map((date) => dailyData.find((d) => d.date === date)!)
     : dataMap[view];
 
-  const totalBase = view === 'all'
-    ? totalEarnings
-    : currentData.reduce((sum, entry) => sum + entry.amount, 0);
+  const fallbackRevenueTotals = useMemo(
+    () => ({
+      daily: dailyData.reduce((sum, entry) => sum + entry.amount, 0),
+      monthly: monthlyData.reduce((sum, entry) => sum + entry.amount, 0),
+      yearly: yearlyData.reduce((sum, entry) => sum + entry.amount, 0),
+      all: totalEarnings,
+    }),
+    [dailyData, monthlyData, totalEarnings, yearlyData],
+  );
+
+  const displayRevenueTotals = revenueTotals ?? fallbackRevenueTotals;
+
+  const totalBase =
+    view === 'all'
+      ? totalEarnings
+      : displayRevenueTotals[view];
+
+  const totalDisplay = Number(totalBase.toFixed(2));
 
   const todaysProfitValue = useMemo(() => {
+
+    if (typeof todaysProfit === 'number') {
+      return todaysProfit;
+    }
+
     const today = new Date().toDateString();
     const todayEntry = dailyData.find((d) => new Date(d.date).toDateString() === today);
-    return todayEntry ? todayEntry.amount * hostShare : 0;
-  }, [dailyData, hostShare]);
+    return todayEntry ? todayEntry.amount : 0;
+  }, [dailyData, todaysProfit]);
 
-  const totalDisplay = Number((totalBase * hostShare).toFixed(2));
   const revenueLabel = view === 'daily'
     ? 'Total Revenue'
     : view === 'all'
     ? 'Total Revenue'
     : `${view.charAt(0).toUpperCase() + view.slice(1)} Total`;
+
+    console.log('[EarningsCard] view, totalEarnings, totalBase, hostShare =', {
+      view,
+      totalEarnings,
+      totalBase,
+      hostShare,
+    });
 
   return (
     <Card className="w-full bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-all">
@@ -109,7 +139,7 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
                     transition={{ duration: 0.2 }}
                     className="text-lg font-semibold text-black"
                   >
-                    {formatConverted(totalDisplay, fromCurrency)}
+                    {formatConverted(totalBase, fromCurrency)}
                   </motion.span>
                 </AnimatePresence>
               </div>
