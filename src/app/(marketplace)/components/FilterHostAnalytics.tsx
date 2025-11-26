@@ -2,6 +2,8 @@
 
 import { useMemo, useRef } from 'react';
 import { twMerge } from 'tailwind-merge';
+import CalendarPicker from './CalendarPicker'; // optional now
+import AnalyticsPicker from './AnalyticsPicker';
 
 export type HostAnalyticsFilter = 'day' | 'month' | 'year';
 
@@ -23,12 +25,15 @@ const toDateValue = (date: Date) => date.toISOString().slice(0, 10);
 // ✅ NEW
 const toDayValue = (date: Date) => date.toISOString().slice(0, 10);
 
+
+
 const FilterHostAnalytics: React.FC<FilterHostAnalyticsProps> = ({
   filter,
   selectedDate,
   onFilterChange,
   onDateChange,
 }) => {
+
   const dateInputRef = useRef<HTMLInputElement>(null);
 
   const inputValue = useMemo(() => {
@@ -37,6 +42,24 @@ const FilterHostAnalytics: React.FC<FilterHostAnalyticsProps> = ({
     // day
     return toDayValue(selectedDate);
   }, [filter, selectedDate]);
+
+    const openNativePicker = () => {
+    const input = dateInputRef.current;
+    if (!input) return;
+
+    const anyInput = input as any;
+
+    if (typeof anyInput.showPicker === 'function') {
+      try {
+        anyInput.showPicker(); // may throw NotAllowedError if browser thinks it's not a user gesture
+      } catch (err) {
+        console.warn('[FilterHostAnalytics] showPicker blocked, falling back to focus', err);
+        input.focus();
+      }
+    } else {
+      input.focus();
+    }
+  };
 
   const handleDateChange = (value: string) => {
     if (!value) return;
@@ -55,8 +78,22 @@ const FilterHostAnalytics: React.FC<FilterHostAnalyticsProps> = ({
     }
     };
 
+      const selectedMonth = selectedDate.getUTCMonth();
+  const selectedYear = selectedDate.getUTCFullYear();
+
+  const yearOptions = useMemo(
+    () => [selectedYear],
+    [selectedYear],
+  );
+
+  const handleMonthYearChange = (month: number, year: number) => {
+    // keep same day, adjust month/year
+    const nextDate = new Date(Date.UTC(year, month, selectedDate.getUTCDate()));
+    onDateChange(nextDate);
+  };
+
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-neutral-200 bg-white p-4 shadow-md shadow-black/5">
+    <div className="flex flex-col gap-4 rounded-2xl bg-white p-4 shadow-md shadow-black/5">
       <div className="flex flex-wrap gap-2">
         {([
           ['day', 'Day'],
@@ -77,36 +114,14 @@ const FilterHostAnalytics: React.FC<FilterHostAnalyticsProps> = ({
             </button>
         ))}
         </div>
+      
+      <AnalyticsPicker
+        filter={filter}
+        selectedDate={selectedDate}
+        onDateChange={onDateChange}
+        placement="down"
+      />
 
-
-     <label className="flex flex-col gap-2 rounded-xl border border-neutral-200 bg-white p-3 text-xs font-semibold text-neutral-600 shadow-sm transition hover:bg-neutral-100 hover:shadow-md">
-        <span
-          className="cursor-pointer text-[13px] font-semibold text-neutral-700 hover:text-neutral-900"
-          onClick={() => {
-            const input = dateInputRef.current;
-            if (!input) return;
-
-            if (typeof input.showPicker === 'function') {
-              input.showPicker();
-            } else {
-              input.focus();
-            }
-          }}
-        >
-          {filter === 'day'
-            ? 'Select day'
-            : filter === 'month'
-            ? 'Select month'
-            : 'Select year'}
-        </span>
-        <input
-          ref={dateInputRef}
-          type={filter === 'month' ? 'month' : 'date'}
-          value={inputValue}
-          onChange={(e) => handleDateChange(e.target.value)}
-          className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-[0_1px_4px_rgba(0,0,0,0.08)] outline-none transition hover:bg-neutral-50 focus:border-black focus:ring-2 focus:ring-black/10"
-        />
-      </label>
     </div>
   );
 };

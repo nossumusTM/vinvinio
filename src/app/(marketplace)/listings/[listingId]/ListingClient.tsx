@@ -690,7 +690,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                         isLikedByCurrentUser={Boolean(listing.likedByCurrentUser)}
                     />
 
-                    <button
+                    {/* <button
                         onClick={() => {
                             // 🔐 Check auth first
                             if (!currentUser) {
@@ -719,7 +719,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                         className="text-md text-neutral-900 shadow-md hover:shadow-lg p-4 rounded-xl transition font-normal mt-1 shadow-md"
                         >
                         Text @{listing.user?.username?.split(' ')[0] ?? 'Host'}
-                    </button>
+                    </button> */}
 
                     <div className="grid grid-cols-1 md:grid-cols-7 md:gap-10 mt-6 relative">
                         <div className="md:col-span-4 flex flex-col gap-6">
