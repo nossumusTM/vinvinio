@@ -4193,7 +4193,7 @@ const coverImage = useMemo(() => {
                     <FilterHostAnalytics
                       filter={promoterActivityFilter}
                       selectedDate={promoterActivityDate}
-                      onFilterChange={setPromoterActivityFilter}
+                      onFilterChange={handlePromoterFilterChange}
                       onDateChange={setPromoterActivityDate}
                     />
                   </div>
@@ -4201,17 +4201,48 @@ const coverImage = useMemo(() => {
                   <div className="mt-5 space-y-4">
                     <div className="flex items-center justify-between rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800 shadow-sm">
                       <span className="font-medium">Total Books</span>
-                      <span className="text-lg font-semibold text-black">{promoterActivityTotals.bookings}</span>
+                       <AnimatePresence mode="wait" initial={false}>
+                        <motion.span
+                          key={`${promoterActivityFilter}-${promoterPeriodKey}-bookings-${promoterActivityTotals.bookings ?? 0}`}
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -6 }}
+                          transition={{ duration: 0.2, ease: 'easeOut' }}
+                          className="text-lg font-semibold text-black inline-block"
+                        >
+                          {promoterActivityTotals.bookings}
+                        </motion.span>
+                      </AnimatePresence>
                     </div>
                     <div className="flex items-center justify-between rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800 shadow-sm">
                       <span className="font-medium">QR Code Scanned</span>
-                      <span className="text-lg font-semibold text-black">{promoterActivityQrScans}</span>
+                      <AnimatePresence mode="wait" initial={false}>
+                        <motion.span
+                          key={`${promoterActivityFilter}-${promoterPeriodKey}-qr-${promoterActivityQrScans ?? 0}`}
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -6 }}
+                          transition={{ duration: 0.2, ease: 'easeOut' }}
+                          className="text-lg font-semibold text-black inline-block"
+                        >
+                          {promoterActivityQrScans}
+                        </motion.span>
+                      </AnimatePresence>
                     </div>
                     <div className="flex items-center justify-between rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800 shadow-sm">
                       <span className="font-medium">Total Books Revenue</span>
-                      <span className="text-lg font-semibold text-black">
-                        {formatConverted(promoterActivityTotals.revenue, baseCurrency)}
-                      </span>
+                      <AnimatePresence mode="wait" initial={false}>
+                        <motion.span
+                          key={`${promoterActivityFilter}-${promoterPeriodKey}-revenue-${promoterActivityTotals.revenue ?? 0}`}
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -6 }}
+                          transition={{ duration: 0.2, ease: 'easeOut' }}
+                          className="text-lg font-semibold text-black inline-block"
+                        >
+                          {formatConverted(promoterActivityTotals.revenue, baseCurrency)}
+                        </motion.span>
+                      </AnimatePresence>
                     </div>
                   </div>
                 </div>
@@ -4224,9 +4255,18 @@ const coverImage = useMemo(() => {
                     </p>
                   </div>
                   <div className="mt-6 flex items-center justify-center rounded-xl bg-neutral-50 p-10 md:h-52">
-                    <p className="text-3xl font-semibold text-black">
-                      {formatConverted((promoterActivityTotals.revenue || 0) * 0.1, baseCurrency)}
-                    </p>
+                    <AnimatePresence mode="wait" initial={false}>
+                      <motion.p
+                        key={`${promoterActivityFilter}-${promoterPeriodKey}-prewithdraw-${promoterActivityTotals.revenue ?? 0}`}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -6 }}
+                        transition={{ duration: 0.2, ease: 'easeOut' }}
+                        className="text-3xl font-semibold text-black"
+                      >
+                        {formatConverted((promoterActivityTotals.revenue || 0) * 0.1, baseCurrency)}
+                      </motion.p>
+                    </AnimatePresence>
                   </div>
                 </div>
 

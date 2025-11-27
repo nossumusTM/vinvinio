@@ -14,23 +14,16 @@ interface FilterHostAnalyticsProps {
   onDateChange: (date: Date) => void;
 }
 
-const formatDateInput = (date: Date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
-
 const toMonthValue = (date: Date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
   return `${year}-${month}`;
 };
 
-const toDateValue = (date: Date) => formatDateInput(date);
+const toDateValue = (date: Date) => date.toISOString().slice(0, 10);
 
 // ✅ NEW
-const toDayValue = (date: Date) => formatDateInput(date);
+const toDayValue = (date: Date) => date.toISOString().slice(0, 10);
 
 
 
@@ -74,11 +67,10 @@ const FilterHostAnalytics: React.FC<FilterHostAnalyticsProps> = ({
     let nextDate: Date;
 
     if (filter === 'month') {
-      const [year, month] = value.split('-').map(Number);
-      nextDate = new Date(year, (month ?? 1) - 1, 1);
+      nextDate = new Date(`${value}-01T00:00:00Z`);
     } else {
         // 'day' and 'year' – use the chosen full date
-      nextDate = new Date(value);
+      nextDate = new Date(`${value}T00:00:00Z`);
     }
 
     if (!Number.isNaN(nextDate.getTime())) {
@@ -86,8 +78,8 @@ const FilterHostAnalytics: React.FC<FilterHostAnalyticsProps> = ({
     }
     };
 
-  const selectedMonth = selectedDate.getMonth();
-  const selectedYear = selectedDate.getFullYear();
+      const selectedMonth = selectedDate.getUTCMonth();
+  const selectedYear = selectedDate.getUTCFullYear();
 
   const yearOptions = useMemo(
     () => [selectedYear],
@@ -95,14 +87,14 @@ const FilterHostAnalytics: React.FC<FilterHostAnalyticsProps> = ({
   );
 
   const handleMonthYearChange = (month: number, year: number) => {
-      // keep same day, adjust month/year
-      const nextDate = new Date(year, month, selectedDate.getDate());
-      onDateChange(nextDate);
+    // keep same day, adjust month/year
+    const nextDate = new Date(Date.UTC(year, month, selectedDate.getUTCDate()));
+    onDateChange(nextDate);
   };
 
   return (
     <div className="flex flex-col gap-4 rounded-2xl bg-white p-4 shadow-md shadow-black/5">
-      <div className="flex flex-wrap gap-2 justify-center items-center">
+      <div className="flex flex-wrap gap-2">
         {([
           ['day', 'Day'],
           ['month', 'Month'],
