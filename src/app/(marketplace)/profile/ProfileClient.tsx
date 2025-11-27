@@ -1451,6 +1451,17 @@ const coverImage = useMemo(() => {
     return `${year}`;
   }, [hostActivityDate, hostActivityFilter]);
 
+  const promoterPeriodKey = useMemo(() => {
+    const date = promoterActivityDate ?? new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    if (promoterActivityFilter === 'day') return `${year}-${month}-${day}`;
+    if (promoterActivityFilter === 'month') return `${year}-${month}`;
+    return `${year}`;
+  }, [promoterActivityDate, promoterActivityFilter]);
+
   const hostFilteredEntries = useMemo(() => {
     const primaryEntries = resolveEntriesForFilter(hostBreakdown, hostActivityFilter);
 
@@ -1714,24 +1725,13 @@ const coverImage = useMemo(() => {
 
     // If there are entries for the selected date/period → use only those
     if (promoterFilteredEntries.length > 0) return totals;
-
-    // If breakdown is completely empty for this granularity, fall back to global totals
-    if (promoterEntriesForFilter.length === 0) {
-      return {
-        ...totals,
-        bookings: analytics.totalBooks ?? totals.bookings,
-        revenue: analytics.totalRevenue ?? totals.revenue,
-      };
-    }
-
-    // Otherwise (no match for this date, but breakdown exists) → show zeroed totals
-    return totals;
-  }, [
-    analytics.totalBooks,
-    analytics.totalRevenue,
-    promoterEntriesForFilter.length,
-    promoterFilteredEntries,
-  ]);
+    // even when the client-side breakdown lacks matches.
+    return {
+      ...totals,
+      bookings: analytics.totalBooks ?? totals.bookings,
+      revenue: analytics.totalRevenue ?? totals.revenue,
+    };
+  }, [analytics.totalBooks, analytics.totalRevenue, promoterFilteredEntries]);
 
   const promoterActivityQrScans = useMemo(() => {
     const total = promoterFilteredEntries.reduce(
@@ -2113,7 +2113,10 @@ const coverImage = useMemo(() => {
       try {
         const res = await axios.get('/api/analytics/get', {
           timeout: 10000,
-          params: { granularity: promoterActivityFilter },
+          params: {
+            granularity: promoterActivityFilter,
+            date: promoterPeriodKey,
+          },
         });
         const data = res.data ?? {};
         const breakdown = normalizeBreakdown(data.breakdown, promoterActivityFilter);
@@ -2141,7 +2144,12 @@ const coverImage = useMemo(() => {
   
     // Clear interval on unmount
     return () => clearInterval(interval);
-  }, [currentUser?.role, promoterActivityFilter, normalizeBreakdown]);
+  }, [
+    currentUser?.role,
+    normalizeBreakdown,
+    promoterActivityFilter,
+    promoterPeriodKey,
+  ]);
 
   useEffect(() => {
     const fetchUserCoupon = async () => {
