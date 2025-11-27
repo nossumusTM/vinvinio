@@ -50,6 +50,7 @@ import { useSearchParams } from "next/navigation";
 import { TbWorldUpload } from "react-icons/tb";
 import { AggregateEntry, summarizeEntries } from "@/app/(marketplace)/libs/aggregateTotals";
 import FilterHostAnalytics, { HostAnalyticsFilter } from "../components/FilterHostAnalytics";
+import FilterPromoterAnalytics from "../components/FilterPromoterAnalytics";
 
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
@@ -1186,6 +1187,16 @@ const coverImage = useMemo(() => {
     },
   });
 
+  const promoterBreakdown = useMemo<AggregateBuckets>(
+    () =>
+      analytics.breakdown ?? {
+        daily: [],
+        monthly: [],
+        yearly: [],
+      },
+    [analytics.breakdown],
+  );
+
   // const [hostAnalytics, setHostAnalytics] = useState({
   //   totalBooks: 0,
   //   totalRevenue: 0,
@@ -1412,6 +1423,23 @@ const coverImage = useMemo(() => {
     [hostBreakdown, parsePeriodToDate, resolveEntriesForFilter, selectPreferredEntry],
   );
 
+  const handlePromoterFilterChange = useCallback(
+    (nextFilter: 'day' | 'month' | 'year') => {
+      setPromoterActivityFilter(nextFilter);
+
+      const candidates = resolveEntriesForFilter(promoterBreakdown, nextFilter);
+      const preferred = selectPreferredEntry(candidates);
+
+      if (!preferred) return;
+
+      const nextDate = parsePeriodToDate(preferred.period, nextFilter);
+      if (!Number.isNaN(nextDate.getTime())) {
+        setPromoterActivityDate(nextDate);
+      }
+    },
+    [parsePeriodToDate, promoterBreakdown, resolveEntriesForFilter, selectPreferredEntry],
+  );
+
   const hostPeriodKey = useMemo(() => {
     const date = hostActivityDate ?? new Date();
     const year = date.getFullYear();
@@ -1543,6 +1571,46 @@ const coverImage = useMemo(() => {
     selectPreferredEntry,
   ]);
 
+  useEffect(() => {
+    setPromoterActivityDate((prevDate) => {
+      const entries = resolveEntriesForFilter(promoterBreakdown, promoterActivityFilter);
+
+      const candidateEntries =
+        entries.length || promoterActivityFilter === 'day'
+          ? entries
+          : promoterActivityFilter === 'month'
+          ? promoterBreakdown.monthly.length
+            ? promoterBreakdown.monthly
+            : promoterBreakdown.daily
+          : promoterBreakdown.yearly.length
+          ? promoterBreakdown.yearly
+          : promoterBreakdown.monthly.length
+          ? promoterBreakdown.monthly
+          : promoterBreakdown.daily;
+
+      if (!candidateEntries.length) return prevDate;
+
+      const hasMatch = candidateEntries.some((entry) =>
+        matchesPeriod(entry.period, promoterActivityFilter, prevDate),
+      );
+
+      if (hasMatch || promoterActivityFilter === 'day') return prevDate;
+
+      const preferred = selectPreferredEntry(candidateEntries);
+      if (!preferred) return prevDate;
+
+      const nextDate = parsePeriodToDate(preferred.period ?? '', promoterActivityFilter);
+      return Number.isNaN(nextDate.getTime()) ? prevDate : nextDate;
+    });
+  }, [
+    matchesPeriod,
+    parsePeriodToDate,
+    promoterActivityFilter,
+    promoterBreakdown,
+    resolveEntriesForFilter,
+    selectPreferredEntry,
+  ]);
+
   const hostActivityTotals = useMemo(
     () => summarizeEntries(hostFilteredEntries),
     [hostFilteredEntries],
@@ -1631,8 +1699,8 @@ const coverImage = useMemo(() => {
   ]);
 
   const promoterEntriesForFilter = useMemo(
-    () => resolveEntriesForFilter(analytics.breakdown, promoterActivityFilter),
-    [analytics.breakdown, promoterActivityFilter, resolveEntriesForFilter],
+    () => resolveEntriesForFilter(promoterBreakdown, promoterActivityFilter),
+    [promoterActivityFilter, promoterBreakdown, resolveEntriesForFilter],
   );
 
   const promoterFilteredEntries = useMemo(() => {
@@ -4131,7 +4199,7 @@ const coverImage = useMemo(() => {
                     <FilterHostAnalytics
                       filter={promoterActivityFilter}
                       selectedDate={promoterActivityDate}
-                      onFilterChange={setPromoterActivityFilter}
+                      onFilterChange={handlePromoterFilterChange}
                       onDateChange={setPromoterActivityDate}
                     />
                   </div>
