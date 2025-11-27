@@ -262,7 +262,7 @@ const BookingConfirmed = () => {
                 <div className="flex items-center gap-3">
                   <Avatar src={listing.user?.image} name={listing.user?.name} />
                   <div className="flex flex-col justify-center">
-                    <p className="text-neutral-600 text-sm">Guided by</p>
+                    <p className="text-neutral-600 text-sm">Provided by</p>
                     <p className="font-bold text-lg">{listing.user?.name}</p>
                   </div>
                 </div>

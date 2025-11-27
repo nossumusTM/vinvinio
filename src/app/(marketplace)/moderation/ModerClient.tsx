@@ -1366,8 +1366,9 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
         </button>
         {hostAnalytics && (
           <div className="text-sm text-neutral-700 space-y-1">
+            <p><strong>User ID:</strong> {hostAnalytics.userId}</p>
             <p><strong>Total Bookings:</strong> {hostAnalytics.totalBooks}</p>
-            <p><strong>Total Revenue:</strong> {formatConverted(hostAnalytics.totalRevenue * 0.9)}</p>
+            <p><strong>Total Revenue:</strong> {formatConverted(hostAnalytics.totalRevenue)}</p>
             <p><strong>Payout Method:</strong> {hostAnalytics.payoutMethod.toUpperCase()}</p>
             <p><strong>Payout Number:</strong> {hostAnalytics.payoutNumber}</p>
             <p><strong>Partner Commission:</strong> {Math.round(hostAnalytics.partnerCommission ?? MIN_PARTNER_COMMISSION)}%</p>

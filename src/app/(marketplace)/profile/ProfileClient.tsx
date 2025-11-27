@@ -27,6 +27,8 @@ import { FiInfo, FiMail, FiPhone } from "react-icons/fi";
 import FAQ from "../components/FAQ";
 import toast from "react-hot-toast";
 import useCurrencyFormatter from '@/app/(marketplace)/hooks/useCurrencyFormatter';
+import useLocaleSettings from '@/app/(marketplace)/hooks/useLocaleSettings';
+import PayoutHistory from "../components/PayoutHistory";
 import { slugSegment } from '@/app/(marketplace)/libs/links';
 import { FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
 import Avatar from "../components/Avatar";
@@ -222,6 +224,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
 }) => {
   const searchParams = useSearchParams();
   const { formatConverted, baseCurrency } = useCurrencyFormatter();
+  const { currencySymbol } = useLocaleSettings();
   const suspensionDate = useMemo(() => {
     const raw = currentUser?.suspendedAt;
     if (!raw) return null;
@@ -281,6 +284,7 @@ const [hostBreakdown, setHostBreakdown] = useState<AggregateBuckets>(DEFAULT_HOS
   const [hostActivityFilter, setHostActivityFilter] = useState<HostAnalyticsFilter>('day');
   const [hostActivityDate, setHostActivityDate] = useState<Date>(new Date());
   const [promoterActivityFilter, setPromoterActivityFilter] = useState<'day' | 'month' | 'year'>('day');
+  const [promoterActivityDate, setPromoterActivityDate] = useState<Date>(new Date());
 
 // Who is paying
   const currentUserEmail = currentUser?.email ?? undefined;
@@ -1123,6 +1127,7 @@ const coverImage = useMemo(() => {
   
   const [savedPayout, setSavedPayout] = useState<any>(null);
   const [payoutUpdated, setPayoutUpdated] = useState(false);
+  const [showPayoutHistory, setShowPayoutHistory] = useState(false);
 
   const [cardType, setCardType] = useState('');
   const [cardInfo, setCardInfo] = useState<{
@@ -1301,9 +1306,9 @@ const coverImage = useMemo(() => {
   }, []);
 
   const toDateKeys = useCallback((date: Date) => {
-    const year = date.getUTCFullYear();
-    const month = date.getUTCMonth() + 1;
-    const day = date.getUTCDate();
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
 
     return {
       year,
@@ -1321,21 +1326,21 @@ const coverImage = useMemo(() => {
       const { year, month, day } = parsePeriodKeyParts(key);
 
       if (filter === 'day' && year && month && day) {
-        return new Date(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T00:00:00Z`);
+        return new Date(year, month - 1, day);
       }
 
       if (filter === 'month' && year && month) {
-        return new Date(`${year}-${String(month).padStart(2, '0')}-01T00:00:00Z`);
+        return new Date(year, month - 1, 1);
       }
 
       if (year) {
-        return new Date(`${year}-01-01T00:00:00Z`);
+        return new Date(year, 0, 1);
       }
 
       const fallback = new Date();
       return fallback;
     },
-    [],
+    [normalizePeriodKey, parsePeriodKeyParts],
   );
 
   const normalizePeriodToDate = useCallback((period: string) => {
@@ -1347,22 +1352,21 @@ const coverImage = useMemo(() => {
 
     if (dayMatch) {
       const [, y, m, d] = dayMatch;
-      return new Date(`${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}T00:00:00Z`);
+      return new Date(Number(y), Number(m) - 1, Number(d));
     }
 
     if (monthMatch) {
       const [, y, m] = monthMatch;
-      return new Date(`${y}-${m.padStart(2, '0')}-01T00:00:00Z`);
+      return new Date(Number(y), Number(m) - 1, 1);
     }
 
     if (yearMatch) {
-      return new Date(`${yearMatch[1]}-01-01T00:00:00Z`);
+      return new Date(Number(yearMatch[1]), 0, 1);
     }
 
-    const iso = normalized.includes('T') ? normalized : `${normalized}T00:00:00Z`;
-    const parsed = new Date(iso);
-    return Number.isNaN(parsed.getTime()) ? null : parsed;
-  }, []);
+    const parsed = new Date(normalized.includes('T') ? normalized : `${normalized}T00:00:00`);
+      return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }, []);
   
   const matchesPeriod = useCallback(
     (period: string, filter: HostAnalyticsFilter, targetDate: Date | null) => {
@@ -1410,9 +1414,9 @@ const coverImage = useMemo(() => {
 
   const hostPeriodKey = useMemo(() => {
     const date = hostActivityDate ?? new Date();
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(date.getUTCDate()).padStart(2, '0');
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
 
     if (hostActivityFilter === 'day') return `${year}-${month}-${day}`;
     if (hostActivityFilter === 'month') return `${year}-${month}`;
@@ -1439,56 +1443,98 @@ const coverImage = useMemo(() => {
     return candidates.filter((entry) => matchesPeriod(entry.period, hostActivityFilter, hostActivityDate));
   }, [hostActivityDate, hostActivityFilter, hostBreakdown, matchesPeriod, resolveEntriesForFilter, selectPreferredEntry]);
 
+  // useEffect(() => {
+  //   // const date = hostActivityDate ?? new Date();
+  //   // const year = date.getUTCFullYear();
+  //   // const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  //   // const day = String(date.getUTCDate()).padStart(2, '0');
+
+  //   // const hostPeriodKey =
+  //   //   hostActivityFilter === 'day'
+  //   //     ? `${year}-${month}-${day}`
+  //   //     : hostActivityFilter === 'month'
+  //   //     ? `${year}-${month}`
+  //   //     : `${year}`;
+
+  //   const entries = resolveEntriesForFilter(hostBreakdown, hostActivityFilter);
+
+  //   const candidateEntries =
+  //     entries.length || hostActivityFilter === 'day'
+  //       ? entries
+  //       : hostActivityFilter === 'month'
+  //       ? hostBreakdown.monthly.length
+  //         ? hostBreakdown.monthly
+  //         : hostBreakdown.daily
+  //       : hostBreakdown.yearly.length
+  //       ? hostBreakdown.yearly
+  //       : hostBreakdown.monthly.length
+  //       ? hostBreakdown.monthly
+  //       : hostBreakdown.daily;
+
+  //   if (!candidateEntries.length) return;
+
+  //   const hasMatch = candidateEntries.some((entry) =>
+  //     // matchesPeriod(entry.period, hostActivityFilter, hostPeriodKey),
+  //     matchesPeriod(entry.period, hostActivityFilter, hostActivityDate),
+  //   );
+
+  //   // if (hasMatch && matchesPeriod(preferred.period, hostActivityFilter, hostPeriodKey)) return;
+  //   if (hasMatch || hostActivityFilter === 'day') return;
+
+  //   const preferred = selectPreferredEntry(candidateEntries);
+  //   if (!preferred) return;
+
+  //   // const preferred = selectPreferredEntry(candidateEntries);
+  //   // if (!preferred) return;
+
+  //   const nextDate = parsePeriodToDate(preferred.period ?? '', hostActivityFilter);
+  //   if (!Number.isNaN(nextDate.getTime())) {
+  //     setHostActivityDate(nextDate);
+  //   }
+  // }, [
+  //   hostActivityDate,
+  //   hostBreakdown,
+  //   hostActivityFilter,
+  //   matchesPeriod,
+  //   parsePeriodToDate,
+  //   resolveEntriesForFilter,
+  //   selectPreferredEntry,
+  // ]);
+
   useEffect(() => {
-    // const date = hostActivityDate ?? new Date();
-    // const year = date.getUTCFullYear();
-    // const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-    // const day = String(date.getUTCDate()).padStart(2, '0');
+    setHostActivityDate((prevDate) => {
+      const entries = resolveEntriesForFilter(hostBreakdown, hostActivityFilter);
 
-    // const hostPeriodKey =
-    //   hostActivityFilter === 'day'
-    //     ? `${year}-${month}-${day}`
-    //     : hostActivityFilter === 'month'
-    //     ? `${year}-${month}`
-    //     : `${year}`;
-
-    const entries = resolveEntriesForFilter(hostBreakdown, hostActivityFilter);
-
-    const candidateEntries =
-      entries.length || hostActivityFilter === 'day'
-        ? entries
-        : hostActivityFilter === 'month'
-        ? hostBreakdown.monthly.length
+      const candidateEntries =
+        entries.length || hostActivityFilter === 'day'
+          ? entries
+          : hostActivityFilter === 'month'
+          ? hostBreakdown.monthly.length
+            ? hostBreakdown.monthly
+            : hostBreakdown.daily
+          : hostBreakdown.yearly.length
+          ? hostBreakdown.yearly
+          : hostBreakdown.monthly.length
           ? hostBreakdown.monthly
-          : hostBreakdown.daily
-        : hostBreakdown.yearly.length
-        ? hostBreakdown.yearly
-        : hostBreakdown.monthly.length
-        ? hostBreakdown.monthly
-        : hostBreakdown.daily;
+          : hostBreakdown.daily;
 
-    if (!candidateEntries.length) return;
+      if (!candidateEntries.length) return prevDate;
 
-    const hasMatch = candidateEntries.some((entry) =>
-      // matchesPeriod(entry.period, hostActivityFilter, hostPeriodKey),
-      matchesPeriod(entry.period, hostActivityFilter, hostActivityDate),
-    );
+      const hasMatch = candidateEntries.some((entry) =>
+        matchesPeriod(entry.period, hostActivityFilter, prevDate),
+      );
 
-    // if (hasMatch && matchesPeriod(preferred.period, hostActivityFilter, hostPeriodKey)) return;
-    if (hasMatch || hostActivityFilter === 'day') return;
+      // If current date already matches some entry (or we’re in day mode),
+      // keep user selection as-is.
+      if (hasMatch || hostActivityFilter === 'day') return prevDate;
 
-    const preferred = selectPreferredEntry(candidateEntries);
-    if (!preferred) return;
+      const preferred = selectPreferredEntry(candidateEntries);
+      if (!preferred) return prevDate;
 
-    // const preferred = selectPreferredEntry(candidateEntries);
-    // if (!preferred) return;
-
-    const nextDate = parsePeriodToDate(preferred.period ?? '', hostActivityFilter);
-    if (!Number.isNaN(nextDate.getTime())) {
-      setHostActivityDate(nextDate);
-    }
+      const nextDate = parsePeriodToDate(preferred.period ?? '', hostActivityFilter);
+      return Number.isNaN(nextDate.getTime()) ? prevDate : nextDate;
+    });
   }, [
-    hostActivityDate,
     hostBreakdown,
     hostActivityFilter,
     matchesPeriod,
@@ -1584,10 +1630,55 @@ const coverImage = useMemo(() => {
     normalizeCommissionValue,
   ]);
 
-  const promoterActivityTotals = useMemo(
-    () => summarizeEntries(resolveEntriesForFilter(analytics.breakdown, promoterActivityFilter)),
+  const promoterEntriesForFilter = useMemo(
+    () => resolveEntriesForFilter(analytics.breakdown, promoterActivityFilter),
     [analytics.breakdown, promoterActivityFilter, resolveEntriesForFilter],
   );
+
+  const promoterFilteredEntries = useMemo(() => {
+    return promoterEntriesForFilter.filter((entry) =>
+      matchesPeriod(entry.period, promoterActivityFilter, promoterActivityDate),
+    );
+  }, [matchesPeriod, promoterActivityDate, promoterActivityFilter, promoterEntriesForFilter]);
+
+        const promoterActivityTotals = useMemo(() => {
+    const totals = summarizeEntries(promoterFilteredEntries);
+
+    // If there are entries for the selected date/period → use only those
+    if (promoterFilteredEntries.length > 0) return totals;
+
+    // If breakdown is completely empty for this granularity, fall back to global totals
+    if (promoterEntriesForFilter.length === 0) {
+      return {
+        ...totals,
+        bookings: analytics.totalBooks ?? totals.bookings,
+        revenue: analytics.totalRevenue ?? totals.revenue,
+      };
+    }
+
+    // Otherwise (no match for this date, but breakdown exists) → show zeroed totals
+    return totals;
+  }, [
+    analytics.totalBooks,
+    analytics.totalRevenue,
+    promoterEntriesForFilter.length,
+    promoterFilteredEntries,
+  ]);
+
+  const promoterActivityQrScans = useMemo(() => {
+    const total = promoterFilteredEntries.reduce(
+      (sum, entry: any) => sum + (entry?.qrScans ?? 0),
+      0,
+    );
+
+    if (promoterFilteredEntries.length > 0 && total > 0) return total;
+
+    if (promoterEntriesForFilter.length === 0) {
+      return analytics.qrScans ?? total;
+    }
+
+    return total;
+  }, [analytics.qrScans, promoterEntriesForFilter.length, promoterFilteredEntries]);
 
   const normalizeBreakdown = useCallback((raw: any, granularity?: 'day' | 'month' | 'year'): AggregateBuckets => {
     // 1) Already in { daily, monthly, yearly } form
@@ -1828,10 +1919,17 @@ const coverImage = useMemo(() => {
         const res = await axios.get('/api/analytics/earnings');
         const daily = res.data.daily;
   
-        const today = new Date().toISOString().split('T')[0];
-        const todayEntry = daily.find((entry: { date: string }) => entry.date === today);
-        // const dailyProfit = todayEntry?.amount || 0;
-        const todaysProfit = todayEntry?.amount || 0;
+        const now = new Date();
+        const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        const todaysProfit = Array.isArray(daily)
+          ? daily.reduce((sum: number, entry: { date: string; amount?: number }) => {
+              const parsedDate = new Date(entry.date);
+              if (Number.isNaN(parsedDate.getTime())) return sum;
+              return parsedDate >= twentyFourHoursAgo && parsedDate <= now
+                ? sum + Number(entry.amount ?? 0)
+                : sum;
+            }, 0)
+          : 0;
 
         const revenueTotals = res.data.revenueTotals ?? {
           daily: Array.isArray(daily) ? daily.reduce((sum: number, entry: any) => sum + Number(entry?.amount ?? 0), 0) : 0,
@@ -2508,6 +2606,7 @@ const coverImage = useMemo(() => {
       <div className="rounded-3xl overflow-visible shadow-xl border border-neutral-100 bg-white">
         <div className="relative z-0 h-56 sm:h-64 md:h-72 overflow-visible">
           {/* ROLE SWITCH — bottom-center over the cover */}
+          {currentUser?.role !== 'promoter' && (
           <div className="absolute left-1/2 -bottom-6 translate-x-[-50%] z-[99999]">
             <Switch.Group as="div" className="flex flex-col items-center">
               <Switch
@@ -2581,6 +2680,7 @@ const coverImage = useMemo(() => {
             </Switch.Group>
 
               </div>
+            )}
 
                 {coverImage ? (
                   <NextImage
@@ -4027,37 +4127,27 @@ const coverImage = useMemo(() => {
                     Performance and earnings overview — renewed twice a month.
                   </p>
 
-                  <div className="mt-4 flex gap-2">
-                    {[['day', 'Day'], ['month', 'Month'], ['year', 'Year']].map(([value, label]) => (
-                      <button
-                        key={value}
-                        onClick={() => setPromoterActivityFilter(value as 'day' | 'month' | 'year')}
-                        className={twMerge(
-                          'rounded-full border px-3 py-1 text-xs font-semibold transition',
-                          promoterActivityFilter === value
-                            ? 'border-black bg-black text-white'
-                            : 'border-neutral-200 text-neutral-700 hover:border-neutral-400',
-                        )}
-                      >
-                        {label}
-                      </button>
-                    ))}
+                  <div className="mt-4">
+                    <FilterHostAnalytics
+                      filter={promoterActivityFilter}
+                      selectedDate={promoterActivityDate}
+                      onFilterChange={setPromoterActivityFilter}
+                      onDateChange={setPromoterActivityDate}
+                    />
                   </div>
 
                   <div className="mt-5 space-y-4">
                     <div className="flex items-center justify-between rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800 shadow-sm">
                       <span className="font-medium">Total Books</span>
-                      {/* <span className="text-lg font-semibold text-black">{analytics.totalBooks}</span> */}
                       <span className="text-lg font-semibold text-black">{promoterActivityTotals.bookings}</span>
                     </div>
                     <div className="flex items-center justify-between rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800 shadow-sm">
                       <span className="font-medium">QR Code Scanned</span>
-                      <span className="text-lg font-semibold text-black">{analytics.qrScans}</span>
+                      <span className="text-lg font-semibold text-black">{promoterActivityQrScans}</span>
                     </div>
                     <div className="flex items-center justify-between rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800 shadow-sm">
                       <span className="font-medium">Total Books Revenue</span>
                       <span className="text-lg font-semibold text-black">
-                        {/* {formatConverted(analytics.totalRevenue)} */}
                         {formatConverted(promoterActivityTotals.revenue, baseCurrency)}
                       </span>
                     </div>
@@ -4073,7 +4163,7 @@ const coverImage = useMemo(() => {
                   </div>
                   <div className="mt-6 flex items-center justify-center rounded-xl bg-neutral-50 p-10 md:h-52">
                     <p className="text-3xl font-semibold text-black">
-                      {formatConverted((analytics.totalRevenue || 0) * 0.1, baseCurrency)}
+                      {formatConverted((promoterActivityTotals.revenue || 0) * 0.1, baseCurrency)}
                     </p>
                   </div>
                 </div>
@@ -4081,7 +4171,15 @@ const coverImage = useMemo(() => {
                 <div className="rounded-2xl bg-white p-6 shadow-md transition hover:shadow-lg">
                   <p className="text-lg font-semibold text-neutral-900">Withdrawal Method</p>
                   <p className="mt-2 text-sm text-neutral-600 md:text-base">
-                    Deposits processed twice per month.
+                    Deposits processed twice per month. You can check your payout history{' '}
+                    <button
+                      type="button"
+                      onClick={() => setShowPayoutHistory(true)}
+                      className="inline-flex items-center text-black underline underline-offset-4 transition hover:opacity-80"
+                    >
+                      here
+                    </button>
+                    .
                   </p>
 
                   {savedPayout ? (
@@ -4313,7 +4411,15 @@ const coverImage = useMemo(() => {
                 <div className="rounded-2xl bg-white p-6 shadow-md transition hover:shadow-lg">
                   <p className="text-lg font-semibold text-neutral-900">Withdrawal Method</p>
                   <p className="mt-2 text-sm text-neutral-600 md:text-base">
-                    Deposits processed twice per month.
+                    Deposits processed twice per month. You can check your payout history{' '}
+                    <button
+                      type="button"
+                      onClick={() => setShowPayoutHistory(true)}
+                      className="inline-flex items-center text-black underline underline-offset-4 transition hover:opacity-80"
+                    >
+                      here
+                    </button>
+                    .
                   </p>
 
                   {savedPayout ? (
@@ -4404,6 +4510,15 @@ const coverImage = useMemo(() => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <PayoutHistory
+        open={showPayoutHistory}
+        onClose={() => setShowPayoutHistory(false)}
+        earnings={earnings}
+        baseCurrency={baseCurrency}
+        formatConverted={formatConverted}
+        currencySymbol={currencySymbol}
+      />
 
       {/* Crop Modal */}
       {isCropping && uploadedImage && (

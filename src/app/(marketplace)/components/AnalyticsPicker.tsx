@@ -22,9 +22,9 @@ const formatDayLabel = (date: Date) =>
 
 // build a simple month grid: null = empty cell, number = day of month
 const buildMonthCells = (year: number, month: number) => {
-  const firstDay = new Date(Date.UTC(year, month, 1));
-  const firstWeekday = firstDay.getUTCDay(); // 0 (Sun) - 6 (Sat)
-  const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+  const firstDay = new Date(year, month, 1);
+  const firstWeekday = firstDay.getDay(); // 0 (Sun) - 6 (Sat)
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
 
   const cells: (number | null)[] = [];
 
@@ -49,59 +49,56 @@ const AnalyticsPicker: React.FC<AnalyticsPickerProps> = ({
   onDateChange,
   placement = 'up',
 }) => {
+  const safeDate =
+    selectedDate instanceof Date && !Number.isNaN(selectedDate.getTime())
+      ? selectedDate
+      : new Date();
+
+  // shared view state for all modes
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [viewYear, setViewYear] = useState(safeDate.getFullYear());
+  const [viewMonth, setViewMonth] = useState(safeDate.getMonth());
+  const selectedDay = safeDate.getDate();
+
+  // keep view in sync when parent changes selectedDate
+  useEffect(() => {
+    setViewYear(safeDate.getFullYear());
+    setViewMonth(safeDate.getMonth());
+  }, [safeDate]);
+
+  // values reused in both modes (no hooks below this point)
+  const monthLabel = new Date(viewYear, viewMonth, 1).toLocaleDateString(
+    'en-US',
+    { month: 'long', year: 'numeric' },
+  );
+  const cells = buildMonthCells(viewYear, viewMonth);
+  const weekDayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
   // ---------- DAY MODE ----------
   if (filter === 'day') {
-    const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-    const [viewYear, setViewYear] = useState(selectedDate.getUTCFullYear());
-    const [viewMonth, setViewMonth] = useState(selectedDate.getUTCMonth());
-
     const calendarVariants = {
-        hidden: { opacity: 0, y: -8, scale: 0.98 },
-        visible: { opacity: 1, y: 0, scale: 1 },
-        exit: { opacity: 0, y: -8, scale: 0.98 },
+      hidden: { opacity: 0, y: -8, scale: 0.98 },
+      visible: { opacity: 1, y: 0, scale: 1 },
+      exit: { opacity: 0, y: -8, scale: 0.98 },
     };
 
-    // keep calendar view in sync if selectedDate changes from outside
-    useEffect(() => {
-      setViewYear(selectedDate.getUTCFullYear());
-      setViewMonth(selectedDate.getUTCMonth());
-    }, [selectedDate]);
-
     const handleStep = (delta: number) => {
-      const next = new Date(selectedDate);
-      next.setUTCDate(next.getUTCDate() + delta);
+      const next = new Date(safeDate);
+      next.setDate(next.getDate() + delta);
       onDateChange(next);
     };
 
     const handleMonthStep = (delta: number) => {
       const nextMonth = viewMonth + delta;
-      const nextDate = new Date(Date.UTC(viewYear, nextMonth, 1));
-      setViewYear(nextDate.getUTCFullYear());
-      setViewMonth(nextDate.getUTCMonth());
+      const nextDate = new Date(viewYear, nextMonth, 1);
+      setViewYear(nextDate.getFullYear());
+      setViewMonth(nextDate.getMonth());
     };
 
-    const monthLabel = useMemo(
-      () =>
-        new Date(Date.UTC(viewYear, viewMonth, 1)).toLocaleDateString(
-          'en-US',
-          { month: 'long', year: 'numeric' },
-        ),
-      [viewYear, viewMonth],
-    );
-
-    const cells = useMemo(
-      () => buildMonthCells(viewYear, viewMonth),
-      [viewYear, viewMonth],
-    );
-
-    const selectedDay = selectedDate.getUTCDate();
-    const selectedYear = selectedDate.getUTCFullYear();
-    const selectedMonth = selectedDate.getUTCMonth();
-
+    const selectedYear = safeDate.getFullYear();
+    const selectedMonth = safeDate.getMonth();
     const isSameMonthView =
       selectedYear === viewYear && selectedMonth === viewMonth;
-
-    const weekDayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
     return (
       <div className="group relative flex flex-col select-none gap-2 rounded-xl border border-neutral-100 bg-white px-3 py-3 text-xs font-semibold text-neutral-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_16px_40px_rgba(0,0,0,0.06)]">
@@ -110,7 +107,7 @@ const AnalyticsPicker: React.FC<AnalyticsPickerProps> = ({
         </span>
 
         {/* compact header with stepper */}
-        <div className="flex items-center justify-between rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.75),0_8px_20px_rgba(0,0,0,0.04)]">
+        <div className="flex items-center justify-between rounded-lg shadow-inner bg-white px-3 py-2 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.75),0_8px_20px_rgba(0,0,0,0.04)]">
           <button
             type="button"
             onClick={() => handleStep(-1)}
@@ -123,7 +120,7 @@ const AnalyticsPicker: React.FC<AnalyticsPickerProps> = ({
             onClick={() => setIsCalendarOpen((open) => !open)}
             className="px-2 text-[13px] font-semibold text-neutral-900 underline-offset-2 hover:underline"
           >
-            {formatDayLabel(selectedDate)}
+            {formatDayLabel(safeDate)}
           </button>
           <button
             type="button"
@@ -139,18 +136,17 @@ const AnalyticsPicker: React.FC<AnalyticsPickerProps> = ({
           {isCalendarOpen && (
             <motion.div
               key="day-calendar"
-              variants={calendarVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
+              initial={{ opacity: 0, y: -8, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.98 }}
               transition={{ duration: 0.18, ease: 'easeOut' }}
-              className="absolute left-0 right-0 top-full z-20 mt-2 rounded-xl border border-neutral-200 bg-white p-3 text-[11px] shadow-[0_16px_40px_rgba(0,0,0,0.14)] origin-top"
+              className="absolute left-0 right-0 top-full z-20 mt-2 rounded-xl shadow-inner bg-white p-3 text-[11px] shadow-[0_16px_40px_rgba(0,0,0,0.14)] origin-top"
             >
               <div className="mb-2 flex items-center justify-between">
                 <button
                   type="button"
                   onClick={() => handleMonthStep(-1)}
-                  className="flex h-7 w-7 items-center justify-center rounded-full border border-neutral-200 bg-neutral-50 text-[11px] font-semibold text-neutral-700 transition hover:bg-neutral-100"
+                  className="flex h-7 w-7 items-center justify-center rounded-full shadow-inner bg-neutral-50 text-[11px] font-semibold text-neutral-700 transition hover:bg-neutral-100"
                 >
                   ‹
                 </button>
@@ -160,7 +156,7 @@ const AnalyticsPicker: React.FC<AnalyticsPickerProps> = ({
                 <button
                   type="button"
                   onClick={() => handleMonthStep(1)}
-                  className="flex h-7 w-7 items-center justify-center rounded-full border border-neutral-200 bg-neutral-50 text-[11px] font-semibold text-neutral-700 transition hover:bg-neutral-100"
+                  className="flex h-7 w-7 items-center justify-center rounded-full shadow-inner bg-neutral-50 text-[11px] font-semibold text-neutral-700 transition hover:bg-neutral-100"
                 >
                   ›
                 </button>
@@ -195,9 +191,7 @@ const AnalyticsPicker: React.FC<AnalyticsPickerProps> = ({
                       key={idx}
                       type="button"
                       onClick={() => {
-                        const next = new Date(
-                          Date.UTC(viewYear, viewMonth, day),
-                        );
+                        const next = new Date(viewYear, viewMonth, day);
                         onDateChange(next);
                         setIsCalendarOpen(false);
                       }}
@@ -220,31 +214,20 @@ const AnalyticsPicker: React.FC<AnalyticsPickerProps> = ({
     );
   }
 
-  // ---------- MONTH / YEAR MODE (reuse CalendarPicker) ----------
-      // ---------- MONTH / YEAR MODE: same stepper pattern ----------
-  const safeDate =
-    selectedDate instanceof Date && !Number.isNaN(selectedDate.getTime())
-      ? selectedDate
-      : new Date();
-
-  const selectedMonth = safeDate.getUTCMonth();
-  const selectedYear = safeDate.getUTCFullYear();
-  const selectedDay = safeDate.getUTCDate();
-
+  // ---------- MONTH / YEAR MODE: stepper for month / year ----------
   const handleMonthStep = (delta: number) => {
-    const next = new Date(Date.UTC(selectedYear, selectedMonth + delta, selectedDay));
+    const next = new Date(viewYear, viewMonth + delta, selectedDay);
+    setViewYear(next.getFullYear());
+    setViewMonth(next.getMonth());
     onDateChange(next);
   };
 
   const handleYearStep = (delta: number) => {
-    const next = new Date(Date.UTC(selectedYear + delta, selectedMonth, selectedDay));
+    const next = new Date(viewYear + delta, viewMonth, selectedDay);
+    setViewYear(next.getFullYear());
+    setViewMonth(next.getMonth());
     onDateChange(next);
   };
-
-  const monthLabel = new Date(Date.UTC(selectedYear, selectedMonth, 1)).toLocaleDateString(
-    'en-US',
-    { month: 'long', year: 'numeric' },
-  );
 
   return (
     <div className="group flex flex-col select-none gap-2 rounded-xl border border-neutral-100 bg-white px-3 py-3 text-xs font-semibold text-neutral-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_16px_40px_rgba(0,0,0,0.06)]">
@@ -252,22 +235,26 @@ const AnalyticsPicker: React.FC<AnalyticsPickerProps> = ({
         {filter === 'month' ? 'Select month' : 'Select year'}
       </span>
 
-      <div className="flex items-center justify-between rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.75),0_8px_20px_rgba(0,0,0,0.04)]">
+      <div className="flex items-center justify-between rounded-lg shadow-inner bg-white px-3 py-2 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.75),0_8px_20px_rgba(0,0,0,0.04)]">
         <button
           type="button"
-          onClick={() => (filter === 'month' ? handleMonthStep(-1) : handleYearStep(-1))}
+          onClick={() =>
+            filter === 'month' ? handleMonthStep(-1) : handleYearStep(-1)
+          }
           className="flex h-7 w-7 items-center justify-center rounded-full shadow-md bg-neutral-50 text-xs font-semibold text-neutral-700 transition hover:bg-neutral-100"
         >
           ‹
         </button>
 
         <span className="px-2 text-[13px] font-semibold text-neutral-900">
-          {filter === 'month' ? monthLabel : selectedYear}
+          {filter === 'month' ? monthLabel : viewYear}
         </span>
 
         <button
           type="button"
-          onClick={() => (filter === 'month' ? handleMonthStep(1) : handleYearStep(1))}
+          onClick={() =>
+            filter === 'month' ? handleMonthStep(1) : handleYearStep(1)
+          }
           className="flex h-7 w-7 items-center justify-center rounded-full shadow-md bg-neutral-50 text-xs font-semibold text-neutral-700 transition hover:bg-neutral-100"
         >
           ›
@@ -276,5 +263,4 @@ const AnalyticsPicker: React.FC<AnalyticsPickerProps> = ({
     </div>
   );
 };
-
 export default AnalyticsPicker;

@@ -38,7 +38,7 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
   sourceCurrency
 }) => {
 
-  const [view, setView] = useState<'daily' | 'monthly' | 'yearly' | 'all'>('daily');
+  const [view, setView] = useState<'daily' |'monthly' | 'yearly' | 'all'>('daily');
   const [activeInfo, setActiveInfo] = useState<'profit' | 'total' | null>(null);
   const { formatConverted, currency, baseCurrency } = useCurrencyFormatter();
   const fromCurrency = sourceCurrency ?? baseCurrency;
@@ -49,10 +49,59 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
     yearly: yearlyData,
   };
 
-  const currentData = view === 'all'
-    ? Array.from(new Set([...dailyData.map((d) => d.date)]))
-        .map((date) => dailyData.find((d) => d.date === date)!)
-    : dataMap[view];
+    const currentDataRaw = useMemo(() => {
+    switch (view) {
+      case 'daily':
+        return dailyData;
+      case 'monthly':
+        return monthlyData;
+      case 'yearly':
+        return yearlyData;
+      case 'all':
+      default:
+        // "All" → full timeline; prefer daily if available,
+        // otherwise fall back to monthly, then yearly
+        if (dailyData.length) return dailyData;
+        if (monthlyData.length) return monthlyData;
+        return yearlyData;
+    }
+  }, [view, dailyData, monthlyData, yearlyData]);
+
+  const currentData = useMemo(() => {
+    const data = [...currentDataRaw];
+
+    data.sort((a, b) => {
+      const aTime = new Date(a.date).getTime();
+      const bTime = new Date(b.date).getTime();
+
+      if (!Number.isFinite(aTime) || !Number.isFinite(bTime)) {
+        // fallback to string comparison if parsing fails
+        return String(a.date).localeCompare(String(b.date));
+      }
+
+      return aTime - bTime; // oldest on the left, newest on the right
+    });
+
+    return data;
+  }, [currentDataRaw]);
+
+  const sortedData = useMemo(() => {
+    const data = [...currentData];
+
+    data.sort((a, b) => {
+      const aTime = new Date(a.date).getTime();
+      const bTime = new Date(b.date).getTime();
+
+      if (!Number.isFinite(aTime) || !Number.isFinite(bTime)) {
+        // fallback to string comparison if date parsing fails
+        return String(a.date).localeCompare(String(b.date));
+      }
+
+      return aTime - bTime; // oldest on the left, newest on the right
+    });
+
+    return data;
+  }, [currentData]);
 
   const fallbackRevenueTotals = useMemo(
     () => ({
@@ -79,16 +128,27 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
       return todaysProfit;
     }
 
-    const today = new Date().toDateString();
-    const todayEntry = dailyData.find((d) => new Date(d.date).toDateString() === today);
-    return todayEntry ? todayEntry.amount : 0;
+    const now = new Date();
+    const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+    return dailyData.reduce((sum, entry) => {
+      const entryDate = new Date(entry.date);
+      if (Number.isNaN(entryDate.getTime())) return sum;
+      if (entryDate >= twentyFourHoursAgo && entryDate <= now) {
+        return sum + entry.amount;
+      }
+      return sum;
+    }, 0);
   }, [dailyData, todaysProfit]);
 
-  const revenueLabel = view === 'daily'
+  const revenueLabel = view === 'monthly'
     ? 'Total Revenue'
     : view === 'all'
     ? 'Total Revenue'
     : `${view.charAt(0).toUpperCase() + view.slice(1)} Total`;
+
+  const isTouch = typeof window !== "undefined" &&
+    window.matchMedia("(pointer: coarse)").matches;
 
     console.log('[EarningsCard] view, totalEarnings, totalBase, hostShare =', {
       view,
@@ -110,11 +170,17 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
 
             <div className="mb-3 mt-3 flex flex-wrap gap-4 pt-3 sm:mb-0 sm:flex-row sm:justify-baseline">
               <div className="relative flex flex-col items-center justify-center">
-                <p
+               <p
                   className="select-none rounded-xl bg-gradient-to-r from-blue-200 to-cyan-200 p-3 text-sm text-white cursor-pointer"
-                  onMouseEnter={() => setActiveInfo('profit')}
-                  onMouseLeave={() => setActiveInfo((prev) => (prev === 'profit' ? null : prev))}
-                  onClick={() => setActiveInfo((prev) => (prev === 'profit' ? null : 'profit'))}
+                  onMouseEnter={() => {
+                    if (!isTouch) setActiveInfo("profit");
+                  }}
+                  onMouseLeave={() => {
+                    if (!isTouch) setActiveInfo((prev) => (prev === "profit" ? null : prev));
+                  }}
+                  onClick={() =>
+                    setActiveInfo((prev) => (prev === "profit" ? null : "profit"))
+                  }
                 >
                   Today&#39;s Profit
                 </p>
@@ -149,12 +215,12 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
 
               </div>
 
-              <div className="relative flex flex-col items-center justify-center">
+              {/* <div className="relative flex flex-col items-center justify-center">
                 <p
                   className="select-none rounded-xl bg-neutral-900 p-3 text-sm text-white cursor-pointer"
-                  onMouseEnter={() => setActiveInfo('total')}
-                  onMouseLeave={() => setActiveInfo((prev) => (prev === 'total' ? null : prev))}
-                  onClick={() => setActiveInfo((prev) => (prev === 'total' ? null : 'total'))}
+                  onClick={() =>
+                    setActiveInfo((prev) => (prev === 'total' ? null : 'total'))
+                  }
                 >
                   {revenueLabel}
                 </p>
@@ -186,8 +252,8 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
                     </motion.div>
                   )}
                 </AnimatePresence>
-                
-              </div>
+
+              </div> */}
             </div>
 
             <div className="mt-4 flex gap-2 sm:mt-0">
