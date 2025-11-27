@@ -1710,8 +1710,8 @@ const coverImage = useMemo(() => {
   ]);
 
   const promoterEntriesForFilter = useMemo(
-    () => resolveEntriesForFilter(promoterBreakdown, promoterActivityFilter),
-    [promoterActivityFilter, promoterBreakdown, resolveEntriesForFilter],
+    () => resolveEntriesForFilter(analytics.breakdown, promoterActivityFilter),
+    [analytics.breakdown, promoterActivityFilter, resolveEntriesForFilter],
   );
 
   const promoterFilteredEntries = useMemo(() => {
@@ -1720,33 +1720,16 @@ const coverImage = useMemo(() => {
     );
   }, [matchesPeriod, promoterActivityDate, promoterActivityFilter, promoterEntriesForFilter]);
 
-        const promoterActivityTotals = useMemo(() => {
-    const totals = summarizeEntries(promoterFilteredEntries);
-
-    // If there are entries for the selected date/period → use only those
-    if (promoterFilteredEntries.length > 0) return totals;
-    // even when the client-side breakdown lacks matches.
-    return {
-      ...totals,
-      bookings: analytics.totalBooks ?? totals.bookings,
-      revenue: analytics.totalRevenue ?? totals.revenue,
-    };
-  }, [analytics.totalBooks, analytics.totalRevenue, promoterFilteredEntries]);
+  const promoterActivityTotals = useMemo(() => {
+    return summarizeEntries(promoterFilteredEntries);
+  }, [promoterFilteredEntries]);
 
   const promoterActivityQrScans = useMemo(() => {
-    const total = promoterFilteredEntries.reduce(
+    return promoterFilteredEntries.reduce(
       (sum, entry: any) => sum + (entry?.qrScans ?? 0),
       0,
     );
-
-    if (promoterFilteredEntries.length > 0 && total > 0) return total;
-
-    if (promoterEntriesForFilter.length === 0) {
-      return analytics.qrScans ?? total;
-    }
-
-    return total;
-  }, [analytics.qrScans, promoterEntriesForFilter.length, promoterFilteredEntries]);
+  }, [promoterFilteredEntries]);
 
   const normalizeBreakdown = useCallback((raw: any, granularity?: 'day' | 'month' | 'year'): AggregateBuckets => {
     // 1) Already in { daily, monthly, yearly } form
@@ -1887,6 +1870,8 @@ const coverImage = useMemo(() => {
         entry?.commission ?? entry?.partnerCommission ?? entry?.commissionSum,
       );
 
+      const qrScansNum = Number(entry?.qrScans ?? entry?.totalQrScans ?? entry?.scans);
+
       return {
         period,
         bookings: Number.isFinite(bookingsNum) ? bookingsNum : 0,
@@ -1894,6 +1879,7 @@ const coverImage = useMemo(() => {
         commission: Number.isFinite(commissionValue)
           ? Math.max(0, commissionValue)
           : undefined,
+        qrScans: Number.isFinite(qrScansNum) ? Math.max(0, qrScansNum) : undefined,
       };
     });
   };
@@ -4207,7 +4193,7 @@ const coverImage = useMemo(() => {
                     <FilterHostAnalytics
                       filter={promoterActivityFilter}
                       selectedDate={promoterActivityDate}
-                      onFilterChange={handlePromoterFilterChange}
+                      onFilterChange={setPromoterActivityFilter}
                       onDateChange={setPromoterActivityDate}
                     />
                   </div>

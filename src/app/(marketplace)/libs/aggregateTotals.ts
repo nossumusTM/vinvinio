@@ -3,11 +3,18 @@ export type AggregateEntry = {
   bookings: number;
   revenue: number;
   commission?: number;
+  qrScans?: number;
 };
 
 type AggregateMap = Record<
   string,
-  { bookings?: number; revenue?: number; commissionSum?: number; commission?: number }
+  {
+    bookings?: number;
+    revenue?: number;
+    commissionSum?: number;
+    commission?: number;
+    qrScans?: number;
+  }
 >;
 
 const clampNonNegative = (value: number) => (Number.isFinite(value) && value > 0 ? value : 0);
@@ -63,6 +70,7 @@ const sanitizeMap = (raw: unknown): AggregateMap => {
     const periodKey = normalizePeriodKey(key);
     const bookings = clampNonNegative(Number((value as any).bookings));
     const revenue = clampNonNegative(Number((value as any).revenue));
+    const qrScans = clampNonNegative(Number((value as any).qrScans));
 
     const commissionRaw =
       (value as any).commissionSum ?? (value as any).commission ?? undefined;
@@ -72,8 +80,8 @@ const sanitizeMap = (raw: unknown): AggregateMap => {
       : undefined;
 
     map[periodKey] = hasCommission
-      ? { bookings, revenue, commissionSum }
-      : { bookings, revenue };
+      ? { bookings, revenue, commissionSum, qrScans }
+      : { bookings, revenue, qrScans };
   }
   return map;
 };
@@ -129,11 +137,18 @@ const normalizeArrayEntries = (raw: unknown[]): AggregateEntry[] => {
         (entry as any)?.commission ?? (entry as any)?.partnerCommission ?? (entry as any)?.commissionSum,
       );
 
+      const qrScansNum = Number(
+        (entry as any)?.qrScans ??
+          (entry as any)?.totalQrScans ??
+          (entry as any)?.scans,
+      );
+
       return {
         period,
         bookings: clampNonNegative(bookingsNum),
         revenue: clampNonNegative(revenueNum),
         commission: Number.isFinite(commissionValue) ? clampNonNegative(commissionValue) : undefined,
+        qrScans: Number.isFinite(qrScansNum) ? clampNonNegative(qrScansNum) : undefined,
       } satisfies AggregateEntry;
     })
     .filter((entry) => Boolean(entry.period));
@@ -237,11 +252,14 @@ export const mapToEntries = (raw: unknown): AggregateEntry[] => {
           ? commissionSum / bookings
           : undefined;
 
+      const qrScans = clampNonNegative(Number((value as any)?.qrScans ?? 0));
+
       return {
         period,
         bookings,
         revenue,
         commission,
+        qrScans
       } satisfies AggregateEntry;
     })
     .sort((a, b) => (a.period < b.period ? 1 : -1));
