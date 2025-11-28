@@ -26,6 +26,16 @@ const parseJsonMaybe = (raw: unknown) => {
   }
 };
 
+const formatUtcKey = (date: Date, type: 'daily' | 'monthly' | 'yearly') => {
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+
+  if (type === 'daily') return `${year}-${month}-${day}`;
+  if (type === 'monthly') return `${year}-${month}`;
+  return `${year}`;
+};
+
 function groupByDate(
   data: RawEarning[],
   type: 'daily' | 'monthly' | 'yearly',
@@ -37,19 +47,9 @@ function groupByDate(
 
   data.forEach((entry) => {
     const date = new Date(entry.createdAt);
-    let key = '';
+    if (Number.isNaN(date.getTime())) return;
 
-    if (type === 'daily') {
-      key = `${date.getFullYear()}-${String(
-        date.getMonth() + 1,
-      ).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-    } else if (type === 'monthly') {
-      key = `${date.getFullYear()}-${String(
-        date.getMonth() + 1,
-      ).padStart(2, '0')}`;
-    } else if (type === 'yearly') {
-      key = `${date.getFullYear()}`;
-    }
+    const key = formatUtcKey(date, type);
 
     const existing = map.get(key) || { amount: 0, totalBooks: 0 };
     map.set(key, {
@@ -175,7 +175,7 @@ export async function GET() {
     }
   }
 
-    const hasLedgerEarnings = earnings.length > 0;
+  const hasLedgerEarnings = earnings.length > 0;
 
   const normalizeEntries = (entries: {
     date: string;
@@ -188,23 +188,45 @@ export async function GET() {
       books: Number(entry.books ?? 0),
     }));
 
+  const applyHostShare = (amount: number) =>
+    hostShare != null ? amount * hostShare : amount;
+
+  const normalizeAndScale = (entries: {
+    date: string;
+    amount: number;
+    books?: number;
+  }[]) =>
+    normalizeEntries(entries).map((entry) => ({
+      ...entry,
+      amount: applyHostShare(entry.amount),
+    }));
+
+  const adjustedLedger = hasLedgerEarnings
+    ? earnings.map((entry) => ({
+        ...entry,
+        amount: applyHostShare(entry.amount),
+      }))
+    : [];
+
   // 🤝 canonical bucket type
   type EarningsBucket = { date: string; amount: number; books: number };
 
   let daily: EarningsBucket[] = normalizeEntries(
-    hasLedgerEarnings ? groupByDate(earnings, 'daily') : hostDaily,
+    hasLedgerEarnings ? groupByDate(adjustedLedger, 'daily') : normalizeAndScale(hostDaily),
   );
   let monthly: EarningsBucket[] = normalizeEntries(
-    hasLedgerEarnings ? groupByDate(earnings, 'monthly') : hostMonthly,
+    hasLedgerEarnings
+          ? groupByDate(adjustedLedger, 'monthly')
+          : normalizeAndScale(hostMonthly),
   );
   let yearly: EarningsBucket[] = normalizeEntries(
-    hasLedgerEarnings ? groupByDate(earnings, 'yearly') : hostYearly,
+    hasLedgerEarnings ? groupByDate(adjustedLedger, 'yearly') : normalizeAndScale(hostYearly),
   );
 
   // NOTE: `earnings.amount` is whatever you've stored in Earning
   // (platform gross or user share) — base total before any hostShare tweak
   let totalEarnings = hasLedgerEarnings
-    ? earnings.reduce((sum, entry) => sum + entry.amount, 0)
+    ? adjustedLedger.reduce((sum, entry) => sum + entry.amount, 0)
     : daily.reduce((sum, entry) => sum + entry.amount, 0);
 
   if (!hasLedgerEarnings && !totalEarnings) {
@@ -214,21 +236,6 @@ export async function GET() {
   const totalBooks = hasLedgerEarnings
     ? earnings.reduce((sum, entry) => sum + entry.totalBooks, 0)
     : Number(hostAnalytics?.totalBooks ?? 0);
-
-  // 👇 correctly typed hostShare application – preserves date & books
-  if (hostShare != null) {
-    const applyHostShare = (entries: EarningsBucket[]): EarningsBucket[] =>
-      entries.map((entry) => ({
-        ...entry,
-        amount: Number(entry.amount ?? 0) * hostShare,
-      }));
-
-    daily = applyHostShare(daily);
-    monthly = applyHostShare(monthly);
-    yearly = applyHostShare(yearly);
-
-    totalEarnings = totalEarnings * hostShare;
-  }
 
   const sumAmounts = (entries: { amount: number }[]) =>
     entries.reduce((sum, entry) => sum + entry.amount, 0);
@@ -240,9 +247,21 @@ export async function GET() {
     all: totalEarnings,
   };
 
-  const todayKey = new Date().toISOString().slice(0, 10);
-  const todaysProfit =
-    daily.find((entry) => entry.date === todayKey)?.amount ?? 0;
+  const now = new Date();
+  const last24hCutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const todaysProfit = hasLedgerEarnings
+    ? adjustedLedger.reduce((sum, entry) => {
+        const created = new Date(entry.createdAt);
+        if (Number.isNaN(created.getTime())) return sum;
+        return created >= last24hCutoff && created <= now
+          ? sum + entry.amount
+          : sum;
+      }, 0)
+    : (() => {
+        const todayKey = formatUtcKey(now, 'daily');
+        const todayEntry = daily.find((entry) => entry.date === todayKey);
+        return todayEntry?.amount ?? 0;
+      })();
 
   return NextResponse.json({
     daily,
