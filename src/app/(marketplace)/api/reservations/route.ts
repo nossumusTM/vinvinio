@@ -174,11 +174,13 @@ export async function POST(request: Request) {
           where: { userId: promoterUser.id },
         });
 
+        const eventDate = new Date(`${startDate}T00:00:00.000Z`);
+
         const { dailyTotals, monthlyTotals, yearlyTotals } = computeAggregateMaps(
           promoterAnalytics?.dailyTotals,
           promoterAnalytics?.monthlyTotals,
           promoterAnalytics?.yearlyTotals,
-          new Date(),
+          eventDate,
           1,
           promoterCut,
           0,

@@ -12,6 +12,7 @@ interface FilterHostAnalyticsProps {
   selectedDate: Date;
   onFilterChange: (filter: HostAnalyticsFilter) => void;
   onDateChange: (date: Date) => void;
+  yearOptions?: number[];
 }
 
 const toMonthValue = (date: Date) => {
@@ -25,13 +26,12 @@ const toDateValue = (date: Date) => date.toISOString().slice(0, 10);
 // ✅ NEW
 const toDayValue = (date: Date) => date.toISOString().slice(0, 10);
 
-
-
 const FilterHostAnalytics: React.FC<FilterHostAnalyticsProps> = ({
   filter,
   selectedDate,
   onFilterChange,
   onDateChange,
+  yearOptions
 }) => {
 
   const dateInputRef = useRef<HTMLInputElement>(null);
@@ -61,30 +61,23 @@ const FilterHostAnalytics: React.FC<FilterHostAnalyticsProps> = ({
     }
   };
 
-  const handleDateChange = (value: string) => {
-    if (!value) return;
-
-    let nextDate: Date;
-
-    if (filter === 'month') {
-      nextDate = new Date(`${value}-01T00:00:00Z`);
-    } else {
-        // 'day' and 'year' – use the chosen full date
-      nextDate = new Date(`${value}T00:00:00Z`);
-    }
-
-    if (!Number.isNaN(nextDate.getTime())) {
-      onDateChange(nextDate);
-    }
-    };
-
-      const selectedMonth = selectedDate.getUTCMonth();
+  const selectedMonth = selectedDate.getUTCMonth();
   const selectedYear = selectedDate.getUTCFullYear();
 
-  const yearOptions = useMemo(
-    () => [selectedYear],
-    [selectedYear],
+  const allowedYears = useMemo(
+    () => (yearOptions?.length ? yearOptions : [selectedYear]),
+    [selectedYear, yearOptions],
   );
+
+  const handleDateChange = (date: Date) => {
+    if (Number.isNaN(date.getTime())) return;
+
+    const normalized = new Date(
+      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+    );
+
+    onDateChange(normalized);
+  };
 
   const handleMonthYearChange = (month: number, year: number) => {
     // keep same day, adjust month/year
@@ -118,8 +111,9 @@ const FilterHostAnalytics: React.FC<FilterHostAnalyticsProps> = ({
       <AnalyticsPicker
         filter={filter}
         selectedDate={selectedDate}
-        onDateChange={onDateChange}
+        onDateChange={handleDateChange}
         placement="down"
+        yearOptions={allowedYears}
       />
 
     </div>

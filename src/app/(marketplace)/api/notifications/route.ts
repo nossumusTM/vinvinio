@@ -36,7 +36,8 @@ type NotificationType =
   | 'listing_submitted'
   | 'listing_revision_requested'
   | 'message_received'
-  | 'review_received';
+  | 'review_received'
+  | 'payout_processed';
 
 type NotificationResponse = {
   id: string;
@@ -79,7 +80,7 @@ export async function GET(request: Request) {
   const fetchWindow = Math.min(limit * 3, 300);
 
   try {
-    const [hostReservations, guestReservations, listings, messages, reviews, dismissals] = await Promise.all([
+    const [hostReservations, guestReservations, listings, messages, reviews, payouts, dismissals] = await Promise.all([
       prisma.reservation.findMany({
         where: {
           listing: {
@@ -223,6 +224,11 @@ export async function GET(request: Request) {
         orderBy: {
           createdAt: 'desc',
         },
+        take: fetchWindow,
+      }),
+      prisma.payout.findMany({
+        where: { userId: currentUser.id, kind: 'payout' },
+        orderBy: { createdAt: 'desc' },
         take: fetchWindow,
       }),
       prisma.notificationDismissal.findMany({
@@ -415,6 +421,33 @@ export async function GET(request: Request) {
         context: {
           listingId: review.listing?.id,
           rating: review.rating,
+        },
+      });
+    });
+
+    payouts.forEach((payout) => {
+      const statusLabel = payout.status === 'payout_sent' ? 'Payout sent' : 'Payout processing';
+      const createdAt = (payout.processedAt ?? payout.createdAt).toISOString();
+      const amountLabel =
+        payout.amount != null
+          ? `${payout.amount.toFixed(2)} ${payout.currency ?? ''}`.trim()
+          : 'Your payout';
+      const phaseLabel = payout.phase ? `phase ${payout.phase}` : 'payout';
+      const periodLabel = payout.period ?? 'this period';
+
+      pushNotification({
+        id: `payout-${payout.id}`,
+        type: 'payout_processed',
+        title: statusLabel,
+        description: `${amountLabel} for ${periodLabel} (${phaseLabel}) is ${statusLabel.toLowerCase()}.`,
+        actor: null,
+        createdAt,
+        context: {
+          amount: payout.amount,
+          currency: payout.currency,
+          phase: payout.phase,
+          period: payout.period,
+          status: payout.status,
         },
       });
     });

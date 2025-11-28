@@ -27,6 +27,7 @@ import { FiInfo, FiMail, FiPhone } from "react-icons/fi";
 import FAQ from "../components/FAQ";
 import toast from "react-hot-toast";
 import useCurrencyFormatter from '@/app/(marketplace)/hooks/useCurrencyFormatter';
+
 import useLocaleSettings from '@/app/(marketplace)/hooks/useLocaleSettings';
 import PayoutHistory from "../components/PayoutHistory";
 import { slugSegment } from '@/app/(marketplace)/libs/links';
@@ -145,6 +146,16 @@ interface EarningsEntry {
   date: string;
   amount: number;
   books?: number;
+}
+
+interface PayoutRecord {
+  id: string;
+  amount?: number | null;
+  currency?: string | null;
+  status?: string | null;
+  phase?: number | null;
+  period?: string | null;
+  createdAt?: string | null;
 }
 
 type HostAnalytics = {
@@ -282,10 +293,16 @@ const [hostAnalytics, setHostAnalytics] = useState<HostAnalytics | null>(null);
 const effectiveHostAnalytics = hostAnalytics ?? DEFAULT_HOST_ANALYTICS;
 const hostCurrency = effectiveHostAnalytics.currency ?? baseCurrency;
 const [hostBreakdown, setHostBreakdown] = useState<AggregateBuckets>(DEFAULT_HOST_ANALYTICS.breakdown!);
-  const [hostActivityFilter, setHostActivityFilter] = useState<HostAnalyticsFilter>('day');
-  const [hostActivityDate, setHostActivityDate] = useState<Date>(new Date());
-  const [promoterActivityFilter, setPromoterActivityFilter] = useState<'day' | 'month' | 'year'>('day');
-  const [promoterActivityDate, setPromoterActivityDate] = useState<Date>(new Date());
+const [hostActivityFilter, setHostActivityFilter] = useState<HostAnalyticsFilter>('day');
+const [hostActivityDate, setHostActivityDate] = useState<Date>(() => {
+const now = new Date();
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  });
+const [promoterActivityFilter, setPromoterActivityFilter] = useState<'day' | 'month' | 'year'>('day');
+const [promoterActivityDate, setPromoterActivityDate] = useState<Date>(() => {
+    const now = new Date();
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  });
 
 // Who is paying
   const currentUserEmail = currentUser?.email ?? undefined;
@@ -1078,6 +1095,7 @@ const coverImage = useMemo(() => {
   },
   });  
 
+  const [payoutRecords, setPayoutRecords] = useState<PayoutRecord[]>([]);
   const earningsCurrency = earnings.currency ?? baseCurrency;
 
   const [activeSection, setActiveSection] = useState<string | null>(null);
@@ -1356,6 +1374,41 @@ const coverImage = useMemo(() => {
     [normalizePeriodKey, parsePeriodKeyParts],
   );
 
+  const computeYearOptions = useCallback(
+    (breakdown: AggregateBuckets) => {
+      const years = new Set<number>();
+
+      const addYear = (entry: AggregateEntry) => {
+        const { year } = parsePeriodKeyParts(normalizePeriodKey(entry.period));
+        if (year) years.add(year);
+      };
+
+      breakdown.daily.forEach(addYear);
+      breakdown.monthly.forEach(addYear);
+      breakdown.yearly.forEach(addYear);
+
+      const ordered = Array.from(years).sort((a, b) => a - b);
+
+      if (!ordered.length) {
+        const now = new Date();
+        return [now.getUTCFullYear()];
+      }
+
+      return ordered;
+    },
+    [normalizePeriodKey, parsePeriodKeyParts],
+  );
+
+  const hostYearOptions = useMemo(
+    () => computeYearOptions(hostBreakdown),
+    [computeYearOptions, hostBreakdown],
+  );
+
+  const promoterYearOptions = useMemo(
+    () => computeYearOptions(promoterBreakdown),
+    [computeYearOptions, promoterBreakdown],
+  );
+
   const normalizePeriodToDate = useCallback((period: string) => {
     const normalized = String(period ?? '').trim();
 
@@ -1452,9 +1505,9 @@ const coverImage = useMemo(() => {
 
   const hostPeriodKey = useMemo(() => {
     const date = hostActivityDate ?? new Date();
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
 
     if (hostActivityFilter === 'day') return `${year}-${month}-${day}`;
     if (hostActivityFilter === 'month') return `${year}-${month}`;
@@ -1463,9 +1516,9 @@ const coverImage = useMemo(() => {
 
   const promoterPeriodKey = useMemo(() => {
     const date = promoterActivityDate ?? new Date();
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
 
     if (promoterActivityFilter === 'day') return `${year}-${month}-${day}`;
     if (promoterActivityFilter === 'month') return `${year}-${month}`;
@@ -1720,8 +1773,8 @@ const coverImage = useMemo(() => {
   ]);
 
   const promoterEntriesForFilter = useMemo(
-    () => resolveEntriesForFilter(analytics.breakdown, promoterActivityFilter),
-    [analytics.breakdown, promoterActivityFilter, resolveEntriesForFilter],
+    () => resolveEntriesForFilter(promoterBreakdown, promoterActivityFilter),
+    [promoterBreakdown, promoterActivityFilter, resolveEntriesForFilter],
   );
 
   const promoterFilteredEntries = useMemo(() => {
@@ -1731,15 +1784,41 @@ const coverImage = useMemo(() => {
   }, [matchesPeriod, promoterActivityDate, promoterActivityFilter, promoterEntriesForFilter]);
 
   const promoterActivityTotals = useMemo(() => {
-    return summarizeEntries(promoterFilteredEntries);
-  }, [promoterFilteredEntries]);
+    const totals = summarizeEntries(promoterFilteredEntries);
+    const hasDateFilter = Boolean(promoterActivityDate);
+    const hasFilteredEntries = promoterFilteredEntries.length > 0;
+
+    return {
+      ...totals,
+      bookings:
+        hasDateFilter && hasFilteredEntries
+          ? totals.bookings
+          : analytics.totalBooks ?? totals.bookings,
+      revenue:
+        hasDateFilter && hasFilteredEntries
+          ? totals.revenue
+          : analytics.totalRevenue ?? totals.revenue,
+    };
+  }, [
+    analytics.totalBooks,
+    analytics.totalRevenue,
+    promoterActivityDate,
+    promoterFilteredEntries,
+  ]);
 
   const promoterActivityQrScans = useMemo(() => {
+    const hasDateFilter = Boolean(promoterActivityDate);
+    const hasFilteredEntries = promoterFilteredEntries.length > 0;
+
+    if (!hasDateFilter || !hasFilteredEntries) {
+      return analytics.qrScans ?? 0;
+    }
+
     return promoterFilteredEntries.reduce(
       (sum, entry: any) => sum + (entry?.qrScans ?? 0),
       0,
     );
-  }, [promoterFilteredEntries]);
+  }, [analytics.qrScans, promoterActivityDate, promoterFilteredEntries]);
 
   const normalizeBreakdown = useCallback((raw: any, granularity?: 'day' | 'month' | 'year'): AggregateBuckets => {
     // 1) Already in { daily, monthly, yearly } form
@@ -2032,9 +2111,21 @@ const coverImage = useMemo(() => {
         console.error("Earnings fetch failed:", err);
       }
     };
+
+    const fetchPayouts = async () => {
+      try {
+        const res = await axios.get('/api/analytics/payouts');
+        if (Array.isArray(res.data)) {
+          setPayoutRecords(res.data);
+        }
+      } catch (error) {
+        console.error('Payout history fetch failed:', error);
+      }
+    };
   
     if (['host', 'promoter'].includes(currentUser.role)) {
       fetchEarnings();
+      fetchPayouts();
     }
   }, [currentUser.role]);  
 
@@ -2118,11 +2209,10 @@ const coverImage = useMemo(() => {
 
     const fetchAnalytics = async () => {
       try {
-        const res = await axios.get('/api/analytics/get', {
+        const res = await axios.get('/api/analytics/promoter/get', {
           timeout: 10000,
           params: {
             granularity: promoterActivityFilter,
-            date: promoterPeriodKey,
           },
         });
         const data = res.data ?? {};
@@ -2136,27 +2226,19 @@ const coverImage = useMemo(() => {
           punti: 0,
           puntiShare: 0,
           puntiLabel: getPuntiLabel(0),
-          breakdown
+          breakdown,
         });
       } catch (error) {
         console.error('Error fetching analytics:', error);
       }
     };
-  
-    // Call once immediately on mount
+
     fetchAnalytics();
-  
-    // Then set interval
-    const interval = setInterval(fetchAnalytics, 20000); // ⏱️ every 20 seconds
-  
-    // Clear interval on unmount
+
+    const interval = setInterval(fetchAnalytics, 20000);
     return () => clearInterval(interval);
-  }, [
-    currentUser?.role,
-    normalizeBreakdown,
-    promoterActivityFilter,
-    promoterPeriodKey,
-  ]);
+  }, [currentUser?.role, normalizeBreakdown, promoterActivityFilter]);
+
 
   useEffect(() => {
     const fetchUserCoupon = async () => {
@@ -4211,11 +4293,12 @@ const coverImage = useMemo(() => {
                   </p>
 
                   <div className="mt-4">
-                    <FilterHostAnalytics
+                    <FilterPromoterAnalytics
                       filter={promoterActivityFilter}
                       selectedDate={promoterActivityDate}
                       onFilterChange={handlePromoterFilterChange}
                       onDateChange={setPromoterActivityDate}
+                      yearOptions={promoterYearOptions}
                     />
                   </div>
 
@@ -4235,23 +4318,9 @@ const coverImage = useMemo(() => {
                         </motion.span>
                       </AnimatePresence>
                     </div>
+                    
                     <div className="flex items-center justify-between rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800 shadow-sm">
-                      <span className="font-medium">QR Code Scanned</span>
-                      <AnimatePresence mode="wait" initial={false}>
-                        <motion.span
-                          key={`${promoterActivityFilter}-${promoterPeriodKey}-qr-${promoterActivityQrScans ?? 0}`}
-                          initial={{ opacity: 0, y: 6 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -6 }}
-                          transition={{ duration: 0.2, ease: 'easeOut' }}
-                          className="text-lg font-semibold text-black inline-block"
-                        >
-                          {promoterActivityQrScans}
-                        </motion.span>
-                      </AnimatePresence>
-                    </div>
-                    <div className="flex items-center justify-between rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800 shadow-sm">
-                      <span className="font-medium">Total Books Revenue</span>
+                      <span className="font-medium">Total Revenue</span>
                       <AnimatePresence mode="wait" initial={false}>
                         <motion.span
                           key={`${promoterActivityFilter}-${promoterPeriodKey}-revenue-${promoterActivityTotals.revenue ?? 0}`}
@@ -4275,7 +4344,8 @@ const coverImage = useMemo(() => {
                       Earning 10% from each referral booking made through your code.
                     </p>
                   </div>
-                  <div className="mt-6 flex items-center justify-center rounded-xl bg-neutral-50 p-10 md:h-52">
+
+                  <div className="flex items-center justify-center rounded-xl bg-neutral-50 p-10 md:h-52">
                     <AnimatePresence mode="wait" initial={false}>
                       <motion.p
                         key={`${promoterActivityFilter}-${promoterPeriodKey}-prewithdraw-${promoterActivityTotals.revenue ?? 0}`}
@@ -4289,6 +4359,22 @@ const coverImage = useMemo(() => {
                       </motion.p>
                     </AnimatePresence>
                   </div>
+
+                  <div className="flex items-center justify-between rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800 shadow-sm">
+                      <span className="font-medium">QR Code Scanned</span>
+                      <AnimatePresence mode="wait" initial={false}>
+                        <motion.span
+                          key={`${promoterActivityFilter}-${promoterPeriodKey}-qr-${promoterActivityQrScans ?? 0}`}
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -6 }}
+                          transition={{ duration: 0.2, ease: 'easeOut' }}
+                          className="text-lg font-semibold text-black inline-block"
+                        >
+                          {promoterActivityQrScans}
+                        </motion.span>
+                      </AnimatePresence>
+                    </div>
                 </div>
 
                 <div className="rounded-2xl bg-white p-6 shadow-md transition hover:shadow-lg">
@@ -4446,6 +4532,7 @@ const coverImage = useMemo(() => {
                       selectedDate={hostActivityDate}
                       onFilterChange={handleHostFilterChange}
                       onDateChange={setHostActivityDate}
+                      yearOptions={hostYearOptions}
                     />
                   </div>
 
@@ -4638,6 +4725,7 @@ const coverImage = useMemo(() => {
         open={showPayoutHistory}
         onClose={() => setShowPayoutHistory(false)}
         earnings={earnings}
+        payouts={payoutRecords}
         baseCurrency={baseCurrency}
         formatConverted={formatConverted}
         currencySymbol={currencySymbol}

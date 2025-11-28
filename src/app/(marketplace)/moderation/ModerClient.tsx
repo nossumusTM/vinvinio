@@ -24,6 +24,7 @@ import {
   formatPuntiPercentage,
   getPuntiLabel,
 } from "@/app/(marketplace)/constants/partner";
+import { BASE_CURRENCY } from '@/app/(marketplace)/constants/locale';
 
 type SliderArrowProps = {
   className?: string;
@@ -167,11 +168,17 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
   const [hostUserId, setHostUserId] = useState('');
   const [promoterUserId, setPromoterUserId] = useState('');
 
+  const [hostPayoutAmount, setHostPayoutAmount] = useState('');
+  const [promoterPayoutAmount, setPromoterPayoutAmount] = useState('');
+
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
   const [confirmAction, setConfirmAction] = useState<() => void>(() => {});
 
   const [showHostWithdrawConfirm, setShowHostWithdrawConfirm] = useState(false);
   const [showPromoterWithdrawConfirm, setShowPromoterWithdrawConfirm] = useState(false);
+
+  const [showHostPayoutConfirm, setShowHostPayoutConfirm] = useState(false);
+  const [showPromoterPayoutConfirm, setShowPromoterPayoutConfirm] = useState(false);
 
   type ModerationStatusKey = 'pending' | 'revision' | 'awaiting_reapproval';
 
@@ -622,6 +629,35 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
     }
   };
 
+  const handlePayoutPromoter = async () => {
+    const numericAmount = Number(promoterPayoutAmount);
+
+    if (!promoterUserId || !promoterPayoutAmount || Number.isNaN(numericAmount)) {
+      toast.error('Provide promoter userId and amount.');
+      return;
+    }
+
+    try {
+      const res = await axios.post('/api/analytics/payout', {
+        userId: promoterUserId,
+        amount: numericAmount,
+        currency: BASE_CURRENCY,
+      });
+
+      toast.success(res.data?.message ?? 'Payout sent', {
+        iconTheme: {
+          primary: '#10b981',
+          secondary: '#fff',
+        },
+      });
+      setPromoterPayoutAmount('');
+      setPromoterUserId('');
+    } catch (error) {
+      console.error('Failed to process promoter payout', error);
+      toast.error('Failed to process promoter payout.');
+    }
+  };
+
   const handleWithdrawForHosts = async (userId: string) => {
     if (!userId) return alert('Please provide a host userId');
     try {
@@ -635,6 +671,35 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
       setHostUserId('');
     } catch {
       toast.error('Failed to withdraw for this host.');
+    }
+  };
+
+  const handlePayoutHost = async () => {
+    const numericAmount = Number(hostPayoutAmount);
+
+    if (!hostUserId || !hostPayoutAmount || Number.isNaN(numericAmount)) {
+      toast.error('Provide host userId and amount.');
+      return;
+    }
+
+    try {
+      const res = await axios.post('/api/analytics/host/payout', {
+        userId: hostUserId,
+        amount: numericAmount,
+        currency: BASE_CURRENCY,
+      });
+
+      toast.success(res.data?.message ?? 'Payout sent', {
+        iconTheme: {
+          primary: '#10b981',
+          secondary: '#fff',
+        },
+      });
+      setHostPayoutAmount('');
+      setHostUserId('');
+    } catch (error) {
+      console.error('Failed to process host payout', error);
+      toast.error('Failed to process host payout.');
     }
   };
 
@@ -1300,6 +1365,38 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
           </button>
         </div>
 
+         <div className="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-neutral-200/60">
+          <h2 className="text-lg font-semibold mb-4">Payout for Promoter</h2>
+          <input
+            type="text"
+            placeholder="Enter Promoter userId"
+            value={promoterUserId}
+            onChange={(e) => setPromoterUserId(e.target.value)}
+            className="w-full rounded-xl border border-neutral-200 p-2 text-sm text-neutral-700"
+          />
+          <input
+            type="number"
+            min="0"
+            placeholder="Amount"
+            value={promoterPayoutAmount}
+            onChange={(e) => setPromoterPayoutAmount(e.target.value)}
+            className="mt-2 w-full rounded-xl border border-neutral-200 p-2 text-sm text-neutral-700"
+          />
+          <button
+            onClick={() => {
+              if (!promoterUserId.trim() || !promoterPayoutAmount.trim()) {
+                toast.error('Please provide a promoter userId and amount.');
+                return;
+              }
+              setShowPromoterPayoutConfirm(true);
+            }}
+            disabled={isLoading}
+            className="mt-3 w-full rounded-xl bg-neutral-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Send payout
+          </button>
+        </div>
+
         <div className="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-neutral-200/60">
           <h2 className="text-lg font-semibold mb-4">Withdraw for Host</h2>
           <input
@@ -1321,6 +1418,38 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
             className="mt-3 w-full rounded-xl bg-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-900 shadow-sm transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-60"
           >
             Withdraw
+          </button>
+        </div>
+
+        <div className="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-neutral-200/60">
+          <h2 className="text-lg font-semibold mb-4">Payout for Host</h2>
+          <input
+            type="text"
+            placeholder="Enter Host userId"
+            value={hostUserId}
+            onChange={(e) => setHostUserId(e.target.value)}
+            className="w-full rounded-xl border border-neutral-200 p-2 text-sm text-neutral-700"
+          />
+          <input
+            type="number"
+            min="0"
+            placeholder="Amount"
+            value={hostPayoutAmount}
+            onChange={(e) => setHostPayoutAmount(e.target.value)}
+            className="mt-2 w-full rounded-xl border border-neutral-200 p-2 text-sm text-neutral-700"
+          />
+          <button
+            onClick={() => {
+              if (!hostUserId.trim() || !hostPayoutAmount.trim()) {
+                toast.error('Please provide a host userId and amount.');
+                return;
+              }
+              setShowHostPayoutConfirm(true);
+            }}
+            disabled={isLoading}
+            className="mt-3 w-full rounded-xl bg-neutral-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Send payout
           </button>
         </div>
 
@@ -1538,6 +1667,20 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
       />
     )}
 
+    {showPromoterPayoutConfirm && (
+      <ConfirmPopup
+        title="Confirm payout"
+        message="Are you sure you want to send this payout to the promoter?"
+        onConfirm={() => {
+          handlePayoutPromoter();
+          setShowPromoterPayoutConfirm(false);
+        }}
+        onCancel={() => setShowPromoterPayoutConfirm(false)}
+        confirmLabel="Send"
+        cancelLabel="Cancel"
+      />
+    )}
+
     {showHostWithdrawConfirm && (
       <ConfirmPopup
         title="Confirm Withdrawal"
@@ -1545,6 +1688,20 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
         onConfirm={() => handleWithdrawForHosts(hostUserId)}
         onCancel={() => setShowHostWithdrawConfirm(false)}
         confirmLabel="Confirm"
+        cancelLabel="Cancel"
+      />
+    )}
+
+    {showHostPayoutConfirm && (
+      <ConfirmPopup
+        title="Confirm payout"
+        message="Are you sure you want to send this payout to the host?"
+        onConfirm={() => {
+          handlePayoutHost();
+          setShowHostPayoutConfirm(false);
+        }}
+        onCancel={() => setShowHostPayoutConfirm(false)}
+        confirmLabel="Send"
         cancelLabel="Cancel"
       />
     )}

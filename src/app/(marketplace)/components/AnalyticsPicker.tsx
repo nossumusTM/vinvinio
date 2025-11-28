@@ -5,11 +5,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import CalendarPicker from './CalendarPicker';
 import type { HostAnalyticsFilter } from './FilterHostAnalytics';
 
+type AnalyticsFilter = 'day' | 'month' | 'year';
+
 interface AnalyticsPickerProps {
-  filter: HostAnalyticsFilter;
+  // filter: HostAnalyticsFilter;
+  filter: AnalyticsFilter;
   selectedDate: Date;
   onDateChange: (date: Date) => void;
   placement?: 'up' | 'down';
+  yearOptions?: number[];
 }
 
 const formatDayLabel = (date: Date) =>
@@ -48,23 +52,30 @@ const AnalyticsPicker: React.FC<AnalyticsPickerProps> = ({
   selectedDate,
   onDateChange,
   placement = 'up',
+  yearOptions,
 }) => {
   const safeDate =
     selectedDate instanceof Date && !Number.isNaN(selectedDate.getTime())
       ? selectedDate
       : new Date();
 
+  const selectedYear = safeDate.getFullYear();
+  const allowedYears = useMemo(
+    () => (yearOptions?.length ? yearOptions : [selectedYear]),
+    [selectedYear, yearOptions],
+  );
+
   // shared view state for all modes
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const [viewYear, setViewYear] = useState(safeDate.getFullYear());
+  const [viewYear, setViewYear] = useState(selectedYear);
   const [viewMonth, setViewMonth] = useState(safeDate.getMonth());
   const selectedDay = safeDate.getDate();
 
   // keep view in sync when parent changes selectedDate
   useEffect(() => {
-    setViewYear(safeDate.getFullYear());
+    setViewYear(selectedYear);
     setViewMonth(safeDate.getMonth());
-  }, [safeDate]);
+  }, [safeDate, selectedYear]);
 
   // values reused in both modes (no hooks below this point)
   const monthLabel = new Date(viewYear, viewMonth, 1).toLocaleDateString(
@@ -95,7 +106,7 @@ const AnalyticsPicker: React.FC<AnalyticsPickerProps> = ({
       setViewMonth(nextDate.getMonth());
     };
 
-    const selectedYear = safeDate.getFullYear();
+    // const selectedYear = safeDate.getFullYear();
     const selectedMonth = safeDate.getMonth();
     const isSameMonthView =
       selectedYear === viewYear && selectedMonth === viewMonth;
@@ -223,7 +234,10 @@ const AnalyticsPicker: React.FC<AnalyticsPickerProps> = ({
   };
 
   const handleYearStep = (delta: number) => {
-    const next = new Date(viewYear + delta, viewMonth, selectedDay);
+    const minYear = Math.min(...allowedYears);
+    const maxYear = Math.max(...allowedYears);
+    const nextYear = Math.min(maxYear, Math.max(minYear, viewYear + delta));
+    const next = new Date(nextYear, viewMonth, selectedDay);
     setViewYear(next.getFullYear());
     setViewMonth(next.getMonth());
     onDateChange(next);

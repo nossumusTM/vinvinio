@@ -9,7 +9,7 @@ export async function DELETE() {
   if (!currentUser?.id) return new NextResponse('Unauthorized', { status: 401 });
 
   await prisma.payout.deleteMany({
-    where: { userId: currentUser.id },
+    where: { userId: currentUser.id, kind: 'method' },
   });
 
   return NextResponse.json({ message: 'Payout method deleted' });

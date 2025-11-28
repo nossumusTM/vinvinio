@@ -15,7 +15,7 @@ import {
 } from 'react-icons/ai';
 import { BiMessageDetail } from 'react-icons/bi';
 import { LuChevronRight } from 'react-icons/lu';
-import { BsStarFill } from 'react-icons/bs';
+import { BsCashCoin, BsStarFill } from 'react-icons/bs';
 import { formatDistanceToNow } from 'date-fns';
 import { useRouter } from 'next/navigation';
 
@@ -39,7 +39,8 @@ export type NotificationType =
   | 'listing_submitted'
   | 'listing_revision_requested'
   | 'message_received'
-  | 'review_received';
+  | 'review_received'
+  | 'payout_processed';
 
 export type NotificationItem = {
   id: string;
@@ -123,6 +124,12 @@ const notificationMeta: Record<NotificationType, NotificationMeta> = {
     accent: 'text-amber-500',
     accentBg: 'bg-amber-100',
     icon: (className) => <BsStarFill className={className} />,
+  },
+  payout_processed: {
+    label: 'Payout update',
+    accent: 'text-emerald-700',
+    accentBg: 'bg-emerald-100',
+    icon: (className) => <BsCashCoin className={className} />,
   },
 };
 
@@ -308,6 +315,10 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isOpen, onClose
         }
         case 'review_received': {
           closeAndNavigate(listingId ? `/listings/${listingId}#reviews` : '/listings');
+          return;
+        }
+        case 'payout_processed': {
+          closeAndNavigate('/profile#payments-section');
           return;
         }
         default: {

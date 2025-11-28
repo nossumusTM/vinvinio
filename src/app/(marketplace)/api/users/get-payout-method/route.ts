@@ -36,8 +36,9 @@ export async function GET() {
   const currentUser = await getCurrentUser();
   if (!currentUser?.id) return new NextResponse('Unauthorized', { status: 401 });
 
-  const payout = await prisma.payout.findUnique({
-    where: { userId: currentUser.id },
+  const payout = await prisma.payout.findFirst({
+    where: { userId: currentUser.id, kind: 'method' },
+    orderBy: { createdAt: 'desc' },
   });
 
   if (!payout) return NextResponse.json(null);
@@ -65,8 +66,9 @@ export async function POST(req: Request) {
 
     console.log('✅ Found user:', user.id);
 
-    const payout = await prisma.payout.findUnique({
-      where: { userId: user.id },
+    const payout = await prisma.payout.findFirst({
+      where: { userId: user.id, kind: 'method' },
+      orderBy: { createdAt: 'desc' },
     });
 
     if (!payout) {

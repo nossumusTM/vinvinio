@@ -19,17 +19,19 @@ export async function POST(req: Request) {
 
   const encrypt = (text: string) => CryptoJS.AES.encrypt(text, SECRET_KEY).toString();
 
-  await prisma.payout.upsert({
-    where: { userId: currentUser.id },
-    update: {
-      method,
-      value: encrypt(number),
-    },
-    create: {
-      method,
-      value: encrypt(number),
-      userId: currentUser.id,
-    },
+  await prisma.$transaction(async (trx) => {
+    await trx.payout.deleteMany({ where: { userId: currentUser.id, kind: 'method' } });
+
+    await trx.payout.create({
+      data: {
+        method,
+        value: encrypt(number),
+        userId: currentUser.id,
+        kind: 'method',
+        username: currentUser.username ?? undefined,
+        email: currentUser.email ?? undefined,
+      },
+    });
   });
 
   return NextResponse.json({ message: 'Payout method saved' });

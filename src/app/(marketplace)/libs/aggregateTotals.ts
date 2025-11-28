@@ -172,17 +172,24 @@ const applyDelta = (
   bookingsDelta: number,
   revenueDelta: number,
   commissionDelta: number,
+  qrDelta: number,
 ) => {
-  const current = map[key] ?? { bookings: 0, revenue: 0, commissionSum: 0 };
+  const current = map[key] ?? { bookings: 0, revenue: 0, commissionSum: 0, qrScans: 0 };
   const nextBookings = Math.max(0, (current.bookings ?? 0) + bookingsDelta);
   const nextRevenue = Math.max(0, (current.revenue ?? 0) + revenueDelta);
+  const nextQrScans = Math.max(0, (current.qrScans ?? 0) + qrDelta);
 
   const currentCommissionSum = clampNonNegative(
     Number(current.commissionSum ?? current.commission ?? 0),
   );
   const nextCommissionSum = Math.max(0, currentCommissionSum + commissionDelta);
 
-  map[key] = { bookings: nextBookings, revenue: nextRevenue, commissionSum: nextCommissionSum };
+  map[key] = {
+      bookings: nextBookings,
+      revenue: nextRevenue,
+      commissionSum: nextCommissionSum,
+      qrScans: nextQrScans,
+    };
   return map;
 };
 
@@ -194,6 +201,7 @@ export const computeAggregateMaps = (
   bookingsDelta: number,
   revenueDelta: number,
   commissionDelta = 0,
+  qrDelta = 0,
 ) => {
   const normalizedDate = new Date(
     Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
@@ -207,6 +215,7 @@ export const computeAggregateMaps = (
     bookingsDelta,
     revenueDelta,
     commissionDelta,
+    qrDelta
   );
   const monthlyTotals = applyDelta(
     sanitizeMap(rawMonthly),
@@ -214,6 +223,7 @@ export const computeAggregateMaps = (
     bookingsDelta,
     revenueDelta,
     commissionDelta,
+    qrDelta
   );
   const yearlyTotals = applyDelta(
     sanitizeMap(rawYearly),
@@ -221,6 +231,7 @@ export const computeAggregateMaps = (
     bookingsDelta,
     revenueDelta,
     commissionDelta,
+    qrDelta
   );
 
   return { dailyTotals, monthlyTotals, yearlyTotals };
