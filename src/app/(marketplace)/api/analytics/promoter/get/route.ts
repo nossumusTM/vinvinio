@@ -121,72 +121,91 @@ const getPromoterFromIdentifier = async (identifier: string) => {
 };
 
 export async function GET(request: Request) {
-  const currentUser = await getCurrentUser();
-  if (!currentUser || currentUser.role !== 'promoter') {
-    return new NextResponse('Unauthorized', { status: 403 });
-  }
+  try {
+    const user = await getCurrentUser();
+    if (!user || user.role !== 'promoter') {
+      return new NextResponse('Unauthorized', { status: 403 });
+    }
 
-  const { searchParams } = new URL(request.url);
-  const granularityParam = searchParams.get('granularity');
-  const granularity: Granularity =
-    granularityParam === 'month'
-      ? 'month'
-      : granularityParam === 'year'
+    const { searchParams } = new URL(request.url);
+    const granularityParam = searchParams.get('granularity');
+    const granularity: Granularity =
+      granularityParam === 'month'
+        ? 'month'
+        : granularityParam === 'year'
         ? 'year'
         : 'day';
-  const hasDateParam = searchParams.has('date');
-  const targetDate = normalizeDateParam(searchParams.get('date'));
 
-  const analytics = await prisma.referralAnalytics.findUnique({
-    where: { userId: currentUser.id },
-  });
+    const analytics = await prisma.referralAnalytics.findUnique({
+      where: { userId: user.id },
+    });
 
-  const dailyEntries = mapToEntries(analytics?.dailyTotals);
-  const monthlyEntries = mapToEntries(analytics?.monthlyTotals);
-  const yearlyEntries = mapToEntries(analytics?.yearlyTotals);
+    // No analytics yet for this promoter
+    if (!analytics) {
+      return NextResponse.json({
+        userId: user.id,
+        totalBooks: 0,
+        qrScans: 0,
+        totalRevenue: 0,
+        breakdown: {
+          daily: [],
+          monthly: [],
+          yearly: [],
+        },
+      });
+    }
 
-  const filteredBreakdown = {
-    daily: filterEntries(dailyEntries, 'day', targetDate),
-    monthly: filterEntries(monthlyEntries, 'month', targetDate),
-    yearly: filterEntries(yearlyEntries, 'year', targetDate),
-  } satisfies Record<'daily' | 'monthly' | 'yearly', AggregateEntry[]>;
+    // Convert stored buckets into AggregateEntry[]
+    const dailyEntries = mapToEntries(analytics.dailyTotals);
+    const monthlyEntries = mapToEntries(analytics.monthlyTotals);
+    const yearlyEntries = mapToEntries(analytics.yearlyTotals);
 
-  const entriesForTotals =
-    granularity === 'month'
-      ? filteredBreakdown.monthly
-      : granularity === 'year'
-        ? filteredBreakdown.yearly
-        : filteredBreakdown.daily;
+    // Choose which bucket to use for "overall" totals based on granularity
+    const entriesForTotals: AggregateEntry[] =
+      granularity === 'month'
+        ? monthlyEntries
+        : granularity === 'year'
+        ? yearlyEntries
+        : dailyEntries;
 
-  const filteredTotals = summarizeEntries(entriesForTotals as AggregateEntry[]);
-  const filteredQrScans = (entriesForTotals as AggregateEntry[]).reduce(
-    (sum, entry) => sum + (entry.qrScans ?? 0),
-    0,
-  );
+    const totals = summarizeEntries(entriesForTotals);
+    const qrScansTotal = entriesForTotals.reduce(
+      (sum, entry) => sum + (entry.qrScans ?? 0),
+      0,
+    );
 
-  // NEW: do we actually have anything for this filter?
-  const hasFilteredEntries = (entriesForTotals as AggregateEntry[]).length > 0;
+    const totalBooks =
+      (Number.isFinite(totals.bookings) && totals.bookings > 0
+        ? totals.bookings
+        : Number(analytics.totalBooks ?? 0)) || 0;
 
-  // Only use filtered totals if there IS data for that period
-  const useFilteredTotals = hasDateParam && hasFilteredEntries;
+    const totalRevenue =
+      (Number.isFinite(totals.revenue) && totals.revenue > 0
+        ? totals.revenue
+        : Number(analytics.totalRevenue ?? 0)) || 0;
 
-  return NextResponse.json({
-    totalBooks: useFilteredTotals
-      ? filteredTotals.bookings
-      : analytics?.totalBooks ?? filteredTotals.bookings ?? 0,
-    qrScans: useFilteredTotals
-      ? filteredQrScans
-      : analytics?.qrScans ?? filteredQrScans ?? 0,
-    totalRevenue: useFilteredTotals
-      ? filteredTotals.revenue
-      : analytics?.totalRevenue ?? filteredTotals.revenue ?? 0,
-    breakdown: {
-      daily: mapToEntries(analytics?.dailyTotals),
-      monthly: mapToEntries(analytics?.monthlyTotals),
-      yearly: mapToEntries(analytics?.yearlyTotals),
-    },
-  });
+    const qrScans =
+      (Number.isFinite(qrScansTotal) && qrScansTotal > 0
+        ? qrScansTotal
+        : Number(analytics.qrScans ?? 0)) || 0;
+
+    return NextResponse.json({
+      userId: user.id,
+      totalBooks,
+      totalRevenue,
+      qrScans,
+      breakdown: {
+        daily: dailyEntries,
+        monthly: monthlyEntries,
+        yearly: yearlyEntries,
+      },
+    });
+  } catch (error) {
+    console.error('[PROMOTER_ANALYTICS_GET]', error);
+    return new NextResponse('Internal Server Error', { status: 500 });
+  }
 }
+
 
 export async function POST(req: Request) {
   try {

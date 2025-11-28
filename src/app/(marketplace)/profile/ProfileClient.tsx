@@ -1783,42 +1783,19 @@ const coverImage = useMemo(() => {
     );
   }, [matchesPeriod, promoterActivityDate, promoterActivityFilter, promoterEntriesForFilter]);
 
-  const promoterActivityTotals = useMemo(() => {
-    const totals = summarizeEntries(promoterFilteredEntries);
-    const hasDateFilter = Boolean(promoterActivityDate);
-    const hasFilteredEntries = promoterFilteredEntries.length > 0;
+  const promoterActivityTotals = useMemo(
+    () => summarizeEntries(promoterFilteredEntries),
+    [promoterFilteredEntries],
+  );
 
-    return {
-      ...totals,
-      bookings:
-        hasDateFilter && hasFilteredEntries
-          ? totals.bookings
-          : analytics.totalBooks ?? totals.bookings,
-      revenue:
-        hasDateFilter && hasFilteredEntries
-          ? totals.revenue
-          : analytics.totalRevenue ?? totals.revenue,
-    };
-  }, [
-    analytics.totalBooks,
-    analytics.totalRevenue,
-    promoterActivityDate,
-    promoterFilteredEntries,
-  ]);
-
-  const promoterActivityQrScans = useMemo(() => {
-    const hasDateFilter = Boolean(promoterActivityDate);
-    const hasFilteredEntries = promoterFilteredEntries.length > 0;
-
-    if (!hasDateFilter || !hasFilteredEntries) {
-      return analytics.qrScans ?? 0;
-    }
-
-    return promoterFilteredEntries.reduce(
-      (sum, entry: any) => sum + (entry?.qrScans ?? 0),
-      0,
-    );
-  }, [analytics.qrScans, promoterActivityDate, promoterFilteredEntries]);
+  const promoterActivityQrScans = useMemo(
+    () =>
+      promoterFilteredEntries.reduce(
+        (sum, entry: any) => sum + (entry?.qrScans ?? 0),
+        0,
+      ),
+    [promoterFilteredEntries],
+  );
 
   const normalizeBreakdown = useCallback((raw: any, granularity?: 'day' | 'month' | 'year'): AggregateBuckets => {
     // 1) Already in { daily, monthly, yearly } form
@@ -2204,7 +2181,7 @@ const coverImage = useMemo(() => {
   //   fetchAnalytics();
   // }, []); 
 
-  useEffect(() => {
+    useEffect(() => {
     if (currentUser?.role !== 'promoter') return;
 
     const fetchAnalytics = async () => {
@@ -2238,7 +2215,6 @@ const coverImage = useMemo(() => {
     const interval = setInterval(fetchAnalytics, 20000);
     return () => clearInterval(interval);
   }, [currentUser?.role, normalizeBreakdown, promoterActivityFilter]);
-
 
   useEffect(() => {
     const fetchUserCoupon = async () => {

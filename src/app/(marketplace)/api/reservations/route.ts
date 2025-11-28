@@ -173,14 +173,23 @@ export async function POST(request: Request) {
         const promoterAnalytics = await prisma.referralAnalytics.findUnique({
           where: { userId: promoterUser.id },
         });
+        
+        const aggregateDateBase =
+          reservation.startDate ?? new Date(`${startDate}T00:00:00.000Z`);
+        const aggregateDate = new Date(
+          Date.UTC(
+            aggregateDateBase.getUTCFullYear(),
+            aggregateDateBase.getUTCMonth(),
+            aggregateDateBase.getUTCDate(),
+          ),
+        );
 
-        const eventDate = new Date(`${startDate}T00:00:00.000Z`);
-
+        // AFTER
         const { dailyTotals, monthlyTotals, yearlyTotals } = computeAggregateMaps(
           promoterAnalytics?.dailyTotals,
           promoterAnalytics?.monthlyTotals,
           promoterAnalytics?.yearlyTotals,
-          eventDate,
+          aggregateDate, // ⬅️ use the same date as host analytics
           1,
           promoterCut,
           0,
