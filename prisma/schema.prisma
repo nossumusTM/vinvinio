@@ -72,7 +72,7 @@ model User {
   earnings          Earning[]
   userCoupons       UserCoupon[]
 
-  payout Payout? @relation("UserPayout")
+  payouts Payout[] @relation("UserPayout")
 
   sentMessages        Message[]             @relation("SentMessages")
   receivedMessages    Message[]             @relation("ReceivedMessages")
@@ -229,11 +229,10 @@ model Card {
 }
 
 model Payout {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  method    String
-  value     String
-  createdAt DateTime @default(now())
-
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  method      String
+  value       String
+  createdAt   DateTime @default(now())
   kind        String   @default("method")
   username    String?
   email       String?
@@ -244,6 +243,8 @@ model Payout {
   period      String?
   processedAt DateTime?
   notes       String?
+  attachmentUrl  String?
+  attachmentName String?
 
   user   User   @relation("UserPayout", fields: [userId], references: [id])
   userId String @unique @db.ObjectId

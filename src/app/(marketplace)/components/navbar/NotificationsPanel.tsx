@@ -40,7 +40,8 @@ export type NotificationType =
   | 'listing_revision_requested'
   | 'message_received'
   | 'review_received'
-  | 'payout_processed';
+  | 'payout_processed'
+  | 'referral_booking';
 
 export type NotificationItem = {
   id: string;
@@ -130,6 +131,12 @@ const notificationMeta: Record<NotificationType, NotificationMeta> = {
     accent: 'text-emerald-700',
     accentBg: 'bg-emerald-100',
     icon: (className) => <BsCashCoin className={className} />,
+  },
+  referral_booking: {
+    label: 'Referral booking',
+    accent: 'text-violet-600',
+    accentBg: 'bg-violet-100',
+    icon: (className) => <AiOutlineCalendar className={className} />,
   },
 };
 

@@ -204,32 +204,58 @@ const PartnershipCommision: React.FC<PartnershipCommisionProps> = ({
     const commissionShare = clamp((effectiveCommission - minCommission) / commissionSpread);
     const fillPercent = Math.round(commissionShare * 100);
 
+        // Limit: 1 commission change per rolling 30-day window by default
     const changesLimit =
-      typeof commissionChangesLimit === "number" ? commissionChangesLimit : 2;
+      typeof commissionChangesLimit === "number" && commissionChangesLimit > 0
+        ? commissionChangesLimit
+        : 1;
 
-    // derive "this month" changes using the same logic as updateHostPartnerCommission
-    let changesUsedThisMonth = 0;
+    const rawUsed =
+      typeof commissionChangesUsed === "number" ? commissionChangesUsed : 0;
+
+    let changesUsedInWindow = 0;
+    let nextChangeDate: Date | null = null;
 
     if (partnerCommissionChangeWindowStart) {
       const windowStart = new Date(partnerCommissionChangeWindowStart);
       const now = new Date();
 
-      const isSameMonth =
-        windowStart.getUTCFullYear() === now.getUTCFullYear() &&
-        windowStart.getUTCMonth() === now.getUTCMonth();
+      const windowMs = 30 * 24 * 60 * 60 * 1000;
+      const diffMs = now.getTime() - windowStart.getTime();
 
-      if (isSameMonth) {
-        const raw =
-          typeof commissionChangesUsed === "number" ? commissionChangesUsed : 0;
-        changesUsedThisMonth = Math.min(
+      if (diffMs >= 0 && diffMs < windowMs) {
+        // we are inside the 30-day window → respect DB counter
+        changesUsedInWindow = Math.min(
           changesLimit,
-          Math.max(0, raw),
+          Math.max(0, rawUsed),
         );
+
+        if (changesUsedInWindow >= changesLimit) {
+          // user exhausted their one allowed change → next available at end of window
+          nextChangeDate = new Date(windowStart.getTime() + windowMs);
+        }
+      } else {
+        // window expired → user can start a new window now
+        changesUsedInWindow = 0;
       }
+    } else {
+      // no window start yet → use DB counter but clamp to limit
+      changesUsedInWindow = Math.min(
+        changesLimit,
+        Math.max(0, rawUsed),
+      );
     }
 
-    const changesRemaining = Math.max(0, changesLimit - changesUsedThisMonth);
+    const changesRemaining = Math.max(0, changesLimit - changesUsedInWindow);
     const noChangesLeft = changesRemaining <= 0;
+
+    const nextChangeDateLabel =
+      nextChangeDate &&
+      nextChangeDate.toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
 
     const labelClass =
       COMMISSION_LABEL_STYLES[effectiveLabel.toUpperCase()] ??
@@ -325,9 +351,15 @@ const PartnershipCommision: React.FC<PartnershipCommisionProps> = ({
                   Monthly commission change limit
                 </p>
                 <p className="text-[11px] font-medium text-neutral-600">
-                  {noChangesLeft
-                    ? `0 of ${changesLimit} changes available · limit reached this month`
-                    : `${changesRemaining} of ${changesLimit} changes available`}
+                  {noChangesLeft ? (
+                    nextChangeDateLabel ? (
+                      `0 of ${changesLimit} changes available · next change available on ${nextChangeDateLabel}`
+                    ) : (
+                      `0 of ${changesLimit} changes available · limit reached`
+                    )
+                  ) : (
+                    `${changesRemaining} of ${changesLimit} changes available in this period`
+                  )}
                 </p>
                 <span
                   className={`
@@ -340,6 +372,7 @@ const PartnershipCommision: React.FC<PartnershipCommisionProps> = ({
                   {effectiveLabel}
                 </span>
               </div>
+
             </div>
 
       <p className="mt-4 text-sm leading-relaxed text-neutral-600">

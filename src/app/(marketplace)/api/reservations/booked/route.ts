@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/app/(marketplace)/libs/prismadb';
+import { ReservationStatus } from '@prisma/client';
 
 export const dynamic = 'force-dynamic'; // recommended for SSR/ISR consistency
 
@@ -15,6 +16,9 @@ export async function GET(req: Request) {
     const reservations = await prisma.reservation.findMany({
       where: {
         listingId,
+        status: {
+        not: ReservationStatus.cancelled, // 👈 exclude cancelled
+    },
       },
       select: {
         startDate: true,

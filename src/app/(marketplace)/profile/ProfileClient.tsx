@@ -29,7 +29,7 @@ import toast from "react-hot-toast";
 import useCurrencyFormatter from '@/app/(marketplace)/hooks/useCurrencyFormatter';
 
 import useLocaleSettings from '@/app/(marketplace)/hooks/useLocaleSettings';
-import PayoutHistory from "../components/PayoutHistory";
+import PayoutHistory, { PayoutRecord } from "../components/PayoutHistory";
 import { slugSegment } from '@/app/(marketplace)/libs/links';
 import { FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
 import Avatar from "../components/Avatar";
@@ -146,16 +146,6 @@ interface EarningsEntry {
   date: string;
   amount: number;
   books?: number;
-}
-
-interface PayoutRecord {
-  id: string;
-  amount?: number | null;
-  currency?: string | null;
-  status?: string | null;
-  phase?: number | null;
-  period?: string | null;
-  createdAt?: string | null;
 }
 
 type HostAnalytics = {
@@ -2089,7 +2079,7 @@ const coverImage = useMemo(() => {
       }
     };
 
-    const fetchPayouts = async () => {
+   const fetchPayouts = async () => {
       try {
         const res = await axios.get('/api/analytics/payouts');
         if (Array.isArray(res.data)) {
@@ -2099,12 +2089,12 @@ const coverImage = useMemo(() => {
         console.error('Payout history fetch failed:', error);
       }
     };
-  
+
     if (['host', 'promoter'].includes(currentUser.role)) {
       fetchEarnings();
       fetchPayouts();
     }
-  }, [currentUser.role]);  
+  }, [currentUser.role]); 
 
   useEffect(() => {
     if (currentUser.role !== 'host') return;
@@ -4467,8 +4457,11 @@ const coverImage = useMemo(() => {
                   onCommissionChange={handleCommissionUpdate}
                   loading={updatingCommission}
                   currentUserEmail={currentUserEmail}
-                  // onOpenVinvinModal={openVinvinModal}
+                  commissionChangesUsed={currentUser.partnerCommissionChangeCount}
+                  partnerCommissionChangeWindowStart={currentUser.partnerCommissionChangeWindowStart}
+                  commissionChangesLimit={1}
                 />
+
               </motion.div>
             )}
 
@@ -4700,7 +4693,6 @@ const coverImage = useMemo(() => {
       <PayoutHistory
         open={showPayoutHistory}
         onClose={() => setShowPayoutHistory(false)}
-        earnings={earnings}
         payouts={payoutRecords}
         baseCurrency={baseCurrency}
         formatConverted={formatConverted}

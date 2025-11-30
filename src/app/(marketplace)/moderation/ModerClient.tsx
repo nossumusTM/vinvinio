@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, ChangeEvent } from 'react';
 import Image from 'next/image';
 import axios, { AxiosError } from 'axios';
 import { toast } from 'react-hot-toast';
@@ -170,6 +170,10 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
 
   const [hostPayoutAmount, setHostPayoutAmount] = useState('');
   const [promoterPayoutAmount, setPromoterPayoutAmount] = useState('');
+  const [promoterPayoutNote, setPromoterPayoutNote] = useState('');
+  const [hostPayoutNote, setHostPayoutNote] = useState('');
+  const [promoterAttachment, setPromoterAttachment] = useState<{ name: string; data: string } | null>(null);
+  const [hostAttachment, setHostAttachment] = useState<{ name: string; data: string } | null>(null);
 
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
   const [confirmAction, setConfirmAction] = useState<() => void>(() => {});
@@ -629,6 +633,25 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
     }
   };
 
+  const handleAttachmentUpload = (
+    event: ChangeEvent<HTMLInputElement>,
+    setter: (value: { name: string; data: string } | null) => void,
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      setter(null);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === 'string' ? reader.result : '';
+      setter(result ? { name: file.name, data: result } : null);
+    };
+    reader.onerror = () => setter(null);
+    reader.readAsDataURL(file);
+  };
+
   const handlePayoutPromoter = async () => {
     const numericAmount = Number(promoterPayoutAmount);
 
@@ -642,6 +665,9 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
         userId: promoterUserId,
         amount: numericAmount,
         currency: BASE_CURRENCY,
+        note: promoterPayoutNote,
+        attachmentUrl: promoterAttachment?.data,
+        attachmentName: promoterAttachment?.name,
       });
 
       toast.success(res.data?.message ?? 'Payout sent', {
@@ -652,6 +678,8 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
       });
       setPromoterPayoutAmount('');
       setPromoterUserId('');
+      setPromoterPayoutNote('');
+      setPromoterAttachment(null);
     } catch (error) {
       console.error('Failed to process promoter payout', error);
       toast.error('Failed to process promoter payout.');
@@ -687,6 +715,9 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
         userId: hostUserId,
         amount: numericAmount,
         currency: BASE_CURRENCY,
+        note: hostPayoutNote,
+        attachmentUrl: hostAttachment?.data,
+        attachmentName: hostAttachment?.name,
       });
 
       toast.success(res.data?.message ?? 'Payout sent', {
@@ -697,6 +728,8 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
       });
       setHostPayoutAmount('');
       setHostUserId('');
+      setHostPayoutNote('');
+      setHostAttachment(null);
     } catch (error) {
       console.error('Failed to process host payout', error);
       toast.error('Failed to process host payout.');
@@ -1366,36 +1399,54 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
         </div>
 
          <div className="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-neutral-200/60">
-          <h2 className="text-lg font-semibold mb-4">Payout for Promoter</h2>
-          <input
-            type="text"
-            placeholder="Enter Promoter userId"
-            value={promoterUserId}
-            onChange={(e) => setPromoterUserId(e.target.value)}
-            className="w-full rounded-xl border border-neutral-200 p-2 text-sm text-neutral-700"
-          />
-          <input
-            type="number"
-            min="0"
-            placeholder="Amount"
-            value={promoterPayoutAmount}
-            onChange={(e) => setPromoterPayoutAmount(e.target.value)}
-            className="mt-2 w-full rounded-xl border border-neutral-200 p-2 text-sm text-neutral-700"
-          />
-          <button
-            onClick={() => {
-              if (!promoterUserId.trim() || !promoterPayoutAmount.trim()) {
-                toast.error('Please provide a promoter userId and amount.');
-                return;
-              }
-              setShowPromoterPayoutConfirm(true);
-            }}
-            disabled={isLoading}
-            className="mt-3 w-full rounded-xl bg-neutral-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            Send payout
-          </button>
-        </div>
+            <h2 className="text-lg font-semibold mb-4">Payout for Promoter</h2>
+            <input
+              type="text"
+              placeholder="Enter Promoter userId"
+              value={promoterUserId}
+              onChange={(e) => setPromoterUserId(e.target.value)}
+              className="w-full rounded-xl border border-neutral-200 p-2 text-sm text-neutral-700"
+            />
+            <input
+              type="number"
+              min="0"
+              placeholder="Amount"
+              value={promoterPayoutAmount}
+              onChange={(e) => setPromoterPayoutAmount(e.target.value)}
+              className="mt-2 w-full rounded-xl border border-neutral-200 p-2 text-sm text-neutral-700"
+            />
+            <textarea
+              placeholder="Add payout note (optional)"
+              value={promoterPayoutNote}
+              onChange={(e) => setPromoterPayoutNote(e.target.value)}
+              className="mt-2 w-full rounded-xl border border-neutral-200 p-2 text-sm text-neutral-700"
+            />
+            <label className="mt-2 block text-sm font-semibold text-neutral-700">
+              Attachment (optional)
+              <input
+                type="file"
+                accept=".pdf,application/pdf,image/*"
+                onChange={(event) => handleAttachmentUpload(event, setPromoterAttachment)}
+                className="mt-1 w-full rounded-xl border border-neutral-200 p-2 text-sm text-neutral-700"
+              />
+              {promoterAttachment?.name && (
+                <p className="mt-1 text-xs text-neutral-500">Selected: {promoterAttachment.name}</p>
+              )}
+            </label>
+            <button
+              onClick={() => {
+                if (!promoterUserId.trim() || !promoterPayoutAmount.trim()) {
+                  toast.error('Please provide a promoter userId and amount.');
+                  return;
+                }
+                setShowPromoterPayoutConfirm(true);
+              }}
+              disabled={isLoading}
+              className="mt-3 w-full rounded-xl bg-neutral-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Send payout
+            </button>
+          </div>
 
         <div className="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-neutral-200/60">
           <h2 className="text-lg font-semibold mb-4">Withdraw for Host</h2>
@@ -1438,6 +1489,22 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
             onChange={(e) => setHostPayoutAmount(e.target.value)}
             className="mt-2 w-full rounded-xl border border-neutral-200 p-2 text-sm text-neutral-700"
           />
+          <textarea
+            placeholder="Add payout note (optional)"
+            value={hostPayoutNote}
+            onChange={(e) => setHostPayoutNote(e.target.value)}
+            className="mt-2 w-full rounded-xl border border-neutral-200 p-2 text-sm text-neutral-700"
+          />
+          <label className="mt-2 block text-sm font-semibold text-neutral-700">
+            Attachment (optional)
+            <input
+              type="file"
+              accept=".pdf,application/pdf,image/*"
+              onChange={(event) => handleAttachmentUpload(event, setHostAttachment)}
+              className="mt-1 w-full rounded-xl border border-neutral-200 p-2 text-sm text-neutral-700"
+            />
+            {hostAttachment?.name && <p className="mt-1 text-xs text-neutral-500">Selected: {hostAttachment.name}</p>}
+          </label>
           <button
             onClick={() => {
               if (!hostUserId.trim() || !hostPayoutAmount.trim()) {

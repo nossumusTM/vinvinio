@@ -29,6 +29,10 @@ export async function GET() {
       phase: payout.phase,
       period: payout.period,
       createdAt: payout.createdAt,
+      processedAt: payout.processedAt,
+      notes: payout.notes,
+      attachmentUrl: payout.attachmentUrl,
+      attachmentName: payout.attachmentName,
     })),
   );
 }

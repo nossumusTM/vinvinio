@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/app/(marketplace)/libs/prismadb';
+import { dropLegacyUniqueUserIndex } from '@/app/(marketplace)/libs/payoutIndexes';
 import getCurrentUser from '@/app/(marketplace)/actions/getCurrentUser';
 import { BASE_CURRENCY } from '@/app/(marketplace)/constants/locale';
 
@@ -12,7 +13,7 @@ export async function POST(req: Request) {
   }
 
   const body = await req.json();
-  const { userId, amount, currency, period, phase } = body ?? {};
+  const { userId, amount, currency, period, phase, note, attachmentUrl, attachmentName } = body ?? {};
 
   if (!userId || amount == null) {
     return new NextResponse('Missing userId or amount', { status: 400 });
@@ -32,6 +33,8 @@ export async function POST(req: Request) {
   const phaseNumber = Number.isFinite(Number(phase)) ? Number(phase) : new Date().getUTCDate() <= 15 ? 1 : 2;
   const periodKey = typeof period === 'string' && period.length >= 7 ? period.slice(0, 7) : new Date().toISOString().slice(0, 7);
 
+  await dropLegacyUniqueUserIndex();
+
   const record = await prisma.payout.create({
     data: {
       userId,
@@ -42,11 +45,13 @@ export async function POST(req: Request) {
       email: user.email ?? undefined,
       amount: Number(amount),
       currency: currency ?? payoutMethod?.currency ?? BASE_CURRENCY,
-      status: 'payout_sent',
+      status: 'payout_received',
       phase: phaseNumber,
       period: periodKey,
       processedAt: new Date(),
-      notes: 'Moderator-triggered host payout',
+      notes: typeof note === 'string' && note.trim() ? note.trim() : 'Moderator-triggered host payout',
+      attachmentUrl: typeof attachmentUrl === 'string' && attachmentUrl.trim() ? attachmentUrl.trim() : undefined,
+      attachmentName: typeof attachmentName === 'string' && attachmentName.trim() ? attachmentName.trim() : undefined,
     },
   });
 

@@ -156,7 +156,7 @@ export async function POST(request: Request) {
       });
 
       if (promoterUser?.id) {
-        const promoterCut = totalPrice * 0.1;
+        const promoterCut = totalPrice;
 
         // Track promoter earning
         await prisma.earning.create({

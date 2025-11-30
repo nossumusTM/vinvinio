@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Card, CardContent } from './navbar/Card';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
@@ -43,10 +43,56 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
   const { formatConverted, currency, baseCurrency } = useCurrencyFormatter();
   const fromCurrency = sourceCurrency ?? baseCurrency;
 
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setNow(new Date());
+    }, 60_000); // update every minute
+
+    return () => clearInterval(id);
+  }, []);
+
+  // Normalize revenue so that the chart always shows *Pre-Withdrawal* values
+  const commissionMultiplier =
+    roleLabel === 'Promoter'
+      ? 0.1
+      : (() => {
+          if (typeof hostShare !== 'number' || hostShare <= 0) return 1;
+          return hostShare > 1 ? hostShare / 100 : hostShare;
+        })();
+
+  const dailyDataAdjusted = useMemo(
+    () =>
+      dailyData.map((e) => ({
+        ...e,
+        amount: e.amount * commissionMultiplier,
+      })),
+    [dailyData, commissionMultiplier],
+  );
+
+  const monthlyDataAdjusted = useMemo(
+    () =>
+      monthlyData.map((e) => ({
+        ...e,
+        amount: e.amount * commissionMultiplier,
+      })),
+    [monthlyData, commissionMultiplier],
+  );
+
+  const yearlyDataAdjusted = useMemo(
+    () =>
+      yearlyData.map((e) => ({
+        ...e,
+        amount: e.amount * commissionMultiplier,
+      })),
+    [yearlyData, commissionMultiplier],
+  );
+
   const dataMap = {
-    daily: dailyData,
-    monthly: monthlyData,
-    yearly: yearlyData,
+    daily: dailyDataAdjusted,
+    monthly: monthlyDataAdjusted,
+    yearly: yearlyDataAdjusted,
   };
 
     const currentDataRaw = useMemo(() => {
@@ -103,6 +149,15 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
     return data;
   }, [currentData]);
 
+  const chartData = useMemo(
+    () =>
+      sortedData.map((entry) => ({
+        ...entry,
+        amount: entry.amount * commissionMultiplier, // Pre-Withdrawal Revenue
+      })),
+    [sortedData, commissionMultiplier],
+  );
+
   const fallbackRevenueTotals = useMemo(
     () => ({
       daily: dailyData.reduce((sum, entry) => sum + entry.amount, 0),
@@ -122,24 +177,39 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
 
   const totalDisplay = Number(totalBase.toFixed(2));
 
-  const todaysProfitValue = useMemo(() => {
+  // const commissionMultiplier = useMemo(() => {
+  //   if (roleLabel === 'Promoter') {
+  //     return 0.1; // 10% of total revenue
+  //   }
+  //   // hostShare might be 0.65 or 65 – normalize to 0–1
+  //   if (typeof hostShare !== 'number' || hostShare <= 0) return 1; // fallback: 100%
+  //   return hostShare > 1 ? hostShare / 100 : hostShare;
+  // }, [roleLabel, hostShare]);
 
+  const todaysProfitValue = useMemo(() => {
+    const todayStr = now.toDateString();
+
+    // 1️⃣ Prefer computing from detailed dailyData
+    if (Array.isArray(dailyData) && dailyData.length > 0) {
+      return dailyData.reduce((sum, entry) => {
+        const entryDate = new Date(entry.date);
+        if (Number.isNaN(entryDate.getTime())) return sum;
+
+        if (entryDate.toDateString() === todayStr) {
+          // use total revenue * role-specific share
+          return sum + entry.amount * commissionMultiplier;
+        }
+        return sum;
+      }, 0);
+    }
+
+    // 2️⃣ Fallback: if no dailyData, trust precomputed todaysProfit from backend
     if (typeof todaysProfit === 'number') {
       return todaysProfit;
     }
 
-    const now = new Date();
-    const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-
-    return dailyData.reduce((sum, entry) => {
-      const entryDate = new Date(entry.date);
-      if (Number.isNaN(entryDate.getTime())) return sum;
-      if (entryDate >= twentyFourHoursAgo && entryDate <= now) {
-        return sum + entry.amount;
-      }
-      return sum;
-    }, 0);
-  }, [dailyData, todaysProfit]);
+    return 0;
+  }, [dailyData, todaysProfit, now, commissionMultiplier]);
 
   const revenueLabel = view === 'monthly'
     ? 'Total Revenue'
@@ -278,7 +348,7 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
           {/* Chart */}
           <div className="w-full h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={currentData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
+              <LineChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
                 <CartesianGrid strokeDasharray="6 6" />
                 <XAxis dataKey="date" tick={{ fontSize: 12 }} />
                 <YAxis tickFormatter={(val) => formatConverted(val, fromCurrency)} />

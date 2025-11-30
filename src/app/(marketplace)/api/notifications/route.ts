@@ -426,7 +426,7 @@ export async function GET(request: Request) {
     });
 
     payouts.forEach((payout) => {
-      const statusLabel = payout.status === 'payout_sent' ? 'Payout sent' : 'Payout processing';
+      const statusLabel = payout.status === 'payout_received' || payout.status === 'payout_sent' ? 'Payout received' : 'Payout processing';
       const createdAt = (payout.processedAt ?? payout.createdAt).toISOString();
       const amountLabel =
         payout.amount != null
@@ -434,12 +434,13 @@ export async function GET(request: Request) {
           : 'Your payout';
       const phaseLabel = payout.phase ? `phase ${payout.phase}` : 'payout';
       const periodLabel = payout.period ?? 'this period';
+      const noteLabel = payout.notes ? ` • ${payout.notes}` : '';
 
       pushNotification({
         id: `payout-${payout.id}`,
         type: 'payout_processed',
         title: statusLabel,
-        description: `${amountLabel} for ${periodLabel} (${phaseLabel}) is ${statusLabel.toLowerCase()}.`,
+        description: `${amountLabel} for ${periodLabel} (${phaseLabel}) — ${statusLabel.toLowerCase()}${noteLabel}.`,
         actor: null,
         createdAt,
         context: {
@@ -448,6 +449,9 @@ export async function GET(request: Request) {
           phase: payout.phase,
           period: payout.period,
           status: payout.status,
+          notes: payout.notes,
+          attachmentName: payout.attachmentName,
+          attachmentUrl: payout.attachmentUrl,
         },
       });
     });
