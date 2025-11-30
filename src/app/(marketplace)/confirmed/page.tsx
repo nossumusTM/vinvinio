@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Avatar from '@/app/(marketplace)/components/Avatar';
 
@@ -45,6 +45,48 @@ const BookingConfirmed = () => {
   const { formatConverted } = useCurrencyFormatter();
 
   const router = useRouter();
+
+  const formattedDateRange = useMemo(() => {
+    if (!startDate) return '';
+
+    try {
+      const start = new Date(startDate);
+      const end = endDate ? new Date(endDate) : null;
+
+      if (timeParam) {
+        const [hour, minute] = timeParam.split(':').map(Number);
+        start.setHours(hour);
+        start.setMinutes(minute);
+      }
+
+      const startDatePart = start.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      });
+      const timePart = start.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      });
+
+      if (end) {
+        const endDatePart = end.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+        });
+        const includeEnd = endDatePart !== startDatePart;
+        return includeEnd
+          ? `${startDatePart} at ${timePart} - ${endDatePart}`
+          : `${startDatePart} at ${timePart}`;
+      }
+
+      return `${startDatePart} at ${timePart}`;
+    } catch {
+      return 'Invalid date';
+    }
+  }, [startDate, endDate, timeParam]);
 
   const handleGoToTrips = () => {
     router.push('/trips');
@@ -288,33 +330,11 @@ const BookingConfirmed = () => {
           <p><strong>Name:</strong> {legalName}</p>
           <p><strong>Email:</strong> {email}</p>
           <p><strong>Contact:</strong> {contact}</p>
-          {startDate && (() => {
-            try {
-              const dateObj = new Date(startDate);
-              if (timeParam) {
-                const [hour, minute] = timeParam.split(':').map(Number);
-                dateObj.setHours(hour);
-                dateObj.setMinutes(minute);
-              }
-              const datePart = dateObj.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-              });
-              const timePart = dateObj.toLocaleTimeString('en-US', {
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true,
-              });
-              return (
-                <p className="text-neutral-600 text-sm">
-                  <strong>Date:</strong> {datePart} at {timePart}
-                </p>
-              );
-            } catch {
-              return <p className="text-neutral-600 text-sm">Date: Invalid</p>;
-            }
-          })()}
+          {formattedDateRange && (
+            <p className="text-neutral-600 text-sm">
+              <strong>Date:</strong> {formattedDateRange}
+            </p>
+          )}
           <hr />
           <h3 className="font-semibold mt-4">Billing Address</h3>
           <p>{street}{apt ? `, ${apt}` : ''}</p>

@@ -4,7 +4,7 @@ import getCurrentUser from "@/app/(marketplace)/actions/getCurrentUser";
 import { hrefForListing } from "@/app/(marketplace)/libs/links";
 import { ensureListingSlug } from "@/app/(marketplace)/libs/ensureListingSlug";
 import { computeAggregateMaps } from "@/app/(marketplace)/libs/aggregateTotals";
-import { MIN_PARTNER_COMMISSION, computeHostShareFromCommission } from "@/app/(marketplace)/constants/partner";
+import { MIN_PARTNER_COMMISSION } from "@/app/(marketplace)/constants/partner";
 export const dynamic = 'force-dynamic';
 import { Prisma } from '@prisma/client';
 import { Role } from '@prisma/client';
@@ -90,8 +90,8 @@ export async function POST(request: Request) {
       const partnerCommission = Number.isFinite(listingWithSlug.user.partnerCommission)
         ? listingWithSlug.user.partnerCommission
         : MIN_PARTNER_COMMISSION;
-      const hostShare = computeHostShareFromCommission(partnerCommission);
-      const revenueDelta = (totalPrice || 0) * hostShare;
+      // Store gross revenue in analytics; host share is applied during display
+      const revenueDelta = totalPrice || 0;
 
       const existingHostAnalytics = await prisma.hostAnalytics.findUnique({
         where: { userId: listingWithSlug.user.id },

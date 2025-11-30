@@ -25,6 +25,7 @@ import ConfirmPopup from "../components/ConfirmPopup";
 import useCurrencyFormatter from '@/app/(marketplace)/hooks/useCurrencyFormatter';
 import Modal from "../components/modals/Modal";
 import FilterTrips from "./FilterTrips";
+import formatReservationDateRange from "../utils/dateRange";
 
 import { AxiosError } from 'axios';
 
@@ -231,7 +232,8 @@ const TripsClient: React.FC<TripsClientProps> = ({
     setIsSubmittingCancellation(true);
 
     const reasonToSend = cancelReason === 'Other' ? customReason.trim() : cancelReason;
-    const formattedDate = format(new Date(reservation.startDate), 'PPP');
+    // const formattedDate = format(new Date(reservation.startDate), 'PPP');
+    const formattedDate = formatReservationDateRange(reservation.startDate, reservation.endDate);
     const submitDate = format(new Date(), 'PPpp');
 
     const emailText = `
@@ -628,7 +630,8 @@ const TripsClient: React.FC<TripsClientProps> = ({
                       <div className="min-w-0 flex-1">
                         <p className="text-[8px] uppercase tracking-wide text-neutral-500">Date</p>
                         <p className="text-[15px] font-semibold text-neutral-900 break-words">
-                          {format(new Date(reservation.startDate), 'PPP')}
+                          {/* {format(new Date(reservation.startDate), 'PPP')} */}
+                          {formatReservationDateRange(reservation.startDate, reservation.endDate)}
                         </p>
                       </div>
                     </div>

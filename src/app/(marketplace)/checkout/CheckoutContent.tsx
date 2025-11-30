@@ -274,6 +274,7 @@ const handleSubmit = async () => {
             email,
             contact,
             startDate,
+            endDate,
             time,
             street: addressFields.street,
             apt: addressFields.apt,
@@ -328,12 +329,37 @@ const handleSubmit = async () => {
             const { street, apt, city, state, zip, country } = addressFields;
             const countryLabel = country?.label || '';
             const countryFlag = country?.flag || '';
+            const billingAddress = [
+              street,
+              apt,
+              [city, state, zip].filter(Boolean).join(', '),
+              countryLabel,
+            ]
+              .filter(Boolean)
+              .join(', ');
 
             await axios.post('/api/email/booking', {
                 to: email,
                 subject: 'Your Vuola Booking Confirmation',
                 listingId,
-                html: `...`, // Keep your existing HTML here
+                html: `
+                  <div style="font-family: Arial, sans-serif; color: #111827; background: #f9fafb; padding: 24px;">
+                    <div style="max-width: 640px; margin: 0 auto; background: white; border-radius: 16px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
+                      <h1 style="font-size: 20px; margin-bottom: 12px;">Your booking is confirmed 🎉</h1>
+                      <p style="margin: 0 0 16px;">Hi ${legalName || 'guest'},</p>
+                      <p style="margin: 0 0 12px;">Thanks for booking <strong>${listingData?.title || 'your experience'}</strong>. Here are your details:</p>
+                      <ul style="padding-left: 18px; margin: 0 0 16px;">
+                        <li><strong>Dates:</strong> ${formattedDateRange || 'To be confirmed'}</li>
+                        <li><strong>Guests:</strong> ${guests}</li>
+                        <li><strong>Contact:</strong> ${contact}</li>
+                        <li><strong>Billing address:</strong> ${billingAddress || 'Not provided'}</li>
+                        <li><strong>Total paid:</strong> ${formatConverted(total)}</li>
+                      </ul>
+                      <p style="margin: 0 0 16px;">If you have questions, reply to this email and we'll be happy to help.</p>
+                      <p style="margin: 0;">Safe travels,<br/>The Vuola Team</p>
+                    </div>
+                  </div>
+                `,
             });
             }
 
@@ -365,6 +391,32 @@ const handleSubmit = async () => {
 
   const formattedStart = startDate ? format(new Date(startDate), 'PP') : '';
   const formattedEnd = endDate ? format(new Date(endDate), 'PP') : '';
+
+  const formattedTime = useMemo(() => {
+    if (!time) return '';
+    try {
+      const [hour, minute] = time.split(':').map(Number);
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
+      return `${formattedHour}:${minute.toString().padStart(2, '0')} ${ampm}`;
+    } catch {
+      return '';
+    }
+  }, [time]);
+
+  const formattedDateRange = useMemo(() => {
+    if (!startDate) return '';
+    try {
+      const start = format(new Date(startDate), 'PP');
+      const end = endDate ? format(new Date(endDate), 'PP') : '';
+      const includesEnd = end && end !== start;
+      const datePortion = includesEnd ? `${start}${formattedTime ? ` at ${formattedTime}` : ''} - ${end}` : `${start}${formattedTime ? ` at ${formattedTime}` : ''}`;
+      return datePortion;
+    } catch {
+      return '';
+    }
+  }, [startDate, endDate, formattedTime]);
+
   const serviceFee = 0;
 
   const pricingTotals = useMemo(
@@ -902,14 +954,7 @@ const handleSubmit = async () => {
                 <div className="flex flex-row gap-2">
                   {/* <p className="text-lg font-medium"><TbCalendarTime /></p> */}
                   <p className="text-neutral-700 font-normal">
-                    {formattedStart} at {
-                      time ? (() => {
-                        const [hour, minute] = time.split(':').map(Number);
-                        const ampm = hour >= 12 ? 'PM' : 'AM';
-                        const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
-                        return `${formattedHour}:${minute.toString().padStart(2, '0')} ${ampm}`;
-                      })() : 'Time unavailable'
-                    }
+                    {formattedDateRange || 'Date unavailable'}
                   </p>
                 </div>
                 {/* <p className="text-neutral-700 font-bold">Guests: {guests}</p> */}
