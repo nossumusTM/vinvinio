@@ -1,21 +1,34 @@
-import { CURRENCY_RATES } from '@/app/(marketplace)/constants/locale';
+import { BASE_CURRENCY, CURRENCY_RATES } from '@/app/(marketplace)/constants/locale';
+
+type CurrencyRates = Record<string, number>;
 
 // converts FROM sourceCurrency TO targetCurrency
 export const convertCurrency = (
   amount: number,
   from: string,
-  to: string
+  to: string,
+  rates: CurrencyRates = CURRENCY_RATES,
+  baseCurrency: string = BASE_CURRENCY
 ) => {
-  const fromRate = CURRENCY_RATES[from] ?? 1;
-  const toRate = CURRENCY_RATES[to] ?? 1;
+  if (from === to) return amount;
+
+  const normalizedRates: CurrencyRates = { ...rates, [baseCurrency]: 1 };
+  const fromRate = normalizedRates[from] ?? 1;
+  const toRate = normalizedRates[to] ?? 1;
 
   // normalize amount to USD-equivalent, then convert
-  const amountInUSD = amount / fromRate;
-  return amountInUSD * toRate;
+  const amountInBase = amount / fromRate;
+  return amountInBase * toRate;
 };
 
-export const convertFromUSD = (amount: number, targetCurrency: string) => {
-  const rate = CURRENCY_RATES[targetCurrency] ?? 1;
+export const convertFromBase = (
+  amount: number,
+  targetCurrency: string,
+  rates: CurrencyRates = CURRENCY_RATES,
+  baseCurrency: string = BASE_CURRENCY
+) => {
+  const normalizedRates: CurrencyRates = { ...rates, [baseCurrency]: 1 };
+  const rate = normalizedRates[targetCurrency] ?? 1;
   return amount * rate;
 };
 

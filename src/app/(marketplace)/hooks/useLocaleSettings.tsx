@@ -31,7 +31,7 @@ const useLocaleSettings = create<LocaleSettingsState>()(
       locale: DEFAULT_LANGUAGE.locale,
       currency: DEFAULT_CURRENCY.currency,
       currencyRegion: DEFAULT_CURRENCY.region,
-       currencySymbol: DEFAULT_CURRENCY.symbol,
+      currencySymbol: DEFAULT_CURRENCY.symbol,
       setLanguage: (code) => {
         const option = getLanguageOption(code);
         set({

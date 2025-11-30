@@ -62,19 +62,20 @@ export const CURRENCY_OPTIONS: CurrencyOption[] = [
 ];
 
 export const DEFAULT_LANGUAGE = LANGUAGE_OPTIONS[0];
-export const DEFAULT_CURRENCY = CURRENCY_OPTIONS[0];
-export const BASE_CURRENCY = process.env.NEXT_PUBLIC_BASE_CURRENCY ?? DEFAULT_CURRENCY.currency;
+export const DEFAULT_CURRENCY =
+  CURRENCY_OPTIONS.find((option) => option.code === 'EUR') ?? CURRENCY_OPTIONS[0];
+export const BASE_CURRENCY = process.env.NEXT_PUBLIC_BASE_CURRENCY ?? 'EUR';
 
 export const CURRENCY_RATES: Record<string, number> = {
-  USD: 1,
-  AZN: 1.7,
-  EUR: 0.92,
-  PLN: 4.05,
-  TRY: 32.5,
-  RUB: 92,
-  CNY: 7.1,
-  JPY: 156,
-  AED: 3.67,
+  EUR: 1,
+  USD: 1.09,
+  AZN: 1.85,
+  PLN: 4.32,
+  TRY: 35.2,
+  RUB: 99.8,
+  CNY: 7.9,
+  JPY: 168.5,
+  AED: 4,
 };
 
 export const DATE_FNS_LOCALES: Record<LanguageCode, Locale> = {
