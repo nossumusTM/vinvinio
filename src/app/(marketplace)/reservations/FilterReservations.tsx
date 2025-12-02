@@ -1,38 +1,67 @@
 'use client';
-
+import { useEffect, useRef } from 'react';
 import MonthYearPicker from '../components/MonthYearPicker';
+import TimeInput from '@/app/(marketplace)/components/inputs/TimeInput';
+import NeumorphicToggle from '@/app/(marketplace)/components/inputs/NeumorphicToggle';
 
 interface FilterReservationsProps {
   activeKeyword?: string | null;
   isLoading?: boolean;
   timeValue: string;
+  isTimeEnabled: boolean;
   selectedYear: number;
   yearOptions: number[];
   selectedMonth: number;
   onMonthChange: (month: number) => void;
+  onTimeToggle: (isEnabled: boolean) => void;
   onTimeChange: (value: string) => void;
   onYearChange: (year: number) => void;
   onFilter: () => void;
   onReset: () => void;
+  onClose: () => void;
 }
 
 const FilterReservations: React.FC<FilterReservationsProps> = ({
   activeKeyword,
   isLoading,
   timeValue,
+  isTimeEnabled,
   selectedYear,
   yearOptions,
   selectedMonth,
   onMonthChange,
+  onTimeToggle,
   onTimeChange,
   onYearChange,
   onFilter,
   onReset,
+  onClose,
 }) => {
   const isActive = activeKeyword === 'reservations';
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const node = containerRef.current;
+      if (!node) return;
+
+      if (!node.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside, true);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside, true);
+    };
+  }, [onClose]);
+
 
   return (
-    <div className="rounded-3xl border border-neutral-200 bg-gradient-to-br from-neutral-50 via-white to-neutral-100/80 shadow-md p-5 space-y-6">
+    <div
+      ref={containerRef}
+      className="rounded-3xl border border-neutral-200 bg-gradient-to-br from-neutral-50 via-white to-neutral-100/80 shadow-md p-5 space-y-6"
+    >
       <div>
         <p className="text-xs uppercase tracking-[0.2em] text-neutral-500">
           Booking filter
@@ -59,25 +88,22 @@ const FilterReservations: React.FC<FilterReservationsProps> = ({
         </div>
 
         {/* Time input */}
+        
         <div className="rounded-2xl border border-neutral-200 bg-white/80 p-4 shadow-sm flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <label
-              htmlFor="reservation-filter-time"
-              className="text-xs font-semibold uppercase tracking-wide text-neutral-500"
-            >
-              Preferred time
-            </label>
-            <input
-              id="reservation-filter-time"
-              type="time"
-              value={timeValue}
-              onChange={(event) => onTimeChange(event.target.value)}
-              className="rounded-2xl border border-neutral-200 px-3 py-2 text-sm text-neutral-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-black"
-            />
-            <p className="text-[11px] text-neutral-500">
-              We’ll look for bookings around this hour in the chosen month.
-            </p>
-          </div>
+        <NeumorphicToggle
+            id="reservation-filter-enable-time"
+            label="Filter by time"
+            checked={isTimeEnabled}
+            onChange={onTimeToggle}
+          />
+          <TimeInput
+            id="reservation-filter-time"
+            label=""
+            value={timeValue}
+            disabled={!isTimeEnabled}
+            onChange={onTimeChange}
+            helperText="Choose a month and year, then optionally filter by a preferred hour."
+          />
         </div>
       </div>
 

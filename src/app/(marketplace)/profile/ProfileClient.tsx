@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useEffect, useMemo, useCallback, type FormEvent } from "react";
+import { useRef, useState, useEffect, useMemo, useCallback, type FormEvent, type KeyboardEvent } from "react";
 import { SafeUser } from "@/app/(marketplace)/types";
 import Container from "@/app/(marketplace)/components/Container";
 import Heading from "@/app/(marketplace)/components/Heading";
@@ -13,6 +13,8 @@ import axios from "axios";
 import Cropper from 'react-easy-crop';
 import getCroppedImg from '@/app/(marketplace)/utils/cropImage';
 import CountrySelect from "../components/inputs/CountrySelect";
+import OnlyCountrySelect from "../components/OnlyCountrySelect";
+import useCountries from "@/app/(marketplace)/hooks/useCountries";
 import { CountrySelectValue } from "@/app/(marketplace)/components/inputs/CountrySelect";
 import AnimatedModal from "../components/modals/AnimatedModal";
 import { AnimatePresence, motion, type Variants, type Easing } from 'framer-motion';
@@ -226,6 +228,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
 }) => {
   const searchParams = useSearchParams();
   const { formatConverted, baseCurrency } = useCurrencyFormatter();
+  const { getByValue } = useCountries();
   const { currencySymbol } = useLocaleSettings();
   const suspensionDate = useMemo(() => {
     const raw = currentUser?.suspendedAt;
@@ -235,6 +238,15 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   }, [currentUser?.suspendedAt]);
   const { totalCount, totalAmount } = referralBookings;
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const streetInputRef = useRef<HTMLInputElement | null>(null);
+  const streetWrapperRef = useRef<HTMLDivElement | null>(null);
+  const autocompleteServiceRef = useRef<any | null>(null);
+  const placesServiceRef = useRef<any | null>(null);
+  const sessionTokenRef = useRef<any | null>(null);
+  const googleScriptPromiseRef = useRef<Promise<void> | null>(null);
+  const newsletterCooldownRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+
   const [profileImage, setProfileImage] = useState(currentUser.image || '');
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -244,6 +256,8 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   const [showConfirmDeletePayout, setShowConfirmDeletePayout] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
   const [loadingSubscription, setLoadingSubscription] = useState(true);
+
+  const [suppressAddressSuggestions, setSuppressAddressSuggestions] = useState(false);
 
   const [verifying, setVerifying] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -255,6 +269,10 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   const [phoneVerificationCode, setPhoneVerificationCode] = useState('');
   const [confirmingPhoneCode, setConfirmingPhoneCode] = useState(false);
   const [phoneVerificationError, setPhoneVerificationError] = useState<string | null>(null);
+  const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
+  const [addressSuggestionsOpen, setAddressSuggestionsOpen] = useState(false);
+  const [highlightedSuggestion, setHighlightedSuggestion] = useState(0);
+  const [isFetchingAddresses, setIsFetchingAddresses] = useState(false);
   const emailVerified = Boolean(currentUser?.emailVerified);
 
   const [viewRole, setViewRole] = useState<'customer' | 'host' | 'promoter' | 'moder'>(currentUser.role);
@@ -939,7 +957,7 @@ const coverImage = useMemo(() => {
 
       if (lastRoleToastRef.current !== updatedRole) {
           lastRoleToastRef.current = updatedRole;
-          toast.success(`Switched to ${updatedRole === 'host' ? 'Host' : 'Guest'} mode`, {
+          toast.success(`Switched to ${updatedRole === 'host' ? 'Provider' : 'Visitor'} mode`, {
             iconTheme: { primary: '#2200ffff', secondary: '#fff' },
           });
           setTimeout(() => {
@@ -2171,7 +2189,30 @@ const coverImage = useMemo(() => {
   //   fetchAnalytics();
   // }, []); 
 
-    useEffect(() => {
+  useEffect(() => {
+    if (currentUser?.role !== 'promoter') return;
+
+    const fetchAnalytics = async () => {
+      try {
+        const res = await axios.get('/api/analytics/get', { timeout: 10000 });
+        const data = res.data ?? {};
+        setAnalytics(res.data);
+      } catch (error) {
+        console.error('Error fetching analytics:', error);
+      }
+    };
+  
+    // Call once immediately on mount
+    fetchAnalytics();
+  
+    // Then set interval
+    const interval = setInterval(fetchAnalytics, 20000); // ⏱️ every 20 seconds
+  
+    // Clear interval on unmount
+    return () => clearInterval(interval);
+  }, [currentUser?.role]);
+
+  useEffect(() => {
     if (currentUser?.role !== 'promoter') return;
 
     const fetchAnalytics = async () => {
@@ -2602,13 +2643,324 @@ const coverImage = useMemo(() => {
     } catch (err) {
       console.error('Failed to update field', err);
     }
-  };  
+  };
+
+  useEffect(() => {
+    if (!streetInputRef.current) return;
+
+    streetInputRef.current.setAttribute('autocomplete', 'street-address');
+  }, []);
 
   useEffect(() => {
     if (activeSection !== null) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  }, [activeSection]);  
+  }, [activeSection]);
+
+  const hydrateAddressFromComponents = useCallback(
+    (addressComponents?: any[] | null, formattedAddress?: string) => {
+      if (!Array.isArray(addressComponents)) return;
+
+      const findComponent = (
+        types: string[],
+        valueKey: 'long_name' | 'short_name' = 'long_name',
+      ) =>
+        addressComponents.find((component: any) =>
+          Array.isArray(component?.types) && types.some((type) => component.types.includes(type)),
+        )?.[valueKey];
+
+      const streetNumber = findComponent(['street_number']);
+      const route = findComponent(['route']);
+      const city =
+        findComponent(['locality']) ||
+        findComponent(['postal_town']) ||
+        findComponent(['administrative_area_level_2']);
+      const state = findComponent(['administrative_area_level_1'], 'short_name');
+      const zip = findComponent(['postal_code']);
+      const countryCode = findComponent(['country'], 'short_name');
+
+      const streetLine = [streetNumber, route].filter(Boolean).join(' ').trim();
+      const matchedCountry = countryCode ? (getByValue(countryCode) as CountrySelectValue | undefined) : undefined;
+
+      setFieldValues((prev) => ({
+        ...prev,
+        street: streetLine || formattedAddress || prev.street,
+        city: city ?? prev.city,
+        state: state ?? prev.state,
+        zip: zip ?? prev.zip,
+        country: matchedCountry ?? prev.country,
+      }));
+    },
+    [getByValue],
+  );
+
+  const loadGoogleMapsScript = useCallback(() => {
+    if (typeof window === 'undefined') return Promise.resolve();
+    if ((window as any).google?.maps?.places) return Promise.resolve();
+
+    if (!googleMapsApiKey) {
+      return Promise.reject(new Error('Missing Google Maps API key'));
+    }
+
+    if (!googleScriptPromiseRef.current) {
+      googleScriptPromiseRef.current = new Promise((resolve, reject) => {
+        const existingScript = document.querySelector<HTMLScriptElement>('script[data-google-maps="true"]');
+
+        if (existingScript) {
+          existingScript.addEventListener('load', () => resolve());
+          existingScript.addEventListener('error', reject);
+          return;
+        }
+
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${googleMapsApiKey}&libraries=places`;
+        script.async = true;
+        script.defer = true;
+        script.dataset.googleMaps = 'true';
+        script.onload = () => resolve();
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
+
+    return googleScriptPromiseRef.current;
+  }, [googleMapsApiKey]);
+
+  const hydrateAddressFromPlace = useCallback(
+    (place: any) => {
+      if (!place?.address_components) return;
+
+      const findComponent = (
+        types: string[],
+        valueKey: 'long_name' | 'short_name' = 'long_name',
+      ) =>
+        place.address_components.find((component: any) =>
+          types.some((type) => component.types?.includes(type)),
+        )?.[valueKey];
+
+      const streetNumber = findComponent(['street_number']);
+      const route = findComponent(['route']);
+      const city =
+        findComponent(['locality']) ||
+        findComponent(['postal_town']) ||
+        findComponent(['administrative_area_level_2']);
+      const state = findComponent(['administrative_area_level_1'], 'short_name');
+      const zip = findComponent(['postal_code']);
+      const countryCode = findComponent(['country'], 'short_name');
+
+      const streetLine = [streetNumber, route].filter(Boolean).join(' ').trim();
+      const matchedCountry = countryCode ? (getByValue(countryCode) as CountrySelectValue | undefined) : undefined;
+
+      setFieldValues((prev) => ({
+        ...prev,
+        street: streetLine || prev.street,
+        city: city ?? prev.city,
+        state: state ?? prev.state,
+        zip: zip ?? prev.zip,
+        country: matchedCountry ?? prev.country,
+      }));
+    },
+    [getByValue],
+  );
+
+  useEffect(() => {
+    if (editingField !== 'address') return;
+
+    let cancelled = false;
+
+    loadGoogleMapsScript()
+      .then(() => {
+        if (cancelled) return;
+        const google = (window as any).google;
+        if (!google?.maps?.places) return;
+
+        if (!autocompleteServiceRef.current) {
+          autocompleteServiceRef.current = new google.maps.places.AutocompleteService();
+        }
+
+        if (!placesServiceRef.current) {
+          placesServiceRef.current = new google.maps.places.PlacesService(document.createElement('div'));
+        }
+
+        sessionTokenRef.current = new google.maps.places.AutocompleteSessionToken();
+      })
+      .catch((error) => {
+        console.warn('Google Maps script failed to load', error);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [editingField, loadGoogleMapsScript]);
+
+  useEffect(() => {
+    if (editingField !== 'address') return;
+    const google = (window as any).google;
+    if (!google?.maps?.places) return;
+    sessionTokenRef.current = new google.maps.places.AutocompleteSessionToken();
+  }, [editingField, fieldValues.country?.value]);
+
+  useEffect(() => {
+    if (editingField !== 'address') {
+      setAddressSuggestions([]);
+      setAddressSuggestionsOpen(false);
+      setIsFetchingAddresses(false);
+      return;
+    }
+
+    if (suppressAddressSuggestions) {
+      setAddressSuggestions([]);
+      setAddressSuggestionsOpen(false);
+      setIsFetchingAddresses(false);
+      return;
+    }
+
+    const query = fieldValues.street?.trim() ?? '';
+    if (!query) {
+      setAddressSuggestions([]);
+      setAddressSuggestionsOpen(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(async () => {
+      if (query.length < 3) {
+        setAddressSuggestions([]);
+        setAddressSuggestionsOpen(false);
+        return;
+      }
+
+      setIsFetchingAddresses(true);
+
+      try {
+        const params = new URLSearchParams({ q: query });
+        if (fieldValues.country?.value) {
+          params.set('country', fieldValues.country.value);
+        }
+
+        const res = await fetch(
+          `/api/locations/address?${params.toString()}`,
+          {
+            signal: controller.signal,
+          },
+        );
+
+        if (!res.ok) {
+          throw new Error('Failed to fetch address suggestions');
+        }
+
+        const data = await res.json();
+        const predictions = Array.isArray(data?.predictions)
+          ? data.predictions
+          : [];
+        setAddressSuggestions(predictions);
+        setHighlightedSuggestion(0);
+        setAddressSuggestionsOpen(predictions.length > 0);
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          console.error('Address suggestion fetch failed', error);
+        }
+      } finally {
+        setIsFetchingAddresses(false);
+      }
+    }, 250);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timeoutId);
+    };
+  }, [editingField, fieldValues.country?.value, fieldValues.street, suppressAddressSuggestions]);
+
+  const handleAddressSelect = useCallback(
+    async (suggestion: any) => {
+      if (!suggestion) return;
+
+      // prima cosa: chiudo il dropdown e metto il testo in input
+      setFieldValues((prev) => ({
+        ...prev,
+        street:
+          suggestion.description ??
+          suggestion.structured_formatting?.main_text ??
+          prev.street,
+      }));
+      setAddressSuggestionsOpen(false);
+      setAddressSuggestions([]);
+      setIsFetchingAddresses(false);
+      setSuppressAddressSuggestions(true);
+
+      // 🔹 Caso 1: suggerimento Nominatim (nuovo endpoint)
+      if (suggestion._nominatim?.address) {
+        const addr = suggestion._nominatim.address as any;
+
+        const city =
+          addr.city ||
+          addr.town ||
+          addr.village ||
+          addr.suburb;
+
+        const state = addr.state;
+        const zip = addr.postcode;
+        const countryCode = (addr.country_code || '').toUpperCase();
+
+        const matchedCountry = countryCode
+          ? (getByValue(countryCode) as CountrySelectValue | undefined)
+          : undefined;
+
+        // 👉 NON rimettiamo più suppress a false qui
+        setFieldValues((prev) => ({
+          ...prev,
+          street:
+            addr.road ||
+            addr.pedestrian ||
+            addr.footway ||
+            suggestion.description ||
+            prev.street,
+          city: city ?? prev.city,
+          state: state ?? prev.state,
+          zip: zip ?? prev.zip,
+          country: matchedCountry ?? prev.country,
+        }));
+
+        return;
+      }
+
+
+      // 🔹 Caso 2: fallback Google Places (se in futuro riusi Google)
+      const placeId = suggestion.place_id ?? suggestion.placeId;
+      if (!placeId) return;
+
+      const controller = new AbortController();
+      setIsFetchingAddresses(true);
+
+      try {
+        const params = new URLSearchParams({ placeId });
+        const res = await fetch(
+          `/api/locations/address/details?${params.toString()}`,
+          {
+            signal: controller.signal,
+          },
+        );
+
+        if (!res.ok) {
+          throw new Error('Failed to fetch address details');
+        }
+
+        const data = await res.json();
+        const result = data?.result;
+        hydrateAddressFromComponents(
+          result?.address_components,
+          result?.formatted_address,
+        );
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          console.error('Address details fetch failed', error);
+        }
+      } finally {
+        setIsFetchingAddresses(false);
+      }
+    },
+    [getByValue, hydrateAddressFromComponents, setFieldValues],
+  );
 
   // useEffect(() => {
   //   const checkAndSubscribe = async () => {
@@ -2686,6 +3038,19 @@ const coverImage = useMemo(() => {
 
 
   const handleToggleSubscription = async () => {
+
+    if (newsletterCooldownRef.current) {
+      toast('Please wait a moment before toggling.');
+      return;
+    }
+
+    newsletterCooldownRef.current = setTimeout(() => {
+      newsletterCooldownRef.current = null;
+    }, 1500);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort('Request timed out'), 8000);
+
     setLoading(true);
     try {
       const method = isSubscribed ? 'DELETE' : 'POST';
@@ -2693,6 +3058,7 @@ const coverImage = useMemo(() => {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: currentUser.email, type: 'experience' }),
+        signal: controller.signal,
       });
 
       if (res.status === 409) {
@@ -2718,14 +3084,59 @@ const coverImage = useMemo(() => {
         }
       );
     } catch (error) {
-      console.error('Toggle subscription error:', error);
-      toast.error('Something went wrong while toggling subscription.');
+
+      if ((error as Error)?.name === 'AbortError') {
+        toast.error('Newsletter request timed out. Please try again.');
+      } else {
+        console.error('Toggle subscription error:', error);
+        toast.error('Something went wrong while toggling subscription.');
+      }
+
     } finally {
+      clearTimeout(timeoutId);
       setLoading(false);
     }
   };
 
-    return (
+  const closeAddressSuggestions = useCallback(() => {
+    setAddressSuggestionsOpen(false);
+    setHighlightedSuggestion(0);
+  }, []);
+
+  useEffect(() => {
+    if (!addressSuggestionsOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!streetWrapperRef.current?.contains(event.target as Node)) {
+        closeAddressSuggestions();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [addressSuggestionsOpen, closeAddressSuggestions]);
+
+  const handleStreetKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (!addressSuggestionsOpen || addressSuggestions.length === 0) return;
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      setHighlightedSuggestion((prev) => (prev + 1) % addressSuggestions.length);
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      setHighlightedSuggestion((prev) => (prev - 1 + addressSuggestions.length) % addressSuggestions.length);
+    } else if (event.key === 'Enter') {
+      event.preventDefault();
+      const suggestion = addressSuggestions[highlightedSuggestion];
+      if (suggestion) {
+        void handleAddressSelect(suggestion);
+      }
+    } else if (event.key === 'Escape') {
+      closeAddressSuggestions();
+    }
+  };
+
+  return (
     <Container className="py-10">
       <motion.div
         className="pageadjust px-5 space-y-8"
@@ -2778,7 +3189,7 @@ const coverImage = useMemo(() => {
                       isHostView ? 'text-neutral-500' : 'text-neutral-900'
                     )}
                   >
-                    Guest
+                    Visitor
                   </span>
                   <span
                     className={twMerge(
@@ -2786,7 +3197,7 @@ const coverImage = useMemo(() => {
                       isHostView ? 'text-neutral-900' : 'text-neutral-500'
                     )}
                   >
-                    Host
+                    Provider
                   </span>
                 </div>
 
@@ -2805,7 +3216,7 @@ const coverImage = useMemo(() => {
                   )}
                   animate={{ x: isHostView ? 113 : 0 }}
                 >
-                  {isHostView ? 'Host mode' : 'Guest mode'}
+                  {isHostView ? 'Provider' : 'Visitor'}
                 </motion.span>
               </Switch>
             </Switch.Group>
@@ -2953,7 +3364,7 @@ const coverImage = useMemo(() => {
             initial={hasMounted ? 'hidden' : false}
             animate="visible"
             exit="exit"
-            className="mt-8 flex w-full flex-col gap-10 pt-0 md:pt-5 lg:flex-row"
+            className="mt-8 pt-4 flex w-full flex-col gap-10 pt-0 md:pt-5 lg:flex-row"
           >
             <motion.div
               variants={cardVariants}
@@ -2984,6 +3395,12 @@ const coverImage = useMemo(() => {
                     <div className="flex-1">
                       <p className="text-xs uppercase tracking-wide text-neutral-500 md:text-sm">{label}</p>
 
+                      {key === 'contact' && (
+                        <p className="mt-1 text-[11px] leading-snug text-neutral-500 md:text-xs">
+                          WhatsApp: <span className="italic">es. +39&nbsp;555&nbsp;666&nbsp;7777</span>{' '} or leave it blank and use Platform messenger ↗
+                        </p>
+                      )}
+
                       <AnimatePresence initial={false} mode="wait">
                         {editingField === key ? (
                           key === 'address' ? (
@@ -2996,7 +3413,7 @@ const coverImage = useMemo(() => {
                                 transition={{ duration: 0.25 }}
                                 className="space-y-4 pt-4"
                               >
-                                <CountrySelect
+                                <OnlyCountrySelect
                                   value={fieldValues.country ?? undefined}
                                   onChange={(val) =>
                                     setFieldValues((prev) => ({
@@ -3006,15 +3423,35 @@ const coverImage = useMemo(() => {
                                   }
                                 />
 
-                                <div className="relative w-full px-1">
+                                <div ref={streetWrapperRef} className="relative w-full px-1">
                                   <input
                                     type="text"
                                     id="street"
                                     placeholder=" "
+                                    ref={streetInputRef}
                                     value={fieldValues.street}
-                                    onChange={(e) =>
-                                      setFieldValues((prev) => ({ ...prev, street: e.target.value }))
+                                    onChange={(e) => {
+                                      const value = e.target.value;
+
+                                      // Riabilita i suggerimenti quando l’utente cambia l’indirizzo
+                                      setSuppressAddressSuggestions(false);
+
+                                      // Pulisci i campi dipendenti perché l’indirizzo è cambiato
+                                      setFieldValues((prev) => ({
+                                        ...prev,
+                                        street: value,
+                                        city: '',
+                                        state: '',
+                                        zip: '',
+                                      }));
+                                    }}
+                                    onFocus={() =>
+                                      setAddressSuggestionsOpen(
+                                        (prev) => prev || addressSuggestions.length > 0,
+                                      )
                                     }
+                                    onKeyDown={handleStreetKeyDown}
+                                    autoComplete="off"
                                     className="peer w-full rounded-xl border border-neutral-300 px-4 pt-6 pb-2 text-base placeholder-transparent focus:outline-none focus:ring-2 focus:ring-black"
                                   />
                                   <label
@@ -3025,6 +3462,37 @@ const coverImage = useMemo(() => {
                                   >
                                     Street address
                                   </label>
+
+                                  {addressSuggestionsOpen && addressSuggestions.length > 0 && (
+                                    <ul className="absolute left-0 right-0 top-full z-50 mt-2 max-h-72 overflow-y-auto rounded-xl border border-neutral-200 bg-white shadow-xl">
+                                      {addressSuggestions.map((suggestion, index) => {
+                                        const isHighlighted = index === highlightedSuggestion;
+                                        return (
+                                          <li
+                                            key={suggestion.place_id ?? suggestion.description ?? index}
+                                            role="option"
+                                            aria-selected={isHighlighted}
+                                            className={`cursor-pointer px-4 py-3 text-sm transition-colors ${
+                                              isHighlighted ? 'bg-neutral-100' : 'hover:bg-neutral-50'
+                                            }`}
+                                            onMouseDown={(event) => event.preventDefault()}
+                                            onMouseEnter={() => setHighlightedSuggestion(index)}
+                                            onClick={() => void handleAddressSelect(suggestion)}
+                                          >
+                                            <p className="font-semibold text-neutral-900">{suggestion.structured_formatting?.main_text ?? suggestion.description}</p>
+                                            {suggestion.structured_formatting?.secondary_text && (
+                                              <p className="text-xs text-neutral-500">{suggestion.structured_formatting.secondary_text}</p>
+                                            )}
+                                          </li>
+                                        );
+                                      })}
+                                    </ul>
+                                  )}
+
+                                  {isFetchingAddresses && (
+                                    <p className="absolute right-4 top-3 text-xs text-neutral-500">Searching…</p>
+                                  )}
+
                                 </div>
 
                                 <div className="relative w-full px-1">
@@ -3330,6 +3798,46 @@ const coverImage = useMemo(() => {
                   </div>
                 ))}
               </div>
+              <div className="mt-6 flex flex-col gap-3 border-t border-neutral-100 pt-6">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs uppercase tracking-wide text-neutral-600 md:text-sm">
+                    Newsletter
+                  </p>
+
+                  {/* Switcher */}
+                  <div className="flex items-center gap-3 rounded-xl bg-white px-3 py-2 shadow-sm">
+                    <div className="flex flex-col leading-tight min-w-[80px]">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-neutral-600">
+                        {loadingSubscription ? 'Checking…' : isSubscribed ? 'Subscribed' : 'Not subscribed'}
+                      </span>
+                    </div>
+
+                    <Switch
+                      checked={isSubscribed}
+                      onChange={() => {
+                        if (!loading && !loadingSubscription) {
+                          handleToggleSubscription();
+                        }
+                      }}
+                      className={twMerge(
+                        'relative inline-flex h-9 w-16 items-center rounded-full border border-neutral-200 transition',
+                        isSubscribed ? 'bg-neutral-900' : 'bg-neutral-200',
+                        (loading || loadingSubscription) && 'cursor-not-allowed opacity-70'
+                      )}
+                      disabled={loading || loadingSubscription}
+                    >
+                      <span
+                        className={twMerge(
+                          'inline-block h-7 w-7 transform rounded-full bg-white shadow transition',
+                          isSubscribed ? 'translate-x-8' : 'translate-x-1'
+                        )}
+                      />
+                    </Switch>
+
+                  </div>
+                </div>
+              </div>
+
             </motion.div>
 
             <motion.div
@@ -3350,7 +3858,7 @@ const coverImage = useMemo(() => {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="mt-8 flex w-full flex-col gap-10 pt-0 md:pt-5 lg:flex-row"
+            className="mt-8 pt-4 flex w-full flex-col gap-10 pt-0 md:pt-5 lg:flex-row"
           >
             <motion.div
               variants={cardVariants}
@@ -4690,15 +5198,6 @@ const coverImage = useMemo(() => {
         )}
       </AnimatePresence>
 
-      <PayoutHistory
-        open={showPayoutHistory}
-        onClose={() => setShowPayoutHistory(false)}
-        payouts={payoutRecords}
-        baseCurrency={baseCurrency}
-        formatConverted={formatConverted}
-        currencySymbol={currencySymbol}
-      />
-
       {/* Crop Modal */}
       {isCropping && uploadedImage && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
@@ -4730,6 +5229,15 @@ const coverImage = useMemo(() => {
         </div>
       )}
       </motion.div>
+
+      <PayoutHistory
+        open={showPayoutHistory}
+        onClose={() => setShowPayoutHistory(false)}
+        payouts={payoutRecords}
+        baseCurrency={baseCurrency}
+        formatConverted={formatConverted}
+        currencySymbol={currencySymbol}
+      />
 
     </Container>
   );  

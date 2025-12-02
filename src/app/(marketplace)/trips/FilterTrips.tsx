@@ -3,15 +3,19 @@
 import SearchCalendar from '@/app/(marketplace)/components/inputs/SearchCalendar';
 import type { Range, RangeKeyDict } from 'react-date-range';
 import MonthYearPicker from '../components/MonthYearPicker';
+import TimeInput from '@/app/(marketplace)/components/inputs/TimeInput';
+import NeumorphicToggle from '@/app/(marketplace)/components/inputs/NeumorphicToggle';
 
 interface FilterTripsProps {
   activeKeyword?: string | null;
   isLoading?: boolean;
   timeValue: string;
+  isTimeEnabled: boolean;
   selectedYear: number;
   yearOptions: number[];
   selectedMonth: number;                 // 👈 NEW
   onMonthChange: (month: number) => void; // 👈 NEW
+  onTimeToggle: (isEnabled: boolean) => void;
   onTimeChange: (value: string) => void;
   onYearChange: (year: number) => void;
   onFilter: () => void;
@@ -22,10 +26,12 @@ const FilterTrips: React.FC<FilterTripsProps> = ({
   activeKeyword,
   isLoading,
   timeValue,
+  isTimeEnabled,
   selectedYear,
   yearOptions,
   selectedMonth,
   onMonthChange,
+  onTimeToggle,
   onTimeChange,
   onYearChange,
   onFilter,
@@ -56,24 +62,20 @@ const FilterTrips: React.FC<FilterTripsProps> = ({
 
         {/* Time input */}
         <div className="rounded-2xl border border-neutral-200 bg-white/80 p-4 shadow-sm flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <label
-              htmlFor="trip-filter-time"
-              className="text-xs font-semibold uppercase tracking-wide text-neutral-500"
-            >
-              Preferred time
-            </label>
-            <input
-              id="trip-filter-time"
-              type="time"
-              value={timeValue}
-              onChange={(event) => onTimeChange(event.target.value)}
-              className="rounded-2xl border border-neutral-200 px-3 py-2 text-sm text-neutral-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-black"
-            />
-            <p className="text-[11px] text-neutral-500">
-              We’ll look for activities around this hour in the chosen month.
-            </p>
-          </div>
+          <NeumorphicToggle
+            id="trip-filter-enable-time"
+            label="Filter by time"
+            checked={isTimeEnabled}
+            onChange={onTimeToggle}
+          />
+          <TimeInput
+            id="trip-filter-time"
+            label=""
+            value={timeValue}
+            disabled={!isTimeEnabled}
+            onChange={onTimeChange}
+            helperText="Choose a month and year, then optionally filter by a preferred hour."
+          />
         </div>
       </div>
 

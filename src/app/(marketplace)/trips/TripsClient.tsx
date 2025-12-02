@@ -2,7 +2,8 @@
 
 import { toast } from "react-hot-toast";
 import axios from "axios";
-import { MouseEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import type { MouseEvent as ReactMouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import { format } from 'date-fns';
 import Button from "../components/Button";
@@ -36,6 +37,24 @@ interface TripsClientProps {
   currentUser?: SafeUser | null;
 }
 
+type ReviewDraft = {
+  rating: number;
+  comment: string;
+  images: string[];
+  hoverRating?: number;
+};
+
+type SubmittedReview = {
+  rating: number;
+  comment: string;
+  images: string[];
+};
+
+const REVIEW_MAX_IMAGES = 5;
+const REVIEW_MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
+const reviewUploadPreset = 'vuolapreset';
+const reviewCloudName = 'dlomv0hbe';
+
 const TripsClient: React.FC<TripsClientProps> = ({
   reservations,
   currentUser,
@@ -45,8 +64,9 @@ const TripsClient: React.FC<TripsClientProps> = ({
   const [deletingId, setDeletingId] = useState('');
   const [hostImages, setHostImages] = useState<Record<string, string>>({});
   const [popupMessage, setPopupMessage] = useState<string | null>(null);
-  const [reviewInputs, setReviewInputs] = useState<Record<string, { rating: number; comment: string; hoverRating?: number }>>({});
-  const [submittedReviews, setSubmittedReviews] = useState<Record<string, { rating: number; comment: string }>>({});
+  const [reviewInputs, setReviewInputs] = useState<Record<string, ReviewDraft>>({});
+  const [submittedReviews, setSubmittedReviews] = useState<Record<string, SubmittedReview>>({});
+  const [reviewUploading, setReviewUploading] = useState<Record<string, boolean>>({});
 
   const [loadedReservations, setLoadedReservations] = useState(reservations);
   const [page, setPage] = useState(1);
@@ -54,6 +74,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
   const [hasMore, setHasMore] = useState(reservations.length === 4);
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const filterWrapperRef = useRef<HTMLDivElement | null>(null);
 
   const [filterKeyword, setFilterKeyword] = useState<string | null>(null);
   const [isFilterLoading, setIsFilterLoading] = useState(false);
@@ -66,6 +87,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [selectedTime, setSelectedTime] = useState('12:00');
+  const [isTimeEnabled, setIsTimeEnabled] = useState(true);
 
   const yearOptions = useMemo(() => {
     const baseYear = new Date().getFullYear();
@@ -89,9 +111,9 @@ const TripsClient: React.FC<TripsClientProps> = ({
   const profileButtonClasses =
     'group flex w-full items-center gap-3 rounded-full text-left outline-none transition focus-visible:ring-2 focus-visible:ring-black/40';
 
-  const makeNavigationHandler = useCallback(
-    (path: string | null | undefined) =>
-      (event?: MouseEvent<HTMLElement>) => {
+ const makeNavigationHandler = useCallback(
+   (path: string | null | undefined) =>
+     (event?: ReactMouseEvent<HTMLElement>) => {
         if (!path) {
           return;
         }
@@ -357,11 +379,94 @@ const TripsClient: React.FC<TripsClientProps> = ({
   //   }
   // }, [router, currentUser]);
 
+  const buildReviewDraft = (draft?: ReviewDraft): ReviewDraft => ({
+    rating: draft?.rating ?? 0,
+    comment: draft?.comment ?? '',
+    images: draft?.images ?? [],
+    hoverRating: draft?.hoverRating ?? 0,
+  });
+
+  const handleReviewImageUpload = async (reservationId: string, fileList: FileList | null) => {
+    if (!fileList) return;
+
+    const existingDraft = buildReviewDraft(reviewInputs[reservationId]);
+
+    if (existingDraft.images.length >= REVIEW_MAX_IMAGES) {
+      setPopupMessage(`You can upload up to ${REVIEW_MAX_IMAGES} images per review.`);
+      return;
+    }
+
+    const files = Array.from(fileList).slice(0, REVIEW_MAX_IMAGES - existingDraft.images.length);
+    const oversizeFile = files.find((file) => file.size > REVIEW_MAX_IMAGE_SIZE);
+
+    if (oversizeFile) {
+      setPopupMessage('Each image must be 2MB or less.');
+      return;
+    }
+
+    setReviewUploading((prev) => ({ ...prev, [reservationId]: true }));
+
+    const uploadedUrls: string[] = [];
+
+    for (const file of files) {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', reviewUploadPreset);
+
+      try {
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${reviewCloudName}/auto/upload`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        const data = await res.json();
+
+        if (data?.secure_url) {
+          uploadedUrls.push(data.secure_url as string);
+        } else {
+          throw new Error('Upload failed');
+        }
+      } catch (err) {
+        console.error('Review image upload failed', err);
+        setPopupMessage('Failed to upload one or more images. Please try again.');
+        break;
+      }
+    }
+
+    setReviewInputs((prev) => ({
+      ...prev,
+      [reservationId]: {
+        ...buildReviewDraft(prev[reservationId]),
+        images: [...existingDraft.images, ...uploadedUrls].slice(0, REVIEW_MAX_IMAGES),
+      },
+    }));
+
+    setReviewUploading((prev) => ({ ...prev, [reservationId]: false }));
+  };
+
+  const handleRemoveReviewImage = (reservationId: string, imageUrl: string) => {
+    setReviewInputs((prev) => {
+      const draft = buildReviewDraft(prev[reservationId]);
+      return {
+        ...prev,
+        [reservationId]: {
+          ...draft,
+          images: draft.images.filter((img) => img !== imageUrl),
+        },
+      };
+    });
+  };
+
   const handleReviewSubmit = async (reservationId: string, listingId: string) => {
-    const { rating, comment } = reviewInputs[reservationId] || {};
+    const { rating, comment, images } = buildReviewDraft(reviewInputs[reservationId]);
   
     if (!rating || !comment) {
       setPopupMessage("Please provide a rating and a comment.");
+      return;
+    }
+
+    if (reviewUploading[reservationId]) {
+      setPopupMessage('Please wait for images to finish uploading.');
       return;
     }
   
@@ -371,6 +476,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
         listingId,
         rating,
         comment,
+        images,
       });
   
       toast.success('Review submitted!', {
@@ -382,7 +488,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
 
       setSubmittedReviews((prev) => ({
         ...prev,
-        [reservationId]: { rating, comment },
+        [reservationId]: { rating, comment, images },
       }));
       
       router.refresh();
@@ -393,7 +499,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
 
   useEffect(() => {
     const fetchReviews = async () => {
-      const reviews: Record<string, { rating: number; comment: string }> = {};
+      const reviews: Record<string, SubmittedReview> = {};
   
       for (const reservation of reservations) {
         try {
@@ -408,6 +514,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
             reviews[reservation.id] = {
               rating: data.rating,
               comment: data.comment,
+              images: Array.isArray(data.images) ? data.images : [],
             };
           }
         } catch (err) {
@@ -439,47 +546,49 @@ const TripsClient: React.FC<TripsClientProps> = ({
   }, [page]);
 
   const applyTripsFilter = useCallback(async () => {
-  setIsFilterLoading(true);
+    setIsFilterLoading(true);
 
-  try {
-    const startDate = new Date(selectedYear, selectedMonth, 1);
-    const endDate = new Date(selectedYear, selectedMonth + 1, 0); // last day of month
+    try {
+      const startDate = new Date(selectedYear, selectedMonth, 1);
+      const endDate = new Date(selectedYear, selectedMonth + 1, 0); // last day of month
+      const timePayload = isTimeEnabled ? selectedTime || null : null;
 
-    const response = await axios.post('/api/trips/filter', {
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString(),
-      time: selectedTime || null,
-      year: selectedYear,
-    });
+      const response = await axios.post('/api/trips/filter', {
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        time: timePayload,
+        year: selectedYear,
+      });
 
-    setFilteredReservations(response.data ?? []);
-    setFilterKeyword('activities');
-  } catch (error) {
-    const err = error as AxiosError<{ error?: string; message?: string }>;
-    console.error('🔴 /api/trips/filter failed:', {
-      status: err.response?.status,
-      data: err.response?.data,
-    });
+      setFilteredReservations(response.data ?? []);
+      setFilterKeyword('activities');
+    } catch (error) {
+      const err = error as AxiosError<{ error?: string; message?: string }>;
+      console.error('🔴 /api/trips/filter failed:', {
+        status: err.response?.status,
+        data: err.response?.data,
+      });
 
-    toast.error(
-      err.response?.data?.error ||
-      err.response?.data?.message ||
-      'Unable to filter your activities right now.'
-    );
-  } finally {
-    setIsFilterLoading(false);
-  }
-  }, [selectedYear, selectedMonth, selectedTime]);
+      toast.error(
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        'Unable to filter your activities right now.'
+      );
+    } finally {
+      setIsFilterLoading(false);
+    }
+  }, [isTimeEnabled, selectedMonth, selectedTime, selectedYear]);
 
   const resetTripsFilter = useCallback(() => {
     setIsFilterLoading(true);
     setFilterKeyword(null);
     setFilteredReservations(null);
     setSelectedTime('12:00');
+    setIsTimeEnabled(true);
     setSelectedYear(currentYear);
     setSelectedMonth(currentMonth);
     setTimeout(() => setIsFilterLoading(false), 200);
-  }, [currentYear, currentMonth]);
+  }, [currentMonth, currentYear]);
 
 
   useEffect(() => {
@@ -491,6 +600,23 @@ const TripsClient: React.FC<TripsClientProps> = ({
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [hasMore, loadingMore, loadMoreReservations]);
+
+    useEffect(() => {
+    if (!isFilterOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const wrapper = filterWrapperRef.current;
+      if (!wrapper) return;
+      if (!wrapper.contains(event.target as Node)) {
+        setIsFilterOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside, true);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside, true);
+    };
+  }, [isFilterOpen]);
 
   const showLoadMore = hasMore && !filteredReservations;
   const reservationsToRender = filteredReservations ?? loadedReservations;
@@ -547,6 +673,9 @@ const TripsClient: React.FC<TripsClientProps> = ({
               : (reservation.listing?.id ? `/listings/${reservation.listing.id}` : null);
             const handleCardNavigation = () =>
               handleNavigationPrompt(listingPath, reservation.listing?.title ?? 'this listing');
+
+            const reviewDraft = buildReviewDraft(reviewInputs[reservation.id]);
+            const isUploadingReview = Boolean(reviewUploading[reservation.id]);
 
           return (
               <div
@@ -806,6 +935,20 @@ const TripsClient: React.FC<TripsClientProps> = ({
                       <p className="text-sm text-neutral-700 italic px-6 mb-6">
                         “{submittedReviews[reservation.id].comment}”
                       </p>
+                      {submittedReviews[reservation.id].images?.length ? (
+                        <div className="grid grid-cols-3 gap-2 px-6 mb-4">
+                          {submittedReviews[reservation.id].images.map((img) => (
+                            <div key={img} className="relative h-20 w-20 overflow-hidden rounded-xl">
+                              <Image
+                                src={img}
+                                alt="Review attachment"
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
                     </>
                   ) : (
                     <>
@@ -818,7 +961,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
                               setReviewInputs((prev) => ({
                                 ...prev,
                                 [reservation.id]: {
-                                  ...prev[reservation.id],
+                                  ...buildReviewDraft(prev[reservation.id]),
                                   hoverRating: star,
                                 },
                               }))
@@ -827,7 +970,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
                               setReviewInputs((prev) => ({
                                 ...prev,
                                 [reservation.id]: {
-                                  ...prev[reservation.id],
+                                  ...buildReviewDraft(prev[reservation.id]),
                                   hoverRating: 0,
                                 },
                               }))
@@ -836,13 +979,13 @@ const TripsClient: React.FC<TripsClientProps> = ({
                               setReviewInputs((prev) => ({
                                 ...prev,
                                 [reservation.id]: {
-                                  ...prev[reservation.id],
+                                  ...buildReviewDraft(prev[reservation.id]),
                                   rating: star,
                                 },
                               }))
                             }
                             className={`cursor-pointer text-2xl transition-colors ${
-                              star <= (reviewInputs[reservation.id]?.hoverRating || reviewInputs[reservation.id]?.rating)
+                              star <= (reviewDraft.hoverRating || reviewDraft.rating)
                                 ? 'text-[#2200ffff]'
                                 : 'text-gray-300'
                             }`}
@@ -857,12 +1000,12 @@ const TripsClient: React.FC<TripsClientProps> = ({
                           rows={3}
                           placeholder="Write your review..."
                           className="w-full p-2 border border-neutral-300 rounded-xl mb-2"
-                          value={reviewInputs[reservation.id]?.comment || ''}
+                          value={reviewDraft.comment}
                           onChange={(e) =>
                             setReviewInputs((prev) => ({
                               ...prev,
                               [reservation.id]: {
-                                ...prev[reservation.id],
+                                ...buildReviewDraft(prev[reservation.id]),
                                 comment: e.target.value,
                               },
                             }))
@@ -870,9 +1013,61 @@ const TripsClient: React.FC<TripsClientProps> = ({
                         />
                       </div>
 
+                      <div className="flex flex-col gap-2 w-full max-w-sm mb-4">
+                        <label
+                          htmlFor={`review-images-${reservation.id}`}
+                          className="text-sm font-semibold text-neutral-800"
+                        >
+                          Add up to {REVIEW_MAX_IMAGES} images (max 2MB each)
+                        </label>
+                        <input
+                          id={`review-images-${reservation.id}`}
+                          type="file"
+                          accept="*/*"
+                          multiple
+                          className="hidden"
+                          onChange={(e) => handleReviewImageUpload(reservation.id, e.target.files)}
+                        />
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => document.getElementById(`review-images-${reservation.id}`)?.click()}
+                            className="px-4 py-2 bg-white border border-neutral-300 text-sm rounded-xl hover:bg-neutral-50 disabled:opacity-50"
+                            disabled={isUploadingReview}
+                          >
+                            {isUploadingReview ? 'Uploading…' : 'Upload images'}
+                          </button>
+                          <p className="text-xs text-neutral-500">Accepts any file format under 2MB.</p>
+                        </div>
+
+                        {reviewDraft.images?.length ? (
+                          <div className="grid grid-cols-3 gap-3">
+                            {reviewDraft.images?.map((img) => (
+                              <div key={img} className="relative h-20 w-20 overflow-hidden rounded-xl">
+                                <Image
+                                  src={img}
+                                  alt="Review upload"
+                                  fill
+                                  className="object-cover"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveReviewImage(reservation.id, img)}
+                                  className="absolute top-1 right-1 bg-white/90 text-black rounded-full px-1 text-xs shadow"
+                                  aria-label="Remove image"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
+
                       <button
                         onClick={() => handleReviewSubmit(reservation.id, reservation.listing.id)}
-                        className="px-4 py-2 mb-4 bg-black text-white text-sm rounded-xl hover:bg-neutral-800"
+                        className="px-4 py-2 mb-4 bg-black text-white text-sm rounded-xl hover:bg-neutral-800 disabled:opacity-50"
+                        disabled={isUploadingReview}
                       >
                         Submit Review
                       </button>
@@ -899,7 +1094,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
       </div>
 
       {/* Bottom-center filter dropdown – anchored to button center */}
-      <div className="fixed inset-x-0 bottom-4 z-40 flex justify-center pointer-events-none">
+      <div ref={filterWrapperRef} className="fixed inset-x-0 bottom-4 z-40 flex justify-center pointer-events-none">
         <div className="pointer-events-auto">
           {/* This wrapper is the ONLY relative parent for the dropup */}
           <div className="relative inline-flex items-center justify-center">
@@ -934,10 +1129,12 @@ const TripsClient: React.FC<TripsClientProps> = ({
                     activeKeyword={filterKeyword}
                     isLoading={isFilterLoading}
                     timeValue={selectedTime}
+                    isTimeEnabled={isTimeEnabled}
                     selectedYear={selectedYear}
                     yearOptions={yearOptions}
                     selectedMonth={selectedMonth}
                     onMonthChange={setSelectedMonth}
+                    onTimeToggle={setIsTimeEnabled}
                     onTimeChange={setSelectedTime}
                     onYearChange={setSelectedYear}
                     onFilter={async () => {

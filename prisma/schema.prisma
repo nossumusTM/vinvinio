@@ -247,7 +247,7 @@ model Payout {
   attachmentName String?
 
   user   User   @relation("UserPayout", fields: [userId], references: [id])
-  userId String @unique @db.ObjectId
+  userId String @db.ObjectId
 
   @@index([userId, kind])
 }
@@ -303,6 +303,7 @@ model Review {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   rating    Int
   comment   String
+  images    String[] @default([])
   createdAt DateTime @default(now())
 
   listingId String  @db.ObjectId

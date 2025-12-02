@@ -4,13 +4,40 @@ import { ListingStatus, ReservationStatus } from '@prisma/client';
 import getCurrentUser from '@/app/(marketplace)/actions/getCurrentUser';
 import prisma from '@/app/(marketplace)/libs/prismadb';
 
+import { MIN_PARTNER_COMMISSION } from '@/app/(marketplace)/constants/partner';
+
 export const dynamic = 'force-dynamic';
 
-const formatShortDate = (date: Date) =>
-  date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+const formatShortDate = (date: Date, includeYear = true) => {
+  const formatter = new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    ...(includeYear ? { year: 'numeric' } : {}),
+  });
 
-const formatDateRange = (start: Date, end: Date) =>
-  `${formatShortDate(start)} - ${formatShortDate(end)}`;
+  const parts = formatter.formatToParts(date).reduce<Record<string, string>>((acc, part) => {
+    if (part.type !== 'literal') {
+      acc[part.type] = part.value;
+    }
+    return acc;
+  }, {});
+
+  const { day = '', month = '', year = '' } = parts;
+
+  return includeYear ? `${day} ${month}, ${year}` : `${day} ${month}`;
+};
+
+const formatDateRange = (start: Date, end: Date) => {
+  if (start.toDateString() === end.toDateString()) {
+    return formatShortDate(start);
+  }
+
+  if (start.getFullYear() === end.getFullYear()) {
+    return `${formatShortDate(start, false)} - ${formatShortDate(end)}`;
+  }
+
+return `${formatShortDate(start)} - ${formatShortDate(end)}`;
+};
 
 const truncate = (value: string, maxLength: number) => {
   if (value.length <= maxLength) {
@@ -37,7 +64,8 @@ type NotificationType =
   | 'listing_revision_requested'
   | 'message_received'
   | 'review_received'
-  | 'payout_processed';
+  | 'payout_processed'
+  | 'referral_booking';
 
 type NotificationResponse = {
   id: string;
@@ -80,7 +108,16 @@ export async function GET(request: Request) {
   const fetchWindow = Math.min(limit * 3, 300);
 
   try {
-    const [hostReservations, guestReservations, listings, messages, reviews, payouts, dismissals] = await Promise.all([
+    const [
+      hostReservations,
+      guestReservations,
+      listings,
+      messages,
+      reviews,
+      payouts,
+      dismissals,
+      promoterAnalytics,
+    ] = await Promise.all([
       prisma.reservation.findMany({
         where: {
           listing: {
@@ -239,6 +276,17 @@ export async function GET(request: Request) {
           notificationId: true,
         },
       }),
+      currentUser.role === 'promoter'
+        ? prisma.referralAnalytics.findUnique({
+            where: { userId: currentUser.id },
+            select: {
+              totalBooks: true,
+              totalRevenue: true,
+              updatedAt: true,
+              createdAt: true,
+            },
+          })
+        : null,
     ]);
 
     const dismissedIds = new Set(dismissals.map((dismissal) => dismissal.notificationId));
@@ -455,6 +503,41 @@ export async function GET(request: Request) {
         },
       });
     });
+
+    if (promoterAnalytics && (promoterAnalytics.totalBooks ?? 0) > 0) {
+      const totalBookings = promoterAnalytics.totalBooks ?? 0;
+      const totalRevenue = promoterAnalytics.totalRevenue ?? 0;
+
+      // approximate "price of the booking" as per-booking revenue
+      const bookingPrice =
+        totalBookings > 0 ? totalRevenue / totalBookings : 0;
+
+      // promoter earns 10%
+      const promoterGain = bookingPrice * 0.1;
+
+      const createdAt = (
+        promoterAnalytics.updatedAt ?? promoterAnalytics.createdAt
+      ).toISOString();
+
+      const bookingLabel = `Referral booking: ${bookingPrice.toFixed(
+        2,
+      )} • Your gain: ${promoterGain.toFixed(2)}`;
+
+      pushNotification({
+        id: `referral-booking-${totalBookings}`,
+        type: 'referral_booking',
+        title: 'Referral booking received',
+        description: bookingLabel,
+        actor: null,
+        createdAt,
+        context: {
+          totalBookings,
+          bookingPrice,
+          promoterGain,
+          totalRevenue,
+        },
+      });
+    }
 
     notifications.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 

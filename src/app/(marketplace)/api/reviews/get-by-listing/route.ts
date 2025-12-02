@@ -62,6 +62,7 @@ export async function POST(req: Request) {
     const formatted = reviews.map((r) => ({
       rating: r.rating,
       comment: r.comment,
+      images: Array.isArray(r.images) ? r.images : [],
       userName: userMap[r.userId] || 'Anonymous',
       createdAt: r.createdAt,
     }));

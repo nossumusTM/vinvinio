@@ -45,6 +45,17 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
 
   const [now, setNow] = useState(() => new Date());
 
+  const formatDailyKey = (value: string | number | Date, mode: 'utc' | 'local' = 'utc') => {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+
+    const year = mode === 'utc' ? date.getUTCFullYear() : date.getFullYear();
+    const month = String((mode === 'utc' ? date.getUTCMonth() : date.getMonth()) + 1).padStart(2, '0');
+    const day = String(mode === 'utc' ? date.getUTCDate() : date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+  };
+
   useEffect(() => {
     const id = setInterval(() => {
       setNow(new Date());
@@ -187,20 +198,32 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
   // }, [roleLabel, hostShare]);
 
   const todaysProfitValue = useMemo(() => {
-    const todayStr = now.toDateString();
+    const todayKeyUtc = formatDailyKey(now, 'utc');
+    const todayKeyLocal = formatDailyKey(now, 'local');
+    if (!todayKeyUtc && !todayKeyLocal) return 0;
 
     // 1️⃣ Prefer computing from detailed dailyData
     if (Array.isArray(dailyData) && dailyData.length > 0) {
-      return dailyData.reduce((sum, entry) => {
-        const entryDate = new Date(entry.date);
-        if (Number.isNaN(entryDate.getTime())) return sum;
+     const computed = dailyData.reduce((sum, entry) => {
+        const entryKeyUtc = formatDailyKey(entry.date, 'utc');
+        const entryKeyLocal = formatDailyKey(entry.date, 'local');
+        if (
+          !entryKeyUtc &&
+          !entryKeyLocal
+        )
+          return sum;
 
-        if (entryDate.toDateString() === todayStr) {
-          // use total revenue * role-specific share
-          return sum + entry.amount * commissionMultiplier;
-        }
-        return sum;
+        const matchesToday =
+          (!!todayKeyUtc && entryKeyUtc === todayKeyUtc) ||
+          (!!todayKeyLocal && entryKeyLocal === todayKeyLocal);
+
+        if (!matchesToday) return sum;
+
+        // use total revenue * role-specific share
+        return sum + entry.amount * commissionMultiplier;
       }, 0);
+      
+      if (computed !== 0) return computed;
     }
 
     // 2️⃣ Fallback: if no dailyData, trust precomputed todaysProfit from backend
@@ -220,12 +243,12 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
   const isTouch = typeof window !== "undefined" &&
     window.matchMedia("(pointer: coarse)").matches;
 
-    console.log('[EarningsCard] view, totalEarnings, totalBase, hostShare =', {
-      view,
-      totalEarnings,
-      totalBase,
-      hostShare,
-    });
+    // console.log('[EarningsCard] view, totalEarnings, totalBase, hostShare =', {
+    //   view,
+    //   totalEarnings,
+    //   totalBase,
+    //   hostShare,
+    // });
 
   return (
     <Card className="w-full bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-all">
@@ -332,8 +355,8 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
                   key={type}
                   onClick={() => setView(type)}
                   whileTap={{ scale: 0.95 }}
-                  whileHover={{ y: -2 }}
-                  className={`rounded-full px-4 py-2 text-sm transition ${
+                  whileHover={{ y: -0.5 }}
+                  className={`rounded-xl px-4 py-2 text-sm transition ${
                     view === type
                       ? 'bg-black text-white'
                       : 'bg-neutral-100 text-gray-700 hover:bg-gray-200'

@@ -1424,14 +1424,18 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
         />
 
         <div className="pt-4">
-          <div className="h-64 md:h-80 w-full overflow-hidden rounded-xl border border-neutral-200">
-            <SearchMap
-              key={`map-${editingListing?.id ?? 'new'}-${location?.value ?? 'default'}`}
-              city={location?.city ?? 'Rome'}
-              country={location?.label ?? 'Italy'}
-              center={(location?.latlng as [number, number]) ?? ([41.9028, 12.4964] as [number, number])}
-              // className="h-full w-full"
-            />
+          <div className="relative w-full overflow-hidden rounded-2xl border border-neutral-200">
+            <div className="h-60 sm:h-64 md:h-72 lg:h-80">
+              <SearchMap
+                key={`map-${editingListing?.id ?? 'new'}-${location?.value ?? 'default'}`}
+                city={location?.city ?? 'Rome'}
+                country={location?.label ?? 'Italy'}
+                center={
+                  (location?.latlng as [number, number]) ??
+                  ([41.9028, 12.4964] as [number, number])
+                }
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -1464,7 +1468,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
 
   if (step === STEPS.INFO2) {
     bodyContent = (
-      <div className="flex flex-col gap-8 min-h-[40vh] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+      <div className="flex flex-col gap-8 min-h-[80vh] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
         <Heading title="Event logistics" subtitle="Duration and meeting point" />
         <div className="flex flex-col gap-2">
           <label className="text-md font-medium">How long is your experience?</label>
@@ -2145,18 +2149,18 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
                     type="button"
                     onClick={() => handleStepSelect(item.id)}
                     className={clsx(
-                      'flex w-full items-center gap-3 rounded-xl border bg-white/95 p-3 text-left shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-black/80',
+                      'flex w-full items-center gap-3 rounded-2xl border bg-white/95 p-3 text-left shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-black/80',
                       status === 'current' && 'border-black shadow-md',
-                      status === 'complete' && 'border-emerald-500 text-emerald-700 hover:border-emerald-400',
+                      status === 'complete' && 'border-black text-black hover:border-black-400',
                       status === 'upcoming' && 'border-neutral-200 text-neutral-400 hover:border-neutral-300'
                     )}
                     disabled={status === 'upcoming'}
                   >
                     <span
                       className={clsx(
-                        'flex h-9 w-9 items-center justify-center rounded-full border text-base',
+                        'flex h-9 w-9 items-center justify-center rounded-full text-base',
                         status === 'current' && 'border-black bg-black text-white',
-                        status === 'complete' && 'border-emerald-500 text-emerald-600',
+                        status === 'complete' && 'shadow-md text-black',
                         status === 'upcoming' && 'border-neutral-200 text-neutral-400'
                       )}
                     >
@@ -2193,7 +2197,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
                     className={clsx(
                       'flex min-w-[170px] flex-col items-start gap-2 rounded-2xl border bg-white px-4 py-3 text-left shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-black/80',
                       status === 'current' && 'border-black shadow-lg',
-                      status === 'complete' && 'border-emerald-500 text-emerald-700',
+                      status === 'complete' && 'border-black text-black',
                       status === 'upcoming' && 'border-neutral-200 text-neutral-400'
                     )}
                     disabled={status === 'upcoming'}
@@ -2202,7 +2206,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
                       className={clsx(
                         'flex h-9 w-9 items-center justify-center rounded-full border text-base',
                         status === 'current' && 'border-black bg-black text-white',
-                        status === 'complete' && 'border-emerald-500 text-emerald-600',
+                        status === 'complete' && 'border-black text-black',
                         status === 'upcoming' && 'border-neutral-200 text-neutral-400'
                       )}
                     >

@@ -259,6 +259,7 @@ const ListingHead: React.FC<ListingHeadProps> = ({
       comment: string; 
       userName: string;
       userImage?: string;
+      images?: string[];
       createdAt: string;
   }[]>([]);
 

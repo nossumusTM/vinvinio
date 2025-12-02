@@ -554,7 +554,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                 {userRole === 'host' && (
                   <>
                     <MenuItem
-                      label="Become a Partner"
+                      label="Become a Provider"
                       icon={<MdOutlineBusinessCenter size={24} />}
                       className="font-semibold text-neutral-900"
                       onClick={() => {

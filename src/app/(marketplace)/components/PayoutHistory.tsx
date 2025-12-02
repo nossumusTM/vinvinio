@@ -1,6 +1,6 @@
 import { useMemo, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { AiOutlineBell } from "react-icons/ai";
+import { AiOutlineBell, AiOutlineClose } from "react-icons/ai";
 
 export type PayoutRecord = {
   id: string;
@@ -158,7 +158,7 @@ const PayoutHistory: React.FC<PayoutHistoryProps> = ({
     <AnimatePresence>
       {open && (
         <>
-          <motion.div
+         <motion.div
             key="payout-history-backdrop"
             className="fixed inset-0 z-[100] flex min-h-[100vh] w-full items-start bg-black/30 p-3"
             initial={{ opacity: 0 }}
@@ -167,16 +167,17 @@ const PayoutHistory: React.FC<PayoutHistoryProps> = ({
             transition={{ duration: 0.2, ease: "easeInOut" }}
             onClick={onClose}
           />
-
+          
           <motion.aside
-            key="payout-history-panel"
-            initial={{ x: "100%", opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: "100%", opacity: 0 }}
-            transition={{ duration: 0.25, ease: "easeInOut" }}
-            className="fixed right-0 top-0 z-[101] m-[8px] flex h-[calc(100dvh-16px)] w-fit min-w-[360px] max-w-md flex-col rounded-3xl bg-white p-1.5 shadow-2xl"
-            onClick={(event) => event.stopPropagation()}
-          >
+              key="payout-history-panel"
+              initial={{ x: "100%", opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: "100%", opacity: 0 }}
+              transition={{ duration: 0.25, ease: "easeInOut" }}
+              className="fixed right-0 top-0 z-[101] m-[8px] flex h-[calc(100dvh-16px)] w-fit min-w-[360px] max-w-md flex-col rounded-3xl bg-white p-1.5 shadow-2xl"
+              onClick={(event) => event.stopPropagation()}
+            >
+
             <header className="border-b border-neutral-100 px-6 py-5">
               <div className="flex items-center justify-between gap-3">
                 <div>
@@ -186,9 +187,10 @@ const PayoutHistory: React.FC<PayoutHistoryProps> = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-full border border-neutral-200 px-3 py-1 text-xs font-semibold text-neutral-600 transition hover:text-neutral-900"
+                  className="rounded-full border border-neutral-200 p-2 text-neutral-500 transition hover:text-neutral-900"
+                  aria-label="Close payout history"
                 >
-                  Close
+                  <AiOutlineClose className="h-4 w-4" />
                 </button>
               </div>
 

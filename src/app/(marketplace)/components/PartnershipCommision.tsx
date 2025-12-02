@@ -5,6 +5,7 @@ import axios from "axios";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { AnimatePresence, motion } from "framer-motion";
+import toast from 'react-hot-toast';
 
 import {
   MAX_PARTNER_COMMISSION,
@@ -287,9 +288,9 @@ const PartnershipCommision: React.FC<PartnershipCommisionProps> = ({
   }, [effectiveLabel]);
 
   const handleToggle = useCallback(() => {
-    if (loading || noChangesLeft) return;
+    if (loading) return;
     setIsEditing(true);
-  }, [loading, noChangesLeft]);
+  }, [loading]);
 
   const handleSliderChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     const next = sanitizePartnerCommission(Number(event.target.value));
@@ -297,7 +298,19 @@ const PartnershipCommision: React.FC<PartnershipCommisionProps> = ({
   }, []);
 
   const handleSubmit = useCallback(async () => {
+    // console.log('[PartnershipCommision] submit clicked', {
+    //   hasHandler: !!onCommissionChange,
+    //   noChangesLeft,
+    //   draftCommission,
+    // });
+
     if (!onCommissionChange) {
+      setIsEditing(false);
+      return;
+    }
+
+    if (noChangesLeft) {
+      toast.error("You’ve reached your monthly commission change limit.");
       setIsEditing(false);
       return;
     }
@@ -308,10 +321,11 @@ const PartnershipCommision: React.FC<PartnershipCommisionProps> = ({
       setIsEditing(false);
     } catch (error) {
       console.error('[PartnershipCommision] failed to update commission', error);
+      toast.error("Unable to update commission. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
-  }, [draftCommission, onCommissionChange]);
+  }, [draftCommission, onCommissionChange, noChangesLeft]);
 
   const disableInteractions = loading || isSubmitting;
   const progressPercent = Math.round(commissionShare * 100);
@@ -385,7 +399,9 @@ const PartnershipCommision: React.FC<PartnershipCommisionProps> = ({
         <span className="font-semibold text-neutral-900">{effectivePlatformRelevance}%</span> platform relevance accumulated from your approved services.
       </p>
 
-      <div className="mt-6" onClick={(event) => event.stopPropagation()}>
+      <div 
+        className="mt-6"
+        onClick={(event) => event.stopPropagation()}>
         <div className="flex items-center justify-between text-xs font-medium text-neutral-500">
           <span>{minCommission}%</span>
           <span>{maxCommission}%</span>

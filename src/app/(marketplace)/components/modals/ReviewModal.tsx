@@ -15,6 +15,7 @@ interface ReviewsModalProps {
     comment: string;
     userName: string;
     userImage?: string;
+    images?: string[];
     createdAt: string;
   }[];
 }

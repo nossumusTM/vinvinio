@@ -246,14 +246,14 @@ const handleSubmit = async () => {
             referralId,
             });
 
-            if (scannedReferenceId) {
-            await axios.post('/api/analytics/update', {
-                referenceId: scannedReferenceId,
-                totalBooksIncrement: 1,
-                // totalRevenueIncrement: listingData.price * guests + serviceFee
-                totalRevenueIncrement: subtotal + serviceFee
-            });
-            }
+            // if (scannedReferenceId) {
+            // await axios.post('/api/analytics/update', {
+            //     referenceId: scannedReferenceId,
+            //     totalBooksIncrement: 1,
+            //     // totalRevenueIncrement: listingData.price * guests + serviceFee
+            //     totalRevenueIncrement: subtotal + serviceFee
+            // });
+            // }
 
             if (userCoupon) {
             try {
