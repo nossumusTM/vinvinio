@@ -1203,14 +1203,14 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
 
         <div className="flex flex-col gap-4 border-t border-neutral-100 bg-neutral-50 px-6 py-5 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-neutral-500">
-            <span>
+            {/* <span>
               {timelineLabel}: {timelineValue}
-            </span>
+            </span> */}
             <span>
               Category: {formattedCategories.length > 0 ? formattedCategories.join(', ') : '—'}
             </span>
             {noteMeta.timelineSource === 'updatedAt' && <span>Last update: {updatedAt}</span>}
-            {locationTypesDisplay && <span>Types: {locationTypesDisplay}</span>}
+            {/* {locationTypesDisplay && <span>Types: {locationTypesDisplay}</span>} */}
           </div>
           <div className="flex flex-wrap gap-3">
             <button
@@ -1374,7 +1374,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
       </section>
 
       <aside className="space-y-6 lg:col-span-4">
-        <div className="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-neutral-200/60">
+        {/* <div className="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-neutral-200/60">
           <h2 className="text-lg font-semibold mb-4">Withdraw for Promoter</h2>
           <input
             type="text"
@@ -1396,7 +1396,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
           >
             Withdraw
           </button>
-        </div>
+        </div> */}
 
          <div className="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-neutral-200/60">
             <h2 className="text-lg font-semibold mb-4">Payout for Promoter</h2>
@@ -1448,7 +1448,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
             </button>
           </div>
 
-        <div className="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-neutral-200/60">
+        {/* <div className="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-neutral-200/60">
           <h2 className="text-lg font-semibold mb-4">Withdraw for Host</h2>
           <input
             type="text"
@@ -1470,7 +1470,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
           >
             Withdraw
           </button>
-        </div>
+        </div> */}
 
         <div className="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-neutral-200/60">
           <h2 className="text-lg font-semibold mb-4">Payout for Host</h2>

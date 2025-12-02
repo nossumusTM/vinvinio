@@ -289,7 +289,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     }
   }, [value, onChange]);
 
-  return (
+   return (
     <div className="flex flex-col gap-4">
       <input
         type="file"
@@ -300,106 +300,113 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         onChange={(e) => handleFiles(e.target.files)}
       />
 
-      <div
-        onClick={() => inputRef.current?.click()}
-        className="
-          relative
-          cursor-pointer
-          hover:opacity-70
-          rounded-xl
-          transition
-          border-dashed 
-          border-2 
-          p-10 
-          border-neutral-300
-          flex
-          flex-col
-          justify-center
-          items-center
-          gap-4
-          text-neutral-600
-        "
-      >
-        <TbPhotoPlus size={50} />
-        <div className="font-semibold text-lg">Click to upload</div>
-        <p className="text-xs text-neutral-500">
-          Upload up to {maxImages} images and 1 video (max {maxVideoSizeMB}MB)
-        </p>
+      <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
+        {/* 🔼 Click to upload IN ALTO */}
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          className="
+            relative w-full cursor-pointer
+            rounded-xl border-2 border-dashed border-neutral-300
+            bg-neutral-50/80 px-4 py-6
+            text-center text-neutral-600
+            transition hover:border-neutral-400 hover:bg-neutral-50
+          "
+        >
+          <div className="flex flex-col items-center gap-3">
+            <TbPhotoPlus size={40} />
+            <div className="text-sm font-semibold">
+              Click to upload
+            </div>
+            <p className="text-[11px] text-neutral-500">
+              Upload up to {maxImages} images and 1 video (max{' '}
+              {maxVideoSizeMB}MB)
+            </p>
+          </div>
+        </button>
+
+        {/* 🔽 Immagini caricate SOTTO il pulsante */}
+        {Array.isArray(value) && value.length > 0 && (
+          <div
+            ref={previewRef}
+            className="mt-4 grid grid-cols-3 gap-3"
+          >
+            {value.map((url, idx) => {
+              if (typeof url !== 'string' || !url) return null;
+
+              const isVideo =
+                url.includes('.mp4') || url.includes('video');
+
+              return (
+                <div
+                  key={url}
+                  className="relative h-40 w-full overflow-hidden rounded-xl bg-neutral-100 shadow-lg shadow-neutral-300/60 transition-transform duration-300 hover:-translate-y-0.5"
+                >
+                  {isVideo ? (
+                    <video
+                      src={url}
+                      controls
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <Image
+                      src={url}
+                      alt={`upload-${idx}`}
+                      fill
+                      loading="lazy"
+                      onLoadingComplete={() =>
+                        setLoadedState((prev) => ({
+                          ...prev,
+                          [url]: true,
+                        }))
+                      }
+                      className={clsx(
+                        'object-cover transition-opacity duration-500 ease-out',
+                        loadedState[url]
+                          ? 'opacity-100'
+                          : 'opacity-0',
+                      )}
+                    />
+                  )}
+
+                  {idx === 0 && (
+                    <span className="absolute left-1 top-1 rounded bg-black px-2 py-0.5 text-xs text-white">
+                      Cover
+                    </span>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const updated = value.filter((v) => v !== url);
+                      onChange(updated);
+                      setLoadedState((prev) => {
+                        if (!(url in prev)) return prev;
+                        const next = { ...prev };
+                        delete next[url];
+                        return next;
+                      });
+                    }}
+                    className="absolute right-1 top-1 rounded-full bg-white px-2 text-black shadow hover:bg-neutral-100"
+                    aria-label="Remove"
+                  >
+                    ×
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {Array.isArray(value) && value.length > 0 && (
-        <div ref={previewRef} className="grid grid-cols-3 gap-3 mt-4">
-          {value.map((url, idx) => {
-            if (typeof url !== 'string' || !url) {
-              return null; // skip bad entries defensively
-            }
-
-            const isVideo = url.includes('.mp4') || url.includes('video');
-
-            return (
-              <div
-                key={url}
-                className="relative w-full h-40 overflow-hidden rounded-xl bg-neutral-100 shadow-lg shadow-neutral-300/60 transition-transform duration-300 hover:-translate-y-0.5"
-              >
-                {isVideo ? (
-                  <video
-                    src={url}
-                    controls
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <Image
-                    src={url}
-                    alt={`upload-${idx}`}
-                    fill
-                    loading="lazy"
-                    onLoadingComplete={() =>
-                      setLoadedState((prev) => ({ ...prev, [url]: true }))
-                    }
-                    className={clsx(
-                      'object-cover transition-opacity duration-500 ease-out',
-                      loadedState[url] ? 'opacity-100' : 'opacity-0'
-                    )}
-                  />
-                )}
-
-                {idx === 0 && (
-                  <span className="absolute top-1 left-1 bg-black text-white text-xs px-2 py-0.5 rounded">
-                    Cover
-                  </span>
-                )}
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    const updated = value.filter((v) => v !== url);
-                    onChange(updated);
-                    setLoadedState((prev) => {
-                      if (!(url in prev)) return prev;
-                      const next = { ...prev };
-                      delete next[url];
-                      return next;
-                    });
-                  }}
-                  className="absolute top-1 right-1 bg-white rounded-full text-black hover:bg-neutral-100 pl-2 pr-2 shadow"
-                  aria-label="Remove"
-                >
-                  ×
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
       {isUploading && (
-        <div className="flex justify-center items-center mt-4">
-          <span className="loader inline-block w-5 h-5 mt-1 border-2 border-t-transparent border-black rounded-full animate-spin" />
+        <div className="mt-2 flex items-center justify-center">
+          <span className="loader inline-block h-5 w-5 rounded-full border-2 border-black border-t-transparent animate-spin" />
         </div>
       )}
-
     </div>
   );
+
 };
 
 export default ImageUpload;

@@ -952,12 +952,33 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
       return onNext();
     }
 
+    // if (step === STEPS.IMAGES) {
+    //   if (!imageSrc || !Array.isArray(imageSrc) || imageSrc.length === 0) {
+    //     toast.error('Please upload at least one image or video.');
+    //     return;
+    //   }
+    //   return onNext();
+    // }
+
     if (step === STEPS.IMAGES) {
-      if (!imageSrc || !Array.isArray(imageSrc) || imageSrc.length === 0) {
-        toast.error('Please upload at least one image or video.');
-        return;
-      }
-      return onNext();
+      bodyContent = (
+        <div className="flex flex-col gap-6 max-h-[60vh] overflow-y-auto pr-1 pb-6">
+          <Heading
+            title="Upload photos and video"
+            subtitle="Display your content! Up to 10 images and 1 video (max 30MB)"
+          />
+
+          {/* Wrapper bianco per separare chiaramente media e pulsanti del modal */}
+          <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
+            <ImageUpload
+              maxImages={10}
+              maxVideoSizeMB={30}
+              value={imageSrc}
+              onChange={(value: string[]) => setCustomValue('imageSrc', value)}
+            />
+          </div>
+        </div>
+      );
     }
   
     if (step === STEPS.DESCRIPTION) {
@@ -2227,7 +2248,12 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
             </p>
           </header>
 
-          <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm sm:p-8">
+          <div
+            className={clsx(
+              'rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm sm:p-8',
+              step === STEPS.IMAGES ? 'h-screen' : 'h-fit'
+            )}
+          >
             <AnimatePresence mode="wait" initial={false} custom={direction}>
               <motion.div
                 key={step}                  // important: change on step

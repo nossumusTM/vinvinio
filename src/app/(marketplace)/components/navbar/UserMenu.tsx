@@ -357,7 +357,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
   <AiOutlineMenu strokeWidth={4}/>
 
   {/* Avatar visible only on md+ screens */}
-  <div className="hidden md:block shadow-xl rounded-full">
+  <div className="hidden md:block select-none shadow-xl rounded-full">
     {currentUser?.image ? (
       <Avatar src={currentUser.image} size={30}/>
     ) : (

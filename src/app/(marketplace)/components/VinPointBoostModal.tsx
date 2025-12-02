@@ -335,7 +335,7 @@ const VinPointBoostModal: React.FC<VinPointBoostModalProps> = ({
 
           <div className="space-y-4">
             <p className="text-sm text-neutral-600">
-              Boost listing <span className="font-semibold text-neutral-900">{listing.title}</span> by choosing your desired VIN POINT.
+              Boost listing <span className="font-semibold text-neutral-900">{listing.title}</span> by choosing your desired Vin point.
             </p>
 
             <div className="grid gap-4 rounded-3xl border border-neutral-200 bg-neutral-50/60 p-4">
@@ -369,12 +369,12 @@ const VinPointBoostModal: React.FC<VinPointBoostModalProps> = ({
                       <span className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
                         {effectivePunti}
                       </span>
-                      <div>
+                      {/* <div>
                         <p className="text-xs uppercase tracking-[0.2em] text-neutral-500">Result</p>
                             <p className="font-semibold text-neutral-900">
                                 You&rsquo;ve unlocked the Relevant volume: your services are now among the top-rated in your area.
                             </p>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 </>
@@ -429,7 +429,7 @@ const VinPointBoostModal: React.FC<VinPointBoostModalProps> = ({
                       }
                       className="w-full accent-neutral-900"
                     />
-                    <p className="text-xs text-neutral-500">Up to {MAX_PARTNER_POINT_VALUE} VIN POINT.</p>
+                    <p className="text-xs text-neutral-500">Up to {MAX_PARTNER_POINT_VALUE} Vin point.</p>
                   </div>
 
                   {/* bottom cards: current / increase / result */}
@@ -460,7 +460,7 @@ const VinPointBoostModal: React.FC<VinPointBoostModalProps> = ({
                         <p className="text-xs uppercase tracking-[0.2em] text-neutral-500">Result</p>
                         <p className="font-semibold text-neutral-900">
                           {vinvinScoreTarget === MAX_PARTNER_POINT_VALUE
-                            ? "You’ve unlocked the RELEVANT level – your services are now among the top-rated in your area."
+                            ? "Troppo high ;)"
                             : "New VIN POINT"}
                         </p>
                       </div>
@@ -525,7 +525,7 @@ const VinPointBoostModal: React.FC<VinPointBoostModalProps> = ({
                   <RiSecurePaymentLine className="h-5 w-5 text-neutral-900" />
                   <div>
                     <p className="font-semibold text-neutral-900">Secure payment</p>
-                    <p className="text-neutral-600">Complete your purchase to boost VIN POINT.</p>
+                    <p className="text-neutral-600">Complete your purchase to boost Vin point.</p>
                   </div>
                 </div>
 
@@ -533,7 +533,7 @@ const VinPointBoostModal: React.FC<VinPointBoostModalProps> = ({
                   <Elements stripe={stripePromise} options={{ clientSecret }}>
                     <VinvinPaymentForm
                       clientSecret={clientSecret}
-                      amountLabel={`${formattedVinvinAmount} to increase VIN POINT by ${vinvinPurchaseAmount}`}
+                      amountLabel={`${formattedVinvinAmount} to increase Vin point by ${vinvinPurchaseAmount}`}
                       onSuccess={handlePaymentSuccess}
                       onError={handlePaymentError}
                       registerSubmit={registerPaymentSubmit}

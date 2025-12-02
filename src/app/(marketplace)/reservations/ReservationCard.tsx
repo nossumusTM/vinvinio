@@ -232,19 +232,19 @@ const ReservationCard: React.FC<ReservationCardProps> = ({
 
         {/* Guest mode info */}
         {guestName === 'Guest' && (
-          <p className="mt-2 text-xs text-neutral-600">
+          <div className="flex flex-col items-center justify-center text-center gap-1 mt-2 text-xs text-neutral-600">
             Booked using guest mode
             {reservation.guestContact ? (
               <>
                 {', contact: '}
-                <span className="inline-block bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded">
+                <span className="inline-block bg-green-100 text-green-700 w-fit font-semibold px-2 py-0.5 rounded">
                   {reservation.guestContact}
                 </span>
               </>
             ) : (
               '.'
             )}
-          </p>
+          </div>
         )}
       </div>
 

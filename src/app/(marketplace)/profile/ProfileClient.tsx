@@ -12,6 +12,7 @@ import CryptoJS from 'crypto-js';
 import axios from "axios";
 import Cropper from 'react-easy-crop';
 import getCroppedImg from '@/app/(marketplace)/utils/cropImage';
+import { QRCodeCanvas } from 'qrcode.react';
 import CountrySelect from "../components/inputs/CountrySelect";
 import OnlyCountrySelect from "../components/OnlyCountrySelect";
 import useCountries from "@/app/(marketplace)/hooks/useCountries";
@@ -269,6 +270,21 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   const [phoneVerificationCode, setPhoneVerificationCode] = useState('');
   const [confirmingPhoneCode, setConfirmingPhoneCode] = useState(false);
   const [phoneVerificationError, setPhoneVerificationError] = useState<string | null>(null);
+  
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(Boolean(currentUser?.twoFactorEnabled));
+  const [twoFactorSecret, setTwoFactorSecret] = useState<string | null>(null);
+  const [twoFactorOtpAuthUrl, setTwoFactorOtpAuthUrl] = useState<string | null>(null);
+  const [twoFactorVerificationCode, setTwoFactorVerificationCode] = useState('');
+  const [twoFactorDisableCode, setTwoFactorDisableCode] = useState('');
+  const [twoFactorError, setTwoFactorError] = useState<string | null>(null);
+  const [twoFactorDisableError, setTwoFactorDisableError] = useState<string | null>(null);
+  const [twoFactorLoading, setTwoFactorLoading] = useState(false);
+  const [twoFactorConfirming, setTwoFactorConfirming] = useState(false);
+  const [twoFactorDisabling, setTwoFactorDisabling] = useState(false);
+  const [twoFactorConfirmedAt, setTwoFactorConfirmedAt] = useState<Date | null>(
+    currentUser?.twoFactorConfirmedAt ? new Date(currentUser.twoFactorConfirmedAt) : null,
+  );
+
   const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
   const [addressSuggestionsOpen, setAddressSuggestionsOpen] = useState(false);
   const [highlightedSuggestion, setHighlightedSuggestion] = useState(0);
@@ -1075,6 +1091,100 @@ const coverImage = useMemo(() => {
       }
     } finally {
       setConfirmingPhoneCode(false);
+    }
+  };
+
+  const startTwoFactorSetup = async () => {
+    setTwoFactorLoading(true);
+    setTwoFactorError(null);
+    setTwoFactorDisableError(null);
+    setTwoFactorVerificationCode('');
+
+    try {
+      const response = await axios.post('/api/users/two-factor/setup');
+      setTwoFactorSecret(response.data?.secret ?? null);
+      setTwoFactorOtpAuthUrl(response.data?.otpauthUrl ?? null);
+
+      if (!twoFactorEnabled) {
+        setTwoFactorConfirmedAt(null);
+      }
+
+      if (response.data?.secret) {
+        toast.success('Authenticator setup started. Scan the QR code to continue.', {
+          iconTheme: { primary: '#2200ffff', secondary: '#fff' },
+        });
+      }
+    } catch (error) {
+      console.error('Failed to start two-factor setup', error);
+      const message = axios.isAxiosError(error) ? error.response?.data?.error : null;
+      toast.error(message || 'Could not start two-factor authentication setup.');
+    } finally {
+      setTwoFactorLoading(false);
+    }
+  };
+
+  const verifyTwoFactorSetup = async () => {
+    const trimmedCode = twoFactorVerificationCode.trim();
+
+    if (!trimmedCode) {
+      setTwoFactorError('Enter the 6-digit code from your authenticator app.');
+      return;
+    }
+
+    setTwoFactorConfirming(true);
+    setTwoFactorError(null);
+
+    try {
+      await axios.post('/api/users/two-factor/verify', { code: trimmedCode });
+
+      setTwoFactorEnabled(true);
+      setTwoFactorConfirmedAt(new Date());
+      setTwoFactorSecret(null);
+      setTwoFactorOtpAuthUrl(null);
+      setTwoFactorVerificationCode('');
+
+      toast.success('Two-factor authentication enabled.', {
+        iconTheme: { primary: '#2200ffff', secondary: '#fff' },
+      });
+    } catch (error) {
+      console.error('Failed to verify two-factor setup', error);
+      const message = axios.isAxiosError(error) ? error.response?.data?.error : null;
+      setTwoFactorError(message || 'Invalid code. Please try again.');
+    } finally {
+      setTwoFactorConfirming(false);
+    }
+  };
+
+  const disableTwoFactor = async () => {
+    const trimmedCode = twoFactorDisableCode.trim();
+
+    if (!trimmedCode) {
+      setTwoFactorDisableError('Enter a current code to disable protection.');
+      return;
+    }
+
+    setTwoFactorDisableError(null);
+    setTwoFactorDisabling(true);
+
+    try {
+      await axios.post('/api/users/two-factor/disable', { code: trimmedCode });
+
+      setTwoFactorEnabled(false);
+      setTwoFactorSecret(null);
+      setTwoFactorOtpAuthUrl(null);
+      setTwoFactorConfirmedAt(null);
+      setTwoFactorDisableCode('');
+      setTwoFactorVerificationCode('');
+
+      toast.success('Two-factor authentication disabled.', {
+        iconTheme: { primary: '#2200ffff', secondary: '#fff' },
+      });
+    } catch (error) {
+      console.error('Failed to disable two-factor authentication', error);
+      const message = axios.isAxiosError(error) ? error.response?.data?.error : null;
+      setTwoFactorDisableError(message || 'Could not disable two-factor authentication.');
+    } finally {
+      setTwoFactorDisabling(false);
     }
   };
 
@@ -3958,13 +4068,165 @@ const coverImage = useMemo(() => {
                 </div>
 
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-neutral-700 md:text-base">Two-factor authentication</p>
-                    <span className="text-xs text-neutral-500 md:text-sm">Coming soon</span>
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-medium text-neutral-700 md:text-base">Two-factor authentication</p>
+                      <p className="text-xs text-neutral-500 md:text-sm">
+                        Add an extra layer of protection to keep your account secure.
+                      </p>
+                    </div>
+                    <span
+                      className={twMerge(
+                        'rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide',
+                        twoFactorEnabled ? 'bg-green-100 text-green-700' : 'bg-neutral-100 text-neutral-600',
+                      )}
+                    >
+                      {twoFactorEnabled ? 'Enabled' : 'Disabled'}
+                    </span>
                   </div>
-                  <p className="text-xs text-neutral-500 md:text-sm">
+
+                  <div className="space-y-4 rounded-xl border border-neutral-200 bg-neutral-50/60 p-4">
+                    {!twoFactorSecret && !twoFactorOtpAuthUrl && (
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="text-sm text-neutral-700">
+                          Start setup to generate a QR code for your authenticator app.
+                        </p>
+                        <motion.button
+                          whileTap={{ scale: 0.97 }}
+                          onClick={startTwoFactorSetup}
+                          disabled={twoFactorLoading}
+                          className={twMerge(
+                            'rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-neutral-800',
+                            twoFactorLoading && 'cursor-not-allowed opacity-70',
+                          )}
+                        >
+                          {twoFactorLoading ? 'Preparing…' : 'Set up authenticator'}
+                        </motion.button>
+                      </div>
+                    )}
+
+                    {twoFactorSecret && twoFactorOtpAuthUrl && (
+                      <div className="grid gap-4 md:grid-cols-[auto,1fr] md:items-start">
+                        <div className="flex flex-col items-center gap-2 rounded-xl bg-white p-3 shadow-sm">
+                          <QRCodeCanvas value={twoFactorOtpAuthUrl} size={156} />
+                          <p className="text-xs text-neutral-500">Scan with Google Authenticator, Authy, or 1Password.</p>
+                        </div>
+
+                        <div className="space-y-3">
+                          <div className="space-y-1">
+                            <p className="text-xs font-medium text-neutral-700">Can't scan the code? Enter this key:</p>
+                            <div className="break-all rounded-lg border border-neutral-200 bg-white px-3 py-2 font-mono text-sm text-neutral-800">
+                              {twoFactorSecret}
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-xs font-semibold uppercase tracking-wide text-neutral-600" htmlFor="twoFactorCode">
+                              Verification code
+                            </label>
+                            <input
+                              id="twoFactorCode"
+                              inputMode="numeric"
+                              autoComplete="one-time-code"
+                              pattern="[0-9]*"
+                              value={twoFactorVerificationCode}
+                              onChange={(event) => setTwoFactorVerificationCode(event.target.value)}
+                              className="w-full rounded-lg border border-neutral-200 px-4 py-3 text-sm shadow-sm transition focus:border-black focus:outline-none"
+                              placeholder="Enter the 6-digit code"
+                              disabled={twoFactorConfirming}
+                            />
+                            {twoFactorError && (
+                              <p className="text-xs text-rose-500">{twoFactorError}</p>
+                            )}
+                          </div>
+
+                          <div className="flex flex-wrap gap-3">
+                            <motion.button
+                              whileTap={{ scale: 0.97 }}
+                              onClick={verifyTwoFactorSetup}
+                              disabled={twoFactorConfirming}
+                              className={twMerge(
+                                'rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-neutral-800',
+                                twoFactorConfirming && 'cursor-not-allowed opacity-70',
+                              )}
+                            >
+                              {twoFactorConfirming ? 'Verifying…' : 'Verify & enable'}
+                            </motion.button>
+
+                            <button
+                              type="button"
+                              onClick={startTwoFactorSetup}
+                              disabled={twoFactorLoading}
+                              className={twMerge(
+                                'rounded-lg border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-700 transition hover:bg-white',
+                                twoFactorLoading && 'cursor-not-allowed opacity-70',
+                              )}
+                            >
+                              Regenerate code
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {twoFactorEnabled && (
+                      <div className="space-y-3">
+                        <p className="text-sm text-neutral-700">
+                          Two-factor authentication is active
+                          {twoFactorConfirmedAt ? ` since ${twoFactorConfirmedAt.toLocaleDateString()}.` : '.'}
+                        </p>
+
+                        <div className="space-y-2">
+                          <label className="text-xs font-semibold uppercase tracking-wide text-neutral-600" htmlFor="twoFactorDisable">
+                            To turn it off, enter a current code
+                          </label>
+                          <input
+                            id="twoFactorDisable"
+                            inputMode="numeric"
+                            autoComplete="one-time-code"
+                            pattern="[0-9]*"
+                            value={twoFactorDisableCode}
+                            onChange={(event) => setTwoFactorDisableCode(event.target.value)}
+                            className="w-full rounded-lg border border-neutral-200 px-4 py-3 text-sm shadow-sm transition focus:border-black focus:outline-none"
+                            placeholder="123 456"
+                            disabled={twoFactorDisabling}
+                          />
+                          {twoFactorDisableError && (
+                            <p className="text-xs text-rose-500">{twoFactorDisableError}</p>
+                          )}
+                        </div>
+
+                        <div className="flex flex-wrap gap-3">
+                          <motion.button
+                            whileTap={{ scale: 0.97 }}
+                            onClick={disableTwoFactor}
+                            disabled={twoFactorDisabling}
+                            className={twMerge(
+                              'rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-100',
+                              twoFactorDisabling && 'cursor-not-allowed opacity-70',
+                            )}
+                          >
+                            {twoFactorDisabling ? 'Disabling…' : 'Disable two-factor'}
+                          </motion.button>
+
+                          <button
+                            type="button"
+                            onClick={startTwoFactorSetup}
+                            disabled={twoFactorLoading}
+                            className={twMerge(
+                              'rounded-lg border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-700 transition hover:bg-white',
+                              twoFactorLoading && 'cursor-not-allowed opacity-70',
+                            )}
+                          >
+                            Refresh setup
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  {/* <p className="text-xs text-neutral-500 md:text-sm">
                     Add an extra layer of protection to keep your account secure.
-                  </p>
+                  </p> */}
                 </div>
 
                 <div className="space-y-3">

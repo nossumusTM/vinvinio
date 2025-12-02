@@ -129,6 +129,9 @@ type SafeUserStrict = Omit<
 
   passwordUpdatedAt: string | null;
 
+  twoFactorEnabled: boolean;
+  twoFactorConfirmedAt: Date | string | null;
+
   referenceId: string | null;
   favoriteIds: string[];
 

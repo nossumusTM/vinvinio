@@ -4,6 +4,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GithubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import { verifyTotp } from "@/app/(marketplace)/utils/totp";
 
 import prisma from "@/app/(marketplace)/libs/prismadb";
 
@@ -24,11 +25,13 @@ export const authOptions: AuthOptions = {
         identifier: { label: "identifier", type: "text" },
         password: { label: "password", type: "password" },
         method: { label: "method", type: "text" },
+        totpCode: { label: "totpCode", type: "text" },
       },
       async authorize(credentials) {
         const method = credentials?.method === 'phone' ? 'phone' : 'email';
         const identifier = credentials?.identifier?.trim();
         const password = credentials?.password;
+        const totpCode = credentials?.totpCode;
 
         if (!identifier || !password) {
           throw new Error("Invalid credentials");
@@ -67,6 +70,22 @@ export const authOptions: AuthOptions = {
 
         if (!isCorrectPassword) {
           throw new Error("Invalid credentials");
+        }
+
+        if (user.twoFactorEnabled) {
+          if (!user.twoFactorSecret) {
+            throw new Error("Two-factor authentication is misconfigured. Please contact support.");
+          }
+
+          if (!totpCode) {
+            throw new Error("Two-factor code required");
+          }
+
+          const isValidTotp = verifyTotp(totpCode, user.twoFactorSecret);
+
+          if (!isValidTotp) {
+            throw new Error("Invalid or expired two-factor code");
+          }
         }
 
         return user;

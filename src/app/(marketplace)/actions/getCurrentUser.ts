@@ -59,6 +59,8 @@ export default async function getCurrentUser(): Promise<SafeUser | null> {
         partnerCommissionChangeCount: true,
         partnerCommissionChangeWindowStart: true,
         allTimeBookingCount: true,
+        twoFactorEnabled: true,
+        twoFactorConfirmedAt: true,
       },
     });
 
@@ -111,6 +113,8 @@ export default async function getCurrentUser(): Promise<SafeUser | null> {
         user.partnerCommissionChangeWindowStart?.toISOString() || null,
       followersCount: typeof user.followersCount === 'number' ? user.followersCount : 0,
       allTimeBookingCount: typeof user.allTimeBookingCount === 'number' ? user.allTimeBookingCount : 0,
+      twoFactorEnabled: Boolean(user.twoFactorEnabled),
+      twoFactorConfirmedAt: user.twoFactorConfirmedAt?.toISOString() || null,
     };
   } catch (error) {
     console.error("getCurrentUser error:", error);

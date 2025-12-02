@@ -94,6 +94,11 @@ model User {
   phoneVerified    Boolean  @default(false)
   passwordUpdatedAt DateTime? @default(now())
 
+  twoFactorEnabled     Boolean   @default(false)
+  twoFactorSecret      String?
+  twoFactorTempSecret  String?
+  twoFactorConfirmedAt DateTime?
+
   isSuspended      Boolean  @default(false)
   suspendedAt      DateTime?
   socialCardVisibility Json?
