@@ -872,7 +872,7 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
 
               {/* Experiences / Reviews switcher */}
               <div className="w-full md:w-auto flex justify-center md:justify-end">
-                <div className="flex w-full md:w-auto rounded-full bg-neutral-50 p-1">
+                <div className="shadow-md flex w-full md:w-auto rounded-full bg-neutral-50 p-1">
                   {(['experiences', 'reviews'] as TabKey[]).map((tab) => {
                     const reviewCount = reviews.length;
                     const reviewLabel =

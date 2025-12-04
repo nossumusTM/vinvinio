@@ -109,7 +109,8 @@ const getUserFromIdentifier = async (identifier: string) => {
 
   conditions.push(
     { email: { equals: identifier, mode: Prisma.QueryMode.insensitive } },
-    { referenceId: identifier }
+    { referenceId: identifier },
+    { username: { equals: identifier, mode: Prisma.QueryMode.insensitive } }
   );
 
   return prisma.user.findFirst({
@@ -287,17 +288,12 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       userId: user.id,
+      userRole: user.role,
+      userEmail: user.email,
+      username: user.username,
+      referenceId: user.referenceId,
       totalBooks: analytics?.totalBooks || 0,
       totalRevenue: analytics?.totalRevenue || 0,
-      // partnerCommission: partnerMetrics.partnerCommission,
-      // punti: partnerMetrics.punti,
-      // puntiShare: partnerMetrics.puntiShare,
-      // puntiLabel: partnerMetrics.puntiLabel,
-      // breakdown: {
-      //   daily: mapToEntries(analytics?.dailyTotals),
-      //   monthly: mapToEntries(analytics?.monthlyTotals),
-      //   yearly: mapToEntries(analytics?.yearlyTotals),
-      // },
       partnerCommission: partnerCommission,
       punti,
       puntiShare,

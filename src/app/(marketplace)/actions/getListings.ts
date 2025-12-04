@@ -222,6 +222,17 @@ export default async function getListings(
         environments: Array.isArray(listing.environments) ? [...listing.environments] : [],
         activityForms: Array.isArray(listing.activityForms) ? [...listing.activityForms] : [],
         seoKeywords: Array.isArray(listing.seoKeywords) ? [...listing.seoKeywords] : [],
+        moderationNoteText:
+          typeof (listing as any).moderationNoteText === 'string'
+            ? ((listing as any).moderationNoteText as string)
+            : null,
+        moderationNoteAttachments: Array.isArray((listing as any).moderationNoteAttachments)
+          ? (listing as any).moderationNoteAttachments.map((item: any) => ({
+              name: typeof item?.name === 'string' ? item.name : null,
+              data: typeof item?.data === 'string' ? item.data : null,
+              url: typeof item?.url === 'string' ? item.url : null,
+            }))
+          : null,
         user: safeUser,
       };
 

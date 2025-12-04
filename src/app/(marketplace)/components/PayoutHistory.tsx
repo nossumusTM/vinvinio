@@ -167,7 +167,7 @@ const PayoutHistory: React.FC<PayoutHistoryProps> = ({
             transition={{ duration: 0.2, ease: "easeInOut" }}
             onClick={onClose}
           />
-          
+
           <motion.aside
               key="payout-history-panel"
               initial={{ x: "100%", opacity: 0 }}
@@ -211,7 +211,7 @@ const PayoutHistory: React.FC<PayoutHistoryProps> = ({
                 </div>
 
                 <div className="ml-auto flex items-center gap-2 rounded-full bg-neutral-50 px-3 py-2 text-[11px] font-semibold uppercase text-neutral-600">
-                  <span>All-time payouts ({currencySymbol})</span>
+                  <span>All-time ({currencySymbol})</span>
                   <span className="text-black">{totalPayoutLabel}</span>
                 </div>
               </div>

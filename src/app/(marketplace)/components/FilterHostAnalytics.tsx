@@ -87,7 +87,7 @@ const FilterHostAnalytics: React.FC<FilterHostAnalyticsProps> = ({
 
   return (
     <div className="flex flex-col gap-4 rounded-2xl bg-white p-4 shadow-md shadow-black/5">
-      <div className="flex flex-wrap gap-2">
+      <div className="justify-center items-center flex flex-wrap gap-2">
         {([
           ['day', 'Day'],
           ['month', 'Month'],

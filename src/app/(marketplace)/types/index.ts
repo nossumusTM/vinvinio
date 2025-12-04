@@ -195,6 +195,10 @@ export type SafeListing = Simplify<
     seoKeywords?: string[];
 
     availabilityRules?: ListingAvailabilityRules | null;
+
+    moderationNoteText?: string | null;
+    moderationNoteAttachments?: { name?: string | null; data?: string | null; url?: string | null }[] | null;
+    
     // Tolerate any current UI enum/union/string for pricing
     pricingType?: Pricingish;
 

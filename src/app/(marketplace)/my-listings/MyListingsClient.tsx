@@ -8,7 +8,7 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import clsx from 'clsx';
 import { format } from 'date-fns';
-import { FiClock, FiMapPin, FiUsers } from 'react-icons/fi';
+import { FiAlertCircle, FiClock, FiMapPin, FiPaperclip, FiUsers } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { FiEye, FiEyeOff } from "react-icons/fi";
@@ -387,6 +387,67 @@ const MyListingsClient: React.FC<MyListingsClientProps> = ({ listings, currentUs
               <p className="ml-1 text-sm leading-relaxed text-neutral-600 line-clamp-4 md:line-clamp-3">
                 {listing.description}
               </p>
+
+              {listing.status === 'rejected' && (
+                <div className="space-y-3 rounded-2xl border border-rose-200 bg-rose-50/70 p-4">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-rose-800">
+                    <FiAlertCircle className="h-5 w-5" />
+                    Moderator feedback
+                  </div>
+                  {listing.moderationNoteText ? (
+                    <p className="whitespace-pre-line text-sm text-neutral-800">{listing.moderationNoteText}</p>
+                  ) : (
+                    <p className="text-sm text-neutral-600">No detailed note was provided.</p>
+                  )}
+
+                  {Array.isArray(listing.moderationNoteAttachments) && listing.moderationNoteAttachments.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-600">Attachments</p>
+                      <div className="flex flex-wrap gap-3">
+                        {listing.moderationNoteAttachments.map((attachment, index) => {
+                          const src = attachment.data || attachment.url;
+                          const isImage = typeof src === 'string' && src.startsWith('data:image');
+                          return (
+                            <div
+                              key={`${listing.id}-note-${index}`}
+                              className="flex min-w-[160px] max-w-[220px] flex-1 items-center gap-2 rounded-xl bg-white px-3 py-2 text-xs font-semibold text-neutral-800 shadow-sm ring-1 ring-neutral-200"
+                            >
+                              {isImage && src ? (
+                                <div className="relative h-10 w-10 overflow-hidden rounded-lg bg-neutral-100 ring-1 ring-neutral-200">
+                                  <Image
+                                    src={src}
+                                    alt={attachment.name || 'Attachment preview'}
+                                    fill
+                                    className="object-cover"
+                                    unoptimized
+                                  />
+                                </div>
+                              ) : (
+                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-neutral-100 text-neutral-500 ring-1 ring-neutral-200">
+                                  <FiPaperclip size={16} />
+                                </div>
+                              )}
+                              <div className="min-w-0">
+                                <p className="truncate text-[11px] font-semibold text-neutral-900">{attachment.name || 'Attachment'}</p>
+                                {src && (
+                                  <a
+                                    href={src}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-[11px] font-semibold text-blue-600 underline"
+                                  >
+                                    View file
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="flex flex-col gap-3 sm:items-end">

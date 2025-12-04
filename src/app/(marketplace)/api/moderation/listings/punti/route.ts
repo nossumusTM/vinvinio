@@ -11,13 +11,13 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { listingId, punti } = await request.json();
+    const { listingId, punti, puntiToAdd } = await request.json();
 
     if (!listingId || typeof listingId !== "string") {
       return new NextResponse("Listing ID is required", { status: 400 });
     }
 
-    const puntiValue = Number(punti);
+    const puntiValue = Number(puntiToAdd ?? punti);
     if (!Number.isFinite(puntiValue)) {
       return new NextResponse("Invalid punti value", { status: 400 });
     }
@@ -28,12 +28,13 @@ export async function POST(request: Request) {
       message: "Listing punti updated",
       listingId: result.listingId,
       punti: result.punti,
+      puntiAdded: result.puntiAdded,
       userId: result.userId,
       metrics: result.metrics,
       maxPointValue: MAX_PARTNER_POINT_VALUE,
     });
   } catch (error: any) {
-    if (error?.code === "P2025") {
+    if (error?.code === "P2025" || error?.message === "Listing not found") {
       return new NextResponse("Listing not found", { status: 404 });
     }
 

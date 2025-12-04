@@ -22,9 +22,10 @@ export async function GET(
     const reservation = await prisma.reservation.findUnique({
       where: { id: reservationId },
       include: {
+        user: true,
         listing: {
-          select: {
-            userId: true, // ✅ Include host ID here
+          include: {
+            user: true,
           },
         },
       },

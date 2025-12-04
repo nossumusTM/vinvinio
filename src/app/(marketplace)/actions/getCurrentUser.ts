@@ -110,11 +110,11 @@ export default async function getCurrentUser(): Promise<SafeUser | null> {
           ? user.partnerCommissionChangeCount
           : 0,
       partnerCommissionChangeWindowStart:
-        user.partnerCommissionChangeWindowStart?.toISOString() || null,
+        user.partnerCommissionChangeWindowStart ?? null,
       followersCount: typeof user.followersCount === 'number' ? user.followersCount : 0,
       allTimeBookingCount: typeof user.allTimeBookingCount === 'number' ? user.allTimeBookingCount : 0,
       twoFactorEnabled: Boolean(user.twoFactorEnabled),
-      twoFactorConfirmedAt: user.twoFactorConfirmedAt?.toISOString() || null,
+      twoFactorConfirmedAt: user.twoFactorConfirmedAt ?? null,
     };
   } catch (error) {
     console.error("getCurrentUser error:", error);

@@ -172,6 +172,10 @@ model Listing {
   punti               Int            @default(0)
   likesCount          Int            @default(0)
   viewCount           Int           @default(0)   // 👈 ADD THIS
+
+  moderationNoteText        String?
+  moderationNoteAttachments Json?
+  
   availabilityRules   Json?
   user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   reservations        Reservation[]

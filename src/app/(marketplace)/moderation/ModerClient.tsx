@@ -84,6 +84,8 @@ const toTitleCase = (value: string) =>
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
 
+const formatJson = (value: any) => JSON.stringify(value, null, 2);
+
 interface Listing {
   id: string;
   title: string;
@@ -160,8 +162,15 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
 
   const [selectedReservationId, setSelectedReservationId] = useState('');
   const [hostLookup, setHostLookup] = useState('');
+
+  const [reservationLookupId, setReservationLookupId] = useState('');
+  const [reservationDetails, setReservationDetails] = useState<any>(null);
+  const [listingLookupId, setListingLookupId] = useState('');
+  const [listingDetails, setListingDetails] = useState<any>(null);
+  const [userLookup, setUserLookup] = useState('');
+
   const [promoterLookup, setPromoterLookup] = useState('');
-  const [hostAnalytics, setHostAnalytics] = useState<any>(null);
+  const [userAnalytics, setUserAnalytics] = useState<any>(null);
   const [promoterAnalytics, setPromoterAnalytics] = useState<any>(null);
   const { formatConverted } = useCurrencyFormatter();
 
@@ -205,6 +214,11 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
   const [showSuspendConfirmPopup, setShowSuspendConfirmPopup] = useState(false);
   const [puntiUpdate, setPuntiUpdate] = useState({ listingId: '', punti: '' });
   const [isUpdatingPunti, setIsUpdatingPunti] = useState(false);
+
+  const [puntiResult, setPuntiResult] = useState<{ added: number; total: number } | null>(null);
+  const [currentListingPunti, setCurrentListingPunti] = useState<number | null>(null);
+  const [isFetchingReservation, setIsFetchingReservation] = useState(false);
+  const [isFetchingListing, setIsFetchingListing] = useState(false);
 
   const openLightbox = (slides: string[], startIndex: number) => {
     if (!Array.isArray(slides) || slides.length === 0) return;
@@ -356,8 +370,43 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
     }
   }, [moderListingId, refreshListingsWithFilters]);
 
+  const resolveUserId = useCallback(
+    async (identifier: string, context: string) => {
+      const trimmed = identifier.trim();
+
+      if (!trimmed) {
+        toast.error(`Please provide a ${context}.`);
+        return null;
+      }
+
+      const looksLikeId = /^[0-9a-f]{24}$/i.test(trimmed);
+      if (looksLikeId) {
+        return trimmed;
+      }
+
+      try {
+        const response = await axios.get('/api/users/resolve', { params: { identifier: trimmed } });
+        const resolved = response.data?.userId;
+        if (typeof resolved === 'string' && resolved.trim()) {
+          return resolved.trim();
+        }
+        toast.error(`Could not resolve ${context}.`);
+        return null;
+      } catch (error) {
+        const message = axios.isAxiosError(error)
+          ? typeof error.response?.data === 'string'
+            ? error.response?.data
+            : (error.response?.data as { error?: string })?.error || `Unable to resolve ${context}.`
+          : `Unable to resolve ${context}.`;
+        toast.error(message);
+        return null;
+      }
+    },
+    [],
+  );
+
   const handleSuspendAccount = useCallback(async () => {
-    const userId = moderSuspendUserId.trim();
+    const userId = await resolveUserId(moderSuspendUserId, 'user');
 
     if (!userId) {
       toast.error('Please provide a user ID.');
@@ -385,7 +434,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
       setIsSuspendingUser(false);
       setShowSuspendConfirmPopup(false);
     }
-  }, [moderSuspendUserId]);
+  }, [moderSuspendUserId, resolveUserId]);
 
   const regionNames = useMemo(() => {
     try {
@@ -616,8 +665,11 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
     }
   };  
 
-  const handleWithdraw = async (userId: string) => {
-    if (!userId) return alert('Please provide a promoter userId');
+  const handleWithdraw = async (identifier: string) => {
+    const userId = await resolveUserId(identifier, 'promoter');
+
+    if (!userId) return;
+
     try {
       const res = await axios.post('/api/analytics/withdraw', { userId });
       toast.success(res.data.message, {
@@ -656,11 +708,15 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
     const numericAmount = Number(promoterPayoutAmount);
 
     if (!promoterUserId || !promoterPayoutAmount || Number.isNaN(numericAmount)) {
-      toast.error('Provide promoter userId and amount.');
+      toast.error('Provide promoter username/userId and amount.');
       return;
     }
 
     try {
+
+      const userId = await resolveUserId(promoterUserId, 'promoter');
+      if (!userId) return;
+
       const res = await axios.post('/api/analytics/payout', {
         userId: promoterUserId,
         amount: numericAmount,
@@ -686,8 +742,10 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
     }
   };
 
-  const handleWithdrawForHosts = async (userId: string) => {
-    if (!userId) return alert('Please provide a host userId');
+  const handleWithdrawForHosts = async (identifier: string) => {
+    const userId = await resolveUserId(identifier, 'host');
+    if (!userId) return;
+
     try {
       const res = await axios.post('/api/analytics/host/withdraw', { userId });
       toast.success(res.data.message, {
@@ -706,11 +764,15 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
     const numericAmount = Number(hostPayoutAmount);
 
     if (!hostUserId || !hostPayoutAmount || Number.isNaN(numericAmount)) {
-      toast.error('Provide host userId and amount.');
+      toast.error('Provide host username/userId and amount.');
       return;
     }
 
     try {
+
+      const userId = await resolveUserId(hostUserId, 'host');
+      if (!userId) return;
+      
       const res = await axios.post('/api/analytics/host/payout', {
         userId: hostUserId,
         amount: numericAmount,
@@ -736,9 +798,9 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
     }
   };
 
-  const handleHostAnalytics = async () => {
+  const handleUserAnalytics = async () => {
     try {
-      const res = await axios.post('/api/analytics/host/get', { identifier: hostLookup });
+      const res = await axios.post('/api/analytics/host/get', { identifier: userLookup });
       const payout = await axios.post('/api/users/get-payout-method', { identifier: res.data.userId });
 
       const data = res.data ?? {};
@@ -753,7 +815,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
         ? partnerCommissionValue
         : MIN_PARTNER_COMMISSION;
   
-      setHostAnalytics({
+      setUserAnalytics({
         // totalBooks: res.data.totalBooks,
         // totalRevenue: res.data.totalRevenue,
         totalBooks: Number(data.totalBooks ?? 0),
@@ -761,13 +823,20 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
         payoutMethod: payout?.data?.method || 'None',
         payoutNumber: payout?.data?.number || '',
         userId: data.userId || '',
+        userRole: data.userRole,
+        username: data.username,
+        userEmail: data.userEmail,
+        referenceId: data.referenceId,
         punti,
         puntiShare,
         partnerCommission,
         puntiLabel: typeof data.puntiLabel === 'string' ? data.puntiLabel : getPuntiLabel(punti),
+        platformRelevance: data.platformRelevance,
+        breakdown: data.breakdown,
+        currency: data.currency,
       });
     } catch (err) {
-      toast.error('Host not found or error fetching data');
+      toast.error('User not found or error fetching data');
     }
   };
   
@@ -789,6 +858,54 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
     }
   };  
 
+  const handleFetchReservationDetails = async () => {
+    const reservationId = reservationLookupId.trim();
+
+    if (!reservationId) {
+      toast.error('Please provide a reservation ID.');
+      return;
+    }
+
+    setIsFetchingReservation(true);
+    setReservationDetails(null);
+
+    try {
+      const res = await axios.get(`/api/reservations/${reservationId}`);
+      setReservationDetails(res.data);
+    } catch (error) {
+      const message = axios.isAxiosError(error)
+        ? error.response?.data || 'Could not fetch reservation.'
+        : 'Could not fetch reservation.';
+      toast.error(typeof message === 'string' ? message : 'Could not fetch reservation.');
+    } finally {
+      setIsFetchingReservation(false);
+    }
+  };
+
+  const handleFetchListingDetails = async () => {
+    const listingId = listingLookupId.trim();
+
+    if (!listingId) {
+      toast.error('Please provide a listing ID.');
+      return;
+    }
+
+    setIsFetchingListing(true);
+    setListingDetails(null);
+
+    try {
+      const res = await axios.get(`/api/listings/${listingId}`);
+      setListingDetails(res.data);
+    } catch (error) {
+      const message = axios.isAxiosError(error)
+        ? error.response?.data || 'Could not fetch listing.'
+        : 'Could not fetch listing.';
+      toast.error(typeof message === 'string' ? message : 'Could not fetch listing.');
+    } finally {
+      setIsFetchingListing(false);
+    }
+  };
+
   const handlePuntiUpdate = async () => {
     const listingId = puntiUpdate.listingId.trim();
 
@@ -803,33 +920,59 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
       return;
     }
 
-    if (puntiValue < 0 || puntiValue > MAX_PARTNER_POINT_VALUE) {
-      toast.error(`Punti must be between 0 and ${MAX_PARTNER_POINT_VALUE}.`);
+    const puntiToAddRequested = Math.max(0, Math.floor(puntiValue));
+
+    if (puntiToAddRequested <= 0) {
+      toast.error('Enter a punti amount greater than 0 to add.');
       return;
     }
 
     setIsUpdatingPunti(true);
+    setPuntiResult(null);
 
     try {
+
+      const listingResponse = await axios.get(`/api/listings/${listingId}`);
+      const existingPunti = Number(listingResponse.data?.punti);
+      const currentPunti = Number.isFinite(existingPunti)
+        ? Math.max(0, Math.floor(existingPunti))
+        : 0;
+
+      setCurrentListingPunti(currentPunti);
+
+      const availableToAdd = Math.max(0, MAX_PARTNER_POINT_VALUE - currentPunti);
+
+      if (availableToAdd <= 0) {
+        toast('Listing is already at the maximum punti.');
+        setPuntiResult({ added: 0, total: currentPunti });
+        return;
+      }
+
+      const puntiToAdd = Math.min(puntiToAddRequested, availableToAdd);
+
       const response = await axios.post('/api/moderation/listings/punti', {
         listingId,
-        punti: puntiValue,
+        puntiToAdd
       });
 
-      toast.success('Listing punti updated.', {
-        iconTheme: {
-          primary: '#2200ffff',
-          secondary: '#fff',
-        },
-      });
+      const puntiAdded = Number.isFinite(Number(response.data?.puntiAdded))
+        ? Number(response.data.puntiAdded)
+        : puntiToAdd;
+      const updatedTotal = Number.isFinite(Number(response.data?.punti))
+        ? Number(response.data.punti)
+        : Math.min(MAX_PARTNER_POINT_VALUE, currentPunti + puntiAdded);
 
-      setPuntiUpdate({ listingId: '', punti: '' });
+      toast.success(`Added ${puntiAdded} punti to the listing.`);
+
+      setPuntiResult({ added: puntiAdded, total: updatedTotal });
+      setCurrentListingPunti(updatedTotal);
+      setPuntiUpdate((prev) => ({ ...prev, punti: '' }));
 
       const metrics = response.data?.metrics;
       const userId = response.data?.userId;
 
-      if (metrics && userId && hostAnalytics?.userId === userId) {
-        setHostAnalytics((prev: any) => {
+      if (metrics && userId && userAnalytics?.userId === userId) {
+        setUserAnalytics((prev: any) => {
           if (!prev) return prev;
 
           const updatedPunti = Number(metrics.punti);
@@ -866,8 +1009,14 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
 
   const puntiNumeric = Number(puntiUpdate.punti);
   const puntiPreview = Number.isFinite(puntiNumeric) ? puntiNumeric : 0;
-  const safePuntiPreview = Math.max(0, Math.min(MAX_PARTNER_POINT_VALUE, Math.round(puntiPreview)));
-  const commissionPreview = computePartnerCommission(safePuntiPreview);
+  const availablePuntiToAdd =
+    currentListingPunti === null
+      ? MAX_PARTNER_POINT_VALUE
+      : Math.max(0, MAX_PARTNER_POINT_VALUE - currentListingPunti);
+  const safePuntiPreview = Math.max(
+    0,
+    Math.min(availablePuntiToAdd || MAX_PARTNER_POINT_VALUE, Math.round(puntiPreview)),
+  );
 
   useEffect(() => {
     if (currentUser?.role === 'moder') {
@@ -1257,17 +1406,38 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
                 Track new submissions and revision requests in one place.
               </p>
             </div>
-            <div className="flex items-center gap-3 text-sm text-neutral-600">
-              <span className="rounded-full bg-neutral-900/5 px-3 py-1 font-semibold text-neutral-800">
-                Pending: {pendingListings.length}
-              </span>
-            <span className="rounded-full bg-neutral-900/5 px-3 py-1 font-semibold text-neutral-800">
-              Revision: {revisionListings.length}
-            </span>
-            <span className="rounded-full bg-neutral-900/5 px-3 py-1 font-semibold text-neutral-800">
-              Re-approval: {awaitingReapprovalListings.length}
-            </span>
-          </div>
+           <div className="flex flex-col items-end gap-3 text-sm text-neutral-600 sm:flex-row sm:items-center">
+              <div className="flex items-center gap-3">
+                {/* <span className="rounded-full bg-neutral-900/5 px-3 py-1 font-semibold text-neutral-800">
+                  Pending: {pendingListings.length}
+                </span>
+                <span className="rounded-full bg-neutral-900/5 px-3 py-1 font-semibold text-neutral-800">
+                  Revision: {revisionListings.length}
+                </span>
+                <span className="rounded-full bg-neutral-900/5 px-3 py-1 font-semibold text-neutral-800">
+                  Re-approval: {awaitingReapprovalListings.length}
+                </span> */}
+              </div>
+              <button
+                type="button"
+                onClick={() => router.push('/moderation-queue')}
+                className="inline-flex items-center gap-2 rounded-full border border-neutral-300 bg-white px-4 py-2 font-semibold text-neutral-800 shadow-sm transition hover:border-neutral-500 hover:text-neutral-900"
+              >
+                <span className="text-xs">Open queue page</span>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-4 w-4"
+                  aria-hidden="true"
+                >
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-end">
@@ -1402,7 +1572,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
             <h2 className="text-lg font-semibold mb-4">Payout for Promoter</h2>
             <input
               type="text"
-              placeholder="Enter Promoter userId"
+              placeholder="Enter Promoter username or userId"
               value={promoterUserId}
               onChange={(e) => setPromoterUserId(e.target.value)}
               className="w-full rounded-xl border border-neutral-200 p-2 text-sm text-neutral-700"
@@ -1436,7 +1606,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
             <button
               onClick={() => {
                 if (!promoterUserId.trim() || !promoterPayoutAmount.trim()) {
-                  toast.error('Please provide a promoter userId and amount.');
+                  toast.error('Please provide a promoter username/userId and amount.');
                   return;
                 }
                 setShowPromoterPayoutConfirm(true);
@@ -1476,7 +1646,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
           <h2 className="text-lg font-semibold mb-4">Payout for Host</h2>
           <input
             type="text"
-            placeholder="Enter Host userId"
+            placeholder="Enter Host username or userId"
             value={hostUserId}
             onChange={(e) => setHostUserId(e.target.value)}
             className="w-full rounded-xl border border-neutral-200 p-2 text-sm text-neutral-700"
@@ -1508,7 +1678,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
           <button
             onClick={() => {
               if (!hostUserId.trim() || !hostPayoutAmount.trim()) {
-                toast.error('Please provide a host userId and amount.');
+                toast.error('Please provide a host username/userId and amount.');
                 return;
               }
               setShowHostPayoutConfirm(true);
@@ -1545,39 +1715,110 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
         </div>
 
         {/* Host Lookup */}
+      <div className="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-neutral-200/60">
+          <h3 className="text-lg font-semibold mb-4">Get Full Reservation Data</h3>
+          <p className="text-sm text-neutral-600">Lookup any reservation and inspect its stored details.</p>
+          <input
+            type="text"
+            placeholder="Enter reservationId"
+            value={reservationLookupId}
+            onChange={(event) => setReservationLookupId(event.target.value)}
+            className="mt-2 w-full rounded-xl border border-neutral-200 p-2 text-sm text-neutral-700"
+          />
+          <button
+            onClick={handleFetchReservationDetails}
+            disabled={isFetchingReservation}
+            className="mt-3 w-full rounded-xl bg-neutral-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isFetchingReservation ? 'Fetching…' : 'Fetch Reservation'}
+          </button>
+          {reservationDetails && (
+            <pre className="mt-3 max-h-72 overflow-auto whitespace-pre-wrap rounded-xl bg-neutral-50 p-3 text-xs text-neutral-800">
+              {formatJson(reservationDetails)}
+            </pre>
+          )}
+        </div>
+
+        <div className="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-neutral-200/60">
+          <h3 className="text-lg font-semibold mb-4">Get Full Listing Data</h3>
+          <p className="text-sm text-neutral-600">Fetch the latest listing payload, including its host details.</p>
+          <input
+            type="text"
+            placeholder="Enter listingId"
+            value={listingLookupId}
+            onChange={(event) => setListingLookupId(event.target.value)}
+            className="mt-2 w-full rounded-xl border border-neutral-200 p-2 text-sm text-neutral-700"
+          />
+          <button
+            onClick={handleFetchListingDetails}
+            disabled={isFetchingListing}
+            className="mt-3 w-full rounded-xl bg-neutral-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isFetchingListing ? 'Fetching…' : 'Fetch Listing'}
+          </button>
+          {listingDetails && (
+            <pre className="mt-3 max-h-72 overflow-auto whitespace-pre-wrap rounded-xl bg-neutral-50 p-3 text-xs text-neutral-800">
+              {formatJson(listingDetails)}
+            </pre>
+          )}
+        </div>
+
+      {/* User Lookup */}
       <div className="bg-white p-6 rounded-xl shadow-lg space-y-4">
-        <h2 className="text-lg font-bold text-black">Host Analytics Lookup</h2>
+        <h2 className="text-lg font-bold text-black">User Analytics Lookup</h2>
         <input
           type="text"
-          placeholder="Enter Host userId or Email"
-          value={hostLookup}
-          onChange={(e) => setHostLookup(e.target.value)}
+          placeholder="Enter username, userId, or email"
+          value={userLookup}
+          onChange={(e) => setUserLookup(e.target.value)}
           className="w-full p-2 border rounded-xl"
         />
         <button
-          onClick={handleHostAnalytics}
+          onClick={handleUserAnalytics}
           className="w-full py-2 bg-neutral-200 text-black rounded-xl hover:bg-neutral-100 transition"
         >
-          Fetch Host Data
+          Fetch User Data
         </button>
-        {hostAnalytics && (
+
+        {userAnalytics && (
           <div className="text-sm text-neutral-700 space-y-1">
-            <p><strong>User ID:</strong> {hostAnalytics.userId}</p>
-            <p><strong>Total Bookings:</strong> {hostAnalytics.totalBooks}</p>
-            <p><strong>Total Revenue:</strong> {formatConverted(hostAnalytics.totalRevenue)}</p>
-            <p><strong>Payout Method:</strong> {hostAnalytics.payoutMethod.toUpperCase()}</p>
-            <p><strong>Payout Number:</strong> {hostAnalytics.payoutNumber}</p>
-            <p><strong>Partner Commission:</strong> {Math.round(hostAnalytics.partnerCommission ?? MIN_PARTNER_COMMISSION)}%</p>
+            
+            <p><strong>User ID:</strong> {userAnalytics.userId}</p>
+            {userAnalytics.username && <p><strong>Username:</strong> {userAnalytics.username}</p>}
+            {userAnalytics.userEmail && <p><strong>Email:</strong> {userAnalytics.userEmail}</p>}
+            {userAnalytics.referenceId && <p><strong>Reference ID:</strong> {userAnalytics.referenceId}</p>}
+            {userAnalytics.userRole && <p><strong>Role:</strong> {userAnalytics.userRole}</p>}
+            <p><strong>Total Bookings:</strong> {userAnalytics.totalBooks}</p>
+            <p><strong>Total Revenue:</strong> {formatConverted(userAnalytics.totalRevenue)}</p>
+            <p><strong>Payout Method:</strong> {userAnalytics.payoutMethod.toUpperCase()}</p>
+            <p><strong>Payout Number:</strong> {userAnalytics.payoutNumber}</p>
+            <p><strong>Partner Commission:</strong> {Math.round(userAnalytics.partnerCommission ?? MIN_PARTNER_COMMISSION)}%</p>
             <p>
-              <strong>VinVin Score:</strong> {Math.round(hostAnalytics.punti ?? 0)} / {MAX_PARTNER_POINT_VALUE}
-              {hostAnalytics.puntiLabel ? ` (${hostAnalytics.puntiLabel})` : ''}
+              <strong>VinVin Score:</strong> {Math.round(userAnalytics.punti ?? 0)} / {MAX_PARTNER_POINT_VALUE}
+              {userAnalytics.puntiLabel ? ` (${userAnalytics.puntiLabel})` : ''}
             </p>
             <p>
-              <strong>Relevance:</strong> {formatPuntiPercentage(hostAnalytics.puntiShare ?? 0)}
+              <strong>Relevance:</strong> {formatPuntiPercentage(userAnalytics.puntiShare ?? 0)}
             </p>
+            {typeof userAnalytics.platformRelevance === 'number' && (
+              <p><strong>Platform Relevance:</strong> {formatPuntiPercentage(userAnalytics.platformRelevance)}</p>
+            )}
+            {userAnalytics.breakdown && (
+              <div className="space-y-1">
+                <p className="font-semibold">Breakdown</p>
+                <p>Daily entries: {userAnalytics.breakdown.daily?.length ?? 0}</p>
+                <p>Monthly entries: {userAnalytics.breakdown.monthly?.length ?? 0}</p>
+                <p>Yearly entries: {userAnalytics.breakdown.yearly?.length ?? 0}</p>
+              </div>
+            )}
+            {userAnalytics.currency && (
+              <p><strong>Currency:</strong> {userAnalytics.currency}</p>
+            )}
           </div>
         )}
       </div>
+
+
       </aside>
     </div>
 
@@ -1586,20 +1827,33 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
       <div className="bg-white p-6 rounded-xl shadow-lg space-y-4">
           <h2 className="text-lg font-bold text-black">Adjust Listing Punti</h2>
           <p className="text-sm text-neutral-600">
-            Tune a listing&apos;s VinVin score (0 – {MAX_PARTNER_POINT_VALUE}). Host commission updates instantly.
+            Add punti to a listing without changing host commission. Additions are capped at {MAX_PARTNER_POINT_VALUE}{' '}
+            punti per listing.
           </p>
           <input
             type="text"
             placeholder="Enter listingId"
             value={puntiUpdate.listingId}
-            onChange={(event) => setPuntiUpdate((prev) => ({ ...prev, listingId: event.target.value }))}
+            onChange={(event) => {
+              setPuntiUpdate((prev) => ({ ...prev, listingId: event.target.value }));
+              setCurrentListingPunti(null);
+              setPuntiResult(null);
+            }}
             className="w-full p-2 border rounded-xl"
           />
+
+          <div className="text-xs text-neutral-600 space-y-1">
+            <p>
+              Current punti: {currentListingPunti === null ? '— (fetched on add)' : `${currentListingPunti} / ${MAX_PARTNER_POINT_VALUE}`}
+            </p>
+            <p>Available to add now: {availablePuntiToAdd}</p>
+          </div>
+
           <div className="space-y-3">
             <input
               type="number"
               min={0}
-              max={MAX_PARTNER_POINT_VALUE}
+              max={availablePuntiToAdd || MAX_PARTNER_POINT_VALUE}
               value={puntiUpdate.punti}
               onChange={(event) => setPuntiUpdate((prev) => ({ ...prev, punti: event.target.value }))}
               className="w-full p-2 border rounded-xl"
@@ -1617,15 +1871,21 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
             />
           </div>
           <div className="flex items-center justify-between text-xs font-semibold text-neutral-600">
-            <span>{safePuntiPreview} punti</span>
-            <span>{commissionPreview}% commission</span>
+            <span>Pending add: {safePuntiPreview} punti</span>
+            <span>Listing cap: {MAX_PARTNER_POINT_VALUE} punti</span>
           </div>
+          {puntiResult && (
+            <div className="rounded-lg bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800">
+              <p>Added {puntiResult.added} punti.</p>
+              <p>Listing total: {puntiResult.total} / {MAX_PARTNER_POINT_VALUE}.</p>
+            </div>
+          )}
           <button
             onClick={handlePuntiUpdate}
             disabled={isUpdatingPunti}
             className="w-full py-2 bg-neutral-900 text-white rounded-xl shadow-md hover:shadow-lg transition disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isUpdatingPunti ? 'Updating…' : 'Update punti'}
+            {isUpdatingPunti ? 'Adding…' : 'Add punti'}
           </button>
         </div>
       </div>
@@ -1662,23 +1922,24 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
       <div className="bg-white p-6 rounded-xl shadow-lg space-y-4">
         <h2 className="text-lg font-bold text-black">Account Suspension Tool</h2>
         <p className="text-sm text-neutral-600">
-          Suspend a user account by providing their user ID. Suspended users will see a suspension label on their profile.
+          Suspend a user account by providing their username or user ID. Suspended users will see a suspension label on their
+          profile.
         </p>
         <input
           type="text"
-          placeholder="Enter userId"
+          placeholder="Enter username or userId"
           value={moderSuspendUserId}
           onChange={(event) => setModerSuspendUserId(event.target.value)}
           className="w-full p-2 border rounded-xl"
         />
         <button
           onClick={() => {
-            if (!moderSuspendUserId.trim()) {
-              toast.error('Please provide a user ID.');
-              return;
-            }
-            setShowSuspendConfirmPopup(true);
-          }}
+                if (!moderSuspendUserId.trim()) {
+                  toast.error('Please provide a username or user ID.');
+                  return;
+                }
+                setShowSuspendConfirmPopup(true);
+            }}
           disabled={isSuspendingUser}
           className="w-full py-2 bg-neutral-900 text-white rounded-xl shadow-md hover:shadow-lg transition disabled:cursor-not-allowed disabled:opacity-60"
         >

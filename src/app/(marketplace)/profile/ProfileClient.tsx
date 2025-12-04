@@ -38,6 +38,7 @@ import { FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
 import Avatar from "../components/Avatar";
 import NextImage from 'next/image';
 import CoverImageUploader from "../components/CoverImageUploader";
+import { LuArrowUpRight, LuCalendarDays, LuMapPin, LuUsers } from 'react-icons/lu';
 import { HiMiniArrowLeft } from 'react-icons/hi2';
 import {
   MAX_PARTNER_COMMISSION,
@@ -3246,6 +3247,20 @@ const coverImage = useMemo(() => {
     }
   };
 
+  useEffect(() => {
+    const notificationType = searchParams?.get('notification');
+
+    if (!notificationType) return;
+
+    // when coming from a payout notification, just open the history aside
+    if (
+      notificationType === 'payout_processed' &&
+      (currentUser.role === 'host' || currentUser.role === 'promoter')
+    ) {
+      setShowPayoutHistory(true);
+    }
+  }, [searchParams, currentUser.role]);
+
   return (
     <Container className="py-10">
       <motion.div
@@ -5120,9 +5135,10 @@ const coverImage = useMemo(() => {
                     <button
                       type="button"
                       onClick={() => setShowPayoutHistory(true)}
-                      className="inline-flex items-center text-black underline underline-offset-4 transition hover:opacity-80"
+                      className="inline-flex items-center gap-1 text-black underline underline-offset-4 transition hover:opacity-80"
                     >
-                      here
+                      <span>here</span>
+                      <LuArrowUpRight className="h-3 w-3" />
                     </button>
                     .
                   </p>
@@ -5358,7 +5374,7 @@ const coverImage = useMemo(() => {
                 </div>
 
                 <div className="rounded-2xl bg-white p-6 shadow-md transition hover:shadow-lg">
-                  <p className="text-lg font-semibold text-neutral-900">Withdrawal Method</p>
+                  <p className="text-lg font-semibold text-neutral-900">Transfer Method</p>
                   <p className="mt-2 text-sm text-neutral-600 md:text-base">
                     Deposits processed twice per month. You can check your payout history{' '}
                     <button
@@ -5373,7 +5389,7 @@ const coverImage = useMemo(() => {
 
                   {savedPayout ? (
                     <div
-                      className="relative mt-6 h-56 w-full max-w-sm cursor-pointer perspective"
+                      className="relative mt-6 h-56 w-[340px] mx-auto cursor-pointer perspective"
                       onClick={() => setIsFlipped((prev) => !prev)}
                     >
                       <div
@@ -5381,48 +5397,92 @@ const coverImage = useMemo(() => {
                           isFlipped ? 'rotate-y-180' : ''
                         }`}
                       >
-                        <div className="absolute flex h-full w-full items-center justify-center rounded-2xl bg-gradient-to-br from-gray-800 to-gray-900 text-white backface-hidden">
-                          <Image
-                            src={
-                              savedPayout.method === 'paypal'
-                                ? '/images/paypal.png'
-                                : savedPayout.method === 'iban'
-                                ? '/images/iban.png'
-                                : savedPayout.method === 'revolut'
-                                ? '/images/revolut.png'
-                                : savedPayout.method === 'card' &&
-                                  savedPayout.number?.replace(/\D/g, '').startsWith('4')
-                                ? '/images/Visa.png'
-                                : savedPayout.method === 'card' &&
-                                  savedPayout.number?.replace(/\D/g, '').startsWith('5')
-                                ? '/images/MasterCard.png'
-                                : savedPayout.method === 'card' &&
-                                  savedPayout.number?.replace(/\D/g, '').startsWith('3')
-                                ? '/images/americanexpress.png'
-                                : '/images/card.png'
-                            }
-                            alt={savedPayout.method}
-                            className="h-auto w-24 object-contain"
-                            width={64}
-                            height={32}
-                          />
+                        {/* FRONT — chrome styled card */}
+                        <div className="absolute h-full w-full rounded-2xl backface-hidden overflow-hidden shadow-[0_20px_45px_rgba(0,0,0,0.45)]">
+                          {/* base metallic gradient */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-[#111827] via-[#4b5563] to-black" />
+                          {/* soft highlight band */}
+                          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_0,rgba(255,255,255,0.28),transparent_55%)]" />
+                          {/* subtle border glow */}
+                          <div className="absolute inset-0 rounded-2xl ring-1 ring-white/10" />
+
+                          <div className="absolute inset-0 flex flex-col justify-between p-5 text-white">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs uppercase tracking-[0.2em] text-white/60">
+                                Transfer Method
+                              </span>
+                            </div>
+
+                            <div className="flex flex-col gap-3">
+                              <div className="flex items-center gap-3">
+                                <Image
+                                  src={
+                                    savedPayout.method === 'paypal'
+                                      ? '/images/paypal.png'
+                                      : savedPayout.method === 'iban'
+                                      ? '/images/iban.png'
+                                      : savedPayout.method === 'revolut'
+                                      ? '/images/revolut.png'
+                                      : savedPayout.method === 'card' &&
+                                        savedPayout.number?.replace(/\D/g, '').startsWith('4')
+                                      ? '/images/Visa.png'
+                                      : savedPayout.method === 'card' &&
+                                        savedPayout.number?.replace(/\D/g, '').startsWith('5')
+                                      ? '/images/MasterCard.png'
+                                      : savedPayout.method === 'card' &&
+                                        savedPayout.number?.replace(/\D/g, '').startsWith('3')
+                                      ? '/images/americanexpress.png'
+                                      : '/images/card.png'
+                                  }
+                                  alt={savedPayout.method}
+                                  className="h-8 w-auto object-contain opacity-90 drop-shadow"
+                                  width={64}
+                                  height={32}
+                                />
+                              </div>
+
+                              <div className="mt-2 text-xs uppercase tracking-[0.25em] text-white/50">
+                                {savedPayout.method}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between text-[10px] text-white/60">
+                              <span>Vinvin Cashout</span>
+                              <span>Virtual • Secure</span>
+                            </div>
+                          </div>
                         </div>
 
-                        <div className="absolute flex h-full w-full flex-col items-center justify-center gap-4 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 p-6 text-white backface-hidden rotate-y-180">
-                          <p className="text-xs tracking-wider text-gray-400">Credentials</p>
-                          <p className="text-center text-lg font-mono">
-                            {savedPayout.method === 'paypal'
-                              ? savedPayout.number
-                              : savedPayout.number && savedPayout.number.length >= 8
-                              ? `${savedPayout.number.slice(0, 4)} ${'*'.repeat(8)} ${savedPayout.number.slice(-4)}`
-                              : '****'}
-                          </p>
+                        {/* BACK — with credentials info */}
+                        <div className="absolute h-full w-full rounded-2xl rotate-y-180 backface-hidden overflow-hidden shadow-[0_20px_45px_rgba(0,0,0,0.45)]">
+                          {/* base gradient */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-[#020617] via-[#111827] to-black" />
+                          {/* magnetic strip */}
+                          <div className="absolute top-6 h-8 w-full bg-black/70" />
+                          {/* subtle glare */}
+                          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_0,rgba(255,255,255,0.18),transparent_60%)]" />
+                          {/* border */}
+                          <div className="absolute inset-0 rounded-2xl ring-1 ring-white/10" />
+
+                          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-white">
+                            <p className="text-xs tracking-wider text-gray-300">Credentials</p>
+                            <p className="text-center text-lg font-mono tracking-widest">
+                              {savedPayout.method === 'paypal'
+                                ? savedPayout.number
+                                : savedPayout.number && savedPayout.number.length >= 8
+                                ? `${savedPayout.number.slice(0, 4)} ${'*'.repeat(8)} ${savedPayout.number.slice(-4)}`
+                                : '****'}
+                            </p>
+                            <p className="mt-2 text-[10px] text-white/50">
+                              Stored securely. Used only for processing withdrawals.
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
                   ) : (
                     <div className="mt-6 flex items-center justify-between rounded-xl bg-neutral-50 p-4 text-sm text-neutral-600">
-                      <p>Withdrawal method is not provided</p>
+                      <p>Transfer method is not provided</p>
                       <button
                         onClick={() => {
                           setActiveSection('payments');
@@ -5436,6 +5496,17 @@ const coverImage = useMemo(() => {
                       </button>
                     </div>
                   )}
+
+                  <div className="flex items-center justify-center mt-5">
+                   <button
+                      type="button"
+                      onClick={() => setShowPayoutHistory(true)}
+                      className="p-4 rounded-xl bg-neutral-100 hover:bg-neutral-200 inline-flex items-center gap-1 text-black transition"
+                    >
+                      <span>Wire Transfer History</span>
+                      <LuArrowUpRight className="h-3 w-3" />
+                    </button>
+                    </div>
                 </div>
               </motion.div>
             )}

@@ -96,20 +96,35 @@ export const resolvePartnerMetricsForHost = async (userId: string): Promise<Part
   return metrics;
 };
 
-export const updateListingPunti = async (listingId: string, punti: number) => {
-  const sanitizedPunti = Math.max(0, Math.min(MAX_PARTNER_POINT_VALUE, Math.floor(punti)));
+export const updateListingPunti = async (listingId: string, puntiToAdd: number) => {
+  const increment = Math.max(0, Math.floor(puntiToAdd));
+
+  const existing = await prisma.listing.findUnique({
+    where: { id: listingId },
+    select: { userId: true, punti: true },
+  });
+
+  if (!existing) {
+    throw new Error("Listing not found");
+  }
+
+  const currentPunti = Number.isFinite(existing.punti) ? Math.max(0, Math.floor(existing.punti ?? 0)) : 0;
+  const remainingCapacity = Math.max(0, MAX_PARTNER_POINT_VALUE - currentPunti);
+  const puntiAdded = Math.min(increment, remainingCapacity);
+  const nextPunti = Math.min(MAX_PARTNER_POINT_VALUE, currentPunti + puntiAdded);
 
   const listing = await prisma.listing.update({
     where: { id: listingId },
-    data: { punti: sanitizedPunti },
-    select: { userId: true },
+    data: { punti: nextPunti },
+    select: { userId: true, punti: true },
   });
 
   const metrics = await resolvePartnerMetricsForHost(listing.userId);
 
   return {
     listingId,
-    punti: sanitizedPunti,
+    punti: listing.punti,
+    puntiAdded,
     userId: listing.userId,
     metrics,
   };

@@ -22,7 +22,8 @@ const getUserFromIdentifier = async (identifier: string) => {
 
   conditions.push(
     { email: { equals: identifier, mode: Prisma.QueryMode.insensitive } },
-    { referenceId: identifier }
+    { referenceId: identifier },
+    { username: { equals: identifier, mode: Prisma.QueryMode.insensitive } }
   );
 
   return await prisma.user.findFirst({

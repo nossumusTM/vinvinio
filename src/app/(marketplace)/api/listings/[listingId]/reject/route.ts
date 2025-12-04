@@ -23,11 +23,34 @@ export async function POST(
     return new NextResponse("Invalid listing ID", { status: 400 });
   }
 
+  const body = await req.json().catch(() => null);
+  const note = typeof body?.note === 'string' ? body.note.trim() : '';
+  const rawAttachments = Array.isArray(body?.attachments) ? body.attachments : [];
+
+  type RawAttachment = { name?: unknown; data?: unknown; url?: unknown };
+  type SafeAttachment = { name?: string; data?: string; url?: string };
+
+  const attachments: SafeAttachment[] = rawAttachments
+    .filter((item: unknown): item is RawAttachment => {
+      return typeof item === 'object' && item !== null;
+    })
+    .slice(0, 4)
+    .map((item: RawAttachment): SafeAttachment => ({
+      name: typeof item.name === 'string' ? item.name : undefined,
+      data: typeof item.data === 'string' ? item.data : undefined,
+      url: typeof item.url === 'string' ? item.url : undefined,
+    }))
+    .filter((item: SafeAttachment) => Boolean(item.data || item.url));
+
   try {
     // ✅ Update status and include the user
     const listing = await prisma.listing.update({
       where: { id: listingId },
-      data: { status: 'rejected' },
+      data: {
+        status: 'rejected',
+        moderationNoteText: note || undefined,
+        moderationNoteAttachments: attachments.length ? attachments : undefined,
+      },
       include: { user: true },
     });
 
@@ -64,6 +87,11 @@ export async function POST(
                 </p>
 
                 <p style="font-size: 14px;">You may revise the listing and resubmit it for review.</p>
+
+                ${note ? `<div style="margin: 18px 0; padding: 14px; background: #fff5f5; border: 1px solid #ffd6d6; border-radius: 10px;">
+                  <p style="font-size: 13px; font-weight: 700; color: #a40000; margin-bottom: 8px;">Moderator notes</p>
+                  <p style="font-size: 14px; white-space: pre-line;">${note}</p>
+                </div>` : ''}
 
                 <p style="margin-top: 32px;">If you have questions, feel free to contact <a href="mailto:ciao@vuoiaggio.it" style="color: #3604ff;">ciao@vuoiaggio.it</a></p>
 

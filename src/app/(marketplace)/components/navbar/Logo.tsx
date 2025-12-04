@@ -38,8 +38,8 @@ const Logo = () => {
       <Image
         src="/images/volalogo.png"
         alt="Vuola Logo Desktop"
-        width={30}
-        height={30}
+        width={20}
+        height={20}
         priority
         className="hidden md:block"
       />
