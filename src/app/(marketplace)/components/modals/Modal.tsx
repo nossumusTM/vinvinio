@@ -35,7 +35,7 @@ const Modal: React.FC<ModalProps> = ({
   disabled,
   secondaryAction,
   secondaryActionLabel,
-  closeOnSubmit = true,
+  closeOnSubmit = false,
   className,
   submitOnEnter = true,
   preventOutsideClose = false,

@@ -9,7 +9,31 @@ export const dynamic = 'force-dynamic';
 import { Prisma } from '@prisma/client';
 import { Role } from '@prisma/client';
 
+import {
+  RequestTimeoutError,
+  withRequestTimeout,
+} from "@/app/(marketplace)/utils/withTimeout";
+
+const RESERVATION_TIMEOUT_MS = 15_000;
+
 export async function POST(request: Request) {
+  try {
+    return await withRequestTimeout(handleReservationRequest(request), {
+      timeoutMs: RESERVATION_TIMEOUT_MS,
+      timeoutMessage: "Reservation request timed out. Please retry.",
+    });
+  } catch (error) {
+    console.error("Error creating reservation:", error);
+
+    if (error instanceof RequestTimeoutError) {
+      return new NextResponse(error.message, { status: 504 });
+    }
+
+    return new NextResponse("Internal Server Error", { status: 500 });
+  }
+}
+
+async function handleReservationRequest(request: Request) {
   try {
     const currentUser = await getCurrentUser();
     const body = await request.json();

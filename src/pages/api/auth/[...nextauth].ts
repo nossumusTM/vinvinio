@@ -6,7 +6,14 @@ import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { verifyTotp } from "@/app/(marketplace)/utils/totp";
 
+import {
+  RequestTimeoutError,
+  withRequestTimeout,
+} from "@/app/(marketplace)/utils/withTimeout";
+
 import prisma from "@/app/(marketplace)/libs/prismadb";
+
+const LOGIN_TIMEOUT_MS = 10_000;
 
 export const authOptions: AuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -40,17 +47,31 @@ export const authOptions: AuthOptions = {
         const normalizedIdentifier =
           method === 'email' ? identifier.toLowerCase() : identifier;
 
-        const user = method === 'phone'
-          ? await prisma.user.findFirst({
-              where: {
-                phone: normalizedIdentifier,
-              },
-            })
-          : await prisma.user.findUnique({
-              where: {
-                email: normalizedIdentifier,
-              },
-            });
+        let user;
+        try {
+          user = await withRequestTimeout(
+            method === 'phone'
+              ? prisma.user.findFirst({
+                  where: {
+                    phone: normalizedIdentifier,
+                  },
+                })
+              : prisma.user.findUnique({
+                  where: {
+                    email: normalizedIdentifier,
+                  },
+                }),
+            {
+              timeoutMs: LOGIN_TIMEOUT_MS,
+              timeoutMessage: "Login request timed out. Please try again.",
+            }
+          );
+        } catch (error) {
+          if (error instanceof RequestTimeoutError) {
+            throw new Error(error.message);
+          }
+          throw error;
+        }
 
           console.log('AUTH DEBUG user', {
             method,

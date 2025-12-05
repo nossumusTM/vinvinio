@@ -151,6 +151,11 @@ const SearchExperienceModal = () => {
     icon: IconType;
   }) => {
     const isActive = step === stepIndex;
+    const handleClick = () => {
+      if (step === stepIndex) return;
+      setDir(stepIndex > step ? 1 : -1);
+      setStep(stepIndex);
+    };
 
     return (
       <div
@@ -158,8 +163,9 @@ const SearchExperienceModal = () => {
           'flex items-center gap-2 rounded-2xl border px-2 py-2 transition-all duration-300 md:px-4 md:py-3',
           isActive
             ? 'bg-white/80 border-white/40 text-neutral-900 shadow-md'
-            : 'bg-white/40 border-white/20 text-neutral-600 shadow-sm',
+            : 'bg-white/40 border-white/20 text-neutral-600 shadow-sm hover:border-white/40 hover:bg-white/60 cursor-pointer',
         )}
+        onClick={handleClick}
       >
         <div
           className={clsx(

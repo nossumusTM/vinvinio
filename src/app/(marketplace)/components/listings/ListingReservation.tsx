@@ -329,19 +329,17 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
         <hr />
 
         <div className="p-4">
-          {isLoading ? (
-            <div className="w-full text-center py-3">
-              <span className="loader inline-block w-5 h-5 mt-1 border-1 border-t-transparent border-black rounded-full animate-spin" />
-            </div>
-          ) : (
-            <div className={`w-full ${dateRange.startDate && dateRange.endDate && selectedTime ? 'animated-border' : ''}`}>
-              <Button
-                label="Book Now"
-                onClick={handleReserve}
-                disabled={disabled || isLoading}   // ✅ UPDATED
-              />
-            </div>
-          )}
+          <div
+            className={`w-full ${
+              dateRange.startDate && dateRange.endDate && selectedTime ? 'animated-border' : ''
+            } ${isLoading ? 'animate-pulse' : ''}`}
+          >
+            <Button
+              label={isLoading ? 'Redirecting…' : 'Book Now'}
+              onClick={handleReserve}
+              disabled={disabled || isLoading}
+            />
+          </div>
         </div>
 
         <hr />

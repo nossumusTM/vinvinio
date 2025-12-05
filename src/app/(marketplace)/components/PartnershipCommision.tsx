@@ -263,11 +263,11 @@ const PartnershipCommision: React.FC<PartnershipCommisionProps> = ({
       "bg-neutral-200 text-neutral-800";
 
   const sliderTrackStyle = useMemo(
-      () => ({
-        background: `linear-gradient(90deg, #75abfbff 0%, #24deffff ${fillPercent}%, #e5e7eb ${fillPercent}%)`,
-        transition: 'background 0.35s ease',
-      }),
-      [fillPercent],
+    () => ({
+      background: `linear-gradient(90deg, #75abfbff 0%, #24deffff ${fillPercent}%, #e5e7eb ${fillPercent}%)`,
+      transition: 'background 0.45s cubic-bezier(0.22, 1, 0.36, 1)',
+    }),
+    [fillPercent],
   );
 
   useEffect(() => {
@@ -289,8 +289,10 @@ const PartnershipCommision: React.FC<PartnershipCommisionProps> = ({
 
   const handleToggle = useCallback(() => {
     if (loading) return;
+    // reset slider to the user’s current stored commission when entering edit mode
+    setDraftCommission(sanitizePartnerCommission(partnerCommission));
     setIsEditing(true);
-  }, [loading]);
+  }, [loading, partnerCommission]);
 
   const handleSliderChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     const next = sanitizePartnerCommission(Number(event.target.value));
@@ -410,12 +412,12 @@ const PartnershipCommision: React.FC<PartnershipCommisionProps> = ({
           type="range"
           min={minCommission}
           max={maxCommission}
-          step={1}
+          step={0.5}
           value={effectiveCommission}
           onChange={handleSliderChange}
           disabled={!isEditing || disableInteractions}
           aria-readonly={!isEditing}
-          className="mt-3 h-2 w-full appearance-none rounded-full accent-indigo-500 outline-none"
+          className="mt-3 h-2 w-full appearance-none rounded-full accent-indigo-500 outline-none transition-[box-shadow,transform] duration-200 ease-out"
           style={sliderTrackStyle}
         />
       </div>

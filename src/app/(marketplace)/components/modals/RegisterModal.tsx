@@ -286,25 +286,27 @@ import { useRouter } from "next/navigation";
               inputClassName="h-14 lg:h-[46px] text-base rounded-xl"
             />
              <Input
-               id="password"
-               label="Password"
-               type="password"
-               disabled={isLoading}
-               register={register}
-               errors={errors}
-               required
-               inputClassName="h-14 lg:h-[46px] text-base rounded-xl"
-             />
-             <Input
-               id="confirmPassword"
-               label="Confirm Password"
-               type="password"
-               disabled={isLoading}
-               register={register}
-               errors={errors}
-               required
-               inputClassName="h-14 lg:h-[46px] text-base rounded-xl"
-             />
+              id="password"
+              label="Password"
+              type="password"
+              disabled={isLoading}
+              register={register}
+              errors={errors}
+              required
+              withVisibilityToggle
+              inputClassName="h-14 lg:h-[46px] text-base rounded-xl"
+            />
+            <Input
+              id="confirmPassword"
+              label="Confirm Password"
+              type="password"
+              disabled={isLoading}
+              register={register}
+              errors={errors}
+              required
+              withVisibilityToggle
+              inputClassName="h-14 lg:h-[46px] text-base rounded-xl"
+            />
              {popupMessage && (
                <ConfirmPopup
                  title="Notice"

@@ -4521,20 +4521,33 @@ const coverImage = useMemo(() => {
                       <>
                         {/* Flip Card */}
                         <div
-                          className="relative w-full max-w-sm h-56 perspective mt-6 cursor-pointer"
-                          onClick={() => setIsFlipped(prev => !prev)}
-                        >
-                          <div
-                            className={`absolute w-full h-full sm:h-full h-[90%] duration-700 transform transition-transform preserve-3d ${
-                              isFlipped ? 'rotate-y-180' : ''
-                            }`}
-                            >
-                            {/* FRONT */}
-                            <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-xl flex items-center justify-center">
-                              {/* <p className="text-lg font-bold tracking-widest uppercase border-b border-white">
-                                {savedPayout.method}
-                              </p> */}
-                              <Image
+                      className="relative mt-6 h-56 w-[340px] cursor-pointer perspective"
+                      onClick={() => setIsFlipped((prev) => !prev)}
+                    >
+                      <div
+                        className={`absolute h-full w-full transform rounded-2xl transition-transform duration-700 preserve-3d ${
+                          isFlipped ? 'rotate-y-180' : ''
+                        }`}
+                      >
+                        {/* FRONT — chrome styled card */}
+                        <div className="absolute h-full w-full rounded-2xl backface-hidden overflow-hidden shadow-[0_20px_45px_rgba(0,0,0,0.45)]">
+                          {/* base metallic gradient */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-[#111827] via-[#4b5563] to-black" />
+                          {/* soft highlight band */}
+                          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_0,rgba(255,255,255,0.28),transparent_55%)]" />
+                          {/* subtle border glow */}
+                          <div className="absolute inset-0 rounded-2xl ring-1 ring-white/10" />
+
+                          <div className="absolute inset-0 flex flex-col justify-between p-5 text-white">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs uppercase tracking-[0.2em] text-white/60">
+                                Transfer Method
+                              </span>
+                            </div>
+
+                            <div className="flex flex-col gap-3">
+                              <div className="flex items-center gap-3">
+                                <Image
                                   src={
                                     savedPayout.method === 'paypal'
                                       ? '/images/paypal.png'
@@ -4551,31 +4564,54 @@ const coverImage = useMemo(() => {
                                       : savedPayout.method === 'card' &&
                                         savedPayout.number?.replace(/\D/g, '').startsWith('3')
                                       ? '/images/americanexpress.png'
-                                      // : savedPayout.method === 'card' &&
-                                      //   savedPayout.number?.replace(/\D/g, '').startsWith('6')
-                                      // ? '/images/Discover.png'
                                       : '/images/card.png'
                                   }
                                   alt={savedPayout.method}
-                                  className="w-24 h-auto object-contain"
+                                  className="h-8 w-auto object-contain opacity-90 drop-shadow"
                                   width={64}
                                   height={32}
                                 />
+                              </div>
+
+                              <div className="mt-2 text-xs uppercase tracking-[0.25em] text-white/50">
+                                {savedPayout.method}
+                              </div>
                             </div>
 
-                            {/* BACK SIDE */}
-                            <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-xl rotate-y-180 p-6 flex flex-col justify-center items-center gap-4">
-                              <p className="text-xs tracking-wider text-gray-400">Credential</p>
-                              <p className="text-lg font-mono text-center">
-                                {savedPayout.method === 'paypal'
-                                  ? savedPayout.number
-                                  : savedPayout.number && savedPayout.number.length >= 8
-                                  ? `${savedPayout.number.slice(0, 4)} ${'*'.repeat(8)} ${savedPayout.number.slice(-4)}`
-                                  : '****'}
-                              </p>
+                            <div className="flex items-center justify-between text-[10px] text-white/60">
+                              <span>Vinvin Cashout</span>
+                              <span>Virtual • Secure</span>
                             </div>
                           </div>
                         </div>
+
+                        {/* BACK — with credentials info */}
+                        <div className="absolute h-full w-full rounded-2xl rotate-y-180 backface-hidden overflow-hidden shadow-[0_20px_45px_rgba(0,0,0,0.45)]">
+                          {/* base gradient */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-[#020617] via-[#111827] to-black" />
+                          {/* magnetic strip */}
+                          <div className="absolute top-6 h-8 w-full bg-black/70" />
+                          {/* subtle glare */}
+                          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_0,rgba(255,255,255,0.18),transparent_60%)]" />
+                          {/* border */}
+                          <div className="absolute inset-0 rounded-2xl ring-1 ring-white/10" />
+
+                          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-white">
+                            <p className="text-xs tracking-wider text-gray-300">Credentials</p>
+                            <p className="text-center text-lg font-mono tracking-widest">
+                              {savedPayout.method === 'paypal'
+                                ? savedPayout.number
+                                : savedPayout.number && savedPayout.number.length >= 8
+                                ? `${savedPayout.number.slice(0, 4)} ${'*'.repeat(8)} ${savedPayout.number.slice(-4)}`
+                                : '****'}
+                            </p>
+                            <p className="mt-2 text-[10px] text-white/50">
+                              Stored securely. Used only for processing withdrawals.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
                         {/* Delete Button Only */}
                         <div className="flex gap-4 mt-6">
@@ -5145,7 +5181,7 @@ const coverImage = useMemo(() => {
 
                   {savedPayout ? (
                     <div
-                      className="relative mt-6 h-56 w-full max-w-sm cursor-pointer perspective"
+                      className="relative mt-6 h-56 w-[340px] cursor-pointer perspective"
                       onClick={() => setIsFlipped((prev) => !prev)}
                     >
                       <div
@@ -5153,42 +5189,86 @@ const coverImage = useMemo(() => {
                           isFlipped ? 'rotate-y-180' : ''
                         }`}
                       >
-                        <div className="absolute flex h-full w-full items-center justify-center rounded-2xl bg-gradient-to-br from-gray-800 to-gray-900 text-white backface-hidden">
-                          <Image
-                            src={
-                              savedPayout.method === 'paypal'
-                                ? '/images/paypal.png'
-                                : savedPayout.method === 'iban'
-                                ? '/images/iban.png'
-                                : savedPayout.method === 'revolut'
-                                ? '/images/revolut.png'
-                                : savedPayout.method === 'card' &&
-                                  savedPayout.number?.replace(/\D/g, '').startsWith('4')
-                                ? '/images/Visa.png'
-                                : savedPayout.method === 'card' &&
-                                  savedPayout.number?.replace(/\D/g, '').startsWith('5')
-                                ? '/images/MasterCard.png'
-                                : savedPayout.method === 'card' &&
-                                  savedPayout.number?.replace(/\D/g, '').startsWith('3')
-                                ? '/images/americanexpress.png'
-                                : '/images/card.png'
-                            }
-                            alt={savedPayout.method}
-                            className="h-auto w-24 object-contain"
-                            width={64}
-                            height={32}
-                          />
+                        {/* FRONT — chrome styled card */}
+                        <div className="absolute h-full w-full rounded-2xl backface-hidden overflow-hidden shadow-[0_20px_45px_rgba(0,0,0,0.45)]">
+                          {/* base metallic gradient */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-[#111827] via-[#4b5563] to-black" />
+                          {/* soft highlight band */}
+                          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_0,rgba(255,255,255,0.28),transparent_55%)]" />
+                          {/* subtle border glow */}
+                          <div className="absolute inset-0 rounded-2xl ring-1 ring-white/10" />
+
+                          <div className="absolute inset-0 flex flex-col justify-between p-5 text-white">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs uppercase tracking-[0.2em] text-white/60">
+                                Transfer Method
+                              </span>
+                            </div>
+
+                            <div className="flex flex-col gap-3">
+                              <div className="flex items-center gap-3">
+                                <Image
+                                  src={
+                                    savedPayout.method === 'paypal'
+                                      ? '/images/paypal.png'
+                                      : savedPayout.method === 'iban'
+                                      ? '/images/iban.png'
+                                      : savedPayout.method === 'revolut'
+                                      ? '/images/revolut.png'
+                                      : savedPayout.method === 'card' &&
+                                        savedPayout.number?.replace(/\D/g, '').startsWith('4')
+                                      ? '/images/Visa.png'
+                                      : savedPayout.method === 'card' &&
+                                        savedPayout.number?.replace(/\D/g, '').startsWith('5')
+                                      ? '/images/MasterCard.png'
+                                      : savedPayout.method === 'card' &&
+                                        savedPayout.number?.replace(/\D/g, '').startsWith('3')
+                                      ? '/images/americanexpress.png'
+                                      : '/images/card.png'
+                                  }
+                                  alt={savedPayout.method}
+                                  className="h-8 w-auto object-contain opacity-90 drop-shadow"
+                                  width={64}
+                                  height={32}
+                                />
+                              </div>
+
+                              <div className="mt-2 text-xs uppercase tracking-[0.25em] text-white/50">
+                                {savedPayout.method}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between text-[10px] text-white/60">
+                              <span>Vinvin Cashout</span>
+                              <span>Virtual • Secure</span>
+                            </div>
+                          </div>
                         </div>
 
-                        <div className="absolute flex h-full w-full flex-col items-center justify-center gap-4 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 p-6 text-white backface-hidden rotate-y-180">
-                          <p className="text-xs tracking-wider text-gray-400">Credentials</p>
-                          <p className="text-center text-lg font-mono">
-                            {savedPayout.method === 'paypal'
-                              ? savedPayout.number
-                              : savedPayout.number && savedPayout.number.length >= 8
-                              ? `${savedPayout.number.slice(0, 4)} ${'*'.repeat(8)} ${savedPayout.number.slice(-4)}`
-                              : '****'}
-                          </p>
+                        {/* BACK — with credentials info */}
+                        <div className="absolute h-full w-full rounded-2xl rotate-y-180 backface-hidden overflow-hidden shadow-[0_20px_45px_rgba(0,0,0,0.45)]">
+                          {/* base gradient */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-[#020617] via-[#111827] to-black" />
+                          {/* magnetic strip */}
+                          <div className="absolute top-6 h-8 w-full bg-black/70" />
+                          {/* subtle glare */}
+                          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_0,rgba(255,255,255,0.18),transparent_60%)]" />
+                          {/* border */}
+                          <div className="absolute inset-0 rounded-2xl ring-1 ring-white/10" />
+
+                          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-white">
+                            <p className="text-xs tracking-wider text-gray-300">Credentials</p>
+                            <p className="text-center text-lg font-mono tracking-widest">
+                              {savedPayout.method === 'paypal'
+                                ? savedPayout.number
+                                : savedPayout.number && savedPayout.number.length >= 8
+                                ? `${savedPayout.number.slice(0, 4)} ${'*'.repeat(8)} ${savedPayout.number.slice(-4)}`
+                                : '****'}
+                            </p>
+                            <p className="mt-2 text-[10px] text-white/50">
+                              Stored securely. Used only for processing withdrawals.
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
