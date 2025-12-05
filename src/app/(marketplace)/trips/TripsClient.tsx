@@ -677,6 +677,11 @@ const TripsClient: React.FC<TripsClientProps> = ({
             const reviewDraft = buildReviewDraft(reviewInputs[reservation.id]);
             const isUploadingReview = Boolean(reviewUploading[reservation.id]);
 
+            const cancellationAttachments = Array.isArray(reservation.cancellationNoteAttachments)
+              ? reservation.cancellationNoteAttachments.filter((item) => item && (item.data || item.url))
+              : [];
+            const hasCancellationNote = Boolean(reservation.cancellationNoteText?.trim()) || cancellationAttachments.length > 0;
+
           return (
               <div
                 key={reservation.id}
@@ -788,6 +793,55 @@ const TripsClient: React.FC<TripsClientProps> = ({
 
                 </div>
               </div>
+
+              {hasCancellationNote && (
+                <div className="mx-4 mt-2 w-[calc(100%-2rem)] rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900">
+                  <p className="font-semibold">Cancellation details</p>
+                  {reservation.cancellationNoteText ? (
+                    <p className="whitespace-pre-line text-rose-900">{reservation.cancellationNoteText}</p>
+                  ) : (
+                    <p className="text-rose-800">No note provided.</p>
+                  )}
+
+                  {cancellationAttachments.length > 0 && (
+                    <div className="mt-2 space-y-2">
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-rose-700">Attachment</p>
+                      <div className="flex flex-wrap gap-3">
+                        {cancellationAttachments.map((attachment, index) => {
+                          const src = attachment.data || attachment.url;
+                          const isImage = typeof src === 'string' && src.startsWith('data:image');
+
+                          return (
+                            <div
+                              key={`trip-cancel-attachment-${index}`}
+                              className="flex min-w-[160px] max-w-[220px] flex-1 items-center gap-2 rounded-xl bg-white px-3 py-2 text-xs font-semibold text-neutral-800 shadow-sm ring-1 ring-rose-200"
+                            >
+                              {isImage && src ? (
+                                <div className="relative h-10 w-10 overflow-hidden rounded-lg bg-neutral-100 ring-1 ring-neutral-200">
+                                  <Image
+                                    src={src}
+                                    alt={attachment.name || 'Attachment preview'}
+                                    fill
+                                    className="object-cover"
+                                    unoptimized
+                                  />
+                                </div>
+                              ) : (
+                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-neutral-100 text-neutral-500 ring-1 ring-neutral-200">
+                                  <span className="text-sm">📎</span>
+                                </div>
+                              )}
+                              <div className="min-w-0">
+                                <p className="truncate">{attachment.name || 'Attachment'}</p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
                  {/* <div className="text-sm text-neutral-600">{reservationDate}</div> */}
 

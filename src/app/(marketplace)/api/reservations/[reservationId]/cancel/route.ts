@@ -5,11 +5,25 @@ import prisma from '@/app/(marketplace)/libs/prismadb';
 import { computeAggregateMaps } from '@/app/(marketplace)/libs/aggregateTotals';
 import { MIN_PARTNER_COMMISSION, computeHostShareFromCommission } from '@/app/(marketplace)/constants/partner';
 
+type Attachment = { name?: string | null; data?: string | null; url?: string | null };
+
 export async function PATCH(
   req: Request,
   { params }: { params: { reservationId: string } } // ✅ Use reservationId
 ) {
   try {
+
+    const payload = await req
+      .json()
+      .catch(() => ({} as { note?: unknown; attachments?: unknown }));
+
+    const note = typeof payload?.note === 'string' ? payload.note.trim() : '';
+    const attachments = Array.isArray(payload?.attachments)
+      ? (payload.attachments as Attachment[]).filter((item) =>
+          item && (typeof item.data === 'string' || typeof item.url === 'string'),
+        )
+      : [];
+
     const reservationId = params.reservationId;
 
     const reservation = await prisma.reservation.findUnique({
@@ -41,7 +55,11 @@ export async function PATCH(
     const { hostBookingCount } = await prisma.$transaction(async (tx) => {
       await tx.reservation.update({
         where: { id: reservationId },
-        data: { status: 'cancelled' },
+        data: {
+          status: 'cancelled',
+          cancellationNoteText: note || null,
+          cancellationNoteAttachments: attachments.length > 0 ? attachments : null,
+        },
       });
 
       // Clean up earnings and platform economy entries linked to this reservation

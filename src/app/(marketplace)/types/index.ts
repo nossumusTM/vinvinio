@@ -198,7 +198,7 @@ export type SafeListing = Simplify<
 
     moderationNoteText?: string | null;
     moderationNoteAttachments?: { name?: string | null; data?: string | null; url?: string | null }[] | null;
-    
+
     // Tolerate any current UI enum/union/string for pricing
     pricingType?: Pricingish;
 
@@ -232,6 +232,8 @@ export type SafeReservation = Simplify<
     endDate: string;
     guestCount: number;
     guestContact?: string;
+    cancellationNoteText?: string | null;
+    cancellationNoteAttachments?: { name?: string | null; data?: string | null; url?: string | null }[] | null;
     user: SafeUser;
     listing: SafeListing;
   }

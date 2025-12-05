@@ -77,6 +77,19 @@ const MEDIA_SLIDER_SETTINGS = {
   prevArrow: <SliderArrow direction="prev" />,
 };
 
+const DETAIL_SLIDER_SETTINGS = {
+  dots: true,
+  infinite: false,
+  speed: 400,
+  slidesToShow: 1,
+  slidesToScroll: 1,
+  arrows: true,
+  adaptiveHeight: true,
+  autoplay: false,
+  nextArrow: <SliderArrow direction="next" />,
+  prevArrow: <SliderArrow direction="prev" />,
+};
+
 const toTitleCase = (value: string) =>
   value
     .toLowerCase()
@@ -161,13 +174,18 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
   const router = useRouter();
 
   const [selectedReservationId, setSelectedReservationId] = useState('');
+  const [cancellationNote, setCancellationNote] = useState('');
+  const [cancellationAttachment, setCancellationAttachment] = useState<{ name: string; data: string } | null>(null);
   const [hostLookup, setHostLookup] = useState('');
 
   const [reservationLookupId, setReservationLookupId] = useState('');
-  const [reservationDetails, setReservationDetails] = useState<any>(null);
+  const [reservationLookupUsername, setReservationLookupUsername] = useState('');
+  const [reservationDetails, setReservationDetails] = useState<any[]>([]);
   const [listingLookupId, setListingLookupId] = useState('');
-  const [listingDetails, setListingDetails] = useState<any>(null);
+  const [listingLookupUsername, setListingLookupUsername] = useState('');
+  const [listingDetails, setListingDetails] = useState<any[]>([]);
   const [userLookup, setUserLookup] = useState('');
+  const [userRecord, setUserRecord] = useState<any>(null);
 
   const [promoterLookup, setPromoterLookup] = useState('');
   const [userAnalytics, setUserAnalytics] = useState<any>(null);
@@ -802,6 +820,9 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
     try {
       const res = await axios.post('/api/analytics/host/get', { identifier: userLookup });
       const payout = await axios.post('/api/users/get-payout-method', { identifier: res.data.userId });
+      const userDetails = await axios.get('/api/moderation/users/lookup', {
+        params: { identifier: userLookup },
+      });
 
       const data = res.data ?? {};
       const puntiValue = Number(data.punti);
@@ -835,8 +856,10 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
         breakdown: data.breakdown,
         currency: data.currency,
       });
+      setUserRecord(userDetails.data?.user ?? null);
     } catch (err) {
       toast.error('User not found or error fetching data');
+      setUserRecord(null);
     }
   };
   
@@ -867,16 +890,43 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
     }
 
     setIsFetchingReservation(true);
-    setReservationDetails(null);
+    setReservationDetails([]);
 
     try {
       const res = await axios.get(`/api/reservations/${reservationId}`);
-      setReservationDetails(res.data);
+      setReservationDetails(res.data ? [res.data] : []);
     } catch (error) {
       const message = axios.isAxiosError(error)
         ? error.response?.data || 'Could not fetch reservation.'
         : 'Could not fetch reservation.';
       toast.error(typeof message === 'string' ? message : 'Could not fetch reservation.');
+    } finally {
+      setIsFetchingReservation(false);
+    }
+  };
+
+  const handleFetchReservationsByUsername = async () => {
+    const username = reservationLookupUsername.trim();
+
+    if (!username) {
+      toast.error('Please provide a username.');
+      return;
+    }
+
+    setIsFetchingReservation(true);
+    setReservationDetails([]);
+
+    try {
+      const res = await axios.get('/api/moderation/reservations/lookup', {
+        params: { identifier: username },
+      });
+
+      setReservationDetails(Array.isArray(res.data?.reservations) ? res.data.reservations : []);
+    } catch (error) {
+      const message = axios.isAxiosError(error)
+        ? error.response?.data || 'Could not fetch reservations.'
+        : 'Could not fetch reservations.';
+      toast.error(typeof message === 'string' ? message : 'Could not fetch reservations.');
     } finally {
       setIsFetchingReservation(false);
     }
@@ -891,16 +941,43 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
     }
 
     setIsFetchingListing(true);
-    setListingDetails(null);
+    setListingDetails([]);
 
     try {
       const res = await axios.get(`/api/listings/${listingId}`);
-      setListingDetails(res.data);
+      setListingDetails(res.data ? [res.data] : []);
     } catch (error) {
       const message = axios.isAxiosError(error)
         ? error.response?.data || 'Could not fetch listing.'
         : 'Could not fetch listing.';
       toast.error(typeof message === 'string' ? message : 'Could not fetch listing.');
+    } finally {
+      setIsFetchingListing(false);
+    }
+  };
+
+  const handleFetchListingsByUsername = async () => {
+    const username = listingLookupUsername.trim();
+
+    if (!username) {
+      toast.error('Please provide a username.');
+      return;
+    }
+
+    setIsFetchingListing(true);
+    setListingDetails([]);
+
+    try {
+      const res = await axios.get('/api/moderation/listings/lookup', {
+        params: { identifier: username },
+      });
+
+      setListingDetails(Array.isArray(res.data?.listings) ? res.data.listings : []);
+    } catch (error) {
+      const message = axios.isAxiosError(error)
+        ? error.response?.data || 'Could not fetch listings.'
+        : 'Could not fetch listings.';
+      toast.error(typeof message === 'string' ? message : 'Could not fetch listings.');
     } finally {
       setIsFetchingListing(false);
     }
@@ -1069,7 +1146,10 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
   
       // ❌ Delete reservation
       // await axios.delete(`/api/reservations/${id}`);
-      await axios.patch(`/api/reservations/${id}/cancel`);
+      await axios.patch(`/api/reservations/${id}/cancel`, {
+        note: cancellationNote,
+        attachments: cancellationAttachment ? [cancellationAttachment] : [],
+      });
       toast.success('Reservation cancelled', {
         iconTheme: { primary: '#2200ffff', secondary: '#fff' },
       });
@@ -1098,6 +1178,8 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
       }
   
       setSelectedReservationId('');
+      setCancellationNote('');
+      setCancellationAttachment(null);
       router.refresh();
     } catch (error) {
       const err = error as AxiosError<{ error?: string }>;
@@ -1541,6 +1623,125 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
             displayedListings.map(renderListingCard)
           )}
         </div>
+        <div className="grid grid-cols-1 gap-4 pt-2 lg:grid-cols-2">
+          <div className="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-neutral-200/60 lg:col-span-3">
+            <h2 className="text-lg font-bold text-black">Adjust Listing Punti</h2>
+            <p className="text-sm text-neutral-600">
+              Add punti to a listing without changing host commission. Additions are capped at {MAX_PARTNER_POINT_VALUE} punti per listing.
+            </p>
+            <input
+              type="text"
+              placeholder="Enter listingId"
+              value={puntiUpdate.listingId}
+              onChange={(event) => {
+                setPuntiUpdate((prev) => ({ ...prev, listingId: event.target.value }));
+                setCurrentListingPunti(null);
+                setPuntiResult(null);
+              }}
+              className="w-full p-2 border rounded-xl"
+            />
+
+            <div className="text-xs text-neutral-600 space-y-1">
+              <p>
+                Current punti: {currentListingPunti === null ? '— (fetched on add)' : `${currentListingPunti} / ${MAX_PARTNER_POINT_VALUE}`}
+              </p>
+              <p>Available to add now: {availablePuntiToAdd}</p>
+            </div>
+
+            <div className="space-y-3">
+              <input
+                type="number"
+                min={0}
+                max={availablePuntiToAdd || MAX_PARTNER_POINT_VALUE}
+                value={puntiUpdate.punti}
+                onChange={(event) => setPuntiUpdate((prev) => ({ ...prev, punti: event.target.value }))}
+                className="w-full p-2 border rounded-xl"
+                placeholder={`0 - ${MAX_PARTNER_POINT_VALUE}`}
+              />
+              <input
+                type="range"
+                min={0}
+                max={MAX_PARTNER_POINT_VALUE}
+                value={safePuntiPreview}
+                onChange={(event) =>
+                  setPuntiUpdate((prev) => ({ ...prev, punti: event.target.value }))
+                }
+                className="w-full"
+              />
+            </div>
+            <div className="flex items-center justify-between text-xs font-semibold text-neutral-600">
+              <span>Pending add: {safePuntiPreview} punti</span>
+              <span>Listing cap: {MAX_PARTNER_POINT_VALUE} punti</span>
+            </div>
+            {puntiResult && (
+              <div className="text-xs text-emerald-700 bg-emerald-50 rounded-xl p-3 mt-3">
+                <p>Added: {puntiResult.added} punti.</p>
+                <p>Listing total: {puntiResult.total} / {MAX_PARTNER_POINT_VALUE}.</p>
+              </div>
+            )}
+            <button
+              onClick={handlePuntiUpdate}
+              disabled={isUpdatingPunti}
+              className="w-full py-2 bg-neutral-900 text-white rounded-xl shadow-md hover:shadow-lg transition disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isUpdatingPunti ? 'Adding…' : 'Add punti'}
+            </button>
+          </div>
+
+          <div className="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-neutral-200/60">
+            <h2 className="text-lg font-bold text-black">Moderator Listing Deactivation</h2>
+            <p className="text-sm text-neutral-600">
+              Deactivate a listing immediately by providing its listing ID. The listing status will be set to inactive.
+            </p>
+            <input
+              type="text"
+              placeholder="Enter listingId"
+              value={moderListingId}
+              onChange={(event) => setModerListingId(event.target.value)}
+              className="w-full p-2 border rounded-xl"
+            />
+            <button
+              onClick={() => {
+                if (!moderListingId.trim()) {
+                  toast.error('Please provide a listing ID.');
+                  return;
+                }
+                setShowListingDeactivateConfirm(true);
+              }}
+              disabled={isDeactivatingListing}
+              className="w-full py-2 bg-neutral-900 text-white rounded-xl shadow-md hover:shadow-lg transition disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Deactivate listing
+            </button>
+          </div>
+
+          <div className="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-neutral-200/60">
+            <h2 className="text-lg font-bold text-black">Account Suspension Tool</h2>
+            <p className="text-sm text-neutral-600">
+              Suspend a user account by providing their username or user ID. Suspended users will see a suspension label on their profile.
+            </p>
+            <input
+              type="text"
+              placeholder="Enter username or userId"
+              value={moderSuspendUserId}
+              onChange={(event) => setModerSuspendUserId(event.target.value)}
+              className="w-full p-2 border rounded-xl"
+            />
+            <button
+              onClick={() => {
+                if (!moderSuspendUserId.trim()) {
+                  toast.error('Please provide a username or user ID.');
+                  return;
+                }
+                setShowSuspendConfirmPopup(true);
+              }}
+              disabled={isSuspendingUser}
+              className="w-full py-2 bg-neutral-900 text-white rounded-xl shadow-md hover:shadow-lg transition disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Suspend account
+            </button>
+          </div>
+        </div>
       </section>
 
       <aside className="space-y-6 lg:col-span-4">
@@ -1699,10 +1900,33 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
             onChange={(e) => setSelectedReservationId(e.target.value)}
             className="w-full rounded-xl border border-neutral-200 p-2 text-sm text-neutral-700"
           />
+          <textarea
+            placeholder="Add a note for the user (required)"
+            value={cancellationNote}
+            onChange={(e) => setCancellationNote(e.target.value)}
+            className="mt-3 w-full rounded-xl border border-neutral-200 p-2 text-sm text-neutral-700"
+            rows={3}
+          />
+          <label className="mt-3 block text-sm font-semibold text-neutral-700">
+            Attachment (optional)
+            <input
+              type="file"
+              accept=".pdf,application/pdf,image/*"
+              onChange={(event) => handleAttachmentUpload(event, setCancellationAttachment)}
+              className="mt-1 w-full rounded-xl border border-neutral-200 p-2 text-sm text-neutral-700"
+            />
+            {cancellationAttachment?.name && (
+              <p className="mt-1 text-xs text-neutral-500">Selected: {cancellationAttachment.name}</p>
+            )}
+          </label>
           <button
             onClick={() => {
               if (!selectedReservationId.trim()) {
                 toast.error('Please provide a reservation ID.');
+                return;
+              }
+              if (!cancellationNote.trim()) {
+                toast.error('Please provide a cancellation note.');
                 return;
               }
               setConfirmAction(() => () => onCancel(selectedReservationId));
@@ -1715,7 +1939,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
         </div>
 
         {/* Host Lookup */}
-      <div className="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-neutral-200/60">
+        <div className="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-neutral-200/60">
           <h3 className="text-lg font-semibold mb-4">Get Full Reservation Data</h3>
           <p className="text-sm text-neutral-600">Lookup any reservation and inspect its stored details.</p>
           <input
@@ -1732,11 +1956,42 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
           >
             {isFetchingReservation ? 'Fetching…' : 'Fetch Reservation'}
           </button>
-          {reservationDetails && (
-            <pre className="mt-3 max-h-72 overflow-auto whitespace-pre-wrap rounded-xl bg-neutral-50 p-3 text-xs text-neutral-800">
-              {formatJson(reservationDetails)}
-            </pre>
-          )}
+          <div className="mt-4 space-y-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+              <input
+                type="text"
+                placeholder="Lookup by username"
+                value={reservationLookupUsername}
+                onChange={(event) => setReservationLookupUsername(event.target.value)}
+                className="w-full rounded-xl border border-neutral-200 p-2 text-sm text-neutral-700"
+              />
+              <button
+                type="button"
+                onClick={handleFetchReservationsByUsername}
+                disabled={isFetchingReservation}
+                className="rounded-xl bg-neutral-100 px-4 py-2 text-sm font-semibold text-neutral-800 shadow-sm transition hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isFetchingReservation ? 'Searching…' : 'Fetch'}
+              </button>
+            </div>
+            {reservationDetails.length > 0 && (
+              reservationDetails.length > 1 ? (
+                <Slider {...DETAIL_SLIDER_SETTINGS} className="mt-1">
+                  {reservationDetails.map((detail, index) => (
+                    <div key={`reservation-${detail.id ?? index}`} className="px-1">
+                      <pre className="max-h-72 overflow-auto whitespace-pre-wrap rounded-xl bg-neutral-50 p-3 text-xs text-neutral-800">
+                        {formatJson(detail)}
+                      </pre>
+                    </div>
+                  ))}
+                </Slider>
+              ) : (
+                <pre className="max-h-72 overflow-auto whitespace-pre-wrap rounded-xl bg-neutral-50 p-3 text-xs text-neutral-800">
+                  {formatJson(reservationDetails[0])}
+                </pre>
+              )
+            )}
+          </div>
         </div>
 
         <div className="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-neutral-200/60">
@@ -1756,11 +2011,42 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
           >
             {isFetchingListing ? 'Fetching…' : 'Fetch Listing'}
           </button>
-          {listingDetails && (
-            <pre className="mt-3 max-h-72 overflow-auto whitespace-pre-wrap rounded-xl bg-neutral-50 p-3 text-xs text-neutral-800">
-              {formatJson(listingDetails)}
-            </pre>
-          )}
+          <div className="mt-4 space-y-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+              <input
+                type="text"
+                placeholder="Lookup listings by username"
+                value={listingLookupUsername}
+                onChange={(event) => setListingLookupUsername(event.target.value)}
+                className="w-full rounded-xl border border-neutral-200 p-2 text-sm text-neutral-700"
+              />
+              <button
+                type="button"
+                onClick={handleFetchListingsByUsername}
+                disabled={isFetchingListing}
+                className="rounded-xl bg-neutral-100 px-4 py-2 text-sm font-semibold text-neutral-800 shadow-sm transition hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isFetchingListing ? 'Searching…' : 'Fetch'}
+              </button>
+            </div>
+            {listingDetails.length > 0 && (
+              listingDetails.length > 1 ? (
+                <Slider {...DETAIL_SLIDER_SETTINGS} className="mt-1">
+                  {listingDetails.map((detail, index) => (
+                    <div key={`listing-${detail.id ?? index}`} className="px-1">
+                      <pre className="max-h-72 overflow-auto whitespace-pre-wrap rounded-xl bg-neutral-50 p-3 text-xs text-neutral-800">
+                        {formatJson(detail)}
+                      </pre>
+                    </div>
+                  ))}
+                </Slider>
+              ) : (
+                <pre className="max-h-72 overflow-auto whitespace-pre-wrap rounded-xl bg-neutral-50 p-3 text-xs text-neutral-800">
+                  {formatJson(listingDetails[0])}
+                </pre>
+              )
+            )}
+          </div>
         </div>
 
       {/* User Lookup */}
@@ -1814,6 +2100,11 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
             {userAnalytics.currency && (
               <p><strong>Currency:</strong> {userAnalytics.currency}</p>
             )}
+            {userRecord && (
+              <pre className="mt-3 max-h-72 overflow-auto whitespace-pre-wrap rounded-xl bg-neutral-50 p-3 text-xs text-neutral-800">
+                {formatJson(userRecord)}
+              </pre>
+            )}
           </div>
         )}
       </div>
@@ -1823,7 +2114,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
     </div>
 
     {/* Promoter Lookup */}
-    <div className="grid px-5 md:px-60 gap-10 mt-10  pt-16">
+    {/* <div className="grid px-5 md:px-60 gap-10 mt-10  pt-16">
       <div className="bg-white p-6 rounded-xl shadow-lg space-y-4">
           <h2 className="text-lg font-bold text-black">Adjust Listing Punti</h2>
           <p className="text-sm text-neutral-600">
@@ -1946,7 +2237,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
           Suspend account
         </button>
       </div>
-    </div>
+    </div> */}
 
     {showConfirmPopup && (
       <ConfirmPopup
