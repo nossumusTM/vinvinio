@@ -65,13 +65,22 @@ const CategoryBox: React.FC<CategoryBoxProps> = ({
       )}
     >
       {bookingCount > 0 && (
-        <div className="absolute right-2 top-2 flex items-center gap-1" aria-hidden="true">
+        <div className="absolute right-2 top-2 flex items-center gap-2" aria-hidden="true">
           {isTrending && (
-            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-semibold uppercase text-emerald-800 shadow-sm">
+            <motion.span
+              initial={{ opacity: 0, y: -6, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: [1, 1.06, 1] }}
+              transition={{
+                duration: 0.6,
+                ease: 'easeOut',
+                repeat: 0
+              }}
+              className="rounded-full bg-blue-100 px-2 py-0.5 text-[9px] font-semibold uppercase text-[#2200ffff] shadow-sm"
+            >
               Trending
-            </span>
+            </motion.span>
           )}
-          <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[#2200ffff]" />
         </div>
       )}
       <motion.div

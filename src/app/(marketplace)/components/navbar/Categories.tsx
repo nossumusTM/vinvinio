@@ -6,9 +6,19 @@ import { motion, AnimatePresence } from 'framer-motion';
 import CategoryBox from '../CategoryBox';
 import Container from '../Container';
 import axios from 'axios';
-import { PINNED_CATEGORIES_STORAGE_KEY, MAX_PINNED_CATEGORIES } from '@/app/(marketplace)/constants/categoryPreferences';
+import {
+  PINNED_CATEGORIES_STORAGE_KEY,
+  MAX_PINNED_CATEGORIES,
+} from '@/app/(marketplace)/constants/categoryPreferences';
 
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from 'react';
 import {
   LuBaby,
   LuCompass,
@@ -109,17 +119,20 @@ export const categories: CategoryDefinition[] = [
   {
     label: 'Adventure & Outdoor',
     icon: LuMountain,
-    description: 'Thrilling experiences in the open air, from hiking trails to adrenaline adventures.',
+    description:
+      'Thrilling experiences in the open air, from hiking trails to adrenaline adventures.',
   },
   {
     label: 'Nature & Wildlife',
     icon: LuLeaf,
-    description: 'Explore biodiversity and connect with the natural world and its habitats.',
+    description:
+      'Explore biodiversity and connect with the natural world and its habitats.',
   },
   {
     label: 'Water Activities',
     icon: LuWaves,
-    description: 'Sail, swim, and dive into aquatic adventures above and below the surface.',
+    description:
+      'Sail, swim, and dive into aquatic adventures above and below the surface.',
   },
   {
     label: 'Food, Drinks & Culinary',
@@ -129,97 +142,117 @@ export const categories: CategoryDefinition[] = [
   {
     label: 'Culture & History',
     icon: LuLandmark,
-    description: 'Discover local heritage, stories, and iconic landmarks with expert hosts.',
+    description:
+      'Discover local heritage, stories, and iconic landmarks with expert hosts.',
   },
   {
     label: 'Art, Design & Photography',
     icon: LuPalette,
-    description: 'Creative workshops and visual explorations for art and design lovers.',
+    description:
+      'Creative workshops and visual explorations for art and design lovers.',
   },
   {
     label: 'Music, Nightlife & Social',
     icon: LuMusic2,
-    description: 'Groove through vibrant nights, live performances, and social hangouts.',
+    description:
+      'Groove through vibrant nights, live performances, and social hangouts.',
   },
   {
     label: 'Sports, Fitness & Well-Being',
     icon: LuDumbbell,
-    description: 'Active escapes focused on movement, health, and mindful balance.',
+    description:
+      'Active escapes focused on movement, health, and mindful balance.',
   },
   {
     label: 'Workshops & Skill-Learning',
     icon: LuGraduationCap,
-    description: 'Hands-on classes to master new crafts, skills, and creative passions.',
+    description:
+      'Hands-on classes to master new crafts, skills, and creative passions.',
   },
   {
     label: 'Tours & Sightseeing',
     icon: LuCompass,
-    description: 'Guided explorations that uncover hidden gems and iconic views.',
+    description:
+      'Guided explorations that uncover hidden gems and iconic views.',
   },
   {
     label: 'Luxury, VIP & Exclusive Access',
     icon: LuGem,
-    description: 'Premium experiences with special access and elevated service.',
+    description:
+      'Premium experiences with special access and elevated service.',
   },
   {
     label: 'Spirituality, Retreats & Healing',
     icon: LuFlower2,
-    description: 'Restorative journeys for mindfulness, wellness, and inner balance.',
+    description:
+      'Restorative journeys for mindfulness, wellness, and inner balance.',
   },
   {
     label: 'Transportation & Logistics',
     icon: LuBus,
-    description: 'Seamless mobility services and scenic rides that connect each moment.',
+    description:
+      'Seamless mobility services and scenic rides that connect each moment.',
   },
   {
     label: 'Events, Festivals & Seasonal',
     icon: LuPartyPopper,
-    description: 'Timely gatherings celebrating culture, tradition, and special occasions.',
+    description:
+      'Timely gatherings celebrating culture, tradition, and special occasions.',
   },
   {
     label: 'Volunteer & Community Impact',
     icon: LuHelpingHand,
-    description: 'Give back with meaningful projects that support local communities.',
+    description:
+      'Give back with meaningful projects that support local communities.',
   },
   {
     label: 'Romantic & Special Occasions',
     icon: LuHeart,
-    description: 'Curated moments for couples, celebrations, and heartfelt memories.',
+    description:
+      'Curated moments for couples, celebrations, and heartfelt memories.',
   },
   {
     label: 'Family & Kids Activities',
     icon: LuBaby,
-    description: 'Playful adventures crafted for little explorers and their grown-ups.',
+    description:
+      'Playful adventures crafted for little explorers and their grown-ups.',
   },
   {
     label: 'Business & Networking',
     icon: LuBriefcase,
-    description: 'Professional meetups, corporate escapes, and industry networking events.',
+    description:
+      'Professional meetups, corporate escapes, and industry networking events.',
   },
   {
     label: 'Photography & Videography',
     icon: LuCamera,
-    description: 'Capture stunning visuals through guided shoots and creative camera workshops.',
+    description:
+      'Capture stunning visuals through guided shoots and creative camera workshops.',
   },
   {
     label: 'Learning & Tutoring',
     icon: LuBookOpen,
-    description: 'Personalized lessons and tutoring sessions across academics and interests.',
+    description:
+      'Personalized lessons and tutoring sessions across academics and interests.',
   },
   {
     label: 'Gaming & Esports',
     icon: LuGamepad2,
-    description: 'Competitive and casual gaming meetups, tournaments, and esports coaching.',
+    description:
+      'Competitive and casual gaming meetups, tournaments, and esports coaching.',
   },
 ];
 
-const Categories = () => {
+/**
+ * Inner component: all heavy hooks and browser-ish logic live here.
+ * This NEVER renders on the server, thanks to the outer shell below.
+ */
+const CategoriesInner: React.FC = () => {
   const params = useSearchParams();
   const category = params?.get('category');
-  const pathname = usePathname();
   const router = useRouter();
-  const isMainPage = pathname === '/';
-  const [visible, setVisible] = useState(true);
+
+  const [visible, setVisible] = useState(() => !category);
   const [autoScrollPaused, setAutoScrollPaused] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const resumeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -230,7 +263,8 @@ const Categories = () => {
   const [pinnedCategories, setPinnedCategories] = useState<string[]>([]);
 
   const locationInputRef = useRef<CountrySearchSelectHandle | null>(null);
-  const { location: globalLocation, setLocation: setGlobalLocation } = useExperienceSearchState();
+  const { location: globalLocation, setLocation: setGlobalLocation } =
+    useExperienceSearchState();
   const countryHelpers = useCountries();
   const [keywordDraft, setKeywordDraft] = useState('');
   const previousLocationRef = useRef<CountrySelectValue | undefined>(undefined);
@@ -239,7 +273,9 @@ const Categories = () => {
   const languageOptions = useMemo(
     () =>
       LANGUAGE_OPTIONS.map((option) => ({
-        label: `${option.language}${option.region ? ` (${option.region})` : ''}`,
+        label: `${option.language}${
+          option.region ? ` (${option.region})` : ''
+        }`,
         value: option.code,
       })),
     [],
@@ -268,19 +304,27 @@ const Categories = () => {
         const response = await axios.get('/api/categories/usage');
         if (!isActive) return;
 
-      const usageEntries = Array.isArray(response.data?.data) ? response.data.data : [];
+        const usageEntries = Array.isArray(response.data?.data)
+          ? response.data.data
+          : [];
 
-      const usage = (usageEntries as Array<{ category?: string; bookingCount?: number }>).reduce(
-        (acc, entry) => {
-          if (entry && typeof entry.category === 'string' && typeof entry.bookingCount === 'number') {
-            acc[entry.category] = entry.bookingCount;
-          }
-          return acc;
-        },
-        {} as Record<string, number>,
-      );
+        const usage = (
+          usageEntries as Array<{ category?: string; bookingCount?: number }>
+        ).reduce(
+          (acc, entry) => {
+            if (
+              entry &&
+              typeof entry.category === 'string' &&
+              typeof entry.bookingCount === 'number'
+            ) {
+              acc[entry.category] = entry.bookingCount;
+            }
+            return acc;
+          },
+          {} as Record<string, number>,
+        );
 
-      setCategoryUsage(usage);
+        setCategoryUsage(usage);
       } catch (error) {
         console.error('[CATEGORY_USAGE]', error);
       }
@@ -297,12 +341,10 @@ const Categories = () => {
   ): CountrySelectValue | undefined => {
     if (!value) return undefined;
 
-    // If latlng is already a tuple, nothing to do
     if (Array.isArray(value.latlng) && value.latlng.length === 2) {
       return value;
     }
 
-    // If it came from useCountries() with latlng: number[]
     const latlngArray = Array.isArray(value.latlng) ? value.latlng : [];
     const [lat, lng] = latlngArray;
 
@@ -314,7 +356,6 @@ const Categories = () => {
 
   const resolvedInitialLocation = useMemo<CountrySelectValue | undefined>(() => {
     if (globalLocation) {
-      // Already a CountrySelectValue (from state), normalize just in case
       return normalizeToCountrySelectValue(globalLocation);
     }
 
@@ -340,7 +381,12 @@ const Categories = () => {
 
   const initialFilters = useMemo<FiltersState>(() => {
     const parseMulti = (value: string | null): string[] =>
-      value ? value.split(',').map((item) => item.trim()).filter(Boolean) : [];
+      value
+        ? value
+            .split(',')
+            .map((item) => item.trim())
+            .filter(Boolean)
+        : [];
 
     return {
       groupStyles: parseMulti(params?.get('groupStyles') ?? null),
@@ -352,10 +398,11 @@ const Categories = () => {
     };
   }, [params]);
 
-  const [draftFilters, setDraftFilters] = useState<FiltersState>(initialFilters);
-  const [locationDraft, setLocationDraft] = useState<CountrySelectValue | undefined>(
-    resolvedInitialLocation,
-  );
+  const [draftFilters, setDraftFilters] =
+    useState<FiltersState>(initialFilters);
+  const [locationDraft, setLocationDraft] = useState<
+    CountrySelectValue | undefined
+  >(resolvedInitialLocation);
 
   useEffect(() => {
     if (!globalLocation && resolvedInitialLocation) {
@@ -372,7 +419,7 @@ const Categories = () => {
       initialFilters.languages.length > 0 ||
       initialFilters.keywords.length > 0 ||
       !!params?.get('locationValue'),
-    [initialFilters, params]
+    [initialFilters, params],
   );
 
   const hasAnyDraftSelected = useMemo(
@@ -384,7 +431,7 @@ const Categories = () => {
       draftFilters.languages.length > 0 ||
       draftFilters.keywords.length > 0 ||
       !!locationDraft,
-    [draftFilters, locationDraft]
+    [draftFilters, locationDraft],
   );
 
   useEffect(() => {
@@ -397,7 +444,8 @@ const Categories = () => {
 
   useEffect(() => {
     if (filtersOpen && !prevFiltersOpenRef.current) {
-      previousLocationRef.current = globalLocation ?? resolvedInitialLocation ?? undefined;
+      previousLocationRef.current =
+        globalLocation ?? resolvedInitialLocation ?? undefined;
       closeReasonRef.current = 'dismiss';
     } else if (!filtersOpen && prevFiltersOpenRef.current) {
       if (closeReasonRef.current === 'dismiss') {
@@ -416,7 +464,7 @@ const Categories = () => {
     setLocationDraft,
   ]);
 
-  // B) replace the preview-count effect so it runs whenever any filter is chosen (debounced)
+  // Preview count effect (debounced)
   useEffect(() => {
     if (!hasAnyDraftSelected) {
       setPreviewCount(null);
@@ -425,16 +473,29 @@ const Categories = () => {
     }
 
     const queryObj: StringifiableRecord = {
-      groupStyles: draftFilters.groupStyles.length ? draftFilters.groupStyles.join(',') : undefined,
+      groupStyles: draftFilters.groupStyles.length
+        ? draftFilters.groupStyles.join(',')
+        : undefined,
       duration: draftFilters.duration ?? undefined,
-      environments: draftFilters.environments.length ? draftFilters.environments.join(',') : undefined,
-      activityForms: draftFilters.activityForms.length ? draftFilters.activityForms.join(',') : undefined,
-      languages: draftFilters.languages.length ? draftFilters.languages.join(',') : undefined,
-      seoKeywords: draftFilters.keywords.length ? draftFilters.keywords.join(',') : undefined,
+      environments: draftFilters.environments.length
+        ? draftFilters.environments.join(',')
+        : undefined,
+      activityForms: draftFilters.activityForms.length
+        ? draftFilters.activityForms.join(',')
+        : undefined,
+      languages: draftFilters.languages.length
+        ? draftFilters.languages.join(',')
+        : undefined,
+      seoKeywords: draftFilters.keywords.length
+        ? draftFilters.keywords.join(',')
+        : undefined,
       locationValue: locationDraft?.value,
     };
 
-    const query = qs.stringify(queryObj, { skipNull: true, skipEmptyString: true });
+    const query = qs.stringify(queryObj, {
+      skipNull: true,
+      skipEmptyString: true,
+    });
 
     let cancelled = false;
     setPreviewLoading(true);
@@ -487,11 +548,14 @@ const Categories = () => {
     scheduleAutoScrollResume();
   }, [scheduleAutoScrollResume]);
 
-  useEffect(() => () => {
-    if (resumeTimeoutRef.current) {
-      clearTimeout(resumeTimeoutRef.current);
-    }
-  }, []);
+  useEffect(
+    () => () => {
+      if (resumeTimeoutRef.current) {
+        clearTimeout(resumeTimeoutRef.current);
+      }
+    },
+    [],
+  );
 
   const orderedCategories = useMemo<CategoryWithMeta[]>(() => {
     const base = categories
@@ -508,43 +572,24 @@ const Categories = () => {
       });
 
     const pinnedSet = new Set(pinnedCategories.slice(0, MAX_PINNED_CATEGORIES));
-    const withPinned = base.map((item) => ({ ...item, pinned: pinnedSet.has(item.label) }));
-    const trendingLabel = withPinned.length > 0 && withPinned[0].bookingCount > 0 ? withPinned[0].label : null;
-    const withTrending = withPinned.map((item) => ({ ...item, trending: trendingLabel === item.label }));
+    const withPinned = base.map((item) => ({
+      ...item,
+      pinned: pinnedSet.has(item.label),
+    }));
+    const trendingLabel =
+      withPinned.length > 0 && withPinned[0].bookingCount > 0
+        ? withPinned[0].label
+        : null;
+    const withTrending = withPinned.map((item) => ({
+      ...item,
+      trending: trendingLabel === item.label,
+    }));
 
     const pinnedFirst = withTrending.filter((item) => item.pinned);
     const rest = withTrending.filter((item) => !item.pinned);
 
     return [...pinnedFirst, ...rest];
   }, [categoryUsage, pinnedCategories]);
-
-  // useEffect(() => {
-  //   if (autoScrollPaused) return;
-
-  //   let frameId: number;
-  //   const step = () => {
-  //     const container = scrollContainerRef.current;
-  //     if (!container) {
-  //       frameId = requestAnimationFrame(step);
-  //       return;
-  //     }
-
-  //     if (container.scrollWidth <= container.clientWidth + 4) {
-  //       return;
-  //     }
-
-  //     container.scrollLeft += 0.35;
-  //     if (container.scrollLeft >= container.scrollWidth - container.clientWidth - 1) {
-  //       container.scrollLeft = 0;
-  //     }
-
-  //     frameId = requestAnimationFrame(step);
-  //   };
-
-  //   frameId = requestAnimationFrame(step);
-
-  //   return () => cancelAnimationFrame(frameId);
-  // }, [autoScrollPaused]);
 
   useEffect(() => {
     setVisible(!category);
@@ -554,7 +599,6 @@ const Categories = () => {
     const handleOpen = () => setVisible(true);
 
     window.addEventListener('categories:open', handleOpen);
-
     return () => {
       window.removeEventListener('categories:open', handleOpen);
     };
@@ -605,7 +649,7 @@ const Categories = () => {
 
     const url = qs.stringifyUrl(
       { url: '/', query: nextQuery },
-      { skipNull: true, skipEmptyString: true }
+      { skipNull: true, skipEmptyString: true },
     );
 
     router.push(url);
@@ -653,7 +697,7 @@ const Categories = () => {
 
     const url = qs.stringifyUrl(
       { url: '/', query: currentQuery },
-      { skipNull: true, skipEmptyString: true }
+      { skipNull: true, skipEmptyString: true },
     );
 
     router.push(url);
@@ -673,7 +717,7 @@ const Categories = () => {
         };
       });
     },
-    []
+    [],
   );
 
   const selectDuration = useCallback((value: string) => {
@@ -683,33 +727,15 @@ const Categories = () => {
     }));
   }, []);
 
-  // const addKeyword = useCallback((value: string) => {
-  //   const keyword = value.trim();
-  //   if (!keyword) {
-  //     return;
-  //   }
-
-  //   setDraftFilters((prev) => {
-  //     if (prev.keywords.includes(keyword)) {
-  //       return prev;
-  //     }
-
-  //     return {
-  //       ...prev,
-  //       keywords: [...prev.keywords, keyword],
-  //     };
-  //   });
-  // }, []);
-
-  // in Categories.tsx (keep your addKeyword callback, but normalize)
+  // normalized keyword add (lowercase, no duplicates)
   const addKeyword = useCallback((value: string) => {
     const keyword = value.trim().toLowerCase();
     if (!keyword) return;
-    setDraftFilters((prev) => (
+    setDraftFilters((prev) =>
       prev.keywords.includes(keyword)
         ? prev
-        : { ...prev, keywords: [...prev.keywords, keyword] }
-    ));
+        : { ...prev, keywords: [...prev.keywords, keyword] },
+    );
   }, []);
 
   const removeKeyword = useCallback((value: string) => {
@@ -761,101 +787,104 @@ const Categories = () => {
   }, []);
 
   useEffect(() => {
-    window.dispatchEvent(new CustomEvent('categories:toggle', { detail: { visible } }));
+    window.dispatchEvent(
+      new CustomEvent('categories:toggle', { detail: { visible } }),
+    );
   }, [visible]);
-
-  if (!isMainPage) {
-    return null;
-  }
 
   return (
     <div className="relative w-full">
-      <AnimatePresence initial={false}>
-        {visible && (
-          <motion.div
-            key="categories"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className={clsx('relative z-0 overflow-hidden', !visible && 'pointer-events-none')}
-          >
-            <Container>
-              <div
-                ref={scrollContainerRef}
-
-                className="categorybox flex w-full  flex-row items-center gap-4 overflow-x-auto px-6 py-6 scroll-smooth scrollbar-thin sm:w-auto"
-                // className="flex w-full snap-x snap-mandatory flex-row items-center gap-4 overflow-x-auto px-6 py-6 scroll-smooth scrollbar-thin sm:w-auto"
-
-                onMouseDown={handleInteractionStart}
-                onMouseUp={handleInteractionEnd}
-                onMouseLeave={handleInteractionEnd}
-                onTouchStart={handleInteractionStart}
-                onTouchEnd={handleInteractionEnd}
-                onWheel={() => {
-                  handleInteractionStart();
-                  scheduleAutoScrollResume();
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => setFiltersOpen(true)}
-                  className={clsx(
-                    'flex h-[110px] w-[110px] shrink-0 flex-col items-center justify-between bg-white rounded-2xl p-4 text-neutral-600 shadow-md transition-all duration-300 hover:shadow-lg hover:shadow-neutral-300/50',
-                    // 'flex h-[110px] w-[110px] shrink-0 flex-col items-center justify-between rounded-2xl bg-white p-4 text-neutral-600 shadow-md transition-all duration-300 hover:shadow-lg hover:shadow-neutral-300/50',
-                    hasActiveFilters && 'text-neutral-900 shadow-xl shadow-neutral-400/60'
-                  )}
-                >
-                  <div
-                    className={clsx(
-                      'relative flex h-12 w-12 p-2 items-center justify-center rounded-full bg-black shadow-md shadow-neutral-300/40',
-                      // 'relative flex h-12 w-12 items-center justify-center rounded-full bg-transparent shadow-md shadow-neutral-300/40',
-                      hasActiveFilters && 'shadow-neutral-400/60'
-                    )}
-                  >
-                    <LuSlidersHorizontal
-                      className={clsx('h-6 w-6', hasActiveFilters ? 'text-white' : 'text-white')}
-                      aria-hidden="true"
-                    />
-                    {hasActiveFilters && (
-                      <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-neutral-900" aria-hidden="true" />
-                    )}
-                  </div>
-                  <span className="mt-4 block h-10 w-full px-1 text-center text-[10px] font-semibold uppercase leading-tight tracking-wide text-neutral-700">
-                  {/* <span className="mt-2 block h-10 w-full px-1 text-center text-[10px] font-semibold uppercase leading-tight tracking-wide text-neutral-700"> */}
-                    Filters
-                  </span>
-                </button>
-                {orderedCategories.map((item) => (
-                  <CategoryBox
-                    key={item.label}
-                    label={item.label}
-                    icon={item.icon}
-                    description={item.description}
-                    selected={category === item.label}
-                    bookingCount={item.bookingCount}
-                    isTrending={item.trending}
-                    pinned={item.pinned}
-                  />
-                ))}
-              </div>
-            </Container>
-          </motion.div>
+      <motion.div
+        key="categories"
+        initial={false}
+        animate={{ height: visible ? 'auto' : 0, opacity: visible ? 1 : 0 }}
+        transition={{ duration: 0.3 }}
+        className={clsx(
+          'relative z-0 overflow-hidden',
+          !visible && 'pointer-events-none',
         )}
-      </AnimatePresence>
+        aria-hidden={!visible}
+      >
+        <Container>
+          <div
+            ref={scrollContainerRef}
+            className="categorybox flex w-full flex-row items-center gap-4 overflow-x-auto px-6 py-6 scroll-smooth scrollbar-thin sm:w-auto"
+            onMouseDown={handleInteractionStart}
+            onMouseUp={handleInteractionEnd}
+            onMouseLeave={handleInteractionEnd}
+            onTouchStart={handleInteractionStart}
+            onTouchEnd={handleInteractionEnd}
+            onWheel={() => {
+              handleInteractionStart();
+              scheduleAutoScrollResume();
+            }}
+          >
+            {/* Filters tile */}
+            <button
+              type="button"
+              onClick={() => setFiltersOpen(true)}
+              className={clsx(
+                'flex h-[110px] w-[110px] shrink-0 flex-col items-center justify-between bg-white rounded-2xl p-4 text-neutral-600 shadow-md transition-all duration-300 hover:shadow-lg hover:shadow-neutral-300/50',
+                hasActiveFilters &&
+                  'text-neutral-900 shadow-xl shadow-neutral-400/60',
+              )}
+            >
+              <div
+                className={clsx(
+                  'relative flex h-12 w-12 p-2 items-center justify-center rounded-full bg-black shadow-md shadow-neutral-300/40',
+                  hasActiveFilters && 'shadow-neutral-400/60',
+                )}
+              >
+                <LuSlidersHorizontal
+                  className={clsx('h-6 w-6', 'text-white')}
+                  aria-hidden="true"
+                />
+                {hasActiveFilters && (
+                  <span
+                    className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-neutral-900"
+                    aria-hidden="true"
+                  />
+                )}
+              </div>
 
+              <span className="mt-4 block h-10 w-full px-1 text-center text-[10px] font-semibold uppercase leading-tight tracking-wide text-neutral-700">
+                Filters
+              </span>
+            </button>
+
+            {/* Category tiles */}
+            {orderedCategories.map((item) => (
+              <CategoryBox
+                key={item.label}
+                label={item.label}
+                icon={item.icon}
+                description={item.description}
+                selected={category === item.label}
+                bookingCount={item.bookingCount}
+                isTrending={item.trending}
+                pinned={item.pinned}
+              />
+            ))}
+          </div>
+        </Container>
+      </motion.div>
+
+      {/* Collapse toggle */}
       <button
         type="button"
         onClick={() => setVisible((prev) => !prev)}
-        className="absolute bottom-[-12px] left-1/2 z-0 -translate-x-1/2 flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-md transition-transform duration-300"
-        // className="absolute bottom-[-12px] left-1/2 z-10 -translate-x-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-md transition-transform duration-300"
+        className="absolute bottom-[-12px] left-1/2 z-10 -translate-x-1/2 flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-md transition-transform duration-300"
         aria-label={visible ? 'Collapse categories' : 'Expand categories'}
       >
-        <motion.div animate={{ rotate: visible ? 0 : 180 }} transition={{ duration: 0.3 }}>
+        <motion.div
+          animate={{ rotate: visible ? 0 : 180 }}
+          transition={{ duration: 0.3 }}
+        >
           <LuChevronUp size={15} strokeWidth={3} className="text-black" />
         </motion.div>
       </button>
 
+      {/* Filters aside */}
       <AnimatePresence>
         {filtersOpen && (
           <>
@@ -890,18 +919,25 @@ const Categories = () => {
                   flex flex-col
                   overflow-hidden
                 "
-      initial={{ x: '-100%', opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      exit={{ x: '-100%', opacity: 0 }}
-      transition={{ duration: 0.25, ease: 'easeInOut', type: 'tween' }}
-    >
-
+                initial={{ x: '-100%', opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: '-100%', opacity: 0 }}
+                transition={{
+                  duration: 0.25,
+                  ease: 'easeInOut',
+                  type: 'tween',
+                }}
+              >
                 {/* Header */}
                 <div className="px-6 md:px-10 pt-6 md:pt-10 pb-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h2 className="text-lg font-semibold text-neutral-900">Refine experiences</h2>
-                      <p className="text-sm text-neutral-600">Choose filters to surface matching listings.</p>
+                      <h2 className="text-lg font-semibold text-neutral-900">
+                        Refine experiences
+                      </h2>
+                      <p className="text-sm text-neutral-600">
+                        Choose filters to surface matching listings.
+                      </p>
                     </div>
                     <button
                       type="button"
@@ -920,15 +956,15 @@ const Categories = () => {
                 {/* Scrollable content */}
                 <div className="min-h-0 flex-1 overflow-y-auto px-6 md:px-10 pb-6 scroll-smooth">
                   <div className="mt-2 flex flex-col gap-6">
-                    <section
-                      className="rounded-xl bg-white p-4 md:p-5 shadow-sm hover:shadow-md transition-shadow border border-neutral-100"
-                    >
+                    <section className="rounded-xl bg-white p-4 md:p-5 shadow-sm hover:shadow-md transition-shadow border border-neutral-100">
                       <div className="flex items-start gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl aspect-square shadow-md text-neutral-900">
                           <LuSearch className="h-5 w-5" aria-hidden="true" />
                         </div>
                         <div>
-                          <h3 className="text-sm font-semibold text-neutral-900">Search by location</h3>
+                          <h3 className="text-sm font-semibold text-neutral-900">
+                            Search by location
+                          </h3>
                           <p className="text-xs text-neutral-500">
                             Find experiences in a specific city or country.
                           </p>
@@ -971,7 +1007,9 @@ const Categories = () => {
                       description="Highlight the environments guests will explore."
                       options={ENVIRONMENT_OPTIONS}
                       values={draftFilters.environments}
-                      onToggle={(value) => toggleMultiFilter('environments', value)}
+                      onToggle={(value) =>
+                        toggleMultiFilter('environments', value)
+                      }
                     />
 
                     <FilterSection
@@ -981,7 +1019,9 @@ const Categories = () => {
                       description="Tell guests how they will move through the experience."
                       options={ACTIVITY_FORM_OPTIONS}
                       values={draftFilters.activityForms}
-                      onToggle={(value) => toggleMultiFilter('activityForms', value)}
+                      onToggle={(value) =>
+                        toggleMultiFilter('activityForms', value)
+                      }
                     />
 
                     <FilterSection
@@ -1018,11 +1058,12 @@ const Categories = () => {
                     border-t border-neutral-200
                     bg-white/90 backdrop-blur-md
                   "
-                  style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 1rem)' }}
+                  style={{
+                    paddingBottom:
+                      'max(env(safe-area-inset-bottom), 1rem)',
+                  }}
                 >
                   <div className="flex flex-col gap-3">
-
-
                     <button
                       type="button"
                       onClick={handleFiltersApply}
@@ -1034,10 +1075,15 @@ const Categories = () => {
                         <span className="flex items-center justify-center gap-2">
                           <span>Show</span>
                           {previewLoading && (
-                            <LuLoader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                            <LuLoader2
+                              className="h-4 w-4 animate-spin"
+                              aria-hidden="true"
+                            />
                           )}
                           {previewCount !== null && !previewLoading && (
-                            <span className="w-5 h-5 justify-center items-center flex aspect-square rounded-lg bg-white text-black font-semibold">{previewCount}</span>
+                            <span className="w-5 h-5 justify-center items-center flex aspect-square rounded-lg bg-white text-black font-semibold">
+                              {previewCount}
+                            </span>
                           )}
                           <span>
                             {previewCount !== null && !previewLoading
@@ -1066,6 +1112,26 @@ const Categories = () => {
       </AnimatePresence>
     </div>
   );
+};
+
+/**
+ * Tiny shell: renders nothing on the server, and only mounts
+ * CategoriesInner on the client homepage after first render.
+ */
+const Categories: React.FC = () => {
+  const pathname = usePathname();
+  const isMainPage = pathname === '/';
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  if (!isMainPage || !hasMounted) {
+    return null;
+  }
+
+  return <CategoriesInner />;
 };
 
 export default Categories;
@@ -1187,7 +1253,9 @@ const KeywordsSection: React.FC<KeywordsSectionProps> = ({
           <Icon className="h-5 w-5" aria-hidden="true" />
         </div>
         <div>
-          <h3 className="text-sm font-semibold text-neutral-900">{title}</h3>
+          <h3 className="text-sm font-semibold text-neutral-900">
+            {title}
+          </h3>
           <p className="text-xs text-neutral-500">{description}</p>
         </div>
       </div>
@@ -1210,7 +1278,9 @@ const KeywordsSection: React.FC<KeywordsSectionProps> = ({
           </span>
         ))}
         {values.length === 0 && (
-          <span className="text-xs text-neutral-400">No keywords selected yet.</span>
+          <span className="text-xs text-neutral-400">
+            No keywords selected yet.
+          </span>
         )}
       </div>
 
