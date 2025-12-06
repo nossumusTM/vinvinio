@@ -13,6 +13,9 @@ interface CategoryBoxProps {
   label: string;
   description: string;
   selected?: boolean;
+  bookingCount?: number;
+  isTrending?: boolean;
+  pinned?: boolean;
 }
 
 const CategoryBox: React.FC<CategoryBoxProps> = ({
@@ -20,6 +23,9 @@ const CategoryBox: React.FC<CategoryBoxProps> = ({
   label,
   description,
   selected,
+  bookingCount = 0,
+  isTrending = false,
+  pinned = false,
 }) => {
   const router = useRouter();
   const params = useSearchParams();
@@ -52,12 +58,22 @@ const CategoryBox: React.FC<CategoryBoxProps> = ({
       aria-pressed={selected}
       title={description}
       className={clsx(
-        'flex h-[110px] w-[110px] shrink-0 flex-col items-center justify-between rounded-2xl bg-white p-4 text-neutral-600 shadow-md transition-all duration-300',
+        'relative flex h-[110px] w-[110px] shrink-0 flex-col items-center justify-between rounded-2xl bg-white p-4 text-neutral-600 shadow-md transition-all duration-300',
         selected
           ? 'text-neutral-900 shadow-xl shadow-neutral-400/60'
           : 'hover:shadow-lg hover:shadow-neutral-300/50'
       )}
     >
+      {bookingCount > 0 && (
+        <div className="absolute right-2 top-2 flex items-center gap-1" aria-hidden="true">
+          {isTrending && (
+            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-semibold uppercase text-emerald-800 shadow-sm">
+              Trending
+            </span>
+          )}
+          <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+        </div>
+      )}
       <motion.div
         animate={
           selected
@@ -71,7 +87,8 @@ const CategoryBox: React.FC<CategoryBoxProps> = ({
         }}
         className={clsx(
           'flex h-12 w-12 items-center justify-center rounded-full bg-transparent shadow-md shadow-neutral-300/40',
-          selected && 'shadow-neutral-400/60'
+          selected && 'shadow-neutral-400/60',
+          pinned && 'shadow-blue-300/60'
         )}
         aria-hidden="true"
       >

@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import CategoryBox from '../CategoryBox';
 import Container from '../Container';
 import axios from 'axios';
+import { PINNED_CATEGORIES_STORAGE_KEY, MAX_PINNED_CATEGORIES } from '@/app/(marketplace)/constants/categoryPreferences';
 
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import {
@@ -38,6 +39,9 @@ import {
   LuClock3,
   LuGlobe2,
   LuActivity,
+  LuCamera,
+  LuBookOpen,
+  LuGamepad2,
 } from 'react-icons/lu';
 import type { IconType } from 'react-icons';
 import qs, {
@@ -77,6 +81,28 @@ type FiltersState = {
   activityForms: string[];
   languages: string[];
   keywords: string[];
+};
+
+type CategoryWithMeta = CategoryDefinition & {
+  bookingCount: number;
+  trending: boolean;
+  pinned: boolean;
+};
+
+const readPinnedCategories = (): string[] => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const stored = window.localStorage.getItem(PINNED_CATEGORIES_STORAGE_KEY);
+    const parsed = stored ? (JSON.parse(stored) as unknown) : [];
+    return Array.isArray(parsed)
+      ? parsed
+          .map((item) => (typeof item === 'string' ? item : null))
+          .filter((value): value is string => Boolean(value))
+          .slice(0, MAX_PINNED_CATEGORIES)
+      : [];
+  } catch {
+    return [];
+  }
 };
 
 export const categories: CategoryDefinition[] = [
@@ -170,6 +196,21 @@ export const categories: CategoryDefinition[] = [
     icon: LuBriefcase,
     description: 'Professional meetups, corporate escapes, and industry networking events.',
   },
+  {
+    label: 'Photography & Videography',
+    icon: LuCamera,
+    description: 'Capture stunning visuals through guided shoots and creative camera workshops.',
+  },
+  {
+    label: 'Learning & Tutoring',
+    icon: LuBookOpen,
+    description: 'Personalized lessons and tutoring sessions across academics and interests.',
+  },
+  {
+    label: 'Gaming & Esports',
+    icon: LuGamepad2,
+    description: 'Competitive and casual gaming meetups, tournaments, and esports coaching.',
+  },
 ];
 
 const Categories = () => {
@@ -185,6 +226,9 @@ const Categories = () => {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [previewCount, setPreviewCount] = useState<number | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [categoryUsage, setCategoryUsage] = useState<Record<string, number>>({});
+  const [pinnedCategories, setPinnedCategories] = useState<string[]>([]);
+
   const locationInputRef = useRef<CountrySearchSelectHandle | null>(null);
   const { location: globalLocation, setLocation: setGlobalLocation } = useExperienceSearchState();
   const countryHelpers = useCountries();
@@ -200,6 +244,53 @@ const Categories = () => {
       })),
     [],
   );
+
+  useEffect(() => {
+    setPinnedCategories(readPinnedCategories());
+  }, []);
+
+  useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (!event.key || event.key === PINNED_CATEGORIES_STORAGE_KEY) {
+        setPinnedCategories(readPinnedCategories());
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const fetchUsage = async () => {
+      try {
+        const response = await axios.get('/api/categories/usage');
+        if (!isActive) return;
+
+      const usageEntries = Array.isArray(response.data?.data) ? response.data.data : [];
+
+      const usage = (usageEntries as Array<{ category?: string; bookingCount?: number }>).reduce(
+        (acc, entry) => {
+          if (entry && typeof entry.category === 'string' && typeof entry.bookingCount === 'number') {
+            acc[entry.category] = entry.bookingCount;
+          }
+          return acc;
+        },
+        {} as Record<string, number>,
+      );
+
+      setCategoryUsage(usage);
+      } catch (error) {
+        console.error('[CATEGORY_USAGE]', error);
+      }
+    };
+
+    fetchUsage();
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   const normalizeToCountrySelectValue = (
     value: CountrySelectValue | undefined | null,
@@ -401,6 +492,31 @@ const Categories = () => {
       clearTimeout(resumeTimeoutRef.current);
     }
   }, []);
+
+  const orderedCategories = useMemo<CategoryWithMeta[]>(() => {
+    const base = categories
+      .map<CategoryWithMeta>((item) => ({
+        ...item,
+        bookingCount: categoryUsage[item.label] ?? 0,
+        trending: false,
+        pinned: false,
+      }))
+      .sort((a, b) => {
+        const diff = b.bookingCount - a.bookingCount;
+        if (diff !== 0) return diff;
+        return a.label.localeCompare(b.label);
+      });
+
+    const pinnedSet = new Set(pinnedCategories.slice(0, MAX_PINNED_CATEGORIES));
+    const withPinned = base.map((item) => ({ ...item, pinned: pinnedSet.has(item.label) }));
+    const trendingLabel = withPinned.length > 0 && withPinned[0].bookingCount > 0 ? withPinned[0].label : null;
+    const withTrending = withPinned.map((item) => ({ ...item, trending: trendingLabel === item.label }));
+
+    const pinnedFirst = withTrending.filter((item) => item.pinned);
+    const rest = withTrending.filter((item) => !item.pinned);
+
+    return [...pinnedFirst, ...rest];
+  }, [categoryUsage, pinnedCategories]);
 
   // useEffect(() => {
   //   if (autoScrollPaused) return;
@@ -710,13 +826,16 @@ const Categories = () => {
                     Filters
                   </span>
                 </button>
-                {categories.map((item) => (
+                {orderedCategories.map((item) => (
                   <CategoryBox
                     key={item.label}
                     label={item.label}
                     icon={item.icon}
                     description={item.description}
                     selected={category === item.label}
+                    bookingCount={item.bookingCount}
+                    isTrending={item.trending}
+                    pinned={item.pinned}
                   />
                 ))}
               </div>

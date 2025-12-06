@@ -3101,6 +3101,11 @@ const coverImage = useMemo(() => {
     [getByValue, hydrateAddressFromComponents, setFieldValues],
   );
 
+  const confirmedAtLabel =
+    twoFactorConfirmedAt
+      ? new Date(twoFactorConfirmedAt as any).toLocaleDateString()
+      : null;
+
   // useEffect(() => {
   //   const checkAndSubscribe = async () => {
   //     try {
@@ -4303,10 +4308,11 @@ const coverImage = useMemo(() => {
 
                     {twoFactorEnabled && (
                       <div className="space-y-3">
-                        <p className="text-sm text-neutral-700">
-                          Two-factor authentication is active
-                          {twoFactorConfirmedAt ? ` since ${twoFactorConfirmedAt.toLocaleDateString()}.` : '.'}
-                        </p>
+                        {twoFactorEnabled && confirmedAtLabel && (
+                            <p className="text-sm text-neutral-700">
+                              Two-factor authentication is active since {confirmedAtLabel}.
+                            </p>
+                          )}
 
                         <div className="space-y-2">
                           <label

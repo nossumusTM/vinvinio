@@ -25,6 +25,8 @@ import {
   getPuntiLabel,
 } from "@/app/(marketplace)/constants/partner";
 import { BASE_CURRENCY } from '@/app/(marketplace)/constants/locale';
+import { categories as NAV_CATEGORIES } from '../components/navbar/Categories';
+import { MAX_PINNED_CATEGORIES, PINNED_CATEGORIES_STORAGE_KEY } from '../constants/categoryPreferences';
 
 type SliderArrowProps = {
   className?: string;
@@ -98,6 +100,21 @@ const toTitleCase = (value: string) =>
     .join(' ');
 
 const formatJson = (value: any) => JSON.stringify(value, null, 2);
+
+const readPinnedCategoriesFromStorage = (): string[] => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const stored = window.localStorage.getItem(PINNED_CATEGORIES_STORAGE_KEY);
+    const parsed = stored ? (JSON.parse(stored) as unknown) : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((value) => (typeof value === 'string' ? value : null))
+      .filter((value): value is string => Boolean(value))
+      .slice(0, MAX_PINNED_CATEGORIES);
+  } catch {
+    return [];
+  }
+};
 
 interface Listing {
   id: string;
@@ -194,6 +211,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
 
   const [hostUserId, setHostUserId] = useState('');
   const [promoterUserId, setPromoterUserId] = useState('');
+  const [pinnedCategories, setPinnedCategories] = useState<string[]>([]);
 
   const [hostPayoutAmount, setHostPayoutAmount] = useState('');
   const [promoterPayoutAmount, setPromoterPayoutAmount] = useState('');
@@ -473,6 +491,19 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
     [fetchListings]
   );
 
+  const togglePinnedCategory = useCallback((label: string) => {
+    setPinnedCategories((prev) => {
+      if (prev.includes(label)) {
+        return prev.filter((item) => item !== label);
+      }
+      if (prev.length >= MAX_PINNED_CATEGORIES) {
+        toast.error(`You can only pin ${MAX_PINNED_CATEGORIES} categories.`);
+        return prev;
+      }
+      return [...prev, label];
+    });
+  }, []);
+
   const resetFilters = useCallback(() => {
     const cleared = { location: '', category: '' };
     setFilters(cleared);
@@ -567,6 +598,17 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
       }),
     []
   );
+
+  useEffect(() => {
+    setPinnedCategories(readPinnedCategoriesFromStorage());
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const safePinned = pinnedCategories.slice(0, MAX_PINNED_CATEGORIES);
+    window.localStorage.setItem(PINNED_CATEGORIES_STORAGE_KEY, JSON.stringify(safePinned));
+    window.dispatchEvent(new Event('storage'));
+  }, [pinnedCategories]);
 
   const formatTimestamp = useCallback(
     (value?: string) => {
@@ -1561,6 +1603,47 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
             >
               Reset
             </button>
+          </div>
+
+          <div className="mt-4 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <p className="text-sm font-semibold text-neutral-900">Pinned categories</p>
+                <p className="text-xs text-neutral-500">
+                  Choose up to {MAX_PINNED_CATEGORIES} categories to feature next to the marketplace filters.
+                </p>
+              </div>
+              <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold text-neutral-700">
+                {pinnedCategories.length}/{MAX_PINNED_CATEGORIES}
+              </span>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {NAV_CATEGORIES.map((option) => {
+                const isPinned = pinnedCategories.includes(option.label);
+                return (
+                  <button
+                    key={option.label}
+                    type="button"
+                    onClick={() => togglePinnedCategory(option.label)}
+                    className={clsx(
+                      'rounded-full border px-3 py-1.5 text-xs font-semibold shadow-sm transition',
+                      isPinned
+                        ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-blue-200'
+                        : 'border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300 hover:text-neutral-900'
+                    )}
+                  >
+                    <span className="flex items-center gap-2">
+                      <option.icon className="h-4 w-4" aria-hidden="true" />
+                      <span className="line-clamp-1 max-w-[150px] text-left">{option.label}</span>
+                      {isPinned && <span className="text-[10px] uppercase">Pinned</span>}
+                    </span>
+                  </button>
+                );
+              })}
+              {pinnedCategories.length === 0 && (
+                <span className="text-xs text-neutral-400">No categories pinned yet.</span>
+              )}
+            </div>
           </div>
 
           <div className="mt-6 flex gap-3 overflow-x-auto pb-2">
