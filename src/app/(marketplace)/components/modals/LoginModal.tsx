@@ -179,13 +179,24 @@ const LoginModal = () => {
   }, []);
 
   // const onSubmit: SubmitHandler<FieldValues> = async (data) => {
+  //   // For twoFactor step, read from watched values (not from data)
+  //   const identifier =
+  //     step === 'twoFactor'
+  //       ? (identifierValue as string)
+  //       : ((data.identifier as string) ?? '');
+
+  //   const password =
+  //     step === 'twoFactor'
+  //       ? (passwordValue as string)
+  //       : ((data.password as string) ?? '');
+
   //   if (step === 'method') {
   //     setStep('form');
   //     setValue('method', selectedMethod);
   //     return;
   //   }
 
-  //   let identifier = data.identifier as string;
+  //   let finalIdentifier = identifier;
 
   //   if (selectedMethod === 'phone') {
   //     const formattedPhone = formatPhoneNumberToE164(
@@ -199,221 +210,75 @@ const LoginModal = () => {
   //       return;
   //     }
 
-  //     identifier = formattedPhone;
+  //     finalIdentifier = formattedPhone;
   //     setPhoneError(null);
-  //   } else if (!identifier) {
+  //   } else if (!finalIdentifier) {
   //     setIdentifierError('Email is required.');
   //     return;
   //   }
 
-  //   if (!data.password) {
+  //   if (!password) {
   //     setIdentifierError(null);
   //     toast.error('Password is required.');
   //     return;
   //   }
 
-  //   if (needsTwoFactor && !twoFactorCode.trim()) {
-  //     setTwoFactorError('Enter the 6-digit code from your authenticator app.');
-  //     return;
-  //   }
-
-  //   setTwoFactorError(null);
-
-  //   setIdentifierError(null);
-  //   setIsLoading(true);
-
-  //   const callback = await signIn('credentials', {
-  //     identifier,
-  //     password: data.password,
-  //     method: selectedMethod,
-  //     totpCode: needsTwoFactor ? twoFactorCode.trim() : undefined,
-  //     redirect: false,
-  //   });
-
-  //   setIsLoading(false);
-
-  //   if (callback?.ok) {
-  //     toast.success('Benvenuto!', {
-  //       iconTheme: {
-  //         primary: '#2200ffff',
-  //         secondary: '#fff',
-  //       },
-  //     });
-
-  //     await getSession();
-  //     setNeedsTwoFactor(false);
-  //     setTwoFactorCode('');
-  //     setTwoFactorError(null);
-  //     router.refresh();
-  //     loginModal.onClose();
-  //     return;
-  //   }
-
-  //   if (callback?.error) {
-  //     const message = callback.error;
-
-  //     if (message.includes('Two-factor code required')) {
-  //       setNeedsTwoFactor(true);
-  //       setTwoFactorError('Enter the code from your authenticator app to continue.');
-  //       toast.error('Two-factor authentication is enabled. Enter your code.');
+  //   // 👉 2FA step: we already have email/phone + password, now send the TOTP
+  //   if (step === 'twoFactor') {
+  //     if (!twoFactorCode.trim() || twoFactorCode.trim().length < 6) {
+  //       setTwoFactorError('Enter the 6-digit code from your authenticator app.');
   //       return;
   //     }
 
-  //     if (message.toLowerCase().includes('two-factor')) {
-  //       setNeedsTwoFactor(true);
+  //     setTwoFactorError(null);
+  //     setIsLoading(true);
+
+  //     const callback = await signIn('credentials', {
+  //       identifier: finalIdentifier,
+  //       password,
+  //       method: selectedMethod,
+  //       totpCode: twoFactorCode.trim(),
+  //       redirect: false,
+  //     });
+
+  //     setIsLoading(false);
+
+  //     if (callback?.ok) {
+  //       toast.success('Benvenuto!', {
+  //         iconTheme: {
+  //           primary: '#2200ffff',
+  //           secondary: '#fff',
+  //         },
+  //       });
+
+  //       await getSession();
+  //       setNeedsTwoFactor(false);
+  //       setTwoFactorCode('');
+  //       setTwoFactorError(null);
+  //       router.refresh();
+  //       loginModal.onClose();
+  //       return;
   //     }
 
-  //     toast.error(message);
-  //   } else {
+  //     if (callback?.error) {
+  //       const message = callback.error || 'Invalid two-factor code.';
+  //       setTwoFactorError(message);
+  //       toast.error(message);
+  //       return;
+  //     }
+
   //     toast.error('Unable to sign in right now.');
-  //   }
-  // };
-
-  // const onSubmit: SubmitHandler<FieldValues> = async (data) => {
-  //   if (step === 'method') {
-  //     setStep('form');
-  //     setValue('method', selectedMethod);
   //     return;
   //   }
 
-  //   let identifier = data.identifier as string;
-
-  //   if (selectedMethod === 'phone') {
-  //     const formattedPhone = formatPhoneNumberToE164(
-  //       phoneInput,
-  //       phoneDialCode ?? undefined,
-  //     );
-
-  //     if (!formattedPhone) {
-  //       setPhoneError('Enter a valid phone number.');
-  //       setIdentifierError('A valid phone number is required.');
-  //       return;
-  //     }
-
-  //     identifier = formattedPhone;
-  //     setPhoneError(null);
-  //   } else if (!identifier) {
-  //     setIdentifierError('Email is required.');
-  //     return;
-  //   }
-
-  //   if (!data.password) {
-  //     setIdentifierError(null);
-  //     toast.error('Password is required.');
-  //     return;
-  //   }
-
-  //   // {step === 'twoFactor' && (
-  //   //   <motion.div
-  //   //     key="twofactor-step"
-  //   //     variants={stepVariants}
-  //   //     initial="initial"
-  //   //     animate="animate"
-  //   //     exit="exit"
-  //   //     transition={{ duration: 0.25 }}
-  //   //     className="flex flex-col gap-4"
-  //   //   >
-  //   //     <Heading
-  //   //       title="Enter your 6-digit code"
-  //   //       subtitle="Open your authenticator app and type the code to complete sign in."
-  //   //     />
-
-  //   //     <div className="flex justify-center">
-  //   //       <div className="flex gap-2 sm:gap-3">
-  //   //         {Array.from({ length: 6 }).map((_, index) => {
-  //   //           const digit = twoFactorCode[index] ?? '';
-
-  //   //           return (
-  //   //             <motion.div
-  //   //               key={index}
-  //   //               initial={{ scale: 0.9, opacity: 0 }}
-  //   //               animate={{ scale: 1, opacity: 1 }}
-  //   //               transition={{ duration: 0.15, delay: index * 0.03 }}
-  //   //               className={`
-  //   //                 relative flex h-12 w-10 items-center justify-center rounded-xl border text-lg font-semibold
-  //   //                 sm:h-14 sm:w-12
-  //   //                 ${digit ? 'border-black bg-black text-white' : 'border-neutral-300 bg-white text-neutral-800'}
-  //   //               `}
-  //   //             >
-  //   //               {/* Visual digit / placeholder */}
-  //   //               <div className="pointer-events-none select-none">
-  //   //                 <AnimatePresence mode="popLayout" initial={false}>
-  //   //                   {digit ? (
-  //   //                     <motion.span
-  //   //                       key={`digit-${index}-${digit}`}
-  //   //                       initial={{ scale: 0.4, opacity: 0, y: 6 }}
-  //   //                       animate={{ scale: 1, opacity: 1, y: 0 }}
-  //   //                       exit={{ scale: 0.6, opacity: 0, y: -4 }}
-  //   //                       transition={{ duration: 0.15 }}
-  //   //                     >
-  //   //                       {digit}
-  //   //                     </motion.span>
-  //   //                   ) : (
-  //   //                     <motion.span
-  //   //                       key={`placeholder-${index}`}
-  //   //                       initial={{ opacity: 0 }}
-  //   //                       animate={{ opacity: 0.4 }}
-  //   //                       exit={{ opacity: 0 }}
-  //   //                       className="text-neutral-400"
-  //   //                     >
-  //   //                       •
-  //   //                     </motion.span>
-  //   //                   )}
-  //   //                 </AnimatePresence>
-  //   //               </div>
-
-  //   //               {/* Actual input, transparent but focusable */}
-  //   //              <input
-  //   //                 type="tel"
-  //   //                 inputMode="numeric"
-  //   //                 autoFocus
-  //   //                 maxLength={6}
-  //   //                 value={twoFactorCode}
-  //   //                 onChange={(e) => {
-  //   //                   const clean = e.target.value.replace(/\D/g, '').slice(0, 6);
-  //   //                   const prev = twoFactorCode;
-  //   //                   setTwoFactorCode(clean);
-
-  //   //                   // auto-submit when user has typed 6 digits (and wasn't already at 6)
-  //   //                   if (clean.length === 6 && prev.length !== 6 && !isLoading) {
-  //   //                     handleSubmit(onSubmit)();
-  //   //                   }
-  //   //                 }}
-  //   //                 className="absolute inset-0 h-full w-full cursor-text opacity-0 outline-none"
-  //   //                 disabled={isLoading}
-  //   //               />
-  //   //             </motion.div>
-  //   //           );
-  //   //         })}
-  //   //       </div>
-  //   //     </div>
-
-  //   //     {twoFactorError && (
-  //   //       <p className="text-xs text-center text-rose-500">{twoFactorError}</p>
-  //   //     )}
-
-  //   //     {/* <button
-  //   //       type="button"
-  //   //       onClick={() => {
-  //   //         setStep('form');
-  //   //         setTwoFactorError(null);
-  //   //         setTwoFactorCode('');
-  //   //       }}
-  //   //       className="self-center text-xs font-medium text-neutral-600 underline-offset-4 transition hover:text-neutral-900 hover:underline"
-  //   //     >
-  //   //       Use a different method
-  //   //     </button> */}
-  //   //   </motion.div>
-  //   // )}
-
-  //   // 👉 STEP: form (prima richiesta, senza codice 2FA)
+  //   // 👉 Normal form step: first credential check, without TOTP
   //   setTwoFactorError(null);
   //   setIdentifierError(null);
   //   setIsLoading(true);
 
   //   const callback = await signIn('credentials', {
-  //     identifier,
-  //     password: data.password,
+  //     identifier: finalIdentifier,
+  //     password,
   //     method: selectedMethod,
   //     redirect: false,
   //   });
@@ -440,12 +305,15 @@ const LoginModal = () => {
   //   if (callback?.error) {
   //     const message = callback.error;
 
-  //     if (message.includes('Two-factor code required') || message.toLowerCase().includes('two-factor')) {
+  //     if (
+  //       message.includes('Two-factor code required') ||
+  //       message.toLowerCase().includes('two-factor')
+  //     ) {
   //       setNeedsTwoFactor(true);
   //       setTwoFactorError(null);
   //       setTwoFactorCode('');
   //       setStep('twoFactor');
-  //       toast('Two-factor authentication is enabled. Enter your 6-digit code to log in.');
+  //       toast.error('Two-factor authentication is enabled. Enter your 6-digit code.');
   //       return;
   //     }
 
@@ -454,67 +322,112 @@ const LoginModal = () => {
   //     toast.error('Unable to sign in right now.');
   //   }
   // };
+  
+  const onSubmit = useCallback(
+    async (data: FieldValues, codeOverride?: string) => {
+      // For twoFactor step, read from watched values (not from data)
+      const identifier =
+        step === 'twoFactor'
+          ? (identifierValue as string)
+          : ((data.identifier as string) ?? '');
 
-  const onSubmit: SubmitHandler<FieldValues> = async (data) => {
-    // For twoFactor step, read from watched values (not from data)
-    const identifier =
-      step === 'twoFactor'
-        ? (identifierValue as string)
-        : ((data.identifier as string) ?? '');
+      const password =
+        step === 'twoFactor'
+          ? (passwordValue as string)
+          : ((data.password as string) ?? '');
 
-    const password =
-      step === 'twoFactor'
-        ? (passwordValue as string)
-        : ((data.password as string) ?? '');
-
-    if (step === 'method') {
-      setStep('form');
-      setValue('method', selectedMethod);
-      return;
-    }
-
-    let finalIdentifier = identifier;
-
-    if (selectedMethod === 'phone') {
-      const formattedPhone = formatPhoneNumberToE164(
-        phoneInput,
-        phoneDialCode ?? undefined,
-      );
-
-      if (!formattedPhone) {
-        setPhoneError('Enter a valid phone number.');
-        setIdentifierError('A valid phone number is required.');
+      if (step === 'method') {
+        setStep('form');
+        setValue('method', selectedMethod);
         return;
       }
 
-      finalIdentifier = formattedPhone;
-      setPhoneError(null);
-    } else if (!finalIdentifier) {
-      setIdentifierError('Email is required.');
-      return;
-    }
+      let finalIdentifier = identifier;
 
-    if (!password) {
-      setIdentifierError(null);
-      toast.error('Password is required.');
-      return;
-    }
+      if (selectedMethod === 'phone') {
+        const formattedPhone = formatPhoneNumberToE164(
+          phoneInput,
+          phoneDialCode ?? undefined,
+        );
 
-    // 👉 2FA step: we already have email/phone + password, now send the TOTP
-    if (step === 'twoFactor') {
-      if (!twoFactorCode.trim() || twoFactorCode.trim().length < 6) {
-        setTwoFactorError('Enter the 6-digit code from your authenticator app.');
+        if (!formattedPhone) {
+          setPhoneError('Enter a valid phone number.');
+          setIdentifierError('A valid phone number is required.');
+          return;
+        }
+
+        finalIdentifier = formattedPhone;
+        setPhoneError(null);
+      } else if (!finalIdentifier) {
+        setIdentifierError('Email is required.');
         return;
       }
 
+      if (!password) {
+        setIdentifierError(null);
+        toast.error('Password is required.');
+        return;
+      }
+
+      // 👉 2FA step: we already have email/phone + password, now send the TOTP
+      if (step === 'twoFactor') {
+        const currentCode = (codeOverride ?? twoFactorCode).trim();
+
+        if (!currentCode || currentCode.length < 6) {
+          setTwoFactorError('Enter the 6-digit code from your authenticator app.');
+          return;
+        }
+
+        setTwoFactorError(null);
+        setIsLoading(true);
+
+        const callback = await signIn('credentials', {
+          identifier: finalIdentifier,
+          password,
+          method: selectedMethod,
+          totpCode: currentCode,
+          redirect: false,
+        });
+
+        setIsLoading(false);
+
+        if (callback?.ok) {
+          toast.success('Benvenuto!', {
+            iconTheme: {
+              primary: '#2200ffff',
+              secondary: '#fff',
+            },
+          });
+
+          await getSession();
+          setNeedsTwoFactor(false);
+          setTwoFactorCode('');
+          setTwoFactorError(null);
+          router.refresh();
+          loginModal.onClose();
+          return;
+        }
+
+        if (callback?.error) {
+          const message = callback.error || 'Invalid two-factor code.';
+          setTwoFactorError(message);
+          toast.error(message);
+          return;
+        }
+
+        toast.error('Unable to sign in right now.');
+        return;
+      }
+
+      // 👉 Normal form step: first credential check, without TOTP
       setTwoFactorError(null);
+      setIdentifierError(null);
       setIsLoading(true);
 
       const callback = await signIn('credentials', {
         identifier: finalIdentifier,
         password,
         method: selectedMethod,
-        totpCode: twoFactorCode.trim(),
         redirect: false,
       });
 
@@ -538,68 +451,43 @@ const LoginModal = () => {
       }
 
       if (callback?.error) {
-        const message = callback.error || 'Invalid two-factor code.';
-        setTwoFactorError(message);
+        const message = callback.error;
+
+        if (
+          message.includes('Two-factor code required') ||
+          message.toLowerCase().includes('two-factor')
+        ) {
+          setNeedsTwoFactor(true);
+          setTwoFactorError(null);
+          setTwoFactorCode('');
+          setStep('twoFactor');
+          toast.error('Two-factor authentication is enabled. Enter your 6-digit code.');
+          return;
+        }
+
         toast.error(message);
-        return;
+      } else {
+        toast.error('Unable to sign in right now.');
       }
+    },
+    [
+      identifierValue,
+      passwordValue,
+      step,
+      selectedMethod,
+      phoneInput,
+      phoneDialCode,
+      twoFactorCode,
+      setValue,
+      toast,
+      getSession,
+      router,
+      loginModal,
+    ],
+  );
 
-      toast.error('Unable to sign in right now.');
-      return;
-    }
+  const handleFormSubmit: SubmitHandler<FieldValues> = (data) => onSubmit(data);
 
-    // 👉 Normal form step: first credential check, without TOTP
-    setTwoFactorError(null);
-    setIdentifierError(null);
-    setIsLoading(true);
-
-    const callback = await signIn('credentials', {
-      identifier: finalIdentifier,
-      password,
-      method: selectedMethod,
-      redirect: false,
-    });
-
-    setIsLoading(false);
-
-    if (callback?.ok) {
-      toast.success('Benvenuto!', {
-        iconTheme: {
-          primary: '#2200ffff',
-          secondary: '#fff',
-        },
-      });
-
-      await getSession();
-      setNeedsTwoFactor(false);
-      setTwoFactorCode('');
-      setTwoFactorError(null);
-      router.refresh();
-      loginModal.onClose();
-      return;
-    }
-
-    if (callback?.error) {
-      const message = callback.error;
-
-      if (
-        message.includes('Two-factor code required') ||
-        message.toLowerCase().includes('two-factor')
-      ) {
-        setNeedsTwoFactor(true);
-        setTwoFactorError(null);
-        setTwoFactorCode('');
-        setStep('twoFactor');
-        toast.error('Two-factor authentication is enabled. Enter your 6-digit code.');
-        return;
-      }
-
-      toast.error(message);
-    } else {
-      toast.error('Unable to sign in right now.');
-    }
-  };
-  
   const handleGoogleLogin = async () => {
     try {
       setIsLoading(true);
@@ -845,11 +733,14 @@ const LoginModal = () => {
 
                     // Auto-submit when 6 digits are entered
                     if (clean.length === 6 && !isLoading) {
-                      onSubmit({
-                        identifier: identifierValue,
-                        password: passwordValue,
-                        method: selectedMethod,
-                      } as FieldValues);
+                      void onSubmit(
+                        {
+                          identifier: identifierValue,
+                          password: passwordValue,
+                          method: selectedMethod,
+                        } as FieldValues,
+                        clean,
+                      );
                     }
                   }}
                   className="absolute inset-0 h-full w-full cursor-text opacity-0 outline-none"
@@ -960,7 +851,7 @@ const LoginModal = () => {
           : 'Continue'
       }
       onClose={loginModal.onClose}
-      onSubmit={step === 'altOptions' ? () => {} : handleSubmit(onSubmit)}
+      onSubmit={step === 'altOptions' ? () => {} : handleSubmit(handleFormSubmit)}
       body={bodyContent}
       footer={footerContent}
       className=""

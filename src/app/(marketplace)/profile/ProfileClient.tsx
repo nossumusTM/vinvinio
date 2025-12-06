@@ -224,6 +224,8 @@ const formatPuntiPercentage = (share: number | null | undefined) => {
   return `${Math.round(safe * 100)}%`;
 };
 
+const MIN_CROP_ZOOM = 0.5;
+
 const ProfileClient: React.FC<ProfileClientProps> = ({
   currentUser,
   referralBookings,
@@ -252,7 +254,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   const [profileImage, setProfileImage] = useState(currentUser.image || '');
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
+  const [zoom, setZoom] = useState(MIN_CROP_ZOOM);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [isCropping, setIsCropping] = useState(false);
   const [showConfirmDeletePayout, setShowConfirmDeletePayout] = useState(false);
@@ -946,7 +948,7 @@ const coverImage = useMemo(() => {
     ? 'Manage listings, payouts and analytics without losing guest-facing data.'
     : 'Preview as a guest while we keep your host workspace untouched.';
     
-  const paymentsTitle = viewRole === 'host' ? 'Payments & Withdrawals' : 'Payments & Vouchers';
+  const paymentsTitle = viewRole === 'host' ? 'Payments & Transfers' : 'Payments & Vouchers';
 
   const lastPasswordUpdateDate = useMemo(
     () => (currentUser.passwordUpdatedAt ? new Date(currentUser.passwordUpdatedAt) : null),
@@ -1100,15 +1102,13 @@ const coverImage = useMemo(() => {
     setTwoFactorError(null);
     setTwoFactorDisableError(null);
     setTwoFactorVerificationCode('');
+    setTwoFactorEnabled(false);
+    setTwoFactorConfirmedAt(null);
 
     try {
       const response = await axios.post('/api/users/two-factor/setup');
       setTwoFactorSecret(response.data?.secret ?? null);
       setTwoFactorOtpAuthUrl(response.data?.otpauthUrl ?? null);
-
-      if (!twoFactorEnabled) {
-        setTwoFactorConfirmedAt(null);
-      }
 
       if (response.data?.secret) {
         toast.success('Authenticator setup started. Scan the QR code to continue.', {
@@ -1124,16 +1124,33 @@ const coverImage = useMemo(() => {
     }
   };
 
+  const handleTwoFactorCodeChange = (value: string) => {
+    const clean = value.replace(/\D/g, '').slice(0, 6);
+    setTwoFactorVerificationCode(clean);
+  };
+
+  const handleTwoFactorDisableCodeChange = (value: string) => {
+    const clean = value.replace(/\D/g, '').slice(0, 6);
+    setTwoFactorDisableCode(clean);
+  };
+
   const verifyTwoFactorSetup = async () => {
-    const trimmedCode = twoFactorVerificationCode.trim();
+    const sanitizedCode = twoFactorVerificationCode.replace(/\s+/g, '');
+    const trimmedCode = sanitizedCode.trim();
 
     if (!trimmedCode) {
       setTwoFactorError('Enter the 6-digit code from your authenticator app.');
       return;
     }
 
+    if (trimmedCode.length !== 6) {
+      setTwoFactorError('Enter the 6-digit code from your authenticator app.');
+      return;
+    }
+
     setTwoFactorConfirming(true);
     setTwoFactorError(null);
+    setTwoFactorVerificationCode(trimmedCode);
 
     try {
       await axios.post('/api/users/two-factor/verify', { code: trimmedCode });
@@ -1157,14 +1174,21 @@ const coverImage = useMemo(() => {
   };
 
   const disableTwoFactor = async () => {
-    const trimmedCode = twoFactorDisableCode.trim();
+    const sanitizedCode = twoFactorDisableCode.replace(/\s+/g, '');
+    const trimmedCode = sanitizedCode.trim();
 
     if (!trimmedCode) {
       setTwoFactorDisableError('Enter a current code to disable protection.');
       return;
     }
 
+    if (trimmedCode.length !== 6) {
+      setTwoFactorDisableError('Enter the 6-digit code from your authenticator app.');
+      return;
+    }
+
     setTwoFactorDisableError(null);
+    setTwoFactorDisableCode(trimmedCode);
     setTwoFactorDisabling(true);
 
     try {
@@ -2132,19 +2156,19 @@ const coverImage = useMemo(() => {
         'No, for security reasons, we only collect and store your card number. CVV and expiration date are not collected or stored. This ensures your sensitive payment details stay safe while still allowing for faster checkout.',
     },
     {
-      question: 'What withdrawal methods are supported?',
+      question: 'What transfer methods are supported?',
       answer:
         'We support Credit/Debit Cards, Revolut, IBAN, and PayPal for payouts. We only store the essential parts securely: card number for cards, IBAN credential for IBAN, and either username or phone number for PayPal.',
     },
     {
       question: 'When are payouts processed?',
       answer:
-        'Payouts are processed twice a month. To ensure timely payments, make sure your withdrawal method is correctly added and up to date.',
+        'Payouts are processed twice a month. To ensure timely payments, make sure your transfer method is correctly added and up to date.',
     },
     {
-      question: 'Can I delete my saved payment or withdrawal method?',
+      question: 'Can I delete my saved payment or transfer method?',
       answer:
-        'Absolutely. You can delete your stored card or withdrawal method at any time and update it with new credentials as needed.',
+        'Absolutely. You can delete your stored card or transfer method at any time and update it with new credentials as needed.',
     },
     {
       question: 'Are these settings relevant for travelers?',
@@ -2577,7 +2601,7 @@ const coverImage = useMemo(() => {
           setSavedPayout(res.data);
         }
       } catch (err) {
-        console.error('Failed to fetch withdrawal method', err);
+        console.error('Failed to fetch transfer method', err);
       }
     };
   
@@ -2617,7 +2641,7 @@ const coverImage = useMemo(() => {
       });
   
       // setPopupMessage('Withdraw method saved!');
-      toast.success('Withdrawal method saved!', {
+      toast.success('Transfer method saved!', {
         iconTheme: {
             primary: '#2200ffff',
             secondary: '#fff',
@@ -2626,9 +2650,9 @@ const coverImage = useMemo(() => {
       
       setPayoutUpdated((prev) => !prev);
     } catch (err) {
-      console.error('Failed to save withdrawal method', err);
+      console.error('Failed to save transfer method', err);
       // setPopupMessage('Error saving withdraw method.');
-      toast.error('Error saving withdrawal method.')
+      toast.error('Error saving transfer method.')
     }
   };  
   
@@ -2637,16 +2661,16 @@ const coverImage = useMemo(() => {
       await axios.delete('/api/users/delete-payout-method');
       setSavedPayout(null);
       // setPopupMessage('Withdraw method deleted!');
-      toast.success('Withdrawal method deleted!', {
+      toast.success('Transfer method deleted!', {
         iconTheme: {
             primary: '#2200ffff',
             secondary: '#fff',
         }
       });
     } catch (err) {
-      console.error('Failed to delete withdrawal method', err);
+      console.error('Failed to delete transfer method', err);
       // setPopupMessage('Error deleting withdraw method.');
-      toast.error('Error deleting withdrawal method.');
+      toast.error('Error deleting transfer method.');
     }
   };  
 
@@ -2679,6 +2703,9 @@ const coverImage = useMemo(() => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setUploadedImage(reader.result as string);
+        setCrop({ x: 0, y: 0 });
+        setZoom(MIN_CROP_ZOOM);
+        setCroppedAreaPixels(null);
         setIsCropping(true);
       };
       reader.readAsDataURL(file);
@@ -2705,6 +2732,7 @@ const coverImage = useMemo(() => {
   const handleCropCancel = () => {
     setIsCropping(false);
     setUploadedImage(null);
+    setZoom(MIN_CROP_ZOOM);
   };
 
   const scrollToSection = (id: string) => {
@@ -4103,22 +4131,31 @@ const coverImage = useMemo(() => {
                   <div className="space-y-4 rounded-xl border border-neutral-200 bg-neutral-50/60 p-4">
                     {!twoFactorSecret && !twoFactorOtpAuthUrl && (
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <p className="text-sm text-neutral-700">
-                          Start setup to generate a QR code for your authenticator app.
-                        </p>
-                        <motion.button
-                          whileTap={{ scale: 0.97 }}
-                          onClick={startTwoFactorSetup}
-                          disabled={twoFactorLoading}
-                          className={twMerge(
-                            'rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-neutral-800',
-                            twoFactorLoading && 'cursor-not-allowed opacity-70',
-                          )}
-                        >
-                          {twoFactorLoading ? 'Preparing…' : 'Set up authenticator'}
-                        </motion.button>
+                        {!twoFactorEnabled && (
+                          <p className="text-sm text-neutral-700">
+                            Start setup to generate a QR code for your authenticator app.
+                          </p>
+                        )}
+                        {twoFactorEnabled ? (
+                          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-neutral-700 shadow-md">
+                            <MdOutlineSecurity className="h-5 w-5" />
+                          </div>
+                        ) : (
+                          <motion.button
+                            whileTap={{ scale: 0.97 }}
+                            onClick={startTwoFactorSetup}
+                            disabled={twoFactorLoading}
+                            className={twMerge(
+                              'rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-neutral-800',
+                              twoFactorLoading && 'cursor-not-allowed opacity-70',
+                            )}
+                          >
+                            {twoFactorLoading ? 'Preparing…' : 'Set up authenticator'}
+                          </motion.button>
+                        )}
                       </div>
                     )}
+
 
                     {twoFactorSecret && twoFactorOtpAuthUrl && (
                       <div className="grid gap-4 md:grid-cols-[auto,1fr] md:items-start">
@@ -4139,20 +4176,100 @@ const coverImage = useMemo(() => {
                             <label className="text-xs font-semibold uppercase tracking-wide text-neutral-600" htmlFor="twoFactorCode">
                               Verification code
                             </label>
-                            <input
-                              id="twoFactorCode"
-                              inputMode="numeric"
-                              autoComplete="one-time-code"
-                              pattern="[0-9]*"
-                              value={twoFactorVerificationCode}
-                              onChange={(event) => setTwoFactorVerificationCode(event.target.value)}
-                              className="w-full rounded-lg border border-neutral-200 px-4 py-3 text-sm shadow-sm transition focus:border-black focus:outline-none"
-                              placeholder="Enter the 6-digit code"
-                              disabled={twoFactorConfirming}
-                            />
+                            <div className="flex justify-start">
+                              <div className="relative">
+                                <div className="flex justify-center mt-4">
+                                  <div className="flex gap-2 sm:gap-3">
+                                    {Array.from({ length: 6 }).map((_, index) => {
+                                      const digit = twoFactorVerificationCode[index] ?? "";
+
+                                      return (
+                                        <motion.div
+                                          key={index}
+                                          initial={{ scale: 0.9, opacity: 0 }}
+                                          animate={{ scale: 1, opacity: 1 }}
+                                          transition={{ duration: 0.15, delay: index * 0.03 }}
+                                          className={`
+                                            relative flex h-12 w-10 items-center justify-center rounded-xl border text-lg font-semibold
+                                            sm:h-14 sm:w-12
+                                            ${digit
+                                              ? "border-black bg-black text-white"
+                                              : "border-neutral-300 bg-white text-neutral-800"}
+                                          `}
+                                        >
+                                          <div className="pointer-events-none select-none">
+                                            <AnimatePresence mode="popLayout" initial={false}>
+                                              {digit ? (
+                                                <motion.span
+                                                  key={`digit-${index}-${digit}`}
+                                                  initial={{ scale: 0.4, opacity: 0, y: 6 }}
+                                                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                                                  exit={{ scale: 0.6, opacity: 0, y: -4 }}
+                                                  transition={{ duration: 0.15 }}
+                                                >
+                                                  {digit}
+                                                </motion.span>
+                                              ) : (
+                                                <motion.span
+                                                  key={`placeholder-${index}`}
+                                                  initial={{ opacity: 0 }}
+                                                  animate={{ opacity: 0.4 }}
+                                                  exit={{ opacity: 0 }}
+                                                  className="text-neutral-400"
+                                                >
+                                                  •
+                                                </motion.span>
+                                              )}
+                                            </AnimatePresence>
+                                          </div>
+
+                                          <input
+                                            type="tel"
+                                            inputMode="numeric"
+                                            maxLength={6}
+                                            value={twoFactorVerificationCode}
+                                            onChange={(e) => {
+                                              const clean = e.target.value.replace(/\D/g, "").slice(0, 6);
+                                              const prev = twoFactorVerificationCode;
+                                              handleTwoFactorCodeChange(clean);
+
+                                              // auto-submit when reaching 6 digits (if you want)
+                                              if (clean.length === 6 && prev.length !== 6 && !twoFactorConfirming) {
+                                                verifyTwoFactorSetup();
+                                              }
+                                            }}
+                                            className="absolute inset-0 h-full w-full opacity-0 cursor-text outline-none"
+                                          />
+                                        </motion.div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+
+                                <input
+                                  type="tel"
+                                  inputMode="numeric"
+                                  maxLength={6}
+                                  value={twoFactorVerificationCode}
+                                  onChange={(e) => {
+                                    const clean = e.target.value.replace(/\D/g, "").slice(0, 6);
+                                    const prev = twoFactorVerificationCode;
+                                    handleTwoFactorCodeChange(clean);
+
+                                    // auto-submit when reaching 6 digits (if you want)
+                                    if (clean.length === 6 && prev.length !== 6 && !twoFactorConfirming) {
+                                      verifyTwoFactorSetup();
+                                    }
+                                  }}
+                                  className="absolute inset-0 h-full w-full opacity-0 cursor-text outline-none"
+                                />
+                              </div>
+                            </div>
                             {twoFactorError && (
-                              <p className="text-xs text-rose-500">{twoFactorError}</p>
-                            )}
+                            <p className="text-xs text-center text-rose-500 mt-2">
+                              {twoFactorError}
+                            </p>
+                          )}
                           </div>
 
                           <div className="flex flex-wrap gap-3">
@@ -4192,20 +4309,81 @@ const coverImage = useMemo(() => {
                         </p>
 
                         <div className="space-y-2">
-                          <label className="text-xs font-semibold uppercase tracking-wide text-neutral-600" htmlFor="twoFactorDisable">
+                          <label
+                            className="text-xs font-semibold uppercase tracking-wide text-neutral-600"
+                            htmlFor="twoFactorDisable"
+                          >
                             To turn it off, enter a current code
                           </label>
-                          <input
-                            id="twoFactorDisable"
-                            inputMode="numeric"
-                            autoComplete="one-time-code"
-                            pattern="[0-9]*"
-                            value={twoFactorDisableCode}
-                            onChange={(event) => setTwoFactorDisableCode(event.target.value)}
-                            className="w-full rounded-lg border border-neutral-200 px-4 py-3 text-sm shadow-sm transition focus:border-black focus:outline-none"
-                            placeholder="123 456"
-                            disabled={twoFactorDisabling}
-                          />
+
+                          <div className="flex justify-start">
+                            <div className="relative">
+                              <div className="flex gap-2 sm:gap-3">
+                                {Array.from({ length: 6 }).map((_, index) => {
+                                  const digit = twoFactorDisableCode[index] ?? '';
+
+                                  return (
+                                    <motion.div
+                                      key={index}
+                                      initial={{ scale: 0.9, opacity: 0 }}
+                                      animate={{ scale: 1, opacity: 1 }}
+                                      exit={{ scale: 0.9, opacity: 0 }}
+                                      transition={{ duration: 0.15, delay: index * 0.03 }}
+                                      className={`
+                                        flex h-12 w-10 items-center justify-center rounded-xl border text-lg font-semibold
+                                        sm:h-14 sm:w-12
+                                        ${
+                                          digit
+                                            ? 'border-black bg-black text-white'
+                                            : 'border-neutral-300 bg-white text-neutral-800'
+                                        }
+                                      `}
+                                    >
+                                      <AnimatePresence mode="popLayout" initial={false}>
+                                        {digit ? (
+                                          <motion.span
+                                            key={`digit-disable-${index}-${digit}`}
+                                            initial={{ scale: 0.4, opacity: 0, y: 6 }}
+                                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                                            exit={{ scale: 0.6, opacity: 0, y: -4 }}
+                                            transition={{ duration: 0.15 }}
+                                          >
+                                            {digit}
+                                          </motion.span>
+                                        ) : (
+                                          <motion.span
+                                            key={`placeholder-disable-${index}`}
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 0.4 }}
+                                            exit={{ opacity: 0 }}
+                                            className="text-neutral-400"
+                                          >
+                                            •
+                                          </motion.span>
+                                        )}
+                                      </AnimatePresence>
+                                    </motion.div>
+                                  );
+                                })}
+                              </div>
+
+                              {/* single invisible input catching all typing */}
+                              <input
+                                id="twoFactorDisable"
+                                type="tel"
+                                inputMode="numeric"
+                                autoComplete="one-time-code"
+                                maxLength={6}
+                                value={twoFactorDisableCode}
+                                onChange={(event) =>
+                                  handleTwoFactorDisableCodeChange(event.target.value)
+                                }
+                                className="absolute inset-0 h-full w-full cursor-text opacity-0 outline-none"
+                                disabled={twoFactorDisabling}
+                              />
+                            </div>
+                          </div>
+
                           {twoFactorDisableError && (
                             <p className="text-xs text-rose-500">{twoFactorDisableError}</p>
                           )}
@@ -4224,17 +4402,7 @@ const coverImage = useMemo(() => {
                             {twoFactorDisabling ? 'Disabling…' : 'Disable two-factor'}
                           </motion.button>
 
-                          <button
-                            type="button"
-                            onClick={startTwoFactorSetup}
-                            disabled={twoFactorLoading}
-                            className={twMerge(
-                              'rounded-lg border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-700 transition hover:bg-white',
-                              twoFactorLoading && 'cursor-not-allowed opacity-70',
-                            )}
-                          >
-                            Refresh setup
-                          </button>
+                         
                         </div>
                       </div>
                     )}
@@ -4514,7 +4682,7 @@ const coverImage = useMemo(() => {
                 {activePaymentTab === 'payout' && ['promoter', 'host'].includes(viewRole) && (
                   <>
                   <div className="pt-4">
-                    <Heading title="Withdrawal Method" subtitle="Manage your withdrawal credentials" />
+                    <Heading title="Transfer method" subtitle="Manage your withdrawal credentials" />
                     </div>
 
                     {savedPayout ? (
@@ -4627,7 +4795,7 @@ const coverImage = useMemo(() => {
                       <>
                         {/* Select Method */}
                         <div className="mt-4">
-                          <label className="block mb-2 font-semibold">Withdrawal Method</label>
+                          <label className="block mb-2 font-semibold">Transfer Method</label>
                           <select
                             value={payoutInfo.method}
                             onChange={(e) => setPayoutInfo({ ...payoutInfo, method: e.target.value })}
@@ -4728,8 +4896,8 @@ const coverImage = useMemo(() => {
 
           {showConfirmDeletePayout && (
             <ConfirmPopup
-              title="Delete Withdrawal Method"
-              message="Are you sure you want to delete your withdrawal method?"
+              title="Delete Transfer Method"
+              message="Are you sure you want to delete your transfer method?"
               onCancel={() => setShowConfirmDeletePayout(false)}
               onConfirm={async () => {
                 try {
@@ -5049,7 +5217,7 @@ const coverImage = useMemo(() => {
                   sectionKey: 'payments',
                   icon: <RiSecurePaymentLine />,
                   title: paymentsTitle,
-                  description: 'View and update your withdrawal methods',
+                  description: 'View and update your transfer methods',
                 },
               ].map(({ sectionKey, icon, title, description }) => (
                 <motion.button
@@ -5165,7 +5333,7 @@ const coverImage = useMemo(() => {
                 </div>
 
                 <div className="rounded-2xl bg-white p-6 shadow-md transition hover:shadow-lg">
-                  <p className="text-lg font-semibold text-neutral-900">Withdrawal Method</p>
+                  <p className="text-lg font-semibold text-neutral-900">Transfer Method</p>
                   <p className="mt-2 text-sm text-neutral-600 md:text-base">
                     Deposits processed twice per month. You can check your payout history{' '}
                     <button
@@ -5274,7 +5442,7 @@ const coverImage = useMemo(() => {
                     </div>
                   ) : (
                     <div className="mt-6 flex items-center justify-between rounded-xl bg-neutral-50 p-4 text-sm text-neutral-600">
-                      <p>Withdrawal method is not provided</p>
+                      <p>Transfer Method is not provided</p>
                       <button
                         onClick={() => {
                           setActiveSection('payments');
@@ -5611,14 +5779,18 @@ const coverImage = useMemo(() => {
         )}
       </AnimatePresence>
 
+      
+      </motion.div>
+
       {/* Crop Modal */}
       {isCropping && uploadedImage && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
           <div className="w-[90vw] h-[70vh] relative rounded-xl shadow-lg">
             <Cropper
               image={uploadedImage}
               crop={crop}
               zoom={zoom}
+              minZoom={MIN_CROP_ZOOM}
               aspect={1}
               onCropChange={setCrop}
               onZoomChange={setZoom}
@@ -5641,7 +5813,6 @@ const coverImage = useMemo(() => {
           </div>
         </div>
       )}
-      </motion.div>
 
       <PayoutHistory
         open={showPayoutHistory}

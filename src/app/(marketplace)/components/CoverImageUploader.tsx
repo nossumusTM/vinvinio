@@ -1,8 +1,11 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Cropper from "react-easy-crop";
 import getCroppedImg from "@/app/(marketplace)/utils/cropImage";
+
+const MIN_CROP_ZOOM = 0.5;
 
 interface CoverImageUploaderProps {
   onUpload: (croppedDataUrl: string) => Promise<void> | void;
@@ -41,6 +44,12 @@ const CoverImageUploader = ({
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
   const [uploading, setUploading] = useState(false);
 
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const open = () => {
     if (disabled || uploading) return;
     inputRef.current?.click();
@@ -53,7 +62,7 @@ const CoverImageUploader = ({
     const dataUrl = await fileToDataURL(file);
     setUploadedImage(dataUrl);
     setIsCropping(true);
-    setZoom(1);
+    setZoom(MIN_CROP_ZOOM);
     setCrop({ x: 0, y: 0 });
     setCroppedAreaPixels(null);
 
@@ -67,6 +76,7 @@ const CoverImageUploader = ({
     setIsCropping(false);
     setUploadedImage(null);
     setCroppedAreaPixels(null);
+    setZoom(MIN_CROP_ZOOM);
   };
 
   const handleSave = async () => {
@@ -88,6 +98,43 @@ const CoverImageUploader = ({
     }
   };
 
+  const cropModal =
+    isCropping && uploadedImage ? (
+      <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+        <div className="w-[92vw] max-w-[1000px] h-[68vh] relative rounded-xl shadow-lg overflow-hidden bg-transparent">
+          <Cropper
+            image={uploadedImage}
+            crop={crop}
+            zoom={zoom}
+            minZoom={MIN_CROP_ZOOM}
+            aspect={aspect}
+            cropShape="rect"
+            showGrid
+            onCropChange={setCrop}
+            onZoomChange={setZoom}
+            onCropComplete={onCropComplete}
+          />
+        </div>
+
+        <div className="flex gap-4 mt-4">
+          <button
+            onClick={handleSave}
+            disabled={uploading}
+            className="px-6 py-2 bg-black text-white rounded-xl hover:opacity-90 disabled:opacity-70"
+          >
+            {uploading ? "Saving…" : "Save"}
+          </button>
+          <button
+            onClick={handleCancel}
+            disabled={uploading}
+            className="px-6 py-2 bg-gray-200 text-gray-800 rounded-xl hover:bg-gray-100 disabled:opacity-70"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    ) : null;
+
   return (
     <>
       {renderTrigger({ open, uploading })}
@@ -99,40 +146,7 @@ const CoverImageUploader = ({
         onChange={handleSelect}
       />
 
-      {isCropping && uploadedImage && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-          <div className="w-[92vw] max-w-[1000px] h-[68vh] relative rounded-xl shadow-lg overflow-hidden bg-transparent">
-            <Cropper
-              image={uploadedImage}
-              crop={crop}
-              zoom={zoom}
-              aspect={aspect}
-              cropShape="rect"
-              showGrid
-              onCropChange={setCrop}
-              onZoomChange={setZoom}
-              onCropComplete={onCropComplete}
-            />
-          </div>
-
-          <div className="flex gap-4 mt-4">
-            <button
-              onClick={handleSave}
-              disabled={uploading}
-              className="px-6 py-2 bg-black text-white rounded-xl hover:opacity-90 disabled:opacity-70"
-            >
-              {uploading ? "Saving…" : "Save"}
-            </button>
-            <button
-              onClick={handleCancel}
-              disabled={uploading}
-              className="px-6 py-2 bg-gray-200 text-gray-800 rounded-xl hover:bg-gray-100 disabled:opacity-70"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
+      {mounted && cropModal ? createPortal(cropModal, document.body) : cropModal}
     </>
   );
 };

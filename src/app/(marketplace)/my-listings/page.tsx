@@ -6,6 +6,7 @@ import getCurrentUser from '@/app/(marketplace)/actions/getCurrentUser';
 import getListings from '@/app/(marketplace)/actions/getListings';
 
 import MyListingsClient from './MyListingsClient';
+import MyListingsEmptyState from './MyListingsEmptyState';
 
 const VALID_TABS = [
   'approved',
@@ -55,10 +56,7 @@ export default async function MyListingsPage({
   if (listings.length === 0) {
     return (
       <ClientOnly>
-        <EmptyState
-          title="No listings yet"
-          subtitle="Create your first experience to see it listed here."
-        />
+        <MyListingsEmptyState />
       </ClientOnly>
     );
   }

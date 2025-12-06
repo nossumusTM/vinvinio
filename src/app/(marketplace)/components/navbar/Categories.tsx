@@ -918,7 +918,7 @@ const Categories = () => {
                             <LuLoader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                           )}
                           {previewCount !== null && !previewLoading && (
-                            <span className="font-semibold">{previewCount}</span>
+                            <span className="w-5 h-5 justify-center items-center flex aspect-square rounded-lg bg-white text-black font-semibold">{previewCount}</span>
                           )}
                           <span>
                             {previewCount !== null && !previewLoading

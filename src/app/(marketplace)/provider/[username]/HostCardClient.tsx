@@ -65,6 +65,8 @@ const tabVariants = {
   exit: { opacity: 0, y: 8 },
 };
 
+const MIN_CROP_ZOOM = 0.5;
+
 const formatPrice = (price: number) => {
   try {
     return new Intl.NumberFormat(undefined, {
@@ -106,7 +108,7 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [isCropping, setIsCropping] = useState(false);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
+  const [zoom, setZoom] = useState(MIN_CROP_ZOOM);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
 
   const busy = isCropping;
@@ -296,14 +298,14 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
   };
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>, target: CropTarget) => {
-  const file = e.target.files?.[0];
+    const file = e.target.files?.[0];
     if (!file) return;
 
     const dataUrl = await fileToDataURL(file);
     setUploadedImage(dataUrl);
     setCropTarget(target);
     setIsCropping(true);
-    setZoom(1);
+    setZoom(MIN_CROP_ZOOM);
     setCrop({ x: 0, y: 0 });
 
     // Clear input so selecting the same file later still triggers change
@@ -317,6 +319,7 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
     setUploadedImage(null);
     setCropTarget(null);
     setCroppedAreaPixels(null);
+    setZoom(MIN_CROP_ZOOM);
   };
 
   const handleCropSubmit = async () => {
@@ -1068,12 +1071,13 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
         </div>
 
         {isCropping && uploadedImage && cropTarget && (
-          <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
             <div className="w-[92vw] max-w-[1000px] h-[68vh] relative rounded-xl shadow-lg">
               <Cropper
                 image={uploadedImage}
                 crop={crop}
                 zoom={zoom}
+                minZoom={MIN_CROP_ZOOM}
                 aspect={cropTarget === 'avatar' ? 1 : 16 / 9}
                 cropShape={cropTarget === 'avatar' ? 'round' : 'rect'}
                 showGrid={cropTarget !== 'avatar'}

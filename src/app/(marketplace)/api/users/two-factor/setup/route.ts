@@ -29,7 +29,12 @@ export async function POST() {
 
     await prisma.user.update({
       where: { id: user.id },
-      data: { twoFactorTempSecret: secret },
+      data: {
+        twoFactorTempSecret: secret,
+        twoFactorSecret: null,
+        twoFactorEnabled: false,
+        twoFactorConfirmedAt: null,
+      },
     });
 
     return NextResponse.json({ secret, otpauthUrl, issuer });
