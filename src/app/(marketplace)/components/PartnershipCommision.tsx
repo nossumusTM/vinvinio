@@ -355,7 +355,7 @@ const PartnershipCommision: React.FC<PartnershipCommisionProps> = ({
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-xs uppercase tracking-wide text-neutral-500">
-                  Partnership commission
+                  Partnership window
                 </p>
                 <p className="text-3xl font-semibold text-neutral-900">
                   {Math.round(effectiveCommission)}%
