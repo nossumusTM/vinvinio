@@ -1024,10 +1024,10 @@ const ListingCard: React.FC<ListingCardProps> = ({
           </div> */}
 
           <div className="absolute top-3 right-3 flex flex-col items-end gap-2">
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/85 px-3 py-1 text-[11px] font-semibold text-neutral-800 shadow">
+            {/* <span className="inline-flex items-center gap-2 rounded-full bg-white/85 px-3 py-1 text-[11px] font-semibold text-neutral-800 shadow">
               <span className="text-[10px] tracking-[0.18em] text-neutral-500">VIN POINT</span>
               <span className="text-sm text-black">{Number(data.punti ?? 0)}</span>
-            </span>
+            </span> */}
             <HeartButton listingId={data.id} currentUser={currentUser} />
           </div>
 

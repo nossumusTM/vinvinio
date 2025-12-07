@@ -26,7 +26,7 @@ import {
 } from "@/app/(marketplace)/constants/partner";
 import { BASE_CURRENCY } from '@/app/(marketplace)/constants/locale';
 import { categories as NAV_CATEGORIES } from '../components/navbar/Categories';
-import { MAX_PINNED_CATEGORIES, PINNED_CATEGORIES_STORAGE_KEY } from '../constants/categoryPreferences';
+import { MAX_PINNED_CATEGORIES } from '../constants/categoryPreferences';
 
 type SliderArrowProps = {
   className?: string;
@@ -100,21 +100,6 @@ const toTitleCase = (value: string) =>
     .join(' ');
 
 const formatJson = (value: any) => JSON.stringify(value, null, 2);
-
-const readPinnedCategoriesFromStorage = (): string[] => {
-  if (typeof window === 'undefined') return [];
-  try {
-    const stored = window.localStorage.getItem(PINNED_CATEGORIES_STORAGE_KEY);
-    const parsed = stored ? (JSON.parse(stored) as unknown) : [];
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .map((value) => (typeof value === 'string' ? value : null))
-      .filter((value): value is string => Boolean(value))
-      .slice(0, MAX_PINNED_CATEGORIES);
-  } catch {
-    return [];
-  }
-};
 
 interface Listing {
   id: string;
@@ -219,6 +204,15 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
   const [hostPayoutNote, setHostPayoutNote] = useState('');
   const [promoterAttachment, setPromoterAttachment] = useState<{ name: string; data: string } | null>(null);
   const [hostAttachment, setHostAttachment] = useState<{ name: string; data: string } | null>(null);
+  const [pinnedCategoryDraft, setPinnedCategoryDraft] = useState<string[]>([]);
+
+  const normalizePinnedCategories = useCallback((value: unknown): string[] => {
+    if (!Array.isArray(value)) return [];
+    return value
+      .map((entry) => (typeof entry === 'string' ? entry : null))
+      .filter((entry): entry is string => Boolean(entry))
+      .slice(0, MAX_PINNED_CATEGORIES);
+  }, []);
 
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
   const [confirmAction, setConfirmAction] = useState<() => void>(() => {});
@@ -491,8 +485,8 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
     [fetchListings]
   );
 
-  const togglePinnedCategory = useCallback((label: string) => {
-    setPinnedCategories((prev) => {
+  const togglePinnedCategoryDraft = useCallback((label: string) => {
+    setPinnedCategoryDraft((prev) => {
       if (prev.includes(label)) {
         return prev.filter((item) => item !== label);
       }
@@ -502,6 +496,39 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
       }
       return [...prev, label];
     });
+  }, []);
+
+  const clearPinnedCategoryDraft = useCallback(() => {
+    setPinnedCategoryDraft([]);
+  }, []);
+
+  const submitPinnedCategoryDraft = useCallback(async () => {
+    const safePinned = pinnedCategoryDraft.slice(0, MAX_PINNED_CATEGORIES);
+    try {
+      const response = await axios.put('/api/categories/pinned', {
+        categories: safePinned,
+      });
+      const updated = normalizePinnedCategories(response.data?.data ?? safePinned);
+      setPinnedCategories(updated);
+      setPinnedCategoryDraft(updated);
+      toast.success('Pinned categories updated for all users.');
+    } catch (error) {
+      console.error('[PINNED_CATEGORIES_SAVE]', error);
+      toast.error('Failed to update pinned categories');
+    }
+  }, [normalizePinnedCategories, pinnedCategoryDraft]);
+
+  const hasPinnedCategoryChanges = useMemo(() => {
+    if (pinnedCategoryDraft.length !== pinnedCategories.length) return true;
+    const draftSorted = [...pinnedCategoryDraft].sort();
+    const activeSorted = [...pinnedCategories].sort();
+    return draftSorted.some((label, index) => label !== activeSorted[index]);
+  }, [pinnedCategories, pinnedCategoryDraft]);
+
+  const categoryByLabel = useMemo(() => {
+    const lookup = new Map<string, (typeof NAV_CATEGORIES)[number]>();
+    NAV_CATEGORIES.forEach((category) => lookup.set(category.label, category));
+    return lookup;
   }, []);
 
   const resetFilters = useCallback(() => {
@@ -600,15 +627,26 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
   );
 
   useEffect(() => {
-    setPinnedCategories(readPinnedCategoriesFromStorage());
-  }, []);
+    let isActive = true;
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const safePinned = pinnedCategories.slice(0, MAX_PINNED_CATEGORIES);
-    window.localStorage.setItem(PINNED_CATEGORIES_STORAGE_KEY, JSON.stringify(safePinned));
-    window.dispatchEvent(new Event('storage'));
-  }, [pinnedCategories]);
+    const fetchPinnedCategories = async () => {
+      try {
+        const response = await axios.get('/api/categories/pinned');
+        if (!isActive) return;
+        const pins = normalizePinnedCategories(response.data?.data);
+        setPinnedCategories(pins);
+        setPinnedCategoryDraft(pins);
+      } catch (error) {
+        console.error('[PINNED_CATEGORIES_FETCH]', error);
+        toast.error('Failed to load pinned categories');
+      }
+    };
+
+    fetchPinnedCategories();
+    return () => {
+      isActive = false;
+    };
+  }, [normalizePinnedCategories]);
 
   const formatTimestamp = useCallback(
     (value?: string) => {
@@ -1610,7 +1648,8 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
               <div>
                 <p className="text-sm font-semibold text-neutral-900">Pinned categories</p>
                 <p className="text-xs text-neutral-500">
-                  Choose up to {MAX_PINNED_CATEGORIES} categories to feature next to the marketplace filters.
+                  These categories are displayed next to the marketplace filters. Use the selector at the bottom of the page to
+                  update them.
                 </p>
               </div>
               <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold text-neutral-700">
@@ -1618,31 +1657,25 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
               </span>
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
-              {NAV_CATEGORIES.map((option) => {
-                const isPinned = pinnedCategories.includes(option.label);
-                return (
-                  <button
-                    key={option.label}
-                    type="button"
-                    onClick={() => togglePinnedCategory(option.label)}
-                    className={clsx(
-                      'rounded-full border px-3 py-1.5 text-xs font-semibold shadow-sm transition',
-                      isPinned
-                        ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-blue-200'
-                        : 'border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300 hover:text-neutral-900'
-                    )}
-                  >
-                    <span className="flex items-center gap-2">
-                      <option.icon className="h-4 w-4" aria-hidden="true" />
-                      <span className="line-clamp-1 max-w-[150px] text-left">{option.label}</span>
-                      {isPinned && <span className="text-[10px] uppercase">Pinned</span>}
-                    </span>
-                  </button>
-                );
-              })}
               {pinnedCategories.length === 0 && (
                 <span className="text-xs text-neutral-400">No categories pinned yet.</span>
               )}
+              {pinnedCategories.map((label) => {
+                const category = categoryByLabel.get(label);
+                const Icon = category?.icon;
+                return (
+                  <span
+                    key={label}
+                    className={clsx(
+                      'flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 shadow-sm',
+                      !Icon && 'pl-4'
+                    )}
+                  >
+                    {Icon && <Icon className="h-4 w-4" aria-hidden="true" />}
+                    <span className="line-clamp-1 max-w-[150px] text-left">{label}</span>
+                  </span>
+                );
+              })}
             </div>
           </div>
 
@@ -2194,6 +2227,67 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
 
 
       </aside>
+    </div>
+
+    <div className="mx-auto max-w-full px-6 pb-12 md:px-20">
+      <div className="rounded-3xl bg-white px-6 py-6 shadow-lg ring-1 ring-neutral-200/70">
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <h2 className="text-lg font-semibold text-neutral-900">Select categories to pin</h2>
+            <p className="text-xs text-neutral-500">
+              Choose up to {MAX_PINNED_CATEGORIES} categories, then submit to update the pinned list shown near the top of the
+              page.
+            </p>
+          </div>
+          <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold text-neutral-700">
+            {pinnedCategoryDraft.length}/{MAX_PINNED_CATEGORIES}
+          </span>
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          {NAV_CATEGORIES.map((option) => {
+            const isSelected = pinnedCategoryDraft.includes(option.label);
+            return (
+              <button
+                key={option.label}
+                type="button"
+                onClick={() => togglePinnedCategoryDraft(option.label)}
+                className={clsx(
+                  'rounded-full border px-3 py-1.5 text-xs font-semibold shadow-sm transition',
+                  isSelected
+                    ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-blue-200'
+                    : 'border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300 hover:text-neutral-900'
+                )}
+              >
+                <span className="flex items-center gap-2">
+                  <option.icon className="h-4 w-4" aria-hidden="true" />
+                  <span className="line-clamp-1 max-w-[150px] text-left">{option.label}</span>
+                  {isSelected && <span className="text-[10px] uppercase">Selected</span>}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={clearPinnedCategoryDraft}
+            disabled={pinnedCategoryDraft.length === 0}
+            className="rounded-full border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-700 transition hover:border-neutral-400 hover:text-neutral-900 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Clear selection
+          </button>
+          <button
+            type="button"
+            onClick={submitPinnedCategoryDraft}
+            disabled={!hasPinnedCategoryChanges}
+            className="rounded-full bg-neutral-900 px-5 py-2 text-sm font-semibold text-white shadow-md transition hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Submit selection
+          </button>
+        </div>
+      </div>
     </div>
 
     {/* Promoter Lookup */}

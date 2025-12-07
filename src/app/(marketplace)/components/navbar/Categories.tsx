@@ -97,22 +97,7 @@ type CategoryWithMeta = CategoryDefinition & {
   bookingCount: number;
   trending: boolean;
   pinned: boolean;
-};
-
-const readPinnedCategories = (): string[] => {
-  if (typeof window === 'undefined') return [];
-  try {
-    const stored = window.localStorage.getItem(PINNED_CATEGORIES_STORAGE_KEY);
-    const parsed = stored ? (JSON.parse(stored) as unknown) : [];
-    return Array.isArray(parsed)
-      ? parsed
-          .map((item) => (typeof item === 'string' ? item : null))
-          .filter((value): value is string => Boolean(value))
-          .slice(0, MAX_PINNED_CATEGORIES)
-      : [];
-  } catch {
-    return [];
-  }
+  pinnedIndex: number | null;
 };
 
 export const categories: CategoryDefinition[] = [
@@ -137,7 +122,8 @@ export const categories: CategoryDefinition[] = [
   {
     label: 'Food, Drinks & Culinary',
     icon: LuUtensils,
-    description: 'Taste, sip, and cook your way through immersive culinary journeys.',
+    description:
+      'Taste, sip, and cook your way through immersive culinary journeys.',
   },
   {
     label: 'Culture & History',
@@ -244,8 +230,8 @@ export const categories: CategoryDefinition[] = [
 ];
 
 /**
- * Inner component: all heavy hooks and browser-ish logic live here.
- * This NEVER renders on the server, thanks to the outer shell below.
+ * Inner component: all heavy logic and hooks live here.
+ * This will only ever mount on the client via the shell below.
  */
 const CategoriesInner: React.FC = () => {
   const params = useSearchParams();
@@ -259,15 +245,28 @@ const CategoriesInner: React.FC = () => {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [previewCount, setPreviewCount] = useState<number | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
-  const [categoryUsage, setCategoryUsage] = useState<Record<string, number>>({});
+  const [categoryUsage, setCategoryUsage] = useState<Record<string, number>>(
+    {},
+  );
   const [pinnedCategories, setPinnedCategories] = useState<string[]>([]);
+  const [pinnedReady, setPinnedReady] = useState(false);
+
+  const normalizePinnedCategories = useCallback((value: unknown): string[] => {
+    if (!Array.isArray(value)) return [];
+    return value
+      .map((entry) => (typeof entry === 'string' ? entry : null))
+      .filter((entry): entry is string => Boolean(entry))
+      .slice(0, MAX_PINNED_CATEGORIES);
+  }, []);
 
   const locationInputRef = useRef<CountrySearchSelectHandle | null>(null);
   const { location: globalLocation, setLocation: setGlobalLocation } =
     useExperienceSearchState();
   const countryHelpers = useCountries();
   const [keywordDraft, setKeywordDraft] = useState('');
-  const previousLocationRef = useRef<CountrySelectValue | undefined>(undefined);
+  const previousLocationRef = useRef<CountrySelectValue | undefined>(
+    undefined,
+  );
   const prevFiltersOpenRef = useRef(filtersOpen);
   const closeReasonRef = useRef<'apply' | 'dismiss'>('dismiss');
   const languageOptions = useMemo(
@@ -281,21 +280,31 @@ const CategoriesInner: React.FC = () => {
     [],
   );
 
+  // pinned categories from API / storage
   useEffect(() => {
-    setPinnedCategories(readPinnedCategories());
-  }, []);
+    let isActive = true;
 
-  useEffect(() => {
-    const handleStorage = (event: StorageEvent) => {
-      if (!event.key || event.key === PINNED_CATEGORIES_STORAGE_KEY) {
-        setPinnedCategories(readPinnedCategories());
+    const fetchPinnedCategories = async () => {
+      try {
+        const response = await axios.get('/api/categories/pinned');
+        if (!isActive) return;
+        setPinnedCategories(normalizePinnedCategories(response.data?.data));
+      } catch (error) {
+        console.error('[PINNED_CATEGORIES]', error);
+      } finally {
+        if (isActive) {
+          setPinnedReady(true);
+        }
       }
     };
 
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
-  }, []);
+    fetchPinnedCategories();
+    return () => {
+      isActive = false;
+    };
+  }, [normalizePinnedCategories]);
 
+  // fetch category usage
   useEffect(() => {
     let isActive = true;
 
@@ -434,6 +443,7 @@ const CategoriesInner: React.FC = () => {
     [draftFilters, locationDraft],
   );
 
+  // reset drafts when closing
   useEffect(() => {
     if (!filtersOpen) {
       setDraftFilters(initialFilters);
@@ -442,6 +452,7 @@ const CategoriesInner: React.FC = () => {
     }
   }, [filtersOpen, initialFilters, resolvedInitialLocation]);
 
+  // track previous location to restore on dismiss
   useEffect(() => {
     if (filtersOpen && !prevFiltersOpenRef.current) {
       previousLocationRef.current =
@@ -464,7 +475,7 @@ const CategoriesInner: React.FC = () => {
     setLocationDraft,
   ]);
 
-  // Preview count effect (debounced)
+  // preview count (debounced)
   useEffect(() => {
     if (!hasAnyDraftSelected) {
       setPreviewCount(null);
@@ -564,6 +575,7 @@ const CategoriesInner: React.FC = () => {
         bookingCount: categoryUsage[item.label] ?? 0,
         trending: false,
         pinned: false,
+        pinnedIndex: null
       }))
       .sort((a, b) => {
         const diff = b.bookingCount - a.bookingCount;
@@ -571,10 +583,13 @@ const CategoriesInner: React.FC = () => {
         return a.label.localeCompare(b.label);
       });
 
-    const pinnedSet = new Set(pinnedCategories.slice(0, MAX_PINNED_CATEGORIES));
+    const pinnedList = pinnedCategories.slice(0, MAX_PINNED_CATEGORIES);
+    const pinnedSet = new Set(pinnedList);
+    const pinnedOrder = new Map(pinnedList.map((label, index) => [label, index]));
     const withPinned = base.map((item) => ({
       ...item,
       pinned: pinnedSet.has(item.label),
+      pinnedIndex: pinnedOrder.get(item.label) ?? null,
     }));
     const trendingLabel =
       withPinned.length > 0 && withPinned[0].bookingCount > 0
@@ -585,16 +600,20 @@ const CategoriesInner: React.FC = () => {
       trending: trendingLabel === item.label,
     }));
 
-    const pinnedFirst = withTrending.filter((item) => item.pinned);
+    const pinnedFirst = withTrending
+      .filter((item) => item.pinned)
+      .sort((a, b) => (a.pinnedIndex ?? 0) - (b.pinnedIndex ?? 0));
     const rest = withTrending.filter((item) => !item.pinned);
 
     return [...pinnedFirst, ...rest];
   }, [categoryUsage, pinnedCategories]);
 
+  // show/hide based on category param
   useEffect(() => {
     setVisible(!category);
   }, [category]);
 
+  // open handler from other parts of app
   useEffect(() => {
     const handleOpen = () => setVisible(true);
 
@@ -727,7 +746,6 @@ const CategoriesInner: React.FC = () => {
     }));
   }, []);
 
-  // normalized keyword add (lowercase, no duplicates)
   const addKeyword = useCallback((value: string) => {
     const keyword = value.trim().toLowerCase();
     if (!keyword) return;
@@ -753,6 +771,7 @@ const CategoriesInner: React.FC = () => {
     [setGlobalLocation],
   );
 
+  // hide on scroll down, show again when scrolled back up
   useEffect(() => {
     let timeout: NodeJS.Timeout | null = null;
     let lastScrollY = window.scrollY;
@@ -786,6 +805,7 @@ const CategoriesInner: React.FC = () => {
     };
   }, []);
 
+  // broadcast visibility change
   useEffect(() => {
     window.dispatchEvent(
       new CustomEvent('categories:toggle', { detail: { visible } }),
@@ -819,52 +839,56 @@ const CategoriesInner: React.FC = () => {
               scheduleAutoScrollResume();
             }}
           >
-            {/* Filters tile */}
-            <button
-              type="button"
-              onClick={() => setFiltersOpen(true)}
-              className={clsx(
-                'flex h-[110px] w-[110px] shrink-0 flex-col items-center justify-between bg-white rounded-2xl p-4 text-neutral-600 shadow-md transition-all duration-300 hover:shadow-lg hover:shadow-neutral-300/50',
-                hasActiveFilters &&
-                  'text-neutral-900 shadow-xl shadow-neutral-400/60',
-              )}
-            >
-              <div
-                className={clsx(
-                  'relative flex h-12 w-12 p-2 items-center justify-center rounded-full bg-black shadow-md shadow-neutral-300/40',
-                  hasActiveFilters && 'shadow-neutral-400/60',
-                )}
-              >
-                <LuSlidersHorizontal
-                  className={clsx('h-6 w-6', 'text-white')}
-                  aria-hidden="true"
-                />
-                {hasActiveFilters && (
-                  <span
-                    className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-neutral-900"
-                    aria-hidden="true"
+            {pinnedReady && (
+              <>
+                {/* Filters tile */}
+                <button
+                  type="button"
+                  onClick={() => setFiltersOpen(true)}
+                  className={clsx(
+                    'flex h-[110px] w-[110px] shrink-0 flex-col items-center justify-between bg-white rounded-2xl p-4 text-neutral-600 shadow-md transition-all duration-300 hover:shadow-lg hover:shadow-neutral-300/50',
+                    hasActiveFilters &&
+                      'text-neutral-900 shadow-xl shadow-neutral-400/60',
+                  )}
+                >
+                  <div
+                    className={clsx(
+                      'relative flex h-12 w-12 p-2 items-center justify-center rounded-full bg-black shadow-md shadow-neutral-300/40',
+                      hasActiveFilters && 'shadow-neutral-400/60',
+                    )}
+                  >
+                    <LuSlidersHorizontal
+                      className={clsx('h-6 w-6', 'text-white')}
+                      aria-hidden="true"
+                    />
+                    {hasActiveFilters && (
+                      <span
+                        className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-neutral-900"
+                        aria-hidden="true"
+                      />
+                    )}
+                  </div>
+
+                  <span className="mt-4 block h-10 w-full px-1 text-center text-[10px] font-semibold uppercase leading-tight tracking-wide text-neutral-700">
+                    Filters
+                  </span>
+                </button>
+
+                {/* Category tiles */}
+                {orderedCategories.map((item) => (
+                  <CategoryBox
+                    key={item.label}
+                    label={item.label}
+                    icon={item.icon}
+                    description={item.description}
+                    selected={category === item.label}
+                    bookingCount={item.bookingCount}
+                    isTrending={item.trending}
+                    pinned={item.pinned}
                   />
-                )}
-              </div>
-
-              <span className="mt-4 block h-10 w-full px-1 text-center text-[10px] font-semibold uppercase leading-tight tracking-wide text-neutral-700">
-                Filters
-              </span>
-            </button>
-
-            {/* Category tiles */}
-            {orderedCategories.map((item) => (
-              <CategoryBox
-                key={item.label}
-                label={item.label}
-                icon={item.icon}
-                description={item.description}
-                selected={category === item.label}
-                bookingCount={item.bookingCount}
-                isTrending={item.trending}
-                pinned={item.pinned}
-              />
-            ))}
+                ))}
+              </>
+            )}
           </div>
         </Container>
       </motion.div>
@@ -986,7 +1010,9 @@ const CategoriesInner: React.FC = () => {
                       description="Select all group styles that fit your experience."
                       options={GROUP_STYLE_OPTIONS}
                       values={draftFilters.groupStyles}
-                      onToggle={(value) => toggleMultiFilter('groupStyles', value)}
+                      onToggle={(value) =>
+                        toggleMultiFilter('groupStyles', value)
+                      }
                     />
 
                     <FilterSection
@@ -1031,7 +1057,9 @@ const CategoriesInner: React.FC = () => {
                       description="Select the languages your host can speak."
                       options={languageOptions}
                       values={draftFilters.languages}
-                      onToggle={(value) => toggleMultiFilter('languages', value)}
+                      onToggle={(value) =>
+                        toggleMultiFilter('languages', value)
+                      }
                     />
 
                     <KeywordsSection
@@ -1115,8 +1143,9 @@ const CategoriesInner: React.FC = () => {
 };
 
 /**
- * Tiny shell: renders nothing on the server, and only mounts
- * CategoriesInner on the client homepage after first render.
+ * Shell component: only mounts CategoriesInner on the client homepage
+ * after the first client render. No SSR subtree, so no Suspense hydration
+ * drama coming from this component.
  */
 const Categories: React.FC = () => {
   const pathname = usePathname();

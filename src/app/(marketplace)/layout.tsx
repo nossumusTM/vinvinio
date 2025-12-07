@@ -9,8 +9,8 @@ import { Suspense } from 'react';
 import Loader from './components/Loader';
 
 export const dynamic = 'force-dynamic';
+import dynamicImport from 'next/dynamic';
 
-import NavBar from '@/app/(marketplace)/components/navbar/NavBar';
 import LoginModal from '@/app/(marketplace)/components/modals/LoginModal';
 import RegisterModal from '@/app/(marketplace)/components/modals/RegisterModal';
 import SearchModal from '@/app/(marketplace)/components/modals/SearchModal';
@@ -47,6 +47,11 @@ export const metadata = {
 // const font = Nunito({
 //   subsets: ['latin'],
 // });
+
+const NavBar = dynamicImport(
+  () => import('@/app/(marketplace)/components/navbar/NavBar'),
+  { ssr: false },
+);
 
 export default async function RootLayout({
   children,

@@ -36,10 +36,10 @@ const Logo = () => {
     <div onClick={() => router.push('/')} className="cursor-pointer">
       {/* Desktop Logo (shown on md and up) */}
       <Image
-        src="/images/volalogo.png"
+        src="/images/vinvinlogo2.png"
         alt="Vuola Logo Desktop"
-        width={20}
-        height={20}
+        width={30}
+        height={30}
         priority
         className="hidden md:block"
       />

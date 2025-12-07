@@ -1,5 +1,6 @@
 'use client'
 
+import Link from "next/link";
 import { useState, useEffect } from "react";
 import { SafeUser } from "@/app/(marketplace)/types";
 
@@ -13,12 +14,18 @@ import UserMenu from "./UserMenu";
 import { usePathname } from 'next/navigation';
 
 import { motion, type Variants } from 'framer-motion';
+import { LuLifeBuoy } from "react-icons/lu";
 
 interface NavBarProps {
     currentUser?: SafeUser | null;
 }
 
 const NavBar: React.FC<NavBarProps> = ({ currentUser }) => {
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   const [prevScrollPos, setPrevScrollPos] = useState(0);
   const [visible, setVisible] = useState(true);
@@ -94,6 +101,11 @@ useEffect(() => {
   return () => window.removeEventListener('scroll', onScroll);
 }, [keepVisible, isHomePage]);
 
+if (!hasMounted) {
+    // avoid SSR + initial hydration for the whole navbar subtree
+    return null;
+  }
+
   return (
     // <div
     //   className={`fixed w-full bg-white z-50 shadow-sm transition-transform duration-300 ${
@@ -130,6 +142,18 @@ useEffect(() => {
               {/* User Menu always on right */}
               <div className="flex-shrink-0 flex items-center gap-3 justify-end z-10">
                 {/* Desktop: show Locale here */}
+                <div className="hidden md:block">
+                  <Link
+                    href="/help-center"
+                    className="inline-flex items-center gap-2 rounded-2xl bg-white/70 px-2 py-1 text-sm font-semibold text-neutral-800 shadow-md transition hover:border-neutral-300 hover:shadow-lg"
+                  >
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-transparent shadow-md">
+                      <LuLifeBuoy className="h-4 w-4" />
+                    </span>
+                    <span>Help Center</span>
+                  </Link>
+                </div>
+
                 <div className="hidden md:block">
                   <LocaleButton />
                 </div>

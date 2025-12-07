@@ -113,6 +113,8 @@ model User {
 
   listingLikes ListingLike[]
 
+  pinnedCategoryUpdates PinnedCategoryConfig[] @relation("PinnedCategoryUpdatedBy")
+
   resetTokens PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
   notificationDismissals NotificationDismissal[]
@@ -330,12 +332,19 @@ model Review {
 }
 
 model Message {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  text        String
-  senderId    String   @db.ObjectId
-  recipientId String   @db.ObjectId
-  createdAt   DateTime @default(now())
-  seen        Boolean  @default(false) // ✅ Add this line
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  text            String?
+  messageType     String   @default("text")
+  attachmentUrl   String?
+  attachmentName  String?
+  attachmentType  String?
+  attachmentSize  Int?
+  audioUrl        String?
+  audioDurationMs Int?
+  senderId        String   @db.ObjectId
+  recipientId     String   @db.ObjectId
+  createdAt       DateTime @default(now())
+  seen            Boolean  @default(false) // ✅ Add this line
 
   sender    User @relation("SentMessages", fields: [senderId], references: [id])
   recipient User @relation("ReceivedMessages", fields: [recipientId], references: [id])
@@ -444,4 +453,16 @@ model ListingView {
 
   @@unique([listingId, ip])
   @@map("ListingView")
+}
+
+model PinnedCategoryConfig {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  categories String[] @default([])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  updatedById String? @db.ObjectId
+  updatedBy   User?   @relation("PinnedCategoryUpdatedBy", fields: [updatedById], references: [id])
+
+  @@map("PinnedCategoryConfig")
 }

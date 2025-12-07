@@ -18,7 +18,7 @@ import useRegisterModal from "@/app/(marketplace)/hooks/useRegisterModal";
 import { SafeUser } from "@/app/(marketplace)/types";
 import { profilePathForUser } from "@/app/(marketplace)/utils/profilePath";
 import { motion, AnimatePresence } from 'framer-motion';
-import { LuScanFace, LuActivity } from "react-icons/lu";
+import { LuScanFace, LuActivity, LuLifeBuoy } from "react-icons/lu";
 import { FcBookmark } from "react-icons/fc";
 import { RiFolderReceivedLine } from "react-icons/ri";
 import { TiBusinessCard } from "react-icons/ti";
@@ -682,6 +682,17 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                     }} />
               </>
             )}
+           </div>
+
+          <div className="md:hidden border-t border-neutral-200 px-4 py-3">
+            <MenuItem
+              label="Help Center"
+              icon={<LuLifeBuoy size={18} />}
+              onClick={() => {
+                setIsOpen(false);
+              }}
+              href="/help-center"
+            />
           </div>
 
           {showLocaleInMenu && (

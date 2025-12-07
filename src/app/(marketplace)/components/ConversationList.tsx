@@ -6,6 +6,9 @@ import { MdVerified } from "react-icons/md";
 import { FiSearch } from 'react-icons/fi';
 import Avatar from './Avatar';
 
+import { HiMiniMicrophone } from 'react-icons/hi2';
+import { HiOutlinePaperClip } from 'react-icons/hi';
+
 interface User {
   id: string;
   name: string;
@@ -14,6 +17,7 @@ interface User {
   latestMessage?: string;
   latestMessageDate?: string;
   latestMessageCreatedAt?: string;
+  latestMessageType?: 'text' | 'attachment' | 'audio';
 }
 
 interface ConversationListProps {
@@ -72,18 +76,18 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
   
     if (cached) {
       const parsed = JSON.parse(cached);
-  
+
       const realCS = parsed.find((u: User) => u.id === CUSTOMER_SERVICE_ID);
       const customerServiceUser: User = {
         id: CUSTOMER_SERVICE_ID,
         name: 'Operator',
         image: '/images/operator.png',
         hasUnread: realCS?.hasUnread ?? false,
-        latestMessage: realCS?.latestMessage || '🚀 Ping us anytime!',
+        latestMessage: realCS?.latestMessage || 'Ping us anytime!',
         latestMessageCreatedAt: realCS?.latestMessageCreatedAt || new Date().toISOString(),
+        latestMessageType: realCS?.latestMessageType ?? 'text',
       };
-  
-      // console.log('📦 Cached conversations loaded:', parsed);
+
       setUsers([customerServiceUser, ...parsed.filter((u: User) => u.id !== CUSTOMER_SERVICE_ID)]);
     }
   
@@ -109,8 +113,10 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
           name: 'Operator',
           image: '/images/operator.png',
           hasUnread: customerServiceData?.hasUnread ?? false,
-          latestMessage: customerServiceData?.latestMessage || '🚀 Ping us anytime!',
-          latestMessageCreatedAt: customerServiceData?.latestMessageCreatedAt || new Date().toISOString(),
+          latestMessage: customerServiceData?.latestMessage || 'Ping us anytime!',
+          latestMessageCreatedAt:
+            customerServiceData?.latestMessageCreatedAt || new Date().toISOString(),
+          latestMessageType: customerServiceData?.latestMessageType ?? 'text',
         };
   
         // setUsers([mergedCustomerServiceUser, ...otherUsers]);
@@ -214,7 +220,15 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
                     <span className="text-xl font-medium">{user.name}</span>
                     {user.latestMessage && (
                       <div className="text-sm text-neutral-500 flex flex-col max-w-[180px] truncate">
-                        <span className="truncate">{user.latestMessage}</span>
+                        <div className="flex items-center gap-1 truncate">
+                          {user.latestMessageType === 'audio' && (
+                            <HiMiniMicrophone className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                          )}
+                          {user.latestMessageType === 'attachment' && (
+                            <HiOutlinePaperClip className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                          )}
+                          <span className="truncate">{user.latestMessage}</span>
+                        </div>
                         {user.latestMessageCreatedAt && (
                           <span className="text-[11px] text-neutral-400 mt-1">
                             {new Date(user.latestMessageCreatedAt).toLocaleString(undefined, {
@@ -228,6 +242,7 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
                       </div>
                     )}
                   </div>
+
                 </div>
 
                 {user.hasUnread && (

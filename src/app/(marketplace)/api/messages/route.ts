@@ -274,10 +274,33 @@ export async function POST(req: Request) {
   if (!currentUser) return new NextResponse('Unauthorized', { status: 401 });
 
   try {
-    const { recipientId, text, senderId } = await req.json();
+    const {
+      recipientId,
+      text,
+      senderId,
+      attachmentUrl,
+      attachmentName,
+      attachmentType,
+      attachmentSize,
+      audioUrl,
+      audioDurationMs,
+    } = await req.json();
 
-    if (!recipientId || !text || text.trim().length === 0) {
-      return new NextResponse('Recipient ID and non-empty text are required', { status: 400 });
+    if (!recipientId) {
+      return new NextResponse('Recipient ID is required', { status: 400 });
+    }
+
+    const hasText = typeof text === 'string' && text.trim().length > 0;
+    const hasAttachment = Boolean(attachmentUrl);
+    const hasAudio = Boolean(audioUrl);
+
+    if (!hasText && !hasAttachment && !hasAudio) {
+      return new NextResponse('A message, attachment, or voice note is required', { status: 400 });
+    }
+
+    const MAX_SIZE = 5 * 1024 * 1024;
+    if (attachmentSize && attachmentSize > MAX_SIZE) {
+      return new NextResponse('Attachments must be 5MB or smaller', { status: 400 });
     }
 
     const isSystemMessage = senderId && senderId !== currentUser.id;
@@ -286,19 +309,32 @@ export async function POST(req: Request) {
     }
 
     // console.log('📤 Sending message:', { from: currentUser.id, to: recipientId, text });
+    const messageType = hasAudio ? 'audio' : hasAttachment ? 'attachment' : 'text';
+    const fallbackText = hasText
+      ? text
+      : hasAudio
+      ? 'Voice message'
+      : attachmentName || 'Attachment';
 
     const newMessage = await prisma.message.create({
       data: {
         senderId: isSystemMessage ? senderId : currentUser.id,
         recipientId,
-        text,
+        text: fallbackText,
+        messageType,
+        attachmentUrl,
+        attachmentName,
+        attachmentType,
+        attachmentSize,
+        audioUrl,
+        audioDurationMs,
         seen: false,
       },
     });
 
     const recipient = await prisma.user.findUnique({ where: { id: recipientId } });
 
-    if (recipient?.email) {
+    if (recipient?.email && hasText) {
       const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
@@ -316,17 +352,17 @@ export async function POST(req: Request) {
         subject: `You've received a new message from ${senderName}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 24px; color: #333;">
-            <img src="https://vuola.eu/images/vuoiaggiologo.png" alt="Vuola Logo" style="height: 40px; margin-bottom: 24px;" />
-            <h2 style="color: #3604ff;">New message from ${senderName}</h2>
-            <p>Hi <strong>${recipient.name || 'there'}</strong>,</p>
-            <p>You’ve just received a new message on Vuola:</p>
-            <blockquote style="margin: 16px 0; padding: 16px; background: #f9f9f9; border-left: 4px solid #3604ff;">
-              <p style="margin: 0;">"${text}"</p>
-              <small style="color: #666;">Sent on ${timeSent}</small>
-            </blockquote>
-            <p>To respond, just open Vuola and click the Messenger icon in the corner to continue chatting.</p>
-            <p style="margin-top: 32px;">Thanks for staying connected with <strong>Vuola</strong> 💙</p>
-          </div>
+              <img src="https://vuola.eu/images/vuoiaggiologo.png" alt="Vuola Logo" style="height: 40px; margin-bottom: 24px;" />
+              <h2 style="color: #3604ff;">New message from ${senderName}</h2>
+              <p>Hi <strong>${recipient.name || 'there'}</strong>,</p>
+              <p>You’ve just received a new message on Vuola:</p>
+              <blockquote style="margin: 16px 0; padding: 16px; background: #f9f9f9; border-left: 4px solid #3604ff;">
+                <p style="margin: 0;">"${fallbackText}"</p>
+                <small style="color: #666;">Sent on ${timeSent}</small>
+              </blockquote>
+              <p>To respond, just open Vuola and click the Messenger icon in the corner to continue chatting.</p>
+              <p style="margin-top: 32px;">Thanks for staying connected with <strong>Vuola</strong> 💙</p>
+            </div>
         `,
       });
     }
