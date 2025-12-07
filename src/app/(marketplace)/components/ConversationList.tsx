@@ -9,7 +9,11 @@ import Avatar from './Avatar';
 import { HiMiniMicrophone } from 'react-icons/hi2';
 import { HiOutlinePaperClip } from 'react-icons/hi';
 import { AiOutlineRobot } from 'react-icons/ai'
+import { SiOpenai } from "react-icons/si";
+import { TbBracketsContainStart } from "react-icons/tb";
 import { LuRocket } from 'react-icons/lu';
+import { GiArtificialHive } from "react-icons/gi";
+import { MdOutlineShutterSpeed } from "react-icons/md";
 import useVinAiChat, { AI_FORCE_ASSISTANT } from '../hooks/useVinAiChat';
 
 interface User {
@@ -200,7 +204,13 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
                     transition={{ duration: 0.2 }}
                     className="relative"
                   >
-                    <Avatar src={user.image} name={user.name} size={48} />
+                    {/* <Avatar src={user.image} name={user.name} size={48} /> */}
+                    <Avatar
+                      src={user.id === VIN_AI_ID ? undefined : user.image}
+                      name={user.id === VIN_AI_ID ? 'AI Force' : user.name}
+                      size={48}
+                      fallbackIcon={user.id === VIN_AI_ID ? <GiArtificialHive className="h-7 w-7" /> : undefined}
+                    />
 
                     {user.id === CUSTOMER_SERVICE_ID && (
                       <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center">
@@ -231,11 +241,11 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
                         </svg>
                       </div>
                     )}
-                    {user.id === VIN_AI_ID && (
-                      <div className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-neutral-900 text-white shadow-sm">
-                        <AiOutlineRobot className="h-4 w-4" />
+                    {/* {user.id === VIN_AI_ID && (
+                      <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#2200ffff] text-white shadow-sm">
+                        <LuRocket className="h-3 w-3" />
                       </div>
-                    )}
+                    )} */}
                   </motion.div>
 
                   <div>

@@ -67,15 +67,24 @@ const Messenger = ({ currentUser }: MessengerProps) => {
   
               {/* Content */}
               {isChatOpen && recipient ? (
-                recipient.id === AI_FORCE_ASSISTANT.id ? (
-                  <VinAiChatView onBack={openList} />
-                ) : (
-                  <ChatView
-                    currentUserId={currentUser.id}
-                    recipient={recipient}
-                    onBack={openList}
-                  />
-                )
+                <motion.div
+                  key={recipient.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex-1"
+                >
+                  {recipient.id === AI_FORCE_ASSISTANT.id ? (
+                    <VinAiChatView onBack={openList} />
+                  ) : (
+                    <ChatView
+                      currentUserId={currentUser.id}
+                      recipient={recipient}
+                      onBack={openList}
+                    />
+                  )}
+                </motion.div>
               ) : (
                 <ConversationList
                   currentUserId={currentUser.id}

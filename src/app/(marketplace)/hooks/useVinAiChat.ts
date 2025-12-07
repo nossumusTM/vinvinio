@@ -7,8 +7,11 @@ export type AiRole = 'assistant' | 'user';
 export interface AiMessage {
   id: string;
   role: AiRole;
+  messageType?: 'text' | 'audio';
   content: string;
   createdAt: string;
+  audioUrl?: string;
+  audioDurationMs?: number;
 }
 
 export interface AiListing {
@@ -27,7 +30,7 @@ interface VinAiState {
   initialized: boolean;
   isSending: boolean;
   init: () => void;
-  sendMessage: (content: string) => Promise<void>;
+  sendMessage: (content: string, options?: { audioUrl?: string; audioDurationMs?: number }) => Promise<void>;
   clear: () => void;
 }
 
@@ -42,7 +45,7 @@ const welcomeMessage: AiMessage = {
 
 const AI_FORCE_ASSISTANT = {
   id: 'vin-ai-assistant',
-  name: 'AI Force Assistant',
+  name: 'AI Force',
   image: undefined,
 };
 
@@ -164,15 +167,18 @@ const useVinAiChat = create<VinAiState>((set, get) => ({
     persistPayload({ messages: resetMessages, recommendations: [] });
     set({ messages: resetMessages, recommendations: [] });
   },
-  sendMessage: async (content: string) => {
+  sendMessage: async (content: string, options?: { audioUrl?: string; audioDurationMs?: number }) => {
     const trimmed = content.trim();
     if (!trimmed) return;
 
     const userMessage: AiMessage = {
       id: generateId(),
       role: 'user',
+      messageType: options?.audioUrl ? 'audio' : 'text',
       content: trimmed,
       createdAt: new Date().toISOString(),
+      audioUrl: options?.audioUrl,
+      audioDurationMs: options?.audioDurationMs,
     };
 
     const optimisticMessages = [...get().messages, userMessage];
@@ -222,3 +228,4 @@ const useVinAiChat = create<VinAiState>((set, get) => ({
 
 export default useVinAiChat;
 export { AI_FORCE_ASSISTANT };
+// export type { AiMessage };
