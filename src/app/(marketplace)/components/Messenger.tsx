@@ -10,6 +10,8 @@ import { SafeUser } from '@/app/(marketplace)/types';
 import { useRef } from 'react';
 import Draggable from 'react-draggable';
 import { motion, AnimatePresence } from 'framer-motion';
+import VinAiChatView from './VinAiChatView';
+import { AI_FORCE_ASSISTANT } from '../hooks/useVinAiChat';
 
 interface MessengerProps {
   currentUser?: SafeUser | null;
@@ -65,11 +67,15 @@ const Messenger = ({ currentUser }: MessengerProps) => {
   
               {/* Content */}
               {isChatOpen && recipient ? (
-                <ChatView
-                  currentUserId={currentUser.id}
-                  recipient={recipient}
-                  onBack={openList}
-                />
+                recipient.id === AI_FORCE_ASSISTANT.id ? (
+                  <VinAiChatView onBack={openList} />
+                ) : (
+                  <ChatView
+                    currentUserId={currentUser.id}
+                    recipient={recipient}
+                    onBack={openList}
+                  />
+                )
               ) : (
                 <ConversationList
                   currentUserId={currentUser.id}

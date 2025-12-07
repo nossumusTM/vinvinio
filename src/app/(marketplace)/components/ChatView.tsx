@@ -5,6 +5,7 @@ import { HiOutlinePaperClip  } from 'react-icons/hi';
 import { HiMiniArrowDownTray } from "react-icons/hi2";
 import { HiMiniMicrophone } from "react-icons/hi2";
 import { TbHttpDelete, TbArrowElbowRight, TbPlayerPause, TbPlayerPlay, TbPlayerStopFilled } from 'react-icons/tb';
+import { LuArrowLeft } from 'react-icons/lu';
 import Picker from '@emoji-mart/react';
 import data from '@emoji-mart/data';
 import ConfirmPopup from './ConfirmPopup';
@@ -857,7 +858,13 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
       {/* Header */}
       <div className="flex items-center gap-3 p-4 border-b justify-between">
         <div className="flex items-center gap-3">
-            <button onClick={onBack} className="text-sm text-neutral-600 hover:text-black">&larr;</button>
+            <button
+              onClick={onBack}
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 text-neutral-700 transition hover:border-neutral-300 hover:bg-neutral-100"
+              aria-label="Back"
+            >
+              <LuArrowLeft className="h-5 w-5" />
+            </button>
             <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}

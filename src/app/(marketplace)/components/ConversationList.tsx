@@ -1,13 +1,16 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { MdVerified } from "react-icons/md";
 import { FiSearch } from 'react-icons/fi';
 import Avatar from './Avatar';
 
 import { HiMiniMicrophone } from 'react-icons/hi2';
 import { HiOutlinePaperClip } from 'react-icons/hi';
+import { AiOutlineRobot } from 'react-icons/ai'
+import { LuRocket } from 'react-icons/lu';
+import useVinAiChat, { AI_FORCE_ASSISTANT } from '../hooks/useVinAiChat';
 
 interface User {
   id: string;
@@ -27,10 +30,33 @@ interface ConversationListProps {
 
 const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUserId }) => {
   const [users, setUsers] = useState<User[]>([]);
+  
   const CUSTOMER_SERVICE_ID = '67ef2895f045b7ff3d0cf6fc';
+  const VIN_AI_ID = AI_FORCE_ASSISTANT.id;
+  
   const [searchQuery, setSearchQuery] = useState('');
+  const { messages: aiMessages, init: initAi } = useVinAiChat();
 
-  const filteredUsers = users.filter((user) =>
+  useEffect(() => {
+    initAi();
+  }, [initAi]);
+
+  const aiAssistantUser: User = useMemo(() => {
+    const latest = aiMessages[aiMessages.length - 1];
+    return {
+      id: AI_FORCE_ASSISTANT.id,
+      name: AI_FORCE_ASSISTANT.name,
+      image: AI_FORCE_ASSISTANT.image,
+      hasUnread: false,
+      latestMessage: latest?.content || 'Ask me to find listings.',
+      latestMessageCreatedAt: latest?.createdAt,
+      latestMessageType: 'text',
+    };
+  }, [aiMessages]);
+
+  const allUsers = useMemo(() => [aiAssistantUser, ...users], [aiAssistantUser, users]);
+
+  const filteredUsers = allUsers.filter((user) =>
     user.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -139,15 +165,6 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
     return () => clearInterval(interval);
   }, [currentUserId]);  
 
-  const customerServiceUser: User = {
-    id: CUSTOMER_SERVICE_ID,
-    name: 'Operator',
-    image: '/images/operator.png', // optional default avatar
-    hasUnread: false,
-    latestMessage: '🚀 Ping us anytime!',
-    latestMessageCreatedAt: new Date().toISOString(),
-  };
-
   return (
     <div className="p-4 space-y-3 overflow-y-auto h-full">
       <div className="relative mb-3">
@@ -212,6 +229,11 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
                             fill="white"
                           />
                         </svg>
+                      </div>
+                    )}
+                    {user.id === VIN_AI_ID && (
+                      <div className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-neutral-900 text-white shadow-sm">
+                        <AiOutlineRobot className="h-4 w-4" />
                       </div>
                     )}
                   </motion.div>

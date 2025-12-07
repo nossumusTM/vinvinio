@@ -4,6 +4,7 @@ interface Recipient {
   id: string;
   name: string;
   image?: string;
+  role?: string;
 }
 
 interface MessengerStore {

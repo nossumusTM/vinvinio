@@ -1,12 +1,19 @@
 'use client';
 
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import qs from 'query-string';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { formatISO } from 'date-fns';
 import { Range } from 'react-date-range';
-import { LuMapPin, LuUsers, LuCalendarDays } from 'react-icons/lu';
+import { LuUsers, LuRocket } from 'react-icons/lu';
+import { FcIdea } from "react-icons/fc";
+import { GiWideArrowDunk } from "react-icons/gi";
+import { FaLocationArrow } from "react-icons/fa6";
+import { LiaLocationArrowSolid } from "react-icons/lia";
+import { CgCalendarDates } from "react-icons/cg";
+import { FaPeoplePulling } from "react-icons/fa6";
+import { MdOutlineTipsAndUpdates } from "react-icons/md";
 import type { IconType } from 'react-icons';
 import clsx from 'clsx';
 
@@ -22,11 +29,13 @@ import CountrySearchSelect, { CountrySearchSelectHandle } from '../inputs/Countr
 import Counter from '../inputs/Counter';
 import useTranslations from '@/app/(marketplace)/hooks/useTranslations';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
+import VinAiSearchWidget from '../VinAiSearchWidget';
 
 enum STEPS {
-  LOCATION = 0,
-  DATE = 1,
-  GUESTS = 2,
+  AI = 0,
+  LOCATION = 1,
+  DATE = 2,
+  GUESTS = 3,
 }
 
 const SearchExperienceModal = () => {
@@ -35,7 +44,7 @@ const SearchExperienceModal = () => {
   const modal = useSearchExperienceModal();
   const t = useTranslations();
 
-  const [step, setStep] = useState(STEPS.LOCATION);
+  const [step, setStep] = useState(STEPS.AI);
   const { location, setLocation } = useExperienceSearchState();
   const [locationError, setLocationError] = useState(false);
   const [guestCount, setGuestCount] = useState(1);
@@ -61,7 +70,7 @@ const SearchExperienceModal = () => {
 
   useEffect(() => {
     if (modal.isOpen) {
-      setStep(STEPS.LOCATION);
+      setStep(STEPS.AI);
     }
   }, [modal.isOpen]);
 
@@ -87,6 +96,12 @@ const SearchExperienceModal = () => {
   }, []);
 
   const onSubmit = useCallback(() => {
+
+    if (step === STEPS.AI) {
+      onNext();
+      return;
+    }
+
     if (step === STEPS.LOCATION && !location) {
       setLocationError(true);
       searchInputRef.current?.focus();
@@ -123,7 +138,7 @@ const SearchExperienceModal = () => {
 
     setLocation(location);
     // modal.onClose();
-    setStep(STEPS.LOCATION);
+    setStep(STEPS.AI);
     router.push(qs.stringifyUrl({ url: '/', query: updatedQuery }, { skipNull: true }));
 
     modal.onClose();
@@ -131,13 +146,14 @@ const SearchExperienceModal = () => {
 
   const actionLabel = useMemo(() => {
     if (step === STEPS.GUESTS) return t('search');
+    if (step === STEPS.AI) return 'Continue';
     if (step === STEPS.LOCATION && !location) return 'Choose a destination';
     if (step === STEPS.DATE && (!dateRange?.startDate || !dateRange?.endDate)) return t('selectDates');
     return t('next');
-  }, [step, location, dateRange, t]);
+  }, [dateRange, location, step, t]);
 
   const secondaryActionLabel = useMemo(
-    () => (step === STEPS.LOCATION ? undefined : t('back')),
+    () => (step === STEPS.AI ? undefined : t('back')),
     [step, t]
   );
 
@@ -183,47 +199,67 @@ const SearchExperienceModal = () => {
     );
   };
 
-  let bodyContent = (
-    <div className="relative flex flex-col gap-8">
-      <div className="absolute inset-0 -z-10 rounded-3xl opacity-80 blur-xl" />
-      <div className="flex flex-col gap-6 rounded-3xl bg-white/70 backdrop-blur p-6 shadow-xl h-fit">
-        {/* <Heading
-          title="Where will your next story unfold?"
-          subtitle="Choose a destination to unlock curated experiences."
-        /> */}
-        <div className="relative z-30 flex flex-col gap-4">
-          <CountrySearchSelect
-            ref={searchInputRef}
-            value={location}
-            onChange={(value) => {
-              setLocation(value);
-              if (value) {
-                setLocationError(false);
-              }
-            }}
-            hasError={locationError}
-            onErrorCleared={() => setLocationError(false)}
-          />
-          <p className="text-xs text-neutral-500">
-            Browse iconic cities or search for hidden gems across the globe.
-          </p>
-          <div className="relative z-0 h-[140px] overflow-hidden rounded-2xl border border-white/60 sm:h-[260px] md:h-[260px]">
-            <SearchMap
-              key={`${modal.isOpen}-${location?.value ?? 'default'}`}
-              city={location?.city ?? 'Rome'}
-              country={location?.label ?? 'Italy'}
-              center={(location?.latlng as [number, number]) ?? ([41.9028, 12.4964] as [number, number])}
-            />
+  let bodyContent: React.ReactNode = null;
+
+  if (step === STEPS.AI) {
+    bodyContent = (
+      <div className="space-y-6">
+        <div className="rounded-3xl p-[1px]">
+          <div className="rounded-[26px] bg-white/80 backdrop-blur p-6 shadow-xl">
+            <VinAiSearchWidget onSkip={() => setStep(STEPS.LOCATION)} />
           </div>
         </div>
+        <div className="flex flex-row flex-wrap gap-3 justify-center mt-2">
+          <StepBadge stepIndex={STEPS.AI} label="AI Force" icon={LuRocket} />
+          <StepBadge stepIndex={STEPS.LOCATION} label={t('where')} icon={FaLocationArrow} />
+          <StepBadge stepIndex={STEPS.DATE} label={t('when')} icon={CgCalendarDates} />
+          <StepBadge stepIndex={STEPS.GUESTS} label={t('who')} icon={FaPeoplePulling} />
+        </div>
       </div>
-      <div className="ml-1 flex flex-row flex-wrap gap-3">
-        <StepBadge stepIndex={STEPS.LOCATION} label={t('where')} icon={LuMapPin} />
-        <StepBadge stepIndex={STEPS.DATE} label={t('when')} icon={LuCalendarDays} />
-        <StepBadge stepIndex={STEPS.GUESTS} label={t('who')} icon={LuUsers} />
+      
+    );
+  }
+
+  if (step === STEPS.LOCATION) {
+    bodyContent = (
+      <div className="relative flex flex-col gap-8">
+        <div className="absolute inset-0 -z-10 rounded-3xl opacity-80 blur-xl" />
+        <div className="flex flex-col gap-6 rounded-3xl bg-white/70 backdrop-blur p-6 shadow-xl h-fit">
+          <div className="relative z-30 flex flex-col gap-4">
+            <CountrySearchSelect
+              ref={searchInputRef}
+              value={location}
+              onChange={(value) => {
+                setLocation(value);
+                if (value) {
+                  setLocationError(false);
+                }
+              }}
+              hasError={locationError}
+              onErrorCleared={() => setLocationError(false)}
+            />
+            <p className="text-xs text-neutral-500">
+              Browse iconic cities or search for hidden gems across the globe.
+            </p>
+            <div className="relative z-0 h-[140px] overflow-hidden rounded-2xl border border-white/60 sm:h-[260px] md:h-[260px]">
+              <SearchMap
+                key={`${modal.isOpen}-${location?.value ?? 'default'}`}
+                city={location?.city ?? 'Rome'}
+                country={location?.label ?? 'Italy'}
+                center={(location?.latlng as [number, number]) ?? ([41.9028, 12.4964] as [number, number])}
+              />
+            </div>
+          </div>
+        </div>
+        <div className="ml-1 flex flex-row flex-wrap gap-3 justify-center mt-2">
+          <StepBadge stepIndex={STEPS.AI} label="AI Force" icon={LuRocket} />
+          <StepBadge stepIndex={STEPS.LOCATION} label={t('where')} icon={FaLocationArrow} />
+          <StepBadge stepIndex={STEPS.DATE} label={t('when')} icon={CgCalendarDates} />
+          <StepBadge stepIndex={STEPS.GUESTS} label={t('who')} icon={FaPeoplePulling} />
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 
   if (step === STEPS.DATE) {
     bodyContent = (
@@ -246,10 +282,11 @@ const SearchExperienceModal = () => {
             </div>
           </div>
         </div>
-        <div className="flex flex-row flex-wrap gap-3">
-          <StepBadge stepIndex={STEPS.LOCATION} label={t('where')} icon={LuMapPin} />
-          <StepBadge stepIndex={STEPS.DATE} label={t('when')} icon={LuCalendarDays} />
-          <StepBadge stepIndex={STEPS.GUESTS} label={t('who')} icon={LuUsers} />
+        <div className="flex flex-row flex-wrap gap-3 justify-center mt-2">
+          <StepBadge stepIndex={STEPS.AI} label="AI Force" icon={LuRocket} />
+          <StepBadge stepIndex={STEPS.LOCATION} label={t('where')} icon={FaLocationArrow} />
+          <StepBadge stepIndex={STEPS.DATE} label={t('when')} icon={CgCalendarDates} />
+          <StepBadge stepIndex={STEPS.GUESTS} label={t('who')} icon={FaPeoplePulling} />
         </div>
       </div>
     );
@@ -274,10 +311,11 @@ const SearchExperienceModal = () => {
             </div>
           </div>
         </div>
-        <div className="flex flex-row flex-wrap gap-3">
-          <StepBadge stepIndex={STEPS.LOCATION} label={t('where')} icon={LuMapPin} />
-          <StepBadge stepIndex={STEPS.DATE} label={t('when')} icon={LuCalendarDays} />
-          <StepBadge stepIndex={STEPS.GUESTS} label={t('who')} icon={LuUsers} />
+        <div className="flex flex-row flex-wrap gap-3 justify-center mt-2">
+          <StepBadge stepIndex={STEPS.AI} label="AI Force" icon={LuRocket} />
+          <StepBadge stepIndex={STEPS.LOCATION} label={t('where')} icon={FaLocationArrow} />
+          <StepBadge stepIndex={STEPS.DATE} label={t('when')} icon={CgCalendarDates} />
+          <StepBadge stepIndex={STEPS.GUESTS} label={t('who')} icon={FaPeoplePulling} />
         </div>
       </div>
     );
@@ -290,8 +328,8 @@ const SearchExperienceModal = () => {
       onSubmit={onSubmit}
       actionLabel={actionLabel}
       secondaryActionLabel={secondaryActionLabel}
-      secondaryAction={step === STEPS.LOCATION ? undefined : onBack}
-      title="Craft your search"
+      secondaryAction={step === STEPS.AI ? undefined : onBack}
+      title="Explore your destination"
       className="bg-transparent"
       body={
         <div className="relative">

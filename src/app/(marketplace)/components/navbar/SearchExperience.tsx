@@ -4,7 +4,7 @@ import { useSearchParams, usePathname } from 'next/navigation';
 import { useEffect, useMemo, useState, useRef, useLayoutEffect } from 'react';
 import { format } from 'date-fns';
 import Image from 'next/image';
-import { LuMapPin } from 'react-icons/lu';
+import { AiOutlineRobot } from "react-icons/ai";
 
 import useExperienceSearchState from '@/app/(marketplace)/hooks/useExperienceSearchState';
 import useSearchExperienceModal from '@/app/(marketplace)/hooks/useSearchExperienceModal';
@@ -29,14 +29,20 @@ const SearchExperience = () => {
   const TEXT_STYLE = "text-sm font-medium";
   const SAFETY_PAD = 8; // px buffer to avoid last-letter clipping
 
-   const ROTATING_ITEMS = [
-    'Rome, Italy',
-    'Hong Kong, China',
-    'Baku, Azerbaijan',
-    'Paris, France',
-    'Istanbul, Turkey',
-    'Tokyo, Japan',
-    'Barcelona, Spain',
+  //  const ROTATING_ITEMS = [
+  //   'Rome, Italy',
+  //   'Hong Kong, China',
+  //   'Baku, Azerbaijan',
+  //   'Paris, France',
+  //   'Istanbul, Turkey',
+  //   'Tokyo, Japan',
+  //   'Barcelona, Spain',
+  // ];
+
+  const ROTATING_ITEMS = [
+    'Ask Vin AI',
+    "What's to do?",
+    'Help to book.',
   ];
 
   const ROTATION_DELAY = 6000;
@@ -66,24 +72,33 @@ const SearchExperience = () => {
   const roRef = useRef<ResizeObserver | null>(null);
 
   useEffect(() => {
+  // let id: number, raf1: number, raf2: number;
+  // const tick = () => {
+  //   const next = (placeholderIndex + 1) % ROTATING_ITEMS.length;
+  //   setMeasureText(ROTATING_ITEMS[next]); // measure NEXT first
+  //   raf1 = requestAnimationFrame(() => {
+  //     raf2 = requestAnimationFrame(() => {
+  //       setPlaceholderIndex(next);        // then show it
+  //       id = window.setTimeout(tick, ROTATION_DELAY);
   let id: number, raf1: number, raf2: number;
-  const tick = () => {
-    const next = (placeholderIndex + 1) % ROTATING_ITEMS.length;
-    setMeasureText(ROTATING_ITEMS[next]); // measure NEXT first
-    raf1 = requestAnimationFrame(() => {
-      raf2 = requestAnimationFrame(() => {
-        setPlaceholderIndex(next);        // then show it
-        id = window.setTimeout(tick, ROTATION_DELAY);
+    const tick = () => {
+      const next = (placeholderIndex + 1) % ROTATING_ITEMS.length;
+      setMeasureText(ROTATING_ITEMS[next]); // measure NEXT first
+      raf1 = requestAnimationFrame(() => {
+        raf2 = requestAnimationFrame(() => {
+          setPlaceholderIndex(next); // then show it
+          id = window.setTimeout(tick, ROTATION_DELAY);
+        });
       });
-    });
-  };
-  id = window.setTimeout(tick, ROTATION_DELAY);
-  return () => {
-    clearTimeout(id);
-    cancelAnimationFrame(raf1);
-    cancelAnimationFrame(raf2);
-  };
-}, [placeholderIndex]);
+      
+    };
+    id = window.setTimeout(tick, ROTATION_DELAY);
+    return () => {
+      clearTimeout(id);
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+    };
+  }, [placeholderIndex]);
 
   useLayoutEffect(() => {
     const el = measureRef.current;
@@ -128,35 +143,41 @@ const SearchExperience = () => {
 
   const locationLabel = useMemo(() => {
     if (!location || !location.value) {
-     return (
-      <>
-        {/* hidden measurer (offscreen) to get exact width of current label */}
-        <span
-          ref={measureRef}
-          className={`absolute -left-[9999px] top-0 whitespace-nowrap ${TEXT_STYLE}`}
-        >
-          {measureText}
-        </span>
+    //  return (
+    //   <>
+    //     {/* hidden measurer (offscreen) to get exact width of current label */}
+    //     <span
+    //       ref={measureRef}
+    //       className={`absolute -left-[9999px] top-0 whitespace-nowrap ${TEXT_STYLE}`}
+    //     >
+    //       {measureText}
+    //     </span>
 
-        <span className="flex items-center gap-1.5 text-neutral-700">
-          <Image
-            key={displayedFlagCode}
-            src={`/flags/${displayedFlagCode}.svg`}
-            alt="Explore destinations"
-            width={16}
-            height={12}
-            className="ml-0.5 h-4 w-6 rounded object-cover"
-          />
+    //     <span className="flex items-center gap-1.5 text-neutral-700">
+    //       <Image
+    //         key={displayedFlagCode}
+    //         src={`/flags/${displayedFlagCode}.svg`}
+    //         alt="Explore destinations"
+    //         width={16}
+    //         height={12}
+    //         className="ml-0.5 h-4 w-6 rounded object-cover"
+    //       />
 
-          {/* animate container to measured width */}
-          <motion.div
-           className={`relative h-5 overflow-hidden whitespace-nowrap ${TEXT_STYLE}`}
-           style={{ width: labelW + SAFETY_PAD }}
-           animate={{ width: labelW + SAFETY_PAD }}
-           initial={false}
-           transition={{ type: "spring", stiffness: 60, damping: 30, mass: 0.35 }}
+    //       {/* animate container to measured width */}
+    //       <motion.div
+    //        className={`relative h-5 overflow-hidden whitespace-nowrap ${TEXT_STYLE}`}
+    //        style={{ width: labelW + SAFETY_PAD }}
+    //        animate={{ width: labelW + SAFETY_PAD }}
+    //        initial={false}
+    //        transition={{ type: "spring", stiffness: 60, damping: 30, mass: 0.35 }}
+    return (
+        <>
+          {/* hidden measurer (offscreen) to get exact width of current label */}
+          <span
+            ref={measureRef}
+            className={`absolute -left-[9999px] top-0 whitespace-nowrap ${TEXT_STYLE}`}
           >
-            <AnimatePresence mode="wait" initial={false}>
+            {/* <AnimatePresence mode="wait" initial={false}>
               <motion.span
                 key={placeholderIndex}
                 initial="hidden"
@@ -171,7 +192,39 @@ const SearchExperience = () => {
           </motion.div>
         </span>
       </>
-    );
+    ); */}
+    {measureText}
+          </span>
+
+          <span className="flex items-center gap-2 text-neutral-700">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full shadow-md text-white">
+              <AiOutlineRobot color='#000' className="h-4 w-4" />
+            </div>
+
+            {/* animate container to measured width */}
+            <motion.div
+              className={`relative h-5 overflow-hidden whitespace-nowrap ${TEXT_STYLE}`}
+              style={{ width: labelW + SAFETY_PAD }}
+              animate={{ width: labelW + SAFETY_PAD }}
+              initial={false}
+              transition={{ type: "spring", stiffness: 60, damping: 30, mass: 0.35 }}
+            >
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={placeholderIndex}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  variants={rotatingVariants}
+                  className="block whitespace-nowrap"
+                >
+                  {ROTATING_ITEMS[placeholderIndex]}
+                </motion.span>
+              </AnimatePresence>
+            </motion.div>
+          </span>
+        </>
+      );
     }
 
     const countryCode = location.value.includes('-')
@@ -193,7 +246,8 @@ const SearchExperience = () => {
         {locationText}
       </span>
     );
-  }, [location, placeholderIndex, displayedFlagCode, labelW, measureText]);
+  // }, [location, placeholderIndex, displayedFlagCode, labelW, measureText]);
+  }, [labelW, location, measureText, placeholderIndex]);
 
   const guestLabel = useMemo(() => {
     const count = Number(guestCount);
