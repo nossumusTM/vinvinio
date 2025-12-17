@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState, useRef, useLayoutEffect } from 'react';
 import { format } from 'date-fns';
 import Image from 'next/image';
 import { AiOutlineRobot } from "react-icons/ai";
+import { RiSpaceShipFill } from "react-icons/ri";
 
 import useExperienceSearchState from '@/app/(marketplace)/hooks/useExperienceSearchState';
 import useSearchExperienceModal from '@/app/(marketplace)/hooks/useSearchExperienceModal';
@@ -198,7 +199,7 @@ const SearchExperience = () => {
 
           <span className="flex items-center gap-2 text-neutral-700">
             <div className="flex h-7 w-7 items-center justify-center rounded-full shadow-md text-white">
-              <AiOutlineRobot color='#000' className="h-4 w-4" />
+              <RiSpaceShipFill color='#000' className="h-4 w-4" />
             </div>
 
             {/* animate container to measured width */}

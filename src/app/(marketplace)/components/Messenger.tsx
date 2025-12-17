@@ -41,10 +41,10 @@ const Messenger = ({ currentUser }: MessengerProps) => {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25, ease: 'easeInOut' }}
           className={clsx(
-            'fixed z-50',
+            'fixed z-50 flex items-end justify-center',        // ⬅ flex + alignment
             isMobile
-              ? 'bottom-0 left-0 w-full h-[65vh] flex justify-center items-end'
-              : 'bottom-4 right-4'
+              ? 'bottom-0 left-0 h-[65vh] w-full'              // ⬅ fixed height on mobile
+              : 'bottom-4 right-4 h-[650px] w-[500px]'         // ⬅ fixed height on desktop
           )}
         >
           <Draggable
@@ -55,8 +55,8 @@ const Messenger = ({ currentUser }: MessengerProps) => {
             <div
               ref={nodeRef}
               className={clsx(
-                'bg-white shadow-sm hover:shadow-xl border rounded-t-3xl pointer-events-auto flex flex-col',
-                isMobile ? 'w-full h-full' : 'w-[500px] h-[700px] max-h-[90vh]'
+                'pointer-events-auto flex h-full w-full flex-col rounded-3xl border bg-white shadow-sm hover:shadow-xl'
+                // ⬆️ always fill the fixed outer box, no more h-[700px]/max-h logic
               )}
             >
               {/* Header */}

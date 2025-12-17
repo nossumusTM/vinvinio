@@ -303,12 +303,12 @@ const VinAiChatView = ({ onBack }: VinAiChatViewProps) => {
   };
 
   return (
- <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.2 }}
-      className="flex h-full flex-col"
+    <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{ duration: 0.2 }}
+        className="flex h-[66vh] max-h-[80vh] flex-col overflow-hidden"
     >
       <div className="flex items-center gap-3 border-b px-4 py-3">
         <button
@@ -320,7 +320,7 @@ const VinAiChatView = ({ onBack }: VinAiChatViewProps) => {
           <LuArrowLeft className="h-5 w-5" />
         </button>
         <div className="flex items-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-900 text-white">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-900 text-white">
             <LuRocket className="h-5 w-5" />
           </div>
           <div className="flex flex-col">
@@ -336,12 +336,14 @@ const VinAiChatView = ({ onBack }: VinAiChatViewProps) => {
             className="flex items-center gap-1 rounded-full border border-neutral-200 px-3 py-1 font-medium text-neutral-600 shadow-sm transition hover:border-neutral-300 hover:bg-neutral-50"
           >
             <LuTrash2 className="h-4 w-4" />
-            Clear
           </button>
         </div>
       </div>
 
-      <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto bg-neutral-50 px-4 py-5">
+      <div
+        ref={scrollRef}
+        className="flex-1 min-h-0 space-y-4 overflow-y-auto bg-neutral-50 px-4 py-5"
+        >
         <AnimatePresence>
           {messages.map((message) => {
             const isUser = message.role === 'user';
@@ -358,7 +360,7 @@ const VinAiChatView = ({ onBack }: VinAiChatViewProps) => {
                 {isUser ? (
                   <Avatar name="You" size={40} />
                 ) : (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-900 text-white">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-900 text-white">
                     <LuRocket className="h-5 w-5" />
                   </div>
                 )}
@@ -392,7 +394,7 @@ const VinAiChatView = ({ onBack }: VinAiChatViewProps) => {
             transition={{ duration: 0.18 }}
             className="flex gap-3 text-left"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-900 text-white">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-900 text-white">
               <LuRocket className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1 space-y-3 rounded-2xl bg-white px-4 py-3 shadow-sm">
@@ -448,7 +450,7 @@ const VinAiChatView = ({ onBack }: VinAiChatViewProps) => {
         )}
       </div>
 
-      <div className="space-y-4 border-t bg-white p-4 shadow-inner">
+    <div className="space-y-4 border-t bg-white px-4 py-3 shadow-inner">
         <div className="flex items-center justify-between text-[11px] text-neutral-500 px-1">
           <span className="font-medium text-neutral-700">Hold the send button to record a voice note.</span>
           {(isRecording || isSendingVoice || isSending) && (
@@ -497,7 +499,7 @@ const VinAiChatView = ({ onBack }: VinAiChatViewProps) => {
             e.preventDefault();
             handleSend();
           }}
-          className="flex w-full items-center gap-3"
+          className="flex w-full items-center gap-3 pb-0 md:pb-3"
         >
           <div className="relative">
             <button

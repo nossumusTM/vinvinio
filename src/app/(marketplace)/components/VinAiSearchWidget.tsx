@@ -300,7 +300,7 @@ const VinAiSearchWidget = ({ onSkip }: VinAiSearchWidgetProps) => {
             <LuRocket className="h-4 w-4" />
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-semibold">Start with AI Force</span>
+            <span className="text-sm font-semibold">Start with Vin AI</span>
             <span className="text-xs text-neutral-500">Ask anything before choosing where, when, and who.</span>
           </div>
         </div>

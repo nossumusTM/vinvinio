@@ -846,108 +846,495 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
     }
   };  
 
+  // return (
+  //   <motion.div
+  //   initial={{ opacity: 0 }}
+  //   animate={{ opacity: 1 }}
+  //   exit={{ opacity: 0 }}
+  //   transition={{ duration: 0.25 }}
+  //   className="flex flex-col h-full max-h-screen overflow-hidden"
+  // >
+  //   <div className="flex flex-col h-full max-h-screen overflow-hidden">
+  //     {/* Header */}
+  //     <div className="flex items-center gap-3 p-4 border-b justify-between">
+  //       <div className="flex items-center gap-3">
+  //           <button
+  //             onClick={onBack}
+  //             className="flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 text-neutral-700 transition hover:border-neutral-300 hover:bg-neutral-100"
+  //             aria-label="Back"
+  //           >
+  //             <LuArrowLeft className="h-5 w-5" />
+  //           </button>
+  //           <motion.div
+  //               initial={{ scale: 0.8, opacity: 0 }}
+  //               animate={{ scale: 1, opacity: 1 }}
+  //               exit={{ scale: 0.8, opacity: 0 }}
+  //               transition={{ duration: 0.25 }}
+  //             >
+  //               <Avatar src={recipient.image} name={recipient.name} size={40} />
+  //             </motion.div>
+
+  //               {recipientProfilePath ? (
+  //                 <button
+  //                   type="button"
+  //                   onClick={handleRecipientNav}
+  //                   onAuxClick={handleRecipientNav}
+  //                   className="font-semibold text-lg underline-offset-2 hover:underline"
+  //                 >
+  //                   {recipient.name}
+  //                 </button>
+  //               ) : (
+  //                 <h4 className="font-semibold text-lg">{recipient.name}</h4>
+  //               )}
+
+  //       </div>
+  //       <button
+  //       onClick={() => setShowConfirm(true)}
+  //       title="Remove from conversations"
+  //       className="text-neutral-500 hover:text-red-600 transition"
+  //       >
+  //           <TbHttpDelete size={20} />
+  //       </button>
+  //       </div>
+
+  //     {/* Messages */}
+  //     <div 
+  //       ref={scrollContainerRef}
+  //       className="flex-grow overflow-y-auto p-4 space-y-4">
+  //       {messages.map((msg, index) => {
+  //         const isAudioMessage = Boolean(msg.audioUrl);
+  //         const isImageAttachment =
+  //           msg.attachmentUrl &&
+  //           (msg.attachmentType?.startsWith('image/') || /\.(png|jpe?g|gif|webp)$/i.test(msg.attachmentUrl));
+  //         const bubbleClass = isAudioMessage || !msg.attachmentUrl
+  //           ? 'bg-sky-50 text-neutral-900 border border-sky-100 shadow-sm'
+  //           : 'bg-white/90 text-neutral-900 border border-neutral-200 shadow-sm';
+  //         const emojiOnly = msg.text ? /^[\p{Emoji}\s]+$/u.test(msg.text.trim()) : false;
+  //         return (
+  //           <motion.div
+  //               key={msg.id}
+  //               initial={{ opacity: 0, scale: 0.95 }}
+  //               animate={{ opacity: 1, scale: 1 }}
+  //               transition={{ duration: 0.2 }}
+  //               className={`max-w-[70%] ${
+  //                 msg.senderId === currentUserId ? 'ml-auto text-right' : ''
+  //               }`}
+  //             >
+
+  //             {/* Sender */}
+  //             <div className="text-xs font-semibold text-neutral-500 mb-1">
+  //               {msg.senderId === currentUserId ? 'Me' : recipient.name}
+  //             </div>
+
+  //             {/* Message bubble */}
+  //             <div
+  //             className={`inline-flex flex-col gap-2 px-4 py-3 rounded-xl break-words whitespace-pre-wrap max-w-full ${bubbleClass}`}
+  //             >
+  //               {msg.audioUrl && (
+  //                 <div className="flex flex-col gap-3 rounded-xl border border-sky-100 bg-sky-50/80 px-3 py-2 shadow-sm">
+  //                   {/* <div className="flex items-center gap-3 text-sm font-semibold text-blue-800">
+  //                     <motion.span
+  //                       initial={{ scale: 0.9, opacity: 0.8 }}
+  //                       animate={{ scale: 1, opacity: 1 }}
+  //                       transition={{ duration: 0.6 }}
+  //                       className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-700 shadow"
+  //                     >
+  //                       <HiMiniMicrophone />
+  //                     </motion.span>
+  //                     <div className="flex flex-col leading-tight">
+  //                       <span>Voice note</span>
+  //                       <span className="text-[11px] font-normal text-neutral-500">
+  //                         {msg.audioDurationMs ? `${Math.max(1, Math.round(msg.audioDurationMs / 1000))}s` : 'Tap play to listen'}
+  //                       </span>
+  //                     </div>
+  //                   </div> */}
+  //                   <AudioPlayer src={msg.audioUrl} durationMs={msg.audioDurationMs} />
+  //                 </div>
+  //               )}
+
+  //               {isImageAttachment && msg.attachmentUrl && (
+  //                 <a
+  //                   href={msg.attachmentUrl}
+  //                   target="_blank"
+  //                   rel="noreferrer"
+  //                   className="block overflow-hidden rounded-xl border border-sky-100 bg-white/80 shadow-sm"
+  //                 >
+  //                   <img
+  //                     src={msg.attachmentUrl}
+  //                     alt={msg.attachmentName || 'Image attachment'}
+  //                     className="max-h-64 w-full object-cover"
+  //                   />
+  //                   {/* <div className="flex items-center justify-between px-3 py-2 text-sm text-neutral-700">
+  //                     <div className="flex items-center gap-2">
+  //                       <HiOutlinePaperClip className="text-blue-600" />
+  //                       <span className="font-medium">{msg.attachmentName || 'Image'}</span>
+  //                     </div>
+  //                     <HiMiniArrowDownTray className="text-blue-600" />
+  //                   </div> */}
+  //                 </a>
+  //               )}
+
+  //               {msg.attachmentUrl && !isImageAttachment && (
+  //                 <a
+  //                   href={msg.attachmentUrl}
+  //                   target="_blank"
+  //                   rel="noreferrer"
+  //                   className="flex items-center justify-between gap-3 rounded-xl border border-dashed border-blue-200 bg-white/80 px-3 py-2 text-sm text-neutral-800 shadow-sm transition hover:shadow-md"
+  //                 >
+  //                   {/* <div className="flex items-center gap-2">
+  //                     <HiOutlinePaperClip className="text-blue-600" />
+  //                     <div className="flex flex-col">
+  //                       <span className="font-semibold leading-tight">
+  //                         {msg.attachmentName || 'Attachment'}
+  //                       </span>
+  //                       <span className="text-[11px] text-neutral-500">
+  //                         {(msg.attachmentType || 'File')}
+  //                         {msg.attachmentSize ? ` • ${formatFileSize(msg.attachmentSize)}` : ''}
+  //                       </span>
+  //                     </div>
+  //                   </div> */}
+  //                   {/* <HiMiniArrowDownTray className="text-blue-600" /> */}
+  //                 </a>
+  //               )}
+
+  //               {msg.text && (
+  //                 <div className={`${emojiOnly ? 'text-3xl' : 'text-sm'} flex items-start gap-2`}>
+  //                   {/* <span className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700 shadow-sm">
+  //                     <TbArrowElbowRight size={14} />
+  //                   </span> */}
+  //                   <span>{msg.text}</span>
+  //                 </div>
+  //               )}
+  //             </div>
+
+  //             {/* Timestamp */}
+  //             <div className="text-[10px] text-neutral-400 mt-1">
+  //               {new Date(msg.createdAt).toLocaleString()}
+  //             </div>
+  //             </motion.div>
+  //         );
+  //       })}
+  //       <div ref={messagesEndRef} />
+  //     </div>
+
+  //     {awaitingTopic && (
+  //       <div className="flex flex-row gap-2 justify-start items-start p-4 overflow-y-auto max-h-64 ml-0">
+  //         {supportTopics.map((topic) => (
+  //           <button
+  //             key={topic}
+  //             onClick={async () => {
+  //               const now = new Date().toISOString();
+              
+  //               const topicMessage = {
+  //                 text: topic,
+  //                 recipientId: CUSTOMER_SERVICE_ID,
+  //               };
+              
+  //               const responseMessage = {
+  //                 text: `Thank you for getting in touch about "${topic}". Could you please describe your issue in a few words?`,
+  //                 recipientId: currentUserId,
+  //                 senderId: CUSTOMER_SERVICE_ID,
+  //               };
+              
+  //               try {
+  //                 // 1. Send user's selected topic to Operator
+  //                 await fetch('/api/messages', {
+  //                   method: 'POST',
+  //                   headers: { 'Content-Type': 'application/json' },
+  //                   body: JSON.stringify(topicMessage),
+  //                 });
+              
+  //                 // 2. Optimistically render user's message
+  //                 setMessages((prev) => [
+  //                   ...prev,
+  //                   {
+  //                     id: `topic-${now}`,
+  //                     senderId: currentUserId,
+  //                     recipientId: CUSTOMER_SERVICE_ID,
+  //                     text: topic,
+  //                     createdAt: now,
+  //                     seen: true,
+  //                   },
+  //                 ]);
+              
+  //                 // 3. Send system response from Operator (server-side message)
+  //                 await fetch('/api/messages/system', {
+  //                   method: 'POST',
+  //                   headers: { 'Content-Type': 'application/json' },
+  //                   body: JSON.stringify(responseMessage),
+  //                 });
+              
+  //                 // 4. Optimistically render Operator reply
+  //                 setMessages((prev) => [
+  //                   ...prev,
+  //                   {
+  //                     id: `response-${Date.now()}`,
+  //                     senderId: CUSTOMER_SERVICE_ID,
+  //                     recipientId: currentUserId,
+  //                     text: responseMessage.text,
+  //                     createdAt: new Date().toISOString(),
+  //                     seen: true,
+  //                   },
+  //                 ]);
+  //               } catch (error) {
+  //                 console.error('Error sending topic selection or system reply:', error);
+  //               }
+              
+  //               setAwaitingTopic(false);
+  //               setAwaitingIssue(true);
+  //             }}                       
+  //             className="bg-neutral-100 rounded-xl px-4 py-2 w-full text-left hover:bg-neutral-200 transition"
+  //           >
+  //             {topic}
+  //           </button>
+  //         ))}
+  //       </div>
+  //     )}
+
+  //     {awaitingIssue && (
+  //       <div className="text-sm text-neutral-400 text-center mt-2 italic">
+  //         Customer assistant will respond as soon as possible.
+  //       </div>
+  //     )}
+
+  //     {messages.length === 0 && (
+  //       <div className="text-sm text-neutral-400 text-center mt-4">
+  //         No messages to show.
+  //       </div>
+  //     )}
+
+  //     {showConfirm && (
+  //       <ConfirmPopup
+  //           title="Remove Conversation"
+  //           message={`Are you sure you want to remove the conversation with ${recipient.name}?`}
+  //           onConfirm={confirmRemoveConversation}
+  //           onCancel={() => setShowConfirm(false)}
+  //           confirmLabel="Remove"
+  //           cancelLabel="Cancel"
+  //       />
+  //       )}
+
+
+  //     {/* Sticky Input */}
+  //     <div className="p-3 border-t bg-white md:sticky md:bottom-0 z-10 flex flex-col gap-2">
+  //       <div className="flex items-center justify-between text-[11px] text-neutral-500 px-1">
+  //         <span className="font-medium text-neutral-700">Hold the send button to record a voice note.</span>
+  //         {(isRecording || isSendingVoice || isUploadingAttachment) && (
+  //           <span className="flex items-center gap-2 text-blue-600 font-semibold">
+  //             {isRecording ? 'Recording…' : isSendingVoice ? 'Sending voice…' : 'Uploading…'}
+  //           </span>
+  //         )}
+  //       </div>
+
+  //       {attachedFile && (
+  //         <div className="flex items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 shadow-sm">
+  //           <div className="flex items-center gap-3">
+  //             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+  //               <HiOutlinePaperClip />
+  //             </div>
+  //             <div className="flex flex-col">
+  //               <span className="text-sm font-semibold text-neutral-800">{attachedFile.name}</span>
+  //               <span className="text-xs text-neutral-500">{formatFileSize(attachedFile.size)}</span>
+  //             </div>
+  //           </div>
+  //           <button
+  //             type="button"
+  //             className="text-xs text-neutral-500 hover:text-neutral-800"
+  //             onClick={() => setAttachedFile(null)}
+  //             aria-label="Remove attachment"
+  //           >
+  //             ✕
+  //           </button>
+  //         </div>
+  //       )}
+
+  //       {isRecording && (
+  //         <div className="flex items-center gap-3 rounded-2xl border border-blue-200/70 bg-white/70 px-3 py-2 shadow-[0_0_25px_rgba(54,4,255,0.2)]">
+  //           <div className="relative h-10 w-10">
+  //             <span className="absolute inset-0 rounded-full bg-blue-500/20 animate-ping" />
+  //             <span className="absolute inset-1 rounded-full bg-blue-500/30 blur-sm" />
+  //             <span className="absolute inset-2 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-[0_0_16px_rgba(54,4,255,0.7)]">
+  //               <HiMiniMicrophone />
+  //             </span>
+  //           </div>
+  //           <div className="flex flex-col text-sm text-blue-800">
+  //             <span className="font-semibold">Recording voice…</span>
+  //             <span className="text-[11px] text-blue-700/80">Release to send your voice message.</span>
+  //           </div>
+  //         </div>
+  //       )}
+
+  //       {isSendingVoice && !isRecording && (
+  //         <div className="text-xs text-blue-700 flex items-center gap-2 px-1">
+  //           <HiMiniMicrophone className="animate-pulse" /> Uploading voice note…
+  //         </div>
+  //       )}
+
+  //       <form
+  //           onSubmit={(e) => {
+  //           e.preventDefault();
+  //           handleSend();
+  //           }}
+  //           className="flex w-full items-center gap-3"
+  //         >
+  //         <input
+  //           ref={attachmentInputRef}
+  //           type="file"
+  //           accept="*/*"
+  //           className="hidden"
+  //           onChange={handleFileInputChange}
+  //         />
+
+  //         {/* Emoji toggle button */}
+  //         <div className="relative">
+  //           <button
+  //             type="button"
+  //             onClick={() => setShowEmojiPicker((prev) => !prev)}
+  //             className="text-neutral-600 hover:text-yellow-500 transition"
+  //           >
+  //               😎
+  //           </button>
+
+  //           {/* Emoji picker dropdown */}
+  //           {showEmojiPicker && (
+  //             <div className="absolute bottom-12 left-0 z-50">
+  //               <Picker data={data} onEmojiSelect={handleEmojiSelect} theme="light" previewPosition="none" />
+  //               </div>
+  //           )}
+  //           </div>
+
+  //         <button
+  //           type="button"
+  //           onClick={() => attachmentInputRef.current?.click()}
+  //           className="rounded-full border border-neutral-200 bg-white p-2 text-neutral-600 shadow-sm transition hover:text-neutral-900 disabled:opacity-50"
+  //           disabled={isUploadingAttachment || isRecording || isSendingVoice}
+  //           aria-label="Add attachment"
+  //         >
+  //           <HiOutlinePaperClip size={18} />
+  //         </button>
+
+  //         <input
+  //           type="text"
+  //           value={newMessage}
+  //           onChange={(e) => setNewMessage(e.target.value)}
+  //           className="flex-1 shadow-md rounded-lg px-4 py-2 text-base border border-neutral-200"
+  //           placeholder="Type your message"
+  //           disabled={isRecording}
+  //         />
+  //         <button
+  //           type="button"
+  //           onMouseDown={scheduleRecording}
+  //           onMouseUp={() => cancelScheduledRecording(true)}
+  //           onMouseLeave={() => cancelScheduledRecording(isRecording || recordingActivatedRef.current)}
+  //           onTouchStart={scheduleRecording}
+  //           onTouchEnd={() => cancelScheduledRecording(true)}
+  //           onClick={() => {
+  //             if (recordingActivatedRef.current || isRecording) return;
+  //             handleSend();
+  //           }}
+  //           className={`flex h-10 w-10 items-center justify-center rounded-full transition shadow-sm ${
+  //             isRecording
+  //               ? 'bg-blue-600 text-white shadow-[0_0_18px_rgba(54,4,255,0.5)]'
+  //               : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
+  //           }`}
+  //           aria-label="Send or hold to record"
+  //           disabled={isUploadingAttachment || isSendingVoice}
+  //         >
+  //           {isRecording ? <span className="text-lg">●</span> : <TbArrowElbowRight size={20} />}
+  //         </button>
+  //       </form>
+  //       </div>
+  //   </div>
+  //   </motion.div>
+  // );
   return (
-    <motion.div
+  <motion.div
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     exit={{ opacity: 0 }}
     transition={{ duration: 0.25 }}
-    className="flex flex-col h-full max-h-screen overflow-hidden"
+    className="flex h-[66vh] max-h-[66vh] flex-col overflow-hidden"
   >
-    <div className="flex flex-col h-full max-h-screen overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center gap-3 p-4 border-b justify-between">
-        <div className="flex items-center gap-3">
-            <button
-              onClick={onBack}
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 text-neutral-700 transition hover:border-neutral-300 hover:bg-neutral-100"
-              aria-label="Back"
-            >
-              <LuArrowLeft className="h-5 w-5" />
-            </button>
-            <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.8, opacity: 0 }}
-                transition={{ duration: 0.25 }}
-              >
-                <Avatar src={recipient.image} name={recipient.name} size={40} />
-              </motion.div>
-
-                {recipientProfilePath ? (
-                  <button
-                    type="button"
-                    onClick={handleRecipientNav}
-                    onAuxClick={handleRecipientNav}
-                    className="font-semibold text-lg underline-offset-2 hover:underline"
-                  >
-                    {recipient.name}
-                  </button>
-                ) : (
-                  <h4 className="font-semibold text-lg">{recipient.name}</h4>
-                )}
-
-        </div>
+    {/* Header */}
+    <div className="flex items-center justify-between gap-3 border-b p-4">
+      <div className="flex items-center gap-3">
         <button
+          onClick={onBack}
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 text-neutral-700 transition hover:border-neutral-300 hover:bg-neutral-100"
+          aria-label="Back"
+        >
+          <LuArrowLeft className="h-5 w-5" />
+        </button>
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.8, opacity: 0 }}
+          transition={{ duration: 0.25 }}
+        >
+          <Avatar src={recipient.image} name={recipient.name} size={40} />
+        </motion.div>
+
+        {recipientProfilePath ? (
+          <button
+            type="button"
+            onClick={handleRecipientNav}
+            onAuxClick={handleRecipientNav}
+            className="text-lg font-semibold underline-offset-2 hover:underline"
+          >
+            {recipient.name}
+          </button>
+        ) : (
+          <h4 className="text-lg font-semibold">{recipient.name}</h4>
+        )}
+      </div>
+      <button
         onClick={() => setShowConfirm(true)}
         title="Remove from conversations"
-        className="text-neutral-500 hover:text-red-600 transition"
-        >
-            <TbHttpDelete size={20} />
-        </button>
-        </div>
+        className="text-neutral-500 transition hover:text-red-600"
+      >
+        <TbHttpDelete size={20} />
+      </button>
+    </div>
 
-      {/* Messages */}
-      <div 
+    {/* Middle area: scrollable content */}
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div
         ref={scrollContainerRef}
-        className="flex-grow overflow-y-auto p-4 space-y-4">
-        {messages.map((msg, index) => {
+        className="flex-1 min-h-0 space-y-4 overflow-y-auto p-4"
+      >
+        {messages.map((msg) => {
           const isAudioMessage = Boolean(msg.audioUrl);
           const isImageAttachment =
             msg.attachmentUrl &&
-            (msg.attachmentType?.startsWith('image/') || /\.(png|jpe?g|gif|webp)$/i.test(msg.attachmentUrl));
-          const bubbleClass = isAudioMessage || !msg.attachmentUrl
-            ? 'bg-sky-50 text-neutral-900 border border-sky-100 shadow-sm'
-            : 'bg-white/90 text-neutral-900 border border-neutral-200 shadow-sm';
+            (msg.attachmentType?.startsWith('image/') ||
+              /\.(png|jpe?g|gif|webp)$/i.test(msg.attachmentUrl));
+          const bubbleClass =
+            isAudioMessage || !msg.attachmentUrl
+              ? 'bg-sky-50 text-neutral-900 border border-sky-100 shadow-sm'
+              : 'bg-white/90 text-neutral-900 border border-neutral-200 shadow-sm';
           const emojiOnly = msg.text ? /^[\p{Emoji}\s]+$/u.test(msg.text.trim()) : false;
+
           return (
             <motion.div
-                key={msg.id}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.2 }}
-                className={`max-w-[70%] ${
-                  msg.senderId === currentUserId ? 'ml-auto text-right' : ''
-                }`}
-              >
-
+              key={msg.id}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.2 }}
+              className={`max-w-[70%] ${
+                msg.senderId === currentUserId ? 'ml-auto text-right' : ''
+              }`}
+            >
               {/* Sender */}
-              <div className="text-xs font-semibold text-neutral-500 mb-1">
+              <div className="mb-1 text-xs font-semibold text-neutral-500">
                 {msg.senderId === currentUserId ? 'Me' : recipient.name}
               </div>
 
               {/* Message bubble */}
               <div
-              className={`inline-flex flex-col gap-2 px-4 py-3 rounded-xl break-words whitespace-pre-wrap max-w-full ${bubbleClass}`}
+                className={`inline-flex max-w-full flex-col gap-2 rounded-xl px-4 py-3 break-words whitespace-pre-wrap ${bubbleClass}`}
               >
                 {msg.audioUrl && (
                   <div className="flex flex-col gap-3 rounded-xl border border-sky-100 bg-sky-50/80 px-3 py-2 shadow-sm">
-                    {/* <div className="flex items-center gap-3 text-sm font-semibold text-blue-800">
-                      <motion.span
-                        initial={{ scale: 0.9, opacity: 0.8 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ duration: 0.6 }}
-                        className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-700 shadow"
-                      >
-                        <HiMiniMicrophone />
-                      </motion.span>
-                      <div className="flex flex-col leading-tight">
-                        <span>Voice note</span>
-                        <span className="text-[11px] font-normal text-neutral-500">
-                          {msg.audioDurationMs ? `${Math.max(1, Math.round(msg.audioDurationMs / 1000))}s` : 'Tap play to listen'}
-                        </span>
-                      </div>
-                    </div> */}
                     <AudioPlayer src={msg.audioUrl} durationMs={msg.audioDurationMs} />
                   </div>
                 )}
@@ -964,13 +1351,6 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
                       alt={msg.attachmentName || 'Image attachment'}
                       className="max-h-64 w-full object-cover"
                     />
-                    {/* <div className="flex items-center justify-between px-3 py-2 text-sm text-neutral-700">
-                      <div className="flex items-center gap-2">
-                        <HiOutlinePaperClip className="text-blue-600" />
-                        <span className="font-medium">{msg.attachmentName || 'Image'}</span>
-                      </div>
-                      <HiMiniArrowDownTray className="text-blue-600" />
-                    </div> */}
                   </a>
                 )}
 
@@ -981,146 +1361,119 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
                     rel="noreferrer"
                     className="flex items-center justify-between gap-3 rounded-xl border border-dashed border-blue-200 bg-white/80 px-3 py-2 text-sm text-neutral-800 shadow-sm transition hover:shadow-md"
                   >
-                    {/* <div className="flex items-center gap-2">
-                      <HiOutlinePaperClip className="text-blue-600" />
-                      <div className="flex flex-col">
-                        <span className="font-semibold leading-tight">
-                          {msg.attachmentName || 'Attachment'}
-                        </span>
-                        <span className="text-[11px] text-neutral-500">
-                          {(msg.attachmentType || 'File')}
-                          {msg.attachmentSize ? ` • ${formatFileSize(msg.attachmentSize)}` : ''}
-                        </span>
-                      </div>
-                    </div> */}
-                    {/* <HiMiniArrowDownTray className="text-blue-600" /> */}
+                    {/* attachment metadata UI stripped for brevity */}
                   </a>
                 )}
 
                 {msg.text && (
                   <div className={`${emojiOnly ? 'text-3xl' : 'text-sm'} flex items-start gap-2`}>
-                    {/* <span className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700 shadow-sm">
-                      <TbArrowElbowRight size={14} />
-                    </span> */}
                     <span>{msg.text}</span>
                   </div>
                 )}
               </div>
 
               {/* Timestamp */}
-              <div className="text-[10px] text-neutral-400 mt-1">
+              <div className="mt-1 text-[10px] text-neutral-400">
                 {new Date(msg.createdAt).toLocaleString()}
               </div>
-              </motion.div>
+            </motion.div>
           );
         })}
+
+        {/* Support topic chips INSIDE scroll area */}
+        {awaitingTopic && (
+          <div className="mt-2 flex flex-col items-start justify-start gap-2">
+            {supportTopics.map((topic) => (
+              <button
+                key={topic}
+                onClick={async () => {
+                  const now = new Date().toISOString();
+
+                  const topicMessage = {
+                    text: topic,
+                    recipientId: CUSTOMER_SERVICE_ID,
+                  };
+
+                  const responseMessage = {
+                    text: `Thank you for getting in touch about "${topic}". Could you please describe your issue in a few words?`,
+                    recipientId: currentUserId,
+                    senderId: CUSTOMER_SERVICE_ID,
+                  };
+
+                  try {
+                    await fetch('/api/messages', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(topicMessage),
+                    });
+
+                    setMessages((prev) => [
+                      ...prev,
+                      {
+                        id: `topic-${now}`,
+                        senderId: currentUserId,
+                        recipientId: CUSTOMER_SERVICE_ID,
+                        text: topic,
+                        createdAt: now,
+                        seen: true,
+                      },
+                    ]);
+
+                    await fetch('/api/messages/system', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(responseMessage),
+                    });
+
+                    setMessages((prev) => [
+                      ...prev,
+                      {
+                        id: `response-${Date.now()}`,
+                        senderId: CUSTOMER_SERVICE_ID,
+                        recipientId: currentUserId,
+                        text: responseMessage.text,
+                        createdAt: new Date().toISOString(),
+                        seen: true,
+                      },
+                    ]);
+                  } catch (error) {
+                    console.error('Error sending topic selection or system reply:', error);
+                  }
+
+                  setAwaitingTopic(false);
+                  setAwaitingIssue(true);
+                }}
+                className="w-full rounded-xl bg-neutral-100 px-4 py-2 text-left transition hover:bg-neutral-200"
+              >
+                {topic}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {awaitingIssue && (
+          <div className="mt-2 text-center text-sm italic text-neutral-400">
+            Customer assistant will respond as soon as possible.
+          </div>
+        )}
+
+        {messages.length === 0 && !awaitingTopic && !awaitingIssue && (
+          <div className="mt-4 text-center text-sm text-neutral-400">
+            No messages to show.
+          </div>
+        )}
+
         <div ref={messagesEndRef} />
       </div>
 
-      {awaitingTopic && (
-        <div className="flex flex-row gap-2 justify-start items-start p-4 overflow-y-auto max-h-64 ml-0">
-          {supportTopics.map((topic) => (
-            <button
-              key={topic}
-              onClick={async () => {
-                const now = new Date().toISOString();
-              
-                const topicMessage = {
-                  text: topic,
-                  recipientId: CUSTOMER_SERVICE_ID,
-                };
-              
-                const responseMessage = {
-                  text: `Thank you for getting in touch about "${topic}". Could you please describe your issue in a few words?`,
-                  recipientId: currentUserId,
-                  senderId: CUSTOMER_SERVICE_ID,
-                };
-              
-                try {
-                  // 1. Send user's selected topic to Operator
-                  await fetch('/api/messages', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(topicMessage),
-                  });
-              
-                  // 2. Optimistically render user's message
-                  setMessages((prev) => [
-                    ...prev,
-                    {
-                      id: `topic-${now}`,
-                      senderId: currentUserId,
-                      recipientId: CUSTOMER_SERVICE_ID,
-                      text: topic,
-                      createdAt: now,
-                      seen: true,
-                    },
-                  ]);
-              
-                  // 3. Send system response from Operator (server-side message)
-                  await fetch('/api/messages/system', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(responseMessage),
-                  });
-              
-                  // 4. Optimistically render Operator reply
-                  setMessages((prev) => [
-                    ...prev,
-                    {
-                      id: `response-${Date.now()}`,
-                      senderId: CUSTOMER_SERVICE_ID,
-                      recipientId: currentUserId,
-                      text: responseMessage.text,
-                      createdAt: new Date().toISOString(),
-                      seen: true,
-                    },
-                  ]);
-                } catch (error) {
-                  console.error('Error sending topic selection or system reply:', error);
-                }
-              
-                setAwaitingTopic(false);
-                setAwaitingIssue(true);
-              }}                       
-              className="bg-neutral-100 rounded-xl px-4 py-2 w-full text-left hover:bg-neutral-200 transition"
-            >
-              {topic}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {awaitingIssue && (
-        <div className="text-sm text-neutral-400 text-center mt-2 italic">
-          Customer assistant will respond as soon as possible.
-        </div>
-      )}
-
-      {messages.length === 0 && (
-        <div className="text-sm text-neutral-400 text-center mt-4">
-          No messages to show.
-        </div>
-      )}
-
-      {showConfirm && (
-        <ConfirmPopup
-            title="Remove Conversation"
-            message={`Are you sure you want to remove the conversation with ${recipient.name}?`}
-            onConfirm={confirmRemoveConversation}
-            onCancel={() => setShowConfirm(false)}
-            confirmLabel="Remove"
-            cancelLabel="Cancel"
-        />
-        )}
-
-
-      {/* Sticky Input */}
-      <div className="p-3 border-t bg-white md:sticky md:bottom-0 z-10 flex flex-col gap-2">
-        <div className="flex items-center justify-between text-[11px] text-neutral-500 px-1">
-          <span className="font-medium text-neutral-700">Hold the send button to record a voice note.</span>
+      {/* Sticky-ish input footer */}
+      <div className="z-10 mt-auto flex flex-col gap-2 border-t bg-white p-3">
+        <div className="flex items-center justify-between px-1 text-[11px] text-neutral-500">
+          <span className="font-medium text-neutral-700">
+            Hold the send button to record a voice note.
+          </span>
           {(isRecording || isSendingVoice || isUploadingAttachment) && (
-            <span className="flex items-center gap-2 text-blue-600 font-semibold">
+            <span className="flex items-center gap-2 font-semibold text-blue-600">
               {isRecording ? 'Recording…' : isSendingVoice ? 'Sending voice…' : 'Uploading…'}
             </span>
           )}
@@ -1133,8 +1486,12 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
                 <HiOutlinePaperClip />
               </div>
               <div className="flex flex-col">
-                <span className="text-sm font-semibold text-neutral-800">{attachedFile.name}</span>
-                <span className="text-xs text-neutral-500">{formatFileSize(attachedFile.size)}</span>
+                <span className="text-sm font-semibold text-neutral-800">
+                  {attachedFile.name}
+                </span>
+                <span className="text-xs text-neutral-500">
+                  {formatFileSize(attachedFile.size)}
+                </span>
               </div>
             </div>
             <button
@@ -1151,32 +1508,35 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
         {isRecording && (
           <div className="flex items-center gap-3 rounded-2xl border border-blue-200/70 bg-white/70 px-3 py-2 shadow-[0_0_25px_rgba(54,4,255,0.2)]">
             <div className="relative h-10 w-10">
-              <span className="absolute inset-0 rounded-full bg-blue-500/20 animate-ping" />
+              <span className="absolute inset-0 animate-ping rounded-full bg-blue-500/20" />
               <span className="absolute inset-1 rounded-full bg-blue-500/30 blur-sm" />
-              <span className="absolute inset-2 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-[0_0_16px_rgba(54,4,255,0.7)]">
+              <span className="absolute inset-2 flex items-center justify-center rounded-full bg-blue-600 text-white shadow-[0_0_16px_rgba(54,4,255,0.7)]">
                 <HiMiniMicrophone />
               </span>
             </div>
             <div className="flex flex-col text-sm text-blue-800">
               <span className="font-semibold">Recording voice…</span>
-              <span className="text-[11px] text-blue-700/80">Release to send your voice message.</span>
+              <span className="text-[11px] text-blue-700/80">
+                Release to send your voice message.
+              </span>
             </div>
           </div>
         )}
 
         {isSendingVoice && !isRecording && (
-          <div className="text-xs text-blue-700 flex items-center gap-2 px-1">
+          <div className="flex items-center gap-2 px-1 text-xs text-blue-700">
             <HiMiniMicrophone className="animate-pulse" /> Uploading voice note…
           </div>
         )}
 
+        {/* Input row */}
         <form
-            onSubmit={(e) => {
+          onSubmit={(e) => {
             e.preventDefault();
             handleSend();
-            }}
-            className="flex w-full items-center gap-3"
-          >
+          }}
+          className="flex w-full items-center gap-3"
+        >
           <input
             ref={attachmentInputRef}
             type="file"
@@ -1185,23 +1545,25 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
             onChange={handleFileInputChange}
           />
 
-          {/* Emoji toggle button */}
           <div className="relative">
             <button
               type="button"
               onClick={() => setShowEmojiPicker((prev) => !prev)}
-              className="text-neutral-600 hover:text-yellow-500 transition"
+              className="transition text-neutral-600 hover:text-yellow-500"
             >
-                😎
+              😎
             </button>
-
-            {/* Emoji picker dropdown */}
             {showEmojiPicker && (
               <div className="absolute bottom-12 left-0 z-50">
-                <Picker data={data} onEmojiSelect={handleEmojiSelect} theme="light" previewPosition="none" />
-                </div>
+                <Picker
+                  data={data}
+                  onEmojiSelect={handleEmojiSelect}
+                  theme="light"
+                  previewPosition="none"
+                />
+              </div>
             )}
-            </div>
+          </div>
 
           <button
             type="button"
@@ -1217,10 +1579,11 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            className="flex-1 shadow-md rounded-lg px-4 py-2 text-base border border-neutral-200"
+            className="flex-1 rounded-lg border border-neutral-200 px-4 py-2 text-base shadow-md"
             placeholder="Type your message"
             disabled={isRecording}
           />
+
           <button
             type="button"
             onMouseDown={scheduleRecording}
@@ -1232,7 +1595,7 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
               if (recordingActivatedRef.current || isRecording) return;
               handleSend();
             }}
-            className={`flex h-10 w-10 items-center justify-center rounded-full transition shadow-sm ${
+            className={`flex h-10 w-10 items-center justify-center rounded-full shadow-sm transition ${
               isRecording
                 ? 'bg-blue-600 text-white shadow-[0_0_18px_rgba(54,4,255,0.5)]'
                 : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
@@ -1243,10 +1606,21 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
             {isRecording ? <span className="text-lg">●</span> : <TbArrowElbowRight size={20} />}
           </button>
         </form>
-        </div>
+      </div>
     </div>
-    </motion.div>
-  );
+
+    {showConfirm && (
+      <ConfirmPopup
+        title="Remove Conversation"
+        message={`Are you sure you want to remove the conversation with ${recipient.name}?`}
+        onConfirm={confirmRemoveConversation}
+        onCancel={() => setShowConfirm(false)}
+        confirmLabel="Remove"
+        cancelLabel="Cancel"
+      />
+    )}
+  </motion.div>
+);
 };
 
 export default ChatView;
