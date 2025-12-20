@@ -448,7 +448,7 @@ export async function GET(request: Request) {
         id: `message-${message.id}`,
         type: 'message_received',
         title: `New message from ${senderName}`,
-        description: truncate(message.text, 140),
+        description: truncate(message.text ?? '', 140),
         actor: mapUserToActor(message.sender),
         createdAt: message.createdAt.toISOString(),
         context: {
