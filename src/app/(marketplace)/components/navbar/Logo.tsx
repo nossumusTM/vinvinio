@@ -46,7 +46,7 @@ const Logo = () => {
 
       {/* Mobile Logo (shown below md breakpoint) */}
       <Image
-        src="/images/vuoiaggiologo.png"
+        src="/images/vinvinlogo2.png"
         alt="Vuola Logo Mobile"
         width={30}
         height={30}
