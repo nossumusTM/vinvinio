@@ -4171,7 +4171,7 @@ const coverImage = useMemo(() => {
 
                         <div className="space-y-3">
                           <div className="space-y-1">
-                            <p className="text-xs font-medium text-neutral-700">Can't scan the code? Enter this key:</p>
+                            <p className="text-xs font-medium text-neutral-700">Can&apos;t scan the code? Enter this key:</p>
                             <div className="break-all rounded-lg border border-neutral-200 bg-white px-3 py-2 font-mono text-sm text-neutral-800">
                               {twoFactorSecret}
                             </div>

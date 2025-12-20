@@ -502,7 +502,7 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
                 <LuBadgeHelp className="h-4 w-4" />
               </div>
               <div>
-                <p className="text-lg font-semibold text-neutral-900">User's Playbook</p>
+                <p className="text-lg font-semibold text-neutral-900">User&apos;s Playbook</p>
                 <p className="text-sm text-neutral-600">Etiquette, safety, and platform best practices in one place.</p>
                 <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-sky-700">
                   Open section
