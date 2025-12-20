@@ -82,6 +82,19 @@ export default async function getListingById(params: IParams) {
       listingWithSlug.price,
     );
 
+    const moderationNoteText =
+      typeof (listingWithSlug as any).moderationNoteText === 'string'
+        ? ((listingWithSlug as any).moderationNoteText as string)
+        : null;
+
+    const moderationNoteAttachments = Array.isArray((listingWithSlug as any).moderationNoteAttachments)
+      ? (listingWithSlug as any).moderationNoteAttachments.map((item: any) => ({
+          name: typeof item?.name === 'string' ? item.name : null,
+          data: typeof item?.data === 'string' ? item.data : null,
+          url: typeof item?.url === 'string' ? item.url : null,
+        }))
+      : null;
+
     const normalizedBasePrice = pricingSnapshot.basePrice > 0
       ? pricingSnapshot.basePrice
       : Number(listingWithSlug.price ?? 0);
@@ -117,6 +130,8 @@ export default async function getListingById(params: IParams) {
         pricingSnapshot.tiers.length > 0
           ? (pricingSnapshot.tiers as SafePricingTier[])
           : null,
+      moderationNoteText,
+      moderationNoteAttachments,
       createdAt: listingWithSlug.createdAt.toString(),
 
       // 💗 NEW: like info exposed to the client
