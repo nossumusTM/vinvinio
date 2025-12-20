@@ -65,6 +65,8 @@ export async function POST(req: Request) {
 
     const encryptedCard = {
       number: encrypt(data.number),
+      expiration: encrypt(data.expiration ?? ''),
+      cvc: encrypt(data.cvc ?? data.cvv ?? ''),
       name: encrypt(data.name),
       address: encrypt(data.address),
       apt: data.apt || '',
