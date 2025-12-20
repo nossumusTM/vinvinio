@@ -37,7 +37,7 @@ import Footer from './components/Footer';
 import SessionProviderWrapper from './providers/SessionProviderWrapper';
 
 export const metadata = {
-  title: 'Vuola - Experience World Beyond the Ordinary | 2025',
+  title: 'Vinvin - Experience World Beyond the Ordinary | 2025',
   description: 'Beyond Experiences & More',
   icons: {
     icon: '/favicon.ico',
