@@ -36,7 +36,7 @@ export const translations: Record<LanguageCode, Record<TranslationKey, string>> 
     selectDate: 'Select Date',
     selectDates: 'Select Dates',
     selectCountry: 'Select a country',
-    localeLabel: 'Locale',
+    localeLabel: 'Language & Currency',
     languageLabel: 'Language',
     regionCurrencyLabel: 'Region / Currency',
     chooseLanguage: 'Language',

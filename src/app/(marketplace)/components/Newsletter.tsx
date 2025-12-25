@@ -51,13 +51,13 @@ const Newsletter = () => {
   };  
 
   return (
-    <div className="w-full max-w-xl p-6 rounded-2xl bg-neutral-100 shadow-md relative">
-        <MdMarkEmailUnread size={22} className="absolute top-4 right-4" />
+    <div className="w-full max-w-3xl p-2 rounded-2xl relative bottom-5 md:top-10">
+        {/* <MdMarkEmailUnread size={22} className="absolute top-4 right-4" /> */}
 
-      <h3 className="text-2xl font-bold mb-2">Catch the Breeze</h3>
-      <span className="text-sm text-neutral-600 mb-4">
+      {/* <h3 className="text-2xl font-bold mb-2">Catch the Breeze</h3> */}
+      {/* <span className="text-sm text-neutral-600 mb-4">
         Receive curated updates on unforgettable experiences - no spam, just <p className='text-5xl text-black font-semibold'>inspiration.</p>
-      </span>
+      </span> */}
 
       {/* <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-4">
         <label className="flex items-center gap-2 text-sm cursor-pointer">
@@ -84,18 +84,18 @@ const Newsletter = () => {
         </label>
       </div> */}
 
-      <div className="relative w-full mt-4">
+      <div className="relative w-full mt-4 shadow-md rounded-2xl">
         <input
           type="email"
-          placeholder="Drop email address"
+          placeholder="Insert email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full px-4 py-2 pr-28 rounded-xl border border-gray-300 transition text-sm focus:outline-none focus:ring-1 focus:ring-black"
+          className="w-full px-16 py-8 pr-12 rounded-xl transition text-sm md:text-3xl focus:outline-none focus:ring-1 focus:ring-black"
         />
         <button
           onClick={handleSubscribe}
           disabled={loading}
-          className="absolute top-0 right-0 h-full px-4 hover:bg-neutral-200 text-black bg-neutral-100 rounded-r-xl border border-gray-300 transition text-sm"
+          className="absolute top-0 right-0 h-full px-4 text-black shadow-md hover:shadow-lg rounded-r-xl transition text-sm"
         >
           {loading ? '...' : 'Subscribe'}
         </button>

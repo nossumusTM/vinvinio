@@ -264,7 +264,8 @@ const EarningsCard: React.FC<EarningsCardProps> = ({
             <div className="mb-3 mt-3 flex flex-wrap gap-4 pt-3 sm:mb-0 sm:flex-row sm:justify-baseline">
               <div className="relative flex flex-col items-center justify-center">
                <p
-                  className="select-none rounded-xl bg-gradient-to-r from-blue-200 to-cyan-200 p-3 text-sm text-white cursor-pointer"
+                  // className="select-none rounded-xl bg-gradient-to-r from-blue-200 to-cyan-200 p-3 text-sm text-white cursor-pointer"
+                  className="select-none rounded-xl bg-black p-3 text-sm text-white cursor-pointer"
                   onMouseEnter={() => {
                     if (!isTouch) setActiveInfo("profit");
                   }}

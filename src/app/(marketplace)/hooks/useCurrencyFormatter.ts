@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import useLocaleSettings from '@/app/(marketplace)/hooks/useLocaleSettings';
 import { convertCurrency } from '@/app/(marketplace)/utils/format';
-import { BASE_CURRENCY, CURRENCY_RATES } from '@/app/(marketplace)/constants/locale';
+import { BASE_CURRENCY, CURRENCY_RATES, getCurrencyOption } from '@/app/(marketplace)/constants/locale';
 
 const useCurrencyFormatter = () => {
   const { currency, locale } = useLocaleSettings();
@@ -15,7 +15,7 @@ const useCurrencyFormatter = () => {
 
     const fetchRates = async () => {
       try {
-        const response = await fetch(`https://open.er-api.com/v6/latest/${BASE_CURRENCY}`, {
+        const response = await fetch(`https://api.exchangerate.host/latest?base=${BASE_CURRENCY}`, {
           signal: controller.signal,
         });
 
@@ -35,16 +35,30 @@ const useCurrencyFormatter = () => {
     };
 
     fetchRates();
+    const refreshInterval = window.setInterval(fetchRates, 30 * 60 * 1000);
 
-    return () => controller.abort();
+    return () => {
+      controller.abort();
+      window.clearInterval(refreshInterval);
+    };
   }, []);
 
   const formatter = useMemo(
-    () => new Intl.NumberFormat(locale, { style: 'currency', currency }),
+  () =>
+        new Intl.NumberFormat(locale, { style: 'currency', currency, currencyDisplay: 'narrowSymbol' }),
     [currency, locale]
   );
 
-  const format = useCallback((amount: number) => formatter.format(amount), [formatter]);
+  const currencySymbol = useMemo(() => getCurrencyOption(currency).symbol, [currency]);
+
+    const format = useCallback(
+      (amount: number) =>
+        formatter
+          .formatToParts(amount)
+          .map((part) => (part.type === 'currency' ? currencySymbol : part.value))
+          .join(''),
+      [currencySymbol, formatter]
+    );
 
   const convert = useCallback(
     (amount: number, fromCurrency: string = BASE_CURRENCY) =>

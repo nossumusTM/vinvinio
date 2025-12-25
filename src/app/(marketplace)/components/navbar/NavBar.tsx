@@ -140,23 +140,23 @@ if (!hasMounted) {
               </motion.div>
 
               {/* User Menu always on right */}
-              <div className="flex-shrink-0 flex items-center gap-3 justify-end z-10">
+              <div className="flex-shrink-0 flex items-center gap-3 justify-center items-center z-10">
                 {/* Desktop: show Locale here */}
                 <div className="hidden md:block">
                   <Link
                     href="/help-center"
-                    className="inline-flex items-center gap-2 rounded-2xl bg-white/70 px-2 py-1 text-sm font-semibold text-neutral-800 shadow-md transition hover:border-neutral-300 hover:shadow-lg"
+                    className="inline-flex items-center gap-2 rounded-2xl bg-white/70 px-2 py-1 text-sm font-semibold text-neutral-800 transition hover:border-neutral-300 shadow-md px-4 py-3 hover:shadow-lg"
                   >
-                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-transparent shadow-md">
+                    {/* <span className="flex h-9 w-9 items-center justify-center rounded-full bg-transparent shadow-md"> */}
                       <LuLifeBuoy className="h-4 w-4" />
-                    </span>
+                    {/* </span> */}
                     <span>Help Center</span>
                   </Link>
                 </div>
 
-                <div className="hidden md:block">
+                {/* <div className="hidden md:block">
                   <LocaleButton />
-                </div>
+                </div> */}
 
                 {/* Mobile: Locale is rendered inside the user menu */}
                 <UserMenu currentUser={currentUser} showLocaleInMenu />

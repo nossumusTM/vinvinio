@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
 import type { IconType } from 'react-icons';
+import { GiSpinningTop } from "react-icons/gi";
 import { LuSparkles } from 'react-icons/lu';
 
 interface CategoryBoxProps {
@@ -66,7 +67,7 @@ const CategoryBoxInner: React.FC<CategoryBoxProps> = ({
       aria-pressed={selected}
       title={description}
       className={clsx(
-        'relative flex h-[110px] w-[110px] shrink-0 flex-col items-center justify-center rounded-2xl bg-white p-4 text-neutral-600 shadow-md transition-all duration-300',
+        'relative flex h-[100px] w-[100px] shrink-0 flex-col items-center justify-center rounded-2xl bg-white p-4 text-neutral-600 shadow-md transition-all duration-300',
         selected
           ? 'text-neutral-900 shadow-xl shadow-neutral-400/60'
           : 'hover:shadow-lg hover:shadow-neutral-300/50'
@@ -77,16 +78,17 @@ const CategoryBoxInner: React.FC<CategoryBoxProps> = ({
           initial={{ opacity: 0, y: -6, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.35, ease: 'easeOut' }}
-          className="absolute right-2 top-2 inline-flex items-center justify-center gap-0 rounded-full bg-[#2200ffff] px-1 py-0.5 text-[8px] font-normal uppercase tracking-tight text-white shadow-md shadow-blue-200/70"
+          className="aspect-square absolute right-2 top-2 inline-flex items-center justify-center gap-0 rounded-full bg-[#2200ffff] px-1 py-0.5 text-[8px] font-normal uppercase tracking-tight text-white shadow-md shadow-blue-200/70"
           aria-label="Pinned category"
         >
           {/* <LuSparkles className="h-2 w-2" aria-hidden="true" /> */}
-          <span>Hotspot</span>
+          {/* <span>Hotspot</span> */}
+          <GiSpinningTop />
         </motion.span>
       )}
 
       {bookingCount > 0 && (
-        <div className="absolute right-2 top-2 flex items-center gap-2" aria-hidden="true">
+        <div className="absolute top-1 flex items-center gap-2" aria-hidden="true">
           {isTrending && (
             <motion.span
               initial={{ opacity: 0, y: -6, scale: 0.9 }}
@@ -101,7 +103,7 @@ const CategoryBoxInner: React.FC<CategoryBoxProps> = ({
               Trending
             </motion.span>
           )}
-          <span className="h-2.5 w-2.5 rounded-full bg-[#2200ffff]" />
+          {/* <span className="h-2.5 w-2.5 rounded-full bg-[#2200ffff]" /> */}
         </div>
       )}
 

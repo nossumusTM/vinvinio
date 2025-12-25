@@ -238,7 +238,8 @@ const CategoriesInner: React.FC = () => {
   const category = params?.get('category');
   const router = useRouter();
 
-  const [visible, setVisible] = useState(() => !category);
+  // const [visible, setVisible] = useState(() => !category);
+  const [visible, setVisible] = useState(false);
   const [autoScrollPaused, setAutoScrollPaused] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const resumeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -610,18 +611,22 @@ const CategoriesInner: React.FC = () => {
 
   // show/hide based on category param
   useEffect(() => {
-    setVisible(!category);
-  }, [category]);
+    setVisible(pinnedReady && !category);
+  }, [category, pinnedReady]);
 
   // open handler from other parts of app
   useEffect(() => {
-    const handleOpen = () => setVisible(true);
+    const handleOpen = () => {
+      if (pinnedReady) {
+        setVisible(true);
+      }
+    };
 
     window.addEventListener('categories:open', handleOpen);
     return () => {
       window.removeEventListener('categories:open', handleOpen);
     };
-  }, []);
+  }, [pinnedReady]);
 
   const handleFiltersApply = useCallback(() => {
     const parsedQuery = params
@@ -773,6 +778,11 @@ const CategoriesInner: React.FC = () => {
 
   // hide on scroll down, show again when scrolled back up
   useEffect(() => {
+
+    if (!pinnedReady) {
+      return;
+    }
+
     let timeout: NodeJS.Timeout | null = null;
     let lastScrollY = window.scrollY;
     let hasScrolledDown = false;
@@ -803,7 +813,7 @@ const CategoriesInner: React.FC = () => {
       if (timeout) clearTimeout(timeout);
       window.removeEventListener('scroll', handleScroll);
     };
-  }, []);
+  }, [pinnedReady]);
 
   // broadcast visibility change
   useEffect(() => {
@@ -846,7 +856,7 @@ const CategoriesInner: React.FC = () => {
                   type="button"
                   onClick={() => setFiltersOpen(true)}
                   className={clsx(
-                    'flex h-[110px] w-[110px] shrink-0 flex-col items-center justify-between bg-white rounded-2xl p-4 text-neutral-600 shadow-md transition-all duration-300 hover:shadow-lg hover:shadow-neutral-300/50',
+                    'flex h-[100px] w-[100px] shrink-0 flex-col items-center justify-between bg-white rounded-2xl p-4 text-neutral-600 shadow-md transition-all duration-300 hover:shadow-lg hover:shadow-neutral-300/50',
                     hasActiveFilters &&
                       'text-neutral-900 shadow-xl shadow-neutral-400/60',
                   )}
@@ -897,7 +907,7 @@ const CategoriesInner: React.FC = () => {
       <button
         type="button"
         onClick={() => setVisible((prev) => !prev)}
-        className="absolute bottom-[-12px] left-1/2 z-10 -translate-x-1/2 flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-md transition-transform duration-300"
+        className="absolute bottom-[-12px] left-1/2 z-1 -translate-x-1/2 flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-md transition-transform duration-300"
         aria-label={visible ? 'Collapse categories' : 'Expand categories'}
       >
         <motion.div

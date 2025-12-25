@@ -612,6 +612,7 @@ import useCountries from "@/app/(marketplace)/hooks/useCountries";
 import { CountrySelectValue } from "../inputs/CountrySelect";
 import useCurrencyFormatter from '@/app/(marketplace)/hooks/useCurrencyFormatter';
 import { getDisplayPricing, computePricingForGuests } from "@/app/(marketplace)/libs/pricingDisplay";
+import { categories } from "@/app/(marketplace)/components/navbar/Categories";
 
 import {
   SafeListing,
@@ -856,6 +857,12 @@ const ListingCard: React.FC<ListingCardProps> = ({
     return data.category;
   }, [data.category]);
 
+  const categoryMeta = useMemo(
+    () => categories.find((category) => category.label === primaryCategory),
+    [primaryCategory]
+  );
+  const CategoryIcon = categoryMeta?.icon;
+
   const location = useMemo(() => {
     if (!data.locationValue) {
       return undefined;
@@ -1092,8 +1099,9 @@ const ListingCard: React.FC<ListingCardProps> = ({
             <>
               <div className="flex flex-col items-start mb-1.5 gap-2 pt-1 text-neutral-500 text-xs md:text-sm flex-nowrap overflow-hidden">
                 {primaryCategory && (
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg border border-neutral-300 bg-white text-neutral-700 text-[11px] md:text-xs font-medium tracking-wide whitespace-nowrap">
-                    {primaryCategory}
+                  <span className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-lg border border-neutral-300 bg-white text-neutral-700 text-[11px] md:text-xs font-medium tracking-wide whitespace-nowrap">
+                    {CategoryIcon && <CategoryIcon className="h-3 w-3" aria-hidden />}
+                    <span>{primaryCategory}</span>
                   </span>
                 )}
                 <span className="flex items-center border border-neutral-300 px-2.5 py-0.5 rounded-lg gap-2 text-[11px] md:text-xs text-neutral-700 whitespace-nowrap overflow-hidden">

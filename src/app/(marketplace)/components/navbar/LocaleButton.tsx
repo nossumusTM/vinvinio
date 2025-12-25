@@ -20,11 +20,11 @@ const LocaleButton = () => {
     <button
       type="button"
       onClick={modal.onOpen}
-      className="inline-flex w-full ml-[-15px] md:ml-0 items-center gap-2 rounded-2xl backdrop-blur px-3.5 py-1.5 text-sm font-medium text-neutral-700 md:shadow-md transition md:hover:shadow-lg"
+      className="inline-flex w-full ml-[-15px] md:ml-0 items-center justify-center gap-2 rounded-2xl backdrop-blur px-3.5 py-1.5 text-sm font-medium text-neutral-700 transition"
     >
-      <span className="flex h-8 w-8 items-center justify-center rounded-full text-neutral-900 shadow-md">
+      {/* <span className="flex h-8 w-8 items-center justify-center rounded-full text-neutral-900 shadow-md">
         <LuGlobe2 className="h-4 w-4" />
-      </span>
+      </span> */}
       {/* <span className="hidden flex-col text-left leading-tight md:flex">
 
         <span className="hidden md:flex flex-col text-left leading-tight">
@@ -40,7 +40,7 @@ const LocaleButton = () => {
         </span>
       </span> */}
 
-      <span className="flex flex-col text-left leading-tight">
+      <span className="flex flex-col text-left items-center leading-tight">
         <span className="text-[8px] uppercase tracking-wide text-neutral-400">
           {t('localeLabel')}
         </span>

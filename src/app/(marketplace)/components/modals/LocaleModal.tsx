@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
 import Image from 'next/image';
 
@@ -49,6 +49,12 @@ const LocaleModal = () => {
     exit:    { opacity: 0, y: -8, filter: 'blur(6px)', transition: { duration: 0.2 } },
   };
 
+  useEffect(() => {
+    if (modal.isOpen) {
+      setActiveTab('language');
+    }
+  }, [modal.isOpen]);
+
   const handleLanguageSelect = (option: LanguageOption) => {
     setLanguage(option.code);
   };
@@ -68,7 +74,7 @@ const LocaleModal = () => {
         className={clsx(
           'flex items-center gap-3 rounded-2xl border px-4 py-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none',
           isSelected
-            ? 'bg-neutral-100 text-neutral-900 shadow-lg'
+            ? 'bg-black text-white shadow-lg'
             : 'bg-white/90 backdrop-blur'
         )}
       >
@@ -80,10 +86,10 @@ const LocaleModal = () => {
           className="h-5 w-7 rounded object-cover"
         />
         <div className="flex flex-col">
-          <span className={clsx('text-sm font-semibold', isSelected ? 'text-black/70' : 'text-neutral-900')}>
+          <span className={clsx('text-sm font-semibold', isSelected ? 'text-white' : 'text-neutral-900')}>
             {option.language}
           </span>
-          <span className={clsx('text-xs uppercase tracking-wide', isSelected ? 'text-black/70' : 'text-neutral-500')}>
+          <span className={clsx('text-xs uppercase tracking-wide', isSelected ? 'text-white/80' : 'text-neutral-500')}>
             {option.region}
           </span>
         </div>
@@ -102,7 +108,7 @@ const LocaleModal = () => {
         className={clsx(
           'flex items-center gap-3 rounded-2xl border px-4 py-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none',
           isSelected
-            ? 'bg-neutral-100 text-neutral-900 shadow-lg'
+            ? 'bg-black text-white shadow-lg'
             : 'bg-white/90 backdrop-blur'
         )}
       >
@@ -114,11 +120,11 @@ const LocaleModal = () => {
           className="h-5 w-7 rounded object-cover"
         />
         <div className="flex flex-col">
-          <span className={clsx('text-sm font-semibold', isSelected ? 'text-neutral-900' : 'text-neutral-900')}>
+          <span className={clsx('text-sm font-semibold', isSelected ? 'text-white' : 'text-neutral-900')}>
             {option.currency}
           </span>
 
-          <span className={clsx('text-xs uppercase tracking-wide', isSelected ? 'text-black/70' : 'text-neutral-500')}>
+          <span className={clsx('text-xs uppercase tracking-wide', isSelected ? 'text-white/80' : 'text-neutral-500')}>
             {option.region} · {option.symbol}
           </span>
 
@@ -134,24 +140,24 @@ const LocaleModal = () => {
           type="button"
           onClick={() => setActiveTab('language')}
           className={clsx(
-            'rounded-full px-6 py-2 text-sm font-semibold transition bg-neutral-100 text-neutral-800 shadow-sm shadow-neutral-900/20',
-            activeTab === 'language'
-              ? 'bg-neutral-100 text-neutral-900 shadow-lg'
-              : 'bg-white/80 text-neutral-700'
-          )}
-        >
+          'rounded-full px-6 py-2 text-sm font-semibold transition bg-neutral-100 text-neutral-800 shadow-sm shadow-neutral-900/20',
+          activeTab === 'language'
+            ? 'bg-black text-white shadow-lg'
+            : 'bg-white/80 text-neutral-700'
+        )}
+      >
           {t('languageLabel')}
         </button>
         <button
           type="button"
           onClick={() => setActiveTab('currency')}
           className={clsx(
-            'rounded-full px-6 py-2 text-sm font-semibold transition bg-neutral-100 text-neutral-800 shadow-sm shadow-neutral-900/20',
-            activeTab === 'currency'
-              ? 'bg-neutral-100 text-neutral-900 shadow-lg'
-              : 'bg-white/80 text-neutral-700'
-          )}
-        >
+          'rounded-full px-6 py-2 text-sm font-semibold transition bg-neutral-100 text-neutral-800 shadow-sm shadow-neutral-900/20',
+          activeTab === 'currency'
+            ? 'bg-black text-white shadow-lg'
+            : 'bg-white/80 text-neutral-700'
+        )}
+      >
           {t('regionCurrencyLabel')}
         </button>
       </div>

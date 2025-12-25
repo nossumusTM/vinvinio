@@ -296,7 +296,7 @@ const VinAiSearchWidget = ({ onSkip }: VinAiSearchWidgetProps) => {
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-sky-50 via-indigo-50 to-white text-[#2200ffff]">
+          <div className="flex h-9 w-9 aspect-square items-center justify-center rounded-xl bg-gradient-to-br from-sky-50 via-indigo-50 to-white text-[#2200ffff]">
             <LuRocket className="h-4 w-4" />
           </div>
           <div className="flex flex-col">
@@ -425,8 +425,8 @@ const VinAiSearchWidget = ({ onSkip }: VinAiSearchWidgetProps) => {
         ))}
       </div>
 
-      <div className="flex items-center gap-2">
-        <div className="relative">
+      <div className="flex flex-row items-center gap-2">
+        {/* <div className="relative">
           <button
             type="button"
             onClick={() => setShowEmojiPicker((prev) => !prev)}
@@ -440,13 +440,13 @@ const VinAiSearchWidget = ({ onSkip }: VinAiSearchWidgetProps) => {
               <Picker data={data} onEmojiSelect={handleEmojiSelect} theme="light" previewPosition="none" />
             </div>
           )}
-        </div>
+        </div> */}
         
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Tell AI Force what you want to explore or book."
-          className="flex-1 rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-900"
+          placeholder="What you want to do?"
+          className="flex-1 rounded-2xl border border-neutral-200 bg-white px-1 text-center py-3 text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-900"
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
@@ -467,7 +467,7 @@ const VinAiSearchWidget = ({ onSkip }: VinAiSearchWidgetProps) => {
             handleSend();
           }}
           disabled={isSendingVoice || isSending}
-          className="flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-900 text-white shadow-sm transition hover:bg-neutral-800 disabled:opacity-60"
+          className="flex h-10 w-10 aspect-square items-center justify-center rounded-xl bg-neutral-900 text-white shadow-sm transition hover:bg-neutral-800 disabled:opacity-60"
           aria-label="Send or hold to record"
         >
           {isRecording ? <span className="text-lg">●</span> : <TbArrowElbowRight size={20} />}
@@ -475,9 +475,9 @@ const VinAiSearchWidget = ({ onSkip }: VinAiSearchWidgetProps) => {
         <button
           type="button"
           onClick={clear}
-          className="rounded-2xl border border-neutral-200 px-3 py-3 text-xs font-semibold text-neutral-600 transition hover:bg-neutral-100"
+          className="rounded-xl border border-neutral-200 px-3 py-3 text-xs font-semibold text-neutral-600 transition hover:bg-neutral-100"
         >
-          Reset
+          R
         </button>
       </div>
     </div>

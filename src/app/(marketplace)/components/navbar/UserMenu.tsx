@@ -556,7 +556,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                     <MenuItem
                       label="Become a Provider"
                       icon={<MdOutlineBusinessCenter size={24} />}
-                      className="font-semibold text-neutral-900"
+                      className="font-normal text-md text-neutral-900"
                       onClick={() => {
                         setIsOpen(false);
                         onRent();
@@ -696,7 +696,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
           </div>
 
           {showLocaleInMenu && (
-            <div className="md:hidden border-t border-neutral-200 px-4 py-3">
+            <div className="border-t border-neutral-200 px-4 py-3">
               <LocaleButton />
             </div>
           )}
