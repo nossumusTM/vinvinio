@@ -2,7 +2,9 @@
  
 import axios from "axios";
 import { MdOutlineModeOfTravel } from "react-icons/md";
+import { GiWingfoot } from "react-icons/gi";
 import { BiNavigation } from "react-icons/bi";
+import { BsPlugin } from "react-icons/bs";
 import { PiBarcode } from "react-icons/pi";
 import { useCallback, useState, useEffect, useMemo } from "react";
 import ConfirmPopup from "../ConfirmPopup";
@@ -194,8 +196,8 @@ import { useRouter } from "next/navigation";
 
             <div className="flex justify-center items-center gap-2 flex-wrap pt-6">
               {([
-                { key: 'customer' as const, icon: <MdOutlineModeOfTravel size={14} />, label: 'Traveller' },
-                { key: 'host' as const, icon: <BiNavigation size={14} />, label: 'Host' },
+                { key: 'customer' as const, icon: <GiWingfoot size={14} />, label: 'Visitor' },
+                { key: 'host' as const, icon: <BsPlugin size={14} />, label: 'Provider' },
                 { key: 'promoter' as const, icon: <PiBarcode size={14} />, label: 'Promoter' },
               ]).map(({ key, icon, label }) => {
                 const isActive = role === key;
@@ -211,11 +213,11 @@ import { useRouter } from "next/navigation";
                     }}
                     disabled={isLoading}
                     className={`
-                      inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium
+                      inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium
                       border transition
                       ${isActive
-                        ? 'bg-neutral-100 text-neutral-900'
-                        : 'bg-white text-neutral-800 border-neutral-200 hover:border-neutral-400'}
+                        ? 'bg-sky-50/60 text-neutral-900'
+                        : 'bg-white text-neutral-800 hover:border-neutral-400'}
                     `}
                   >
                     <span className="text-xl">{icon}</span>

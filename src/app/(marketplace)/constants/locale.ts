@@ -35,14 +35,14 @@ export interface CurrencyOption {
 
 export const LANGUAGE_OPTIONS: LanguageOption[] = [
   { language: 'English',     code: 'en', locale: 'en-US',     region: 'US', flag: 'us', defaultCurrency: 'USD' },
-  { language: 'Azerbaijani', code: 'az', locale: 'az-Latn-AZ', region: 'AZ', flag: 'az', defaultCurrency: 'AZN' },
+  { language: 'Italiano',    code: 'it', locale: 'it-IT',     region: 'IT', flag: 'it', defaultCurrency: 'EUR' },
   { language: 'Deutsch',     code: 'de', locale: 'de-DE',     region: 'DE', flag: 'de', defaultCurrency: 'EUR' },
   { language: 'Español',     code: 'es', locale: 'es-ES',     region: 'ES', flag: 'es', defaultCurrency: 'EUR' },
   { language: 'Français',    code: 'fr', locale: 'fr-FR',     region: 'FR', flag: 'fr', defaultCurrency: 'EUR' },
-  { language: 'Italiano',    code: 'it', locale: 'it-IT',     region: 'IT', flag: 'it', defaultCurrency: 'EUR' },
   { language: 'Nederlands',  code: 'nl', locale: 'nl-NL',     region: 'NL', flag: 'nl', defaultCurrency: 'EUR' },
   { language: 'Polski',      code: 'pl', locale: 'pl-PL',     region: 'PL', flag: 'pl', defaultCurrency: 'PLN' },
   { language: 'Turkish',     code: 'tr', locale: 'tr-TR',     region: 'TR', flag: 'tr', defaultCurrency: 'TRY' },
+  { language: 'Azerbaijani', code: 'az', locale: 'az-Latn-AZ', region: 'AZ', flag: 'az', defaultCurrency: 'AZN' },
   { language: 'Russian',     code: 'ru', locale: 'ru-RU',     region: 'RU', flag: 'ru', defaultCurrency: 'RUB' },
   { language: 'Chinese',     code: 'zh', locale: 'zh-CN',     region: 'CN', flag: 'cn', defaultCurrency: 'CNY' },
   { language: 'Japanese',    code: 'ja', locale: 'ja-JP',     region: 'JP', flag: 'jp', defaultCurrency: 'JPY' },
@@ -51,10 +51,10 @@ export const LANGUAGE_OPTIONS: LanguageOption[] = [
 
 export const CURRENCY_OPTIONS: CurrencyOption[] = [
   { currency: 'USD', code: 'USD', currencyName: 'US Dollar',         region: 'US', flag: 'us', symbol: '$' },
-  { currency: 'AZN', code: 'AZN', currencyName: 'Azerbaijani Manat', region: 'AZ', flag: 'az', symbol: '₼' },
   { currency: 'EUR', code: 'EUR', currencyName: 'Euro',              region: 'EU', flag: 'eu', symbol: '€' },
   { currency: 'PLN', code: 'PLN', currencyName: 'Polish Złoty',      region: 'PL', flag: 'pl', symbol: 'zł' },
   { currency: 'TRY', code: 'TRY', currencyName: 'Turkish Lira',      region: 'TR', flag: 'tr', symbol: '₺' },
+  { currency: 'AZN', code: 'AZN', currencyName: 'Azerbaijani Manat', region: 'AZ', flag: 'az', symbol: '₼' },
   { currency: 'RUB', code: 'RUB', currencyName: 'Russian Ruble',     region: 'RU', flag: 'ru', symbol: '₽' },
   { currency: 'CNY', code: 'CNY', currencyName: 'Chinese Yuan',      region: 'CN', flag: 'cn', symbol: '¥' },
   { currency: 'JPY', code: 'JPY', currencyName: 'Japanese Yen',      region: 'JP', flag: 'jp', symbol: '¥' },

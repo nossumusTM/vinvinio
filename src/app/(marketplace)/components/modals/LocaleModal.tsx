@@ -140,7 +140,7 @@ const LocaleModal = () => {
           type="button"
           onClick={() => setActiveTab('language')}
           className={clsx(
-          'rounded-full px-6 py-2 text-sm font-semibold transition bg-neutral-100 text-neutral-800 shadow-sm shadow-neutral-900/20',
+          'rounded-xl px-6 py-2 text-sm font-semibold transition bg-black text-neutral-800 shadow-sm shadow-neutral-900/20',
           activeTab === 'language'
             ? 'bg-black text-white shadow-lg'
             : 'bg-white/80 text-neutral-700'
@@ -152,7 +152,7 @@ const LocaleModal = () => {
           type="button"
           onClick={() => setActiveTab('currency')}
           className={clsx(
-          'rounded-full px-6 py-2 text-sm font-semibold transition bg-neutral-100 text-neutral-800 shadow-sm shadow-neutral-900/20',
+          'rounded-xl px-6 py-2 text-sm font-semibold transition bg-black text-neutral-800 shadow-sm shadow-neutral-900/20',
           activeTab === 'currency'
             ? 'bg-black text-white shadow-lg'
             : 'bg-white/80 text-neutral-700'

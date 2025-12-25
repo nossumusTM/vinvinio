@@ -76,19 +76,19 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
        <div className="relative w-full sm:max-w-[180px]">
         {selectedCountry && (
           <div className="pointer-events-none absolute left-3 top-1/2 flex -translate-y-1/2 items-center">
-            <Image
+            <img
               src={`/images/flags/${selectedCountry.value.toLowerCase()}.svg`}
               alt={selectedCountry.label}
               width={20}
               height={14}
-              className="rounded-sm mb-1 h-4 w-6 object-cover"
+              className="rounded-sm h-4 w-6 object-cover"
             />
           </div>
         )}
 
         <select
           className={twMerge(
-            'w-full appearance-none uppercase rounded-xl bg-white py-3 pl-10 pr-10 text-sm font-medium text-neutral-800 shadow-md transition focus:border-black focus:outline-none focus:ring-1 focus:ring-black',
+            'w-full appearance-none uppercase rounded-xl bg-white py-3 pl-10 pr-10 text-xs font-medium text-neutral-800 shadow-md transition focus:border-black focus:outline-none focus:ring-1 focus:ring-black',
             disabled ? 'opacity-60' : ''
           )}
           value={selectedCountry?.value ?? ''}

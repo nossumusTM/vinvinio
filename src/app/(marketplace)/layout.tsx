@@ -40,7 +40,7 @@ export const metadata = {
   title: 'Vinvin - Experience World Beyond the Ordinary | 2025',
   description: 'Beyond Experiences & More',
   icons: {
-    icon: '/favicon.ico',
+    icon: '/favicon-2026.ico?',
   },
 };
 
