@@ -145,7 +145,7 @@ if (!hasMounted) {
                 <div className="hidden md:block">
                   <Link
                     href="/help-center"
-                    className="inline-flex items-center gap-2 rounded-2xl bg-white/70 px-2 py-1 text-sm font-semibold text-neutral-800 transition hover:border-neutral-300 shadow-md px-4 py-3 hover:shadow-lg"
+                    className="inline-flex items-center gap-2 rounded-2xl bg-white/70 text-sm font-semibold text-neutral-800 transition hover:border-neutral-300 shadow-md px-4 py-2.5 hover:shadow-lg"
                   >
                     {/* <span className="flex h-9 w-9 items-center justify-center rounded-full bg-transparent shadow-md"> */}
                       <LuLifeBuoy className="h-4 w-4" />
