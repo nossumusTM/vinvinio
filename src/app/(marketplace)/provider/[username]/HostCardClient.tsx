@@ -210,8 +210,8 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
     setFollowBusy(true);
     try {
       const response = isFollowingHost
-        ? await axios.delete(`/api/hosts/${host.id}/follow`, { withCredentials: true })
-        : await axios.post(`/api/hosts/${host.id}/follow`, undefined, { withCredentials: true });
+        ? await axios.delete(`/api/provider/${host.id}/follow`, { withCredentials: true })
+        : await axios.post(`/api/provider/${host.id}/follow`, undefined, { withCredentials: true });
 
       const nextCount = typeof response.data?.followersCount === 'number'
         ? response.data.followersCount

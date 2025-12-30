@@ -74,7 +74,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
     currentUser?.username ??
     (currentUser?.name ? slugify(currentUser.name) : currentUser?.id ?? '');
 
-  const hostCardHref = hostHandle ? `/hosts/${encodeURIComponent(hostHandle)}` : '/hosts';
+  const hostCardHref = hostHandle ? `/provider/${encodeURIComponent(hostHandle)}` : '/hosts';
 
   const notificationsLastSeenKey = currentUser?.id
     ? `notifications:last-seen:${currentUser.id}`

@@ -408,7 +408,7 @@ const ListingHead: React.FC<ListingHeadProps> = ({
 
   return (
     <>
-    <div className='flex flex-col md:pt-8 px-4'>
+    <div className='flex flex-col md:pt-8 px-0'>
       <div className="flex flex-col md:flex-row items-start md:items-center gap-3 mb-2">
         <button
           type="button"

@@ -49,7 +49,7 @@ const ReservationCard: React.FC<ReservationCardProps> = ({
 
   const guestProfilePath =
     u?.role === "host"
-      ? (handle ? `/hosts/${encodeURIComponent(handle)}` : null)
+      ? (handle ? `/provider/${encodeURIComponent(handle)}` : null)
       : (handle ? `/social-card/${encodeURIComponent(handle)}` : null);
 
   const handleGuestNavigation = useCallback(

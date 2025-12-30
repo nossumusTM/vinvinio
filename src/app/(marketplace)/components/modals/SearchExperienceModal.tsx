@@ -209,12 +209,12 @@ const SearchExperienceModal = () => {
             <VinAiSearchWidget onSkip={() => setStep(STEPS.LOCATION)} />
           </div>
         </div>
-        <div className="flex flex-row flex-wrap gap-3 justify-center mt-2">
+        {/* <div className="flex flex-row flex-wrap gap-3 justify-center mt-2"> */}
           {/* <StepBadge stepIndex={STEPS.AI} label="AI Force" icon={LuRocket} /> */}
-          <StepBadge stepIndex={STEPS.LOCATION} label={t('where')} icon={FaLocationArrow} />
+          {/* <StepBadge stepIndex={STEPS.LOCATION} label={t('where')} icon={FaLocationArrow} />
           <StepBadge stepIndex={STEPS.DATE} label={t('when')} icon={CgCalendarDates} />
-          <StepBadge stepIndex={STEPS.GUESTS} label={t('who')} icon={FaPeoplePulling} />
-        </div>
+          <StepBadge stepIndex={STEPS.GUESTS} label={t('who')} icon={FaPeoplePulling} /> */}
+        {/* </div> */}
       </div>
       
     );

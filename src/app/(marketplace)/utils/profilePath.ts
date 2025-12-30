@@ -40,7 +40,7 @@ export const profilePathForUser = (
 
   const encoded = encodeURIComponent(handle);
   const role = user?.role ?? roleHint;
-  return role === 'host' ? `/hosts/${encoded}` : `/social-card/${encoded}`;
+  return role === 'host' ? `/provider/${encoded}` : `/social-card/${encoded}`;
 };
 
 export const isHostUser = (user: ProfiledUser | null | undefined): boolean => {

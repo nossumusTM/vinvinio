@@ -185,7 +185,7 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
 
   const recipientProfilePath =
     !isOperator && recipient?.role === 'host'
-      ? (recipientNameClean ? `/hosts/${encodeURIComponent(recipientNameClean)}` : null)
+      ? (recipientNameClean ? `/provider/${encodeURIComponent(recipientNameClean)}` : null)
       : !isOperator
       ? (recipient?.id ? `/social-card/${encodeURIComponent(recipient.id)}` :
         recipientNameClean ? `/social-card/${encodeURIComponent(recipientNameClean)}` : null)

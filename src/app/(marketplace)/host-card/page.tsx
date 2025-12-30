@@ -15,7 +15,7 @@ const HostSelfCardPage = async () => {
     redirect('/profile');
   }
 
-  redirect(`/hosts/${encodeURIComponent(username)}`);
+  redirect(`/provider/${encodeURIComponent(username)}`);
 };
 
 export default HostSelfCardPage;

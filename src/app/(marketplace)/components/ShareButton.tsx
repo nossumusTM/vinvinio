@@ -22,7 +22,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({ onClick, inline = false }) =>
       }}
       aria-label="Share"
       className={clsx(
-        'p-4 rounded-full bg-black/10 backdrop-blur-sm text-white shadow-md',
+        'p-3 rounded-full bg-black/10 backdrop-blur-sm text-white shadow-md',
         'flex items-center justify-center transition hover:shadow-lg',
         inline ? 'static' : 'absolute top-3 right-3'
       )}

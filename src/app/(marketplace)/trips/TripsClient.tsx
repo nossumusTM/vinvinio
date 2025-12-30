@@ -664,7 +664,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
 
             const hostProfilePath =
               host?.role === 'host'
-                ? (handle ? `/hosts/${encodeURIComponent(handle)}` : null)
+                ? (handle ? `/provider/${encodeURIComponent(handle)}` : null)
                 : (handle ? `/social-card/${encodeURIComponent(handle)}` : null);
 
             const handleHostNavigation = makeNavigationHandler(hostProfilePath);
