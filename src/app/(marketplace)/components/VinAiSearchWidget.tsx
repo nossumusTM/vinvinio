@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { LuRocket, LuSkipForward } from 'react-icons/lu';
+import { LuMaximize2, LuRocket, LuSkipForward } from 'react-icons/lu';
 import { TbArrowElbowRight, TbPlayerPause, TbPlayerPlay, TbPlayerStopFilled } from 'react-icons/tb';
 import { HiMiniMicrophone } from 'react-icons/hi2';
 import clsx from 'clsx';
+import { AnimatePresence, motion } from 'framer-motion';
 
 import Picker from '@emoji-mart/react';
 import data from '@emoji-mart/data';
@@ -12,6 +13,7 @@ import toast from 'react-hot-toast';
 
 import useVinAiChat, { AI_FORCE_ASSISTANT, AiMessage } from '../hooks/useVinAiChat';
 import useMessenger from '../hooks/useMessager';
+import VinAiChatView from './VinAiChatView';
 
 interface VinAiSearchWidgetProps {
   onSkip: () => void;
@@ -133,14 +135,62 @@ const AudioPlayer: React.FC<{ src: string; durationMs?: number | null }> = ({ sr
   );
 };
 
+const TypingIndicator = () => (
+  <div className="flex items-center gap-2">
+    <span className="h-2 w-2 animate-bounce rounded-full bg-neutral-500/80 [animation-delay:-0.2s]" />
+    <span className="h-2 w-2 animate-bounce rounded-full bg-neutral-500/80 [animation-delay:-0.1s]" />
+    <span className="h-2 w-2 animate-bounce rounded-full bg-neutral-500/80" />
+  </div>
+);
+
+const TypewriterText = ({
+  text,
+  shouldAnimate,
+  onComplete,
+}: {
+  text: string;
+  shouldAnimate: boolean;
+  onComplete: () => void;
+}) => {
+  const [displayed, setDisplayed] = useState(shouldAnimate ? '' : text);
+  const onCompleteRef = useRef(onComplete);
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
+
+  useEffect(() => {
+    if (!shouldAnimate) {
+      setDisplayed(text);
+      return;
+    }
+
+    let index = 0;
+    const interval = setInterval(() => {
+      index += 1;
+      setDisplayed(text.slice(0, index));
+      if (index >= text.length) {
+        clearInterval(interval);
+        onCompleteRef.current();
+      }
+    }, 12);
+
+    return () => clearInterval(interval);
+  }, [text, shouldAnimate]);
+
+  return <div className="whitespace-pre-line leading-relaxed">{displayed}</div>;
+};
+
 const VinAiSearchWidget = ({ onSkip }: VinAiSearchWidgetProps) => {
-  const { messages, recommendations, init, sendMessage, isSending, clear } = useVinAiChat();
+  const { messages, recommendations, criteriaMet, init, sendMessage, isSending, clear } = useVinAiChat();
   const { openChat } = useMessenger();
   const [input, setInput] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [isSendingVoice, setIsSendingVoice] = useState(false);
   const [recordingStart, setRecordingStart] = useState<number | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [typedMessageIds, setTypedMessageIds] = useState<string[]>([]);
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -157,6 +207,47 @@ const VinAiSearchWidget = ({ onSkip }: VinAiSearchWidgetProps) => {
     if (!node) return;
     node.scrollTop = node.scrollHeight;
   }, [messages.length, recommendations.length, isSending]);
+
+  const lastAssistantId = useMemo(
+    () => [...messages].reverse().find((message) => message.role === 'assistant')?.id,
+    [messages],
+  );
+  const hasUserMessage = useMemo(
+    () => messages.some((message) => message.role === 'user'),
+    [messages],
+  );
+
+  const handleUseLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported on this device.');
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${coords.latitude}&lon=${coords.longitude}`,
+          );
+          const data = await res.json();
+          const address = data?.address ?? {};
+          const label = [
+            address.city || address.town || address.village || address.state,
+            address.country,
+          ]
+            .filter(Boolean)
+            .join(', ');
+          await handleSend(label || `My location is ${coords.latitude}, ${coords.longitude}`);
+        } catch (error) {
+          console.error('Failed to fetch location label', error);
+          await handleSend(`My location is ${coords.latitude}, ${coords.longitude}`);
+        }
+      },
+      () => {
+        toast.error('Unable to access your location.');
+      },
+    );
+  };
 
   const uploadToCloudinary = async (file: File) => {
     const formData = new FormData();
@@ -289,11 +380,25 @@ const VinAiSearchWidget = ({ onSkip }: VinAiSearchWidgetProps) => {
       return <AudioPlayer src={message.audioUrl} durationMs={message.audioDurationMs} />;
     }
 
-    return <div className="whitespace-pre-line leading-relaxed">{message.content}</div>;
+    const shouldAnimate =
+      message.role === 'assistant' &&
+      message.id === lastAssistantId &&
+      !typedMessageIds.includes(message.id);
+
+    return (
+      <TypewriterText
+        text={message.content}
+        shouldAnimate={shouldAnimate}
+        onComplete={() =>
+          setTypedMessageIds((prev) => (prev.includes(message.id) ? prev : [...prev, message.id]))
+        }
+      />
+    );
   };
 
   return (
-    <div className="space-y-3">
+     <>
+      <div className="space-y-3">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <div className="flex h-9 w-9 aspect-square items-center justify-center rounded-xl bg-gradient-to-br from-sky-50 via-indigo-50 to-white text-[#2200ffff]">
@@ -304,38 +409,91 @@ const VinAiSearchWidget = ({ onSkip }: VinAiSearchWidgetProps) => {
             <span className="text-xs text-neutral-500">Ask anything before choosing where, when, and who.</span>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={onSkip}
-          className="flex items-center gap-1 rounded-full border border-neutral-200 px-3 py-1 text-xs font-semibold text-neutral-600 transition hover:bg-neutral-100"
-        >
-          Skip
-          <LuSkipForward className="h-4 w-4" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsExpanded(true)}
+            className="flex items-center gap-1 rounded-full border border-neutral-200 px-3 py-1 text-xs font-semibold text-neutral-600 transition hover:bg-neutral-100"
+          >
+            Zoom
+            <LuMaximize2 className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={onSkip}
+            className="flex items-center gap-1 rounded-full border border-neutral-200 px-3 py-1 text-xs font-semibold text-neutral-600 transition hover:bg-neutral-100"
+          >
+            Skip
+            <LuSkipForward className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       <div ref={scrollRef} className="max-h-64 space-y-3 overflow-y-auto rounded-2xl border border-neutral-100 bg-white/80 p-3 shadow-inner">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={clsx(
-              'flex gap-2 text-sm',
-              message.role === 'user' ? 'flex-row-reverse text-right' : 'flex-row text-left'
-            )}
-          >
-            <div
+        <AnimatePresence>
+          {messages.map((message) => (
+            <motion.div
+              key={message.id}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.18 }}
               className={clsx(
-                'rounded-2xl px-3 py-2 shadow-sm min-w-[40%] max-w-[75%]',
-                message.role === 'user' ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-800'
+                'flex gap-2 text-sm',
+                message.role === 'user' ? 'flex-row-reverse text-right' : 'flex-row text-left'
               )}
             >
-              {renderMessageContent(message)}
-            </div>
-          </div>
-        ))}
+              <div
+                className={clsx(
+                  'inline-flex w-fit max-w-[78%] rounded-2xl px-3 py-2 text-[13px] shadow-sm',
+                  message.role === 'user' ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-800'
+                )}
+              >
+                {renderMessageContent(message)}
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
 
-      {recommendations.length > 0 && (
-          <div className="rounded-2xl border border-neutral-100 bg-white p-3 shadow-sm">
+        {!hasUserMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.18 }}
+            className="rounded-2xl border border-neutral-100 bg-white px-3 py-2 text-sm shadow-sm"
+          >
+            <p className="text-xs font-semibold text-neutral-700">Share your location</p>
+            <p className="mt-1 text-xs text-neutral-500">Use your device location to get local picks.</p>
+            <button
+              type="button"
+              onClick={handleUseLocation}
+              className="mt-2 inline-flex items-center gap-2 rounded-full bg-neutral-900 px-3 py-1.5 text-[11px] font-semibold text-white"
+            >
+              Use my location
+            </button>
+          </motion.div>
+        )}
+
+        {isSending && (
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.18 }}
+            className="flex gap-2 text-sm"
+          >
+            <div className="inline-flex w-fit max-w-[78%] items-center rounded-2xl bg-neutral-100 px-3 py-2 shadow-sm">
+              <TypingIndicator />
+            </div>
+          </motion.div>
+        )}
+
+      {criteriaMet && recommendations.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.18 }}
+            className="rounded-2xl border border-neutral-100 bg-white p-3 shadow-sm"
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm font-semibold text-neutral-700">
                 Curated for you
@@ -351,12 +509,16 @@ const VinAiSearchWidget = ({ onSkip }: VinAiSearchWidgetProps) => {
 
               </div>
             <div className="mt-2 no-scrollbar flex gap-3 overflow-x-auto pb-1">
-              {recommendations.map((card) => (
-                <button
+              {recommendations.map((card, index) => (
+                <motion.button
                   key={card.id}
                   type="button"
                   onClick={() => handleListingClick(card.title)}
-                  className="group relative min-w-[220px] max-w-[240px] overflow-hidden rounded-2xl border border-neutral-100 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
+                  initial={{ opacity: 0, scale: 0.96 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.2, delay: index * 0.04 }}
+                  whileHover={{ y: -3, scale: 1.01 }}
+                  className="group relative min-w-[220px] max-w-[240px] overflow-hidden rounded-2xl border border-neutral-100 text-left shadow-sm"
                 >
                   <div
                     className="absolute inset-0 bg-cover bg-center"
@@ -373,10 +535,10 @@ const VinAiSearchWidget = ({ onSkip }: VinAiSearchWidgetProps) => {
                     </div>
                     <span className="text-[10px] font-semibold uppercase text-white/70">Tap to ask AI Force</span>
                   </div>
-                </button>
+                </motion.button>
               ))}
             </div>
-          </div>
+          </motion.div>
         )}
       </div>
 
@@ -481,6 +643,32 @@ const VinAiSearchWidget = ({ onSkip }: VinAiSearchWidgetProps) => {
         </button>
       </div>
     </div>
+
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.94 }}
+              transition={{ duration: 0.2 }}
+              className="h-full w-full origin-bottom-right overflow-hidden rounded-3xl bg-white shadow-2xl"
+            >
+              <VinAiChatView
+                onBack={() => setIsExpanded(false)}
+                isFullscreen
+                onClose={() => setIsExpanded(false)}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 

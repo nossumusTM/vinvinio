@@ -27,6 +27,7 @@ export interface AiListing {
 interface VinAiState {
   messages: AiMessage[];
   recommendations: AiListing[];
+  criteriaMet: boolean;
   initialized: boolean;
   isSending: boolean;
   init: () => void;
@@ -39,7 +40,7 @@ const welcomeMessage: AiMessage = {
   id: 'vin-ai-welcome',
   role: 'assistant',
   content:
-    "Hi, I'm AI Force. Ask me about destinations, dates, or what's your plan today? I'll bring back the most relevant services and experiences you can try via Vinvin.",
+    "Hi, I'm AI Force 👋 Tell me your country or region so I can curate the best experiences. You can also tap “Use my location.”",
   createdAt: new Date().toISOString(),
 };
 
@@ -49,24 +50,34 @@ const AI_FORCE_ASSISTANT = {
   image: undefined,
 };
 
-const persistPayload = (payload: { messages: AiMessage[]; recommendations: AiListing[] }) => {
+const persistPayload = (payload: {
+  messages: AiMessage[];
+  recommendations: AiListing[];
+  criteriaMet: boolean;
+}) => {
   if (typeof window === 'undefined') return;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
 };
 
-const loadState = (): { messages: AiMessage[]; recommendations: AiListing[] } => {
-  if (typeof window === 'undefined') return { messages: [welcomeMessage], recommendations: [] };
+const loadState = (): { messages: AiMessage[]; recommendations: AiListing[]; criteriaMet: boolean } => {
+  if (typeof window === 'undefined') {
+    return { messages: [welcomeMessage], recommendations: [], criteriaMet: false };
+  }
   const cached = localStorage.getItem(STORAGE_KEY);
-  if (!cached) return { messages: [welcomeMessage], recommendations: [] };
+  if (!cached) return { messages: [welcomeMessage], recommendations: [], criteriaMet: false };
   try {
-    const parsed = JSON.parse(cached) as Partial<{ messages: AiMessage[]; recommendations: AiListing[] }>;
+const parsed = JSON.parse(cached) as Partial<{
+      messages: AiMessage[];
+      recommendations: AiListing[];
+      criteriaMet: boolean;
+    }>;
     const messages = Array.isArray(parsed?.messages) && parsed.messages.length > 0 ? parsed.messages : [welcomeMessage];
     const recommendations = Array.isArray(parsed?.recommendations) ? parsed.recommendations : [];
-    return { messages, recommendations };
+    return { messages, recommendations, criteriaMet: Boolean(parsed?.criteriaMet) };
   } catch (error) {
     console.error('Failed to parse cached AI Force messages', error);
   }
-  return { messages: [welcomeMessage], recommendations: [] };
+  return { messages: [welcomeMessage], recommendations: [], criteriaMet: false };
 };
 
 const generateId = () =>
@@ -77,17 +88,18 @@ const generateId = () =>
 const useVinAiChat = create<VinAiState>((set, get) => ({
   messages: [],
   recommendations: [],
+  criteriaMet: false,
   initialized: false,
   isSending: false,
   init: () => {
     if (get().initialized) return;
-    const { messages, recommendations } = loadState();
-    set({ messages, recommendations, initialized: true });
+    const { messages, recommendations, criteriaMet } = loadState();
+    set({ messages, recommendations, criteriaMet, initialized: true });
   },
   clear: () => {
     const resetMessages = [welcomeMessage];
-    persistPayload({ messages: resetMessages, recommendations: [] });
-    set({ messages: resetMessages, recommendations: [] });
+    persistPayload({ messages: resetMessages, recommendations: [], criteriaMet: false });
+    set({ messages: resetMessages, recommendations: [], criteriaMet: false });
   },
   sendMessage: async (content: string, options?: { audioUrl?: string; audioDurationMs?: number }) => {
     const trimmed = content.trim();
@@ -105,8 +117,18 @@ const useVinAiChat = create<VinAiState>((set, get) => ({
 
     const optimisticMessages = [...get().messages, userMessage];
     const optimisticRecommendations = get().recommendations;
-    persistPayload({ messages: optimisticMessages, recommendations: optimisticRecommendations });
-    set({ messages: optimisticMessages, isSending: true, recommendations: optimisticRecommendations });
+    const optimisticCriteriaMet = get().criteriaMet;
+    persistPayload({
+      messages: optimisticMessages,
+      recommendations: optimisticRecommendations,
+      criteriaMet: optimisticCriteriaMet,
+    });
+    set({
+      messages: optimisticMessages,
+      isSending: true,
+      recommendations: optimisticRecommendations,
+      criteriaMet: optimisticCriteriaMet,
+    });
 
     try {
       const res = await fetch('/api/vin-ai', {
@@ -129,8 +151,9 @@ const useVinAiChat = create<VinAiState>((set, get) => ({
 
       const updatedMessages = [...optimisticMessages, assistantMessage];
       const apiRecommendations = Array.isArray(data?.recommendations) ? data.recommendations : optimisticRecommendations;
-      persistPayload({ messages: updatedMessages, recommendations: apiRecommendations });
-      set({ messages: updatedMessages, recommendations: apiRecommendations });
+      const criteriaMet = Boolean(data?.criteriaMet);
+      persistPayload({ messages: updatedMessages, recommendations: apiRecommendations, criteriaMet });
+      set({ messages: updatedMessages, recommendations: apiRecommendations, criteriaMet });
     } catch (error) {
       console.error('AI Force failed to respond', error);
       const fallback: AiMessage = {
@@ -141,8 +164,16 @@ const useVinAiChat = create<VinAiState>((set, get) => ({
         createdAt: new Date().toISOString(),
       };
       const updatedMessages = [...optimisticMessages, fallback];
-      persistPayload({ messages: updatedMessages, recommendations: optimisticRecommendations });
-      set({ messages: updatedMessages, recommendations: optimisticRecommendations });
+      persistPayload({
+        messages: updatedMessages,
+        recommendations: optimisticRecommendations,
+        criteriaMet: optimisticCriteriaMet,
+      });
+      set({
+        messages: updatedMessages,
+        recommendations: optimisticRecommendations,
+        criteriaMet: optimisticCriteriaMet,
+      });
     } finally {
       set({ isSending: false });
     }

@@ -95,6 +95,12 @@
 
 import { NextResponse } from 'next/server';
 import prisma from '@/app/(marketplace)/libs/prismadb';
+import {
+  ACTIVITY_FORM_OPTIONS,
+  DURATION_OPTIONS,
+  ENVIRONMENT_OPTIONS,
+  GROUP_STYLE_OPTIONS,
+} from '@/app/(marketplace)/constants/experienceFilters';
 
 interface RequestMessage {
   role: 'assistant' | 'user';
@@ -104,6 +110,23 @@ interface RequestMessage {
 function lastUserText(messages: { role: string; content: string }[]) {
   return [...messages].reverse().find((m) => m.role === 'user')?.content ?? '';
 }
+
+const CATEGORY_MATCHERS = [
+  { label: 'Adventure & Outdoor', keywords: ['adventure', 'outdoor', 'hike', 'hiking', 'trek', 'camp'] },
+  { label: 'Nature & Wildlife', keywords: ['nature', 'wildlife', 'safari', 'forest', 'eco'] },
+  { label: 'Water Activities', keywords: ['water', 'boat', 'sailing', 'surf', 'snorkel', 'dive', 'beach'] },
+  { label: 'Food, Drinks & Culinary', keywords: ['food', 'drink', 'wine', 'tasting', 'culinary', 'cook', 'chef'] },
+  { label: 'Culture & History', keywords: ['culture', 'history', 'museum', 'heritage', 'landmark'] },
+  { label: 'Art, Design & Photography', keywords: ['art', 'design', 'photo', 'photography', 'gallery'] },
+  { label: 'Music, Nightlife & Social', keywords: ['music', 'nightlife', 'party', 'social', 'dj'] },
+  { label: 'Sports, Fitness & Well-Being', keywords: ['fitness', 'sport', 'yoga', 'wellness', 'spa'] },
+  { label: 'Workshops & Skill-Learning', keywords: ['workshop', 'class', 'lesson', 'learning', 'craft'] },
+  { label: 'Tours & Sightseeing', keywords: ['tour', 'sightseeing', 'guide', 'walk'] },
+  { label: 'Luxury, VIP & Exclusive Access', keywords: ['luxury', 'vip', 'exclusive', 'premium'] },
+  { label: 'Romantic & Special Occasions', keywords: ['romantic', 'honeymoon', 'anniversary', 'proposal'] },
+];
+
+const CATEGORY_SUGGESTIONS = CATEGORY_MATCHERS.map((category) => category.label);
 
 const STOP_WORDS = new Set([
   'a',
@@ -191,6 +214,69 @@ const parseDateRange = (text: string) => {
   return { startDate, endDate };
 };
 
+const extractLocation = (text: string) => {
+  const normalized = text.replace(/\s+/g, ' ').trim();
+  if (!normalized) return null;
+  const match = normalized.match(
+    /\b(?:in|at|near|around|from|to|country|region|city)\s+([a-zA-Z][a-zA-Z\s-]{2,40})/i,
+  );
+  if (!match) return null;
+  const location = match[1]
+    .replace(/\b(for|with|on|in|at|around)\b.*$/i, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return location || null;
+};
+
+const extractGuestCount = (text: string) => {
+  const match =
+    text.match(/\b(\d{1,2})\s*(guests?|people|persons|travellers|travelers|adults|friends)\b/i) ||
+    text.match(/\bfor\s+(\d{1,2})\b(?!\s*(nights?|days?|hours?))/i);
+  if (!match) return null;
+  const value = Number(match[1]);
+  return Number.isFinite(value) ? value : null;
+};
+
+const extractCategory = (text: string) => {
+  const lower = text.toLowerCase();
+  const match = CATEGORY_MATCHERS.find((category) =>
+    category.keywords.some((keyword) => lower.includes(keyword)),
+  );
+  return match?.label ?? null;
+};
+
+const formatOptionList = (values: string[], max = 6) =>
+  values.slice(0, max).join(', ');
+
+const buildFollowUpReply = (params: {
+  greeting?: string;
+  missing: string[];
+  categoryHint?: string | null;
+}) => {
+  const focusLine = params.categoryHint
+    ? `I can tailor it within "${params.categoryHint}" or something else you prefer.`
+    : `Pick a category like ${formatOptionList(CATEGORY_SUGGESTIONS)}.`;
+
+  const prompts: Record<string, string> = {
+    location: 'Your country/region or city (or tap “Use my location”).',
+    category: `What you are looking for. ${focusLine}`,
+    dates: 'Your dates (YYYY-MM-DD to YYYY-MM-DD) so I can check availability.',
+    guests: 'Guest count so I can match the right capacity.',
+  };
+
+  const missingLines = params.missing.map((key) => `• ${prompts[key]}`).join('\n');
+
+  return [
+    params.greeting,
+    'To curate the best matches, I just need a few details:',
+    missingLines,
+    '',
+    'Once I have them, I will check availability and rank listings by their reviews.',
+  ]
+    .filter(Boolean)
+    .join('\n');
+};
+
 const truncate = (value: string, max = 120) => {
   if (value.length <= max) return value;
   return `${value.slice(0, max - 1).trim()}…`;
@@ -242,6 +328,9 @@ const buildAvailabilityWhere = (range: { startDate: Date; endDate: Date } | null
   };
 };
 
+const buildGuestWhere = (guestCount: number | null) =>
+  guestCount ? { guestCount: { gte: guestCount } } : {};
+
 const buildListingBadge = (listing: {
   groupStyles?: string[] | null;
   activityForms?: string[] | null;
@@ -271,16 +360,41 @@ export async function POST(request: Request) {
   const hfToken = process.env.HF_TOKEN?.trim() || process.env.HUGGINGFACE_API_KEY?.trim();
 
   const prompt = lastUserText(normalizedMessages);
-  const keywords = extractKeywords(prompt);
-  const dateRange = parseDateRange(prompt);
+  const conversationText = normalizedMessages
+    .filter((message) => message.role === 'user')
+    .map((message) => message.content)
+    .join(' ');
+  const keywords = extractKeywords(conversationText);
+  const dateRange = parseDateRange(conversationText);
+  const guestCount = extractGuestCount(conversationText);
+  const location = extractLocation(conversationText);
+  const matchedCategory = extractCategory(conversationText);
+  const missingFields: string[] = [];
+
+  if (!location) missingFields.push('location');
+  if (!matchedCategory) missingFields.push('category');
+  if (!dateRange) missingFields.push('dates');
+  if (!guestCount) missingFields.push('guests');
+
+  const criteriaMet = missingFields.length === 0;
+
+  if (!criteriaMet) {
+    return NextResponse.json({
+      reply: buildFollowUpReply({ missing: missingFields, categoryHint: matchedCategory }),
+      recommendations: [],
+      criteriaMet,
+      missingFields,
+    });
+  }
 
   const listings = await prisma.listing.findMany({
     where: {
       status: 'approved',
       ...buildKeywordWhere(keywords),
       ...buildAvailabilityWhere(dateRange),
+      ...buildGuestWhere(guestCount),
     },
-    orderBy: [{ punti: 'desc' }, { createdAt: 'desc' }],
+    orderBy: [{ punti: 'desc' }, { likesCount: 'desc' }, { createdAt: 'desc' }],
     take: 5,
   });
 
@@ -300,8 +414,10 @@ export async function POST(request: Request) {
   if (!hfToken) {
     // const prompt = lastUserText(normalizedMessages);
     return NextResponse.json({
-      reply: `Here is a tailored shortlist for "${prompt || 'your trip'}". Pick a city, dates, and guest count so I can surface the right listings.`,
+      reply: `Thanks! I will check availability for ${location} on ${dateRange?.startDate.toISOString().slice(0, 10)} → ${dateRange?.endDate.toISOString().slice(0, 10)} for ${guestCount} guests and rank the best-reviewed listings.`,
       recommendations,
+      criteriaMet,
+      missingFields,
     });
   }
 
@@ -323,7 +439,15 @@ export async function POST(request: Request) {
           {
             role: 'system',
             content:
-              'You are AI Force, a sales representative for a multibrand travel marketplace called Vuola. Keep responses business-only. Ask for and confirm the customer’s country or city, desired category, travel date(s), and availability needs. If anything is missing, ask concise follow-up questions. Provide short bullet-point guidance and never answer off-topic questions; politely refuse and steer back to listings and bookings.',
+              `You are AI Force, a sales representative for a multibrand travel marketplace called Vuola. Keep responses business-only. Confirm the customer's country/region (${location}), category (${matchedCategory}), travel date(s), and guest count. Explain that you will check availability and rank listings by reviews. Offer concise bullet points and avoid off-topic replies.`,
+          },
+          {
+            role: 'assistant',
+            content: `Structured categories include: Categories (${formatOptionList(CATEGORY_SUGGESTIONS)}), Group styles (${formatOptionList(
+              GROUP_STYLE_OPTIONS.map((option) => option.label),
+            )}), Environments (${formatOptionList(ENVIRONMENT_OPTIONS.map((option) => option.label))}), Duration (${formatOptionList(
+              DURATION_OPTIONS.map((option) => option.label),
+            )}), Activity forms (${formatOptionList(ACTIVITY_FORM_OPTIONS.map((option) => option.label))}).`,
           },
           ...normalizedMessages,
         ],
@@ -341,7 +465,10 @@ export async function POST(request: Request) {
           ? 'AI Force is at capacity right now. Please try again soon.'
           : 'I could not reach the AI model. Please try again in a moment.';
 
-      return NextResponse.json({ reply, recommendations }, { status: 200 });
+      return NextResponse.json(
+        { reply, recommendations, criteriaMet, missingFields },
+        { status: 200 },
+      );
     }
 
     const data = await res.json();
@@ -349,12 +476,17 @@ export async function POST(request: Request) {
       data?.choices?.[0]?.message?.content ??
       'Ask me anything about your next stay and I will tailor the results.';
 
-    return NextResponse.json({ reply, recommendations });
+    return NextResponse.json({ reply, recommendations, criteriaMet, missingFields });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('AI Force (HF Router) request failed', message);
     return NextResponse.json(
-      { reply: 'I could not reach the AI model. Please try again in a moment.', recommendations },
+{
+        reply: 'I could not reach the AI model. Please try again in a moment.',
+        recommendations,
+        criteriaMet,
+        missingFields,
+      },
       { status: 200 },
     );
   }

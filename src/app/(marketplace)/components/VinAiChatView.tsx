@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { LuArrowLeft, LuRocket, LuTrash2 } from 'react-icons/lu';
+import { LuArrowLeft, LuRocket, LuTrash2, LuX } from 'react-icons/lu';
 import { TbArrowElbowRight, TbPlayerPause, TbPlayerPlay, TbPlayerStopFilled } from 'react-icons/tb';
 import { HiMiniMicrophone } from 'react-icons/hi2';
 import clsx from 'clsx';
@@ -17,6 +17,8 @@ import type { AiMessage } from '../hooks/useVinAiChat';
 
 interface VinAiChatViewProps {
   onBack: () => void;
+  isFullscreen?: boolean;
+  onClose?: () => void;
 }
 
 const quickPrompts = ['Where?', 'When?', 'Who?', 'Show listings'];
@@ -135,8 +137,54 @@ const AudioPlayer: React.FC<{ src: string; durationMs?: number | null }> = ({ sr
   );
 };
 
-const VinAiChatView = ({ onBack }: VinAiChatViewProps) => {
-  const { messages, recommendations, init, sendMessage, isSending, clear } = useVinAiChat();
+const TypingIndicator = () => (
+  <div className="flex items-center gap-2">
+    <span className="h-2 w-2 animate-bounce rounded-full bg-white/70 [animation-delay:-0.2s]" />
+    <span className="h-2 w-2 animate-bounce rounded-full bg-white/70 [animation-delay:-0.1s]" />
+    <span className="h-2 w-2 animate-bounce rounded-full bg-white/70" />
+  </div>
+);
+
+const TypewriterText = ({
+  text,
+  shouldAnimate,
+  onComplete,
+}: {
+  text: string;
+  shouldAnimate: boolean;
+  onComplete: () => void;
+}) => {
+  const [displayed, setDisplayed] = useState(shouldAnimate ? '' : text);
+  const onCompleteRef = useRef(onComplete);
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
+
+  useEffect(() => {
+    if (!shouldAnimate) {
+      setDisplayed(text);
+      return;
+    }
+
+    let index = 0;
+    const interval = setInterval(() => {
+      index += 1;
+      setDisplayed(text.slice(0, index));
+      if (index >= text.length) {
+        clearInterval(interval);
+        onCompleteRef.current();
+      }
+    }, 12);
+
+    return () => clearInterval(interval);
+  }, [text, shouldAnimate]);
+
+  return <div className="whitespace-pre-line leading-relaxed">{displayed}</div>;
+};
+
+const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewProps) => {
+  const { messages, recommendations, criteriaMet, init, sendMessage, isSending, clear } = useVinAiChat();
   const { openChat } = useMessenger();
   const [input, setInput] = useState('');
   const [isListening, setIsListening] = useState(false);
@@ -144,6 +192,7 @@ const VinAiChatView = ({ onBack }: VinAiChatViewProps) => {
   const [isSendingVoice, setIsSendingVoice] = useState(false);
   const [recordingStart, setRecordingStart] = useState<number | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [typedMessageIds, setTypedMessageIds] = useState<string[]>([]);
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -180,6 +229,47 @@ const VinAiChatView = ({ onBack }: VinAiChatViewProps) => {
   }, [messages.length, recommendations.length, isSending]);
 
   const lastUpdated = useMemo(() => messages[messages.length - 1]?.createdAt, [messages]);
+
+  const lastAssistantId = useMemo(
+    () => [...messages].reverse().find((message) => message.role === 'assistant')?.id,
+    [messages],
+  );
+  const hasUserMessage = useMemo(
+    () => messages.some((message) => message.role === 'user'),
+    [messages],
+  );
+
+  const handleUseLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported on this device.');
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${coords.latitude}&lon=${coords.longitude}`,
+          );
+          const data = await res.json();
+          const address = data?.address ?? {};
+          const label = [
+            address.city || address.town || address.village || address.state,
+            address.country,
+          ]
+            .filter(Boolean)
+            .join(', ');
+          await handleSend(label || `My location is ${coords.latitude}, ${coords.longitude}`);
+        } catch (error) {
+          console.error('Failed to fetch location label', error);
+          await handleSend(`My location is ${coords.latitude}, ${coords.longitude}`);
+        }
+      },
+      () => {
+        toast.error('Unable to access your location.');
+      },
+    );
+  };
 
   const handleSend = async (value?: string) => {
     const messageToSend = (value ?? input).trim();
@@ -299,7 +389,20 @@ const VinAiChatView = ({ onBack }: VinAiChatViewProps) => {
       return <AudioPlayer src={message.audioUrl} durationMs={message.audioDurationMs} />;
     }
 
-    return <div className="whitespace-pre-line leading-relaxed">{message.content}</div>;
+  const shouldAnimate =
+      message.role === 'assistant' &&
+      message.id === lastAssistantId &&
+      !typedMessageIds.includes(message.id);
+
+    return (
+      <TypewriterText
+        text={message.content}
+        shouldAnimate={shouldAnimate}
+        onComplete={() =>
+          setTypedMessageIds((prev) => (prev.includes(message.id) ? prev : [...prev, message.id]))
+        }
+      />
+    );
   };
 
   return (
@@ -308,7 +411,10 @@ const VinAiChatView = ({ onBack }: VinAiChatViewProps) => {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
         transition={{ duration: 0.2 }}
-        className="flex h-[66vh] max-h-[80vh] flex-col overflow-hidden"
+        className={clsx(
+          'flex flex-col overflow-hidden',
+          isFullscreen ? 'h-full w-full' : 'h-[66vh] max-h-[80vh]',
+        )}
     >
       <div className="flex items-center gap-3 border-b px-4 py-3">
         <button
@@ -337,6 +443,16 @@ const VinAiChatView = ({ onBack }: VinAiChatViewProps) => {
           >
             <LuTrash2 className="h-4 w-4" />
           </button>
+            {onClose && (
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 text-neutral-500 transition hover:border-neutral-300 hover:bg-neutral-50"
+                aria-label="Close"
+              >
+                <LuX className="h-4 w-4" />
+              </button>
+            )}
         </div>
       </div>
 
@@ -366,8 +482,10 @@ const VinAiChatView = ({ onBack }: VinAiChatViewProps) => {
                 )}
                 <div
                   className={clsx(
-                    'max-w-[75%] rounded-2xl px-4 py-3 text-sm shadow-sm backdrop-blur',
-                    isUser ? 'bg-white text-neutral-800' : 'bg-neutral-900 text-white'
+                    'inline-flex w-fit max-w-[78%] flex-col rounded-2xl px-4 py-3 text-[15px] shadow-sm backdrop-blur',
+                    isUser
+                      ? 'bg-white text-neutral-800'
+                      : 'bg-neutral-900 text-white shadow-[0_10px_30px_rgba(15,23,42,0.25)]'
                   )}
                 >
                   {renderMessageContent(message)}
@@ -385,7 +503,51 @@ const VinAiChatView = ({ onBack }: VinAiChatViewProps) => {
           })}
         </AnimatePresence>
 
-        {recommendations.length > 0 && (
+        {!hasUserMessage && (
+          <motion.div
+            layout
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            className="flex gap-3 text-left"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-900 text-white">
+              <LuRocket className="h-5 w-5" />
+            </div>
+            <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
+              <p className="text-sm font-semibold text-neutral-800">Share your location</p>
+              <p className="mt-1 text-xs text-neutral-500">
+                Tell me your country or region, or let me use your device location.
+              </p>
+              <button
+                type="button"
+                onClick={handleUseLocation}
+                className="mt-3 inline-flex items-center gap-2 rounded-full bg-neutral-900 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-neutral-800"
+              >
+                Use my location
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {isSending && (
+          <motion.div
+            layout
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            className="flex gap-3 text-left"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-900 text-white">
+              <LuRocket className="h-5 w-5" />
+            </div>
+            <div className="inline-flex w-fit max-w-[78%] items-center rounded-2xl bg-neutral-900 px-4 py-3 text-sm text-white shadow-[0_10px_30px_rgba(15,23,42,0.25)]">
+              <TypingIndicator />
+            </div>
+          </motion.div>
+        )}
+
+        {criteriaMet && recommendations.length > 0 && (
           <motion.div
             layout
             initial={{ opacity: 0, y: 10 }}
@@ -412,12 +574,16 @@ const VinAiChatView = ({ onBack }: VinAiChatViewProps) => {
                 </button>
               </div>
               <div className="no-scrollbar flex gap-3 overflow-x-auto pb-1">
-                {recommendations.map((card) => (
-                  <button
+                {recommendations.map((card, index) => (
+                  <motion.button
                     key={card.id}
                     type="button"
                     onClick={() => handleListingClick(card.title)}
-                    className="group relative min-w-[240px] max-w-[260px] overflow-hidden rounded-2xl border border-neutral-100 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
+                    initial={{ opacity: 0, scale: 0.96 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.2, delay: index * 0.04 }}
+                    whileHover={{ y: -4, scale: 1.01 }}
+                    className="group relative min-w-[240px] max-w-[260px] overflow-hidden rounded-2xl border border-neutral-100 text-left shadow-sm"
                   >
                     <div
                       className="absolute inset-0 bg-cover bg-center"
@@ -442,7 +608,7 @@ const VinAiChatView = ({ onBack }: VinAiChatViewProps) => {
                       </div>
                       
                     </div>
-                  </button>
+                  </motion.button>
                 ))}
               </div>
             </div>
@@ -450,7 +616,7 @@ const VinAiChatView = ({ onBack }: VinAiChatViewProps) => {
         )}
       </div>
 
-    <div className="space-y-4 border-t bg-white px-4 py-3 shadow-inner">
+      <div className="space-y-4 border-t bg-white px-4 py-3 shadow-inner">
         <div className="flex items-center justify-between text-[11px] text-neutral-500 px-1">
           <span className="font-medium text-neutral-700">Hold the send button to record a voice note.</span>
           {(isRecording || isSendingVoice || isSending) && (
