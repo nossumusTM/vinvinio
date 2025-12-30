@@ -94,6 +94,7 @@
 // }
 
 import { NextResponse } from 'next/server';
+import prisma from '@/app/(marketplace)/libs/prismadb';
 
 interface RequestMessage {
   role: 'assistant' | 'user';
@@ -104,12 +105,162 @@ function lastUserText(messages: { role: string; content: string }[]) {
   return [...messages].reverse().find((m) => m.role === 'user')?.content ?? '';
 }
 
+const STOP_WORDS = new Set([
+  'a',
+  'an',
+  'the',
+  'and',
+  'or',
+  'but',
+  'for',
+  'with',
+  'without',
+  'to',
+  'from',
+  'in',
+  'on',
+  'at',
+  'of',
+  'by',
+  'is',
+  'are',
+  'be',
+  'am',
+  'was',
+  'were',
+  'it',
+  'this',
+  'that',
+  'these',
+  'those',
+  'i',
+  'we',
+  'you',
+  'my',
+  'our',
+  'your',
+  'me',
+  'us',
+  'show',
+  'find',
+  'need',
+  'looking',
+  'want',
+  'like',
+  'please',
+  'can',
+  'could',
+  'would',
+  'book',
+  'booking',
+  'trip',
+  'travel',
+  'stay',
+  'experience',
+  'service',
+  'listing',
+  'listings',
+  'available',
+  'availability',
+  'date',
+  'dates',
+  'time',
+]);
+
+const extractKeywords = (text: string) => {
+  const normalized = text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!normalized) return [];
+  const parts = normalized.split(' ').filter(Boolean);
+  const keywords = parts.filter((word) => word.length > 2 && !STOP_WORDS.has(word));
+  return Array.from(new Set(keywords)).slice(0, 12);
+};
+
+const parseDateRange = (text: string) => {
+  const matches = text.match(/\b\d{4}-\d{2}-\d{2}\b/g);
+  if (!matches || matches.length < 2) return null;
+  const [startRaw, endRaw] = matches;
+  const startDate = new Date(startRaw);
+  const endDate = new Date(endRaw);
+  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+    return null;
+  }
+  return { startDate, endDate };
+};
+
+const truncate = (value: string, max = 120) => {
+  if (value.length <= max) return value;
+  return `${value.slice(0, max - 1).trim()}…`;
+};
+
+const buildKeywordWhere = (keywords: string[]) => {
+  if (keywords.length === 0) return {};
+  const textMatches = keywords.flatMap((word) => [
+    { title: { contains: word, mode: 'insensitive' as const } },
+    { description: { contains: word, mode: 'insensitive' as const } },
+    { locationValue: { contains: word, mode: 'insensitive' as const } },
+  ]);
+
+  return {
+    OR: [
+      { seoKeywords: { hasSome: keywords } },
+      { category: { hasSome: keywords } },
+      { primaryCategory: { in: keywords } },
+      { groupStyles: { hasSome: keywords } },
+      { environments: { hasSome: keywords } },
+      { activityForms: { hasSome: keywords } },
+      { locationType: { hasSome: keywords } },
+      { durationCategory: { in: keywords } },
+      ...textMatches,
+    ],
+  };
+};
+
+const buildAvailabilityWhere = (range: { startDate: Date; endDate: Date } | null) => {
+  if (!range) return {};
+  const { startDate, endDate } = range;
+  return {
+    NOT: {
+      reservations: {
+        some: {
+          OR: [
+            {
+              endDate: { gte: startDate },
+              startDate: { lte: startDate },
+            },
+            {
+              startDate: { lte: endDate },
+              endDate: { gte: endDate },
+            },
+          ],
+        },
+      },
+    },
+  };
+};
+
+const buildListingBadge = (listing: {
+  groupStyles?: string[] | null;
+  activityForms?: string[] | null;
+  environments?: string[] | null;
+  durationCategory?: string | null;
+}) =>
+  listing.groupStyles?.[0] ||
+  listing.activityForms?.[0] ||
+  listing.environments?.[0] ||
+  listing.durationCategory ||
+  'Featured';
+
 export async function POST(request: Request) {
   const { messages } = (await request.json()) as { messages?: RequestMessage[] };
 
   if (!messages || !Array.isArray(messages) || messages.length === 0) {
     return NextResponse.json({
       reply: 'Tell me what you are looking for and I will curate listings for you.',
+      recommendations: [],
     });
   }
 
@@ -119,10 +270,38 @@ export async function POST(request: Request) {
 
   const hfToken = process.env.HF_TOKEN?.trim() || process.env.HUGGINGFACE_API_KEY?.trim();
 
+  const prompt = lastUserText(normalizedMessages);
+  const keywords = extractKeywords(prompt);
+  const dateRange = parseDateRange(prompt);
+
+  const listings = await prisma.listing.findMany({
+    where: {
+      status: 'approved',
+      ...buildKeywordWhere(keywords),
+      ...buildAvailabilityWhere(dateRange),
+    },
+    orderBy: [{ punti: 'desc' }, { createdAt: 'desc' }],
+    take: 5,
+  });
+
+  const recommendations = listings.map((listing) => {
+    const rawCategory = Array.isArray(listing.category) ? listing.category[0] : listing.category;
+    return {
+      id: listing.id,
+      title: listing.title,
+      category: listing.primaryCategory ?? rawCategory ?? 'General',
+      location: listing.locationValue ?? 'Worldwide',
+      badge: buildListingBadge(listing),
+      description: truncate(listing.description ?? ''),
+      image: listing.imageSrc?.[0] ?? '/images/promo-banner-1.jpg',
+    };
+  });
+
   if (!hfToken) {
-    const prompt = lastUserText(normalizedMessages);
+    // const prompt = lastUserText(normalizedMessages);
     return NextResponse.json({
       reply: `Here is a tailored shortlist for "${prompt || 'your trip'}". Pick a city, dates, and guest count so I can surface the right listings.`,
+      recommendations,
     });
   }
 
@@ -144,7 +323,7 @@ export async function POST(request: Request) {
           {
             role: 'system',
             content:
-              'You are AI Force, a travel concierge for Vuola. Answer concisely with bullet points and surface relevant listing hints: where, when, and who should travel.',
+              'You are AI Force, a sales representative for a multibrand travel marketplace called Vuola. Keep responses business-only. Ask for and confirm the customer’s country or city, desired category, travel date(s), and availability needs. If anything is missing, ask concise follow-up questions. Provide short bullet-point guidance and never answer off-topic questions; politely refuse and steer back to listings and bookings.',
           },
           ...normalizedMessages,
         ],
@@ -162,7 +341,7 @@ export async function POST(request: Request) {
           ? 'AI Force is at capacity right now. Please try again soon.'
           : 'I could not reach the AI model. Please try again in a moment.';
 
-      return NextResponse.json({ reply }, { status: 200 });
+      return NextResponse.json({ reply, recommendations }, { status: 200 });
     }
 
     const data = await res.json();
@@ -170,12 +349,12 @@ export async function POST(request: Request) {
       data?.choices?.[0]?.message?.content ??
       'Ask me anything about your next stay and I will tailor the results.';
 
-    return NextResponse.json({ reply });
+    return NextResponse.json({ reply, recommendations });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('AI Force (HF Router) request failed', message);
     return NextResponse.json(
-      { reply: 'I could not reach the AI model. Please try again in a moment.' },
+      { reply: 'I could not reach the AI model. Please try again in a moment.', recommendations },
       { status: 200 },
     );
   }

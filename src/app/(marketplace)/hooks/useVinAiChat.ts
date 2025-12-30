@@ -49,82 +49,6 @@ const AI_FORCE_ASSISTANT = {
   image: undefined,
 };
 
-const AI_LISTINGS: AiListing[] = [
-  {
-    id: 'vin-wellness-1',
-    title: 'Wellness retreat in Lake Como',
-    category: 'wellness',
-    location: 'Lake Como, Italy',
-    badge: 'Spa + Chef',
-    description: 'Sunrise yoga, chef’s table dinners, and lakeside hammam suites.',
-    image: '/images/promo-banner-2.jpg',
-  },
-  {
-    id: 'vin-adventure-1',
-    title: 'Dolomites alpine escape',
-    category: 'adventure',
-    location: 'Cortina, Italy',
-    badge: 'Guided Treks',
-    description: 'Cable car panoramas, via ferrata thrills, and rustic chalets.',
-    image: '/images/promo-banner-3.jpg',
-  },
-  {
-    id: 'vin-city-1',
-    title: 'Design loft near Duomo',
-    category: 'city',
-    location: 'Milan, Italy',
-    badge: 'Late checkout',
-    description: 'Gallery district loft with concierge, espresso bar, and balcony views.',
-    image: '/images/promo-banner-1.jpg',
-  },
-  {
-    id: 'vin-foodie-1',
-    title: 'Chef-led food crawl',
-    category: 'food',
-    location: 'Bologna, Italy',
-    badge: 'Tasting tour',
-    description: 'Handmade pasta labs, balsamic attics, and private market access.',
-    image: '/images/promo-banner.png',
-  },
-  {
-    id: 'vin-romance-1',
-    title: 'Canalside boutique stay',
-    category: 'romance',
-    location: 'Venice, Italy',
-    badge: 'Gondola pickup',
-    description: 'Candlelit lagoon nights with balcony breakfasts and opera concierge.',
-    image: '/images/promo-banner-4.png',
-  },
-  {
-    id: 'vin-family-1',
-    title: 'Family beach club villa',
-    category: 'family',
-    location: 'Puglia, Italy',
-    badge: 'Kids club',
-    description: 'Private pool villa with kids’ atelier, bikes, and beach butler.',
-    image: '/images/promo-banner-3.jpg',
-  },
-];
-
-const deriveCategory = (content: string): string | undefined => {
-  const normalized = content.toLowerCase();
-  if (/(spa|wellness|relax|detox)/.test(normalized)) return 'wellness';
-  if (/(hike|ski|mountain|adventure|trek)/.test(normalized)) return 'adventure';
-  if (/(family|kids|group)/.test(normalized)) return 'family';
-  if (/(romantic|honeymoon|couple|love)/.test(normalized)) return 'romance';
-  if (/(food|dining|restaurant|tasting)/.test(normalized)) return 'food';
-  if (/(art|museum|city|urban|design)/.test(normalized)) return 'city';
-  return undefined;
-};
-
-const pickRecommendations = (prompt?: string): AiListing[] => {
-  if (!prompt) return [];
-  const category = deriveCategory(prompt);
-  if (!category) return AI_LISTINGS.slice(0, 3);
-  const matches = AI_LISTINGS.filter((item) => item.category === category);
-  return matches.length > 0 ? matches : AI_LISTINGS.slice(0, 3);
-};
-
 const persistPayload = (payload: { messages: AiMessage[]; recommendations: AiListing[] }) => {
   if (typeof window === 'undefined') return;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
@@ -137,9 +61,7 @@ const loadState = (): { messages: AiMessage[]; recommendations: AiListing[] } =>
   try {
     const parsed = JSON.parse(cached) as Partial<{ messages: AiMessage[]; recommendations: AiListing[] }>;
     const messages = Array.isArray(parsed?.messages) && parsed.messages.length > 0 ? parsed.messages : [welcomeMessage];
-    const recommendations = Array.isArray(parsed?.recommendations)
-      ? parsed.recommendations
-      : pickRecommendations(messages.find((m) => m.role === 'user')?.content);
+    const recommendations = Array.isArray(parsed?.recommendations) ? parsed.recommendations : [];
     return { messages, recommendations };
   } catch (error) {
     console.error('Failed to parse cached AI Force messages', error);
@@ -182,9 +104,9 @@ const useVinAiChat = create<VinAiState>((set, get) => ({
     };
 
     const optimisticMessages = [...get().messages, userMessage];
-    const updatedRecommendations = pickRecommendations(userMessage.content);
-    persistPayload({ messages: optimisticMessages, recommendations: updatedRecommendations });
-    set({ messages: optimisticMessages, isSending: true, recommendations: updatedRecommendations });
+    const optimisticRecommendations = get().recommendations;
+    persistPayload({ messages: optimisticMessages, recommendations: optimisticRecommendations });
+    set({ messages: optimisticMessages, isSending: true, recommendations: optimisticRecommendations });
 
     try {
       const res = await fetch('/api/vin-ai', {
@@ -206,8 +128,9 @@ const useVinAiChat = create<VinAiState>((set, get) => ({
       };
 
       const updatedMessages = [...optimisticMessages, assistantMessage];
-      persistPayload({ messages: updatedMessages, recommendations: updatedRecommendations });
-      set({ messages: updatedMessages, recommendations: updatedRecommendations });
+      const apiRecommendations = Array.isArray(data?.recommendations) ? data.recommendations : optimisticRecommendations;
+      persistPayload({ messages: updatedMessages, recommendations: apiRecommendations });
+      set({ messages: updatedMessages, recommendations: apiRecommendations });
     } catch (error) {
       console.error('AI Force failed to respond', error);
       const fallback: AiMessage = {
@@ -218,8 +141,8 @@ const useVinAiChat = create<VinAiState>((set, get) => ({
         createdAt: new Date().toISOString(),
       };
       const updatedMessages = [...optimisticMessages, fallback];
-      persistPayload({ messages: updatedMessages, recommendations: updatedRecommendations });
-      set({ messages: updatedMessages, recommendations: updatedRecommendations });
+      persistPayload({ messages: updatedMessages, recommendations: optimisticRecommendations });
+      set({ messages: updatedMessages, recommendations: optimisticRecommendations });
     } finally {
       set({ isSending: false });
     }
