@@ -1673,7 +1673,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
                   value={yearInput}
                   onChange={(e) => setYearInput(e.target.value)}
                   className="rounded-lg border border-neutral-200 px-3 py-2 text-sm"
-                  placeholder="e.g. 2025"
+                  placeholder="e.g. 2026"
                   min={new Date().getFullYear()}
                 />
                 <CreatableSelect

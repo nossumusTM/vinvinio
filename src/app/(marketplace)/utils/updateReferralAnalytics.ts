@@ -11,7 +11,7 @@ type ReferralEvent = {
 export async function applyReferralEvent(event: ReferralEvent) {
   const { userId, amount, qrScanIncrement = 0, createdAt } = event;
 
-  // Build keys like '2025-11-28', '2025-11', '2025'
+  // Build keys like '2026-11-28', '2026-11', '2026'
   const year = createdAt.getUTCFullYear();
   const month = String(createdAt.getUTCMonth() + 1).padStart(2, '0');
   const day = String(createdAt.getUTCDate()).padStart(2, '0');

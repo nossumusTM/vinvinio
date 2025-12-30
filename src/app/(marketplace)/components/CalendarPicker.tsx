@@ -76,8 +76,8 @@ const CalendarPicker: React.FC<CalendarPickerProps> = ({
     if (yearOptions && yearOptions.length) {
       const rawMin = Math.min(...yearOptions);
       const max = Math.max(...yearOptions);
-      const min = Math.max(rawMin, 2025); // 👈 don't go below 2025
-      const extendTo = Math.max(max, currentYear + 5, 2025);
+      const min = Math.max(rawMin, 2026); // 👈 don't go below 2026
+      const extendTo = Math.max(max, currentYear + 5, 2026);
 
       const result: number[] = [];
       for (let y = min; y <= extendTo; y++) {
@@ -86,7 +86,7 @@ const CalendarPicker: React.FC<CalendarPickerProps> = ({
       return result;
     }
 
-    const start = Math.max(currentYear - 5, 2025); // 👈 min 2025 even without yearOptions
+    const start = Math.max(currentYear - 5, 2026); // 👈 min 2026 even without yearOptions
     return Array.from({ length: 11 }, (_, i) => start + i);
   }, [yearOptions, currentYear]);
 

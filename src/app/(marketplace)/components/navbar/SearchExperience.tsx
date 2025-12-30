@@ -41,7 +41,7 @@ const SearchExperience = () => {
   // ];
 
   const ROTATING_ITEMS = [
-    'Ask Vin AI',
+    'Ask Force AI ',
     "What's to do?",
     'Help to book.',
   ];

@@ -102,13 +102,11 @@ import {
   GROUP_STYLE_OPTIONS,
 } from '@/app/(marketplace)/constants/experienceFilters';
 
+import countries from 'world-countries';
+
 interface RequestMessage {
   role: 'assistant' | 'user';
   content: string;
-}
-
-function lastUserText(messages: { role: string; content: string }[]) {
-  return [...messages].reverse().find((m) => m.role === 'user')?.content ?? '';
 }
 
 const CATEGORY_MATCHERS = [
@@ -127,6 +125,20 @@ const CATEGORY_MATCHERS = [
 ];
 
 const CATEGORY_SUGGESTIONS = CATEGORY_MATCHERS.map((category) => category.label);
+
+const COUNTRY_MATCHERS = [
+  ...countries.map((country) => ({
+    name: country.name.common,
+    synonyms: [country.name.common, country.name.official, ...(country.altSpellings ?? [])].filter(Boolean),
+  })),
+  { name: 'United States', synonyms: ['usa', 'u.s.a', 'u.s.', 'us', 'america', 'united states'] },
+  { name: 'United Kingdom', synonyms: ['uk', 'u.k.', 'great britain', 'britain', 'england'] },
+  { name: 'United Arab Emirates', synonyms: ['uae', 'u.a.e', 'emirates'] },
+].map((entry) => ({
+  name: entry.name,
+  synonyms: Array.from(new Set(entry.synonyms.map((value) => value.toLowerCase()))),
+}));
+
 
 const STOP_WORDS = new Set([
   'a',
@@ -190,6 +202,56 @@ const STOP_WORDS = new Set([
   'time',
 ]);
 
+const MONTHS: Record<string, number> = {
+  jan: 0,
+  january: 0,
+  janury: 0,
+  feb: 1,
+  february: 1,
+  mar: 2,
+  march: 2,
+  apr: 3,
+  april: 3,
+  may: 4,
+  jun: 5,
+  june: 5,
+  jul: 6,
+  july: 6,
+  aug: 7,
+  august: 7,
+  sep: 8,
+  sept: 8,
+  september: 8,
+  oct: 9,
+  october: 9,
+  nov: 10,
+  november: 10,
+  dec: 11,
+  december: 11,
+};
+
+const NUMBER_WORDS: Record<string, number> = {
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6,
+  seven: 7,
+  eight: 8,
+  nine: 9,
+  ten: 10,
+  eleven: 11,
+  twelve: 12,
+};
+
+const normalizeYear = (value?: string) => {
+  if (!value) return null;
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return null;
+  return numeric < 100 ? 2000 + numeric : numeric;
+};
+
 const extractKeywords = (text: string) => {
   const normalized = text
     .toLowerCase()
@@ -214,27 +276,186 @@ const parseDateRange = (text: string) => {
   return { startDate, endDate };
 };
 
+const parseNamedDateRange = (text: string) => {
+  const normalized = text
+    .toLowerCase()
+    .replace(/(\d)(st|nd|rd|th)\b/g, '$1')
+    .replace(/[,]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!normalized) return null;
+
+  const monthRegex =
+    '(jan(?:uary)?|janury|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)';
+  const dayRegex = '(\\d{1,2})';
+  const yearRegex = '(\\d{2,4})?';
+  const divider = '(?:to|through|until|\\-|–|—)';
+
+  const patterns = [
+    new RegExp(`\\b${monthRegex}\\s+${dayRegex}\\s+${yearRegex}\\s*${divider}\\s*${monthRegex}\\s+${dayRegex}\\s+${yearRegex}\\b`, 'i'),
+    new RegExp(`\\b${dayRegex}\\s+${monthRegex}\\s+${yearRegex}\\s*${divider}\\s*${dayRegex}\\s+${monthRegex}\\s+${yearRegex}\\b`, 'i'),
+    new RegExp(`\\b${monthRegex}\\s+${dayRegex}\\s*${divider}\\s*${dayRegex}\\s+${yearRegex}\\b`, 'i'),
+  ];
+
+  for (const pattern of patterns) {
+    const match = normalized.match(pattern);
+    if (!match) continue;
+
+    if (pattern === patterns[0]) {
+      const [, startMonth, startDay, startYear, endMonth, endDay, endYear] = match;
+      const startYearValue = normalizeYear(startYear) ?? new Date().getFullYear();
+      const endYearValue =
+        normalizeYear(endYear) ?? normalizeYear(startYear) ?? new Date().getFullYear();
+      const start = new Date(startYearValue, MONTHS[startMonth], Number(startDay));
+      const end = new Date(endYearValue, MONTHS[endMonth], Number(endDay));
+      if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
+        return { startDate: start, endDate: end };
+      }
+    }
+
+    if (pattern === patterns[1]) {
+      const [, startDay, startMonth, startYear, endDay, endMonth, endYear] = match;
+      const startYearValue = normalizeYear(startYear) ?? new Date().getFullYear();
+      const endYearValue =
+        normalizeYear(endYear) ?? normalizeYear(startYear) ?? new Date().getFullYear();
+      const start = new Date(startYearValue, MONTHS[startMonth], Number(startDay));
+      const end = new Date(endYearValue, MONTHS[endMonth], Number(endDay));
+      if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
+        return { startDate: start, endDate: end };
+      }
+    }
+
+    if (pattern === patterns[2]) {
+      const [, month, startDay, endDay, year] = match;
+      const yearValue = normalizeYear(year) ?? new Date().getFullYear();
+      const start = new Date(yearValue, MONTHS[month], Number(startDay));
+      const end = new Date(yearValue, MONTHS[month], Number(endDay));
+      if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
+        return { startDate: start, endDate: end };
+      }
+    }
+  }
+
+  const loosePattern = new RegExp(`\\b${monthRegex}\\s+${dayRegex}(?:\\s+(\\d{2,4}))?\\b`, 'gi');
+  const matches = Array.from(normalized.matchAll(loosePattern));
+  if (matches.length >= 2) {
+    const [first, second] = matches;
+    const startMonth = first[1];
+    const startDay = first[2];
+    const startYear = normalizeYear(first[3]) ?? new Date().getFullYear();
+    const endMonth = second[1];
+    const endDay = second[2];
+    const endYear = normalizeYear(second[3]) ?? startYear;
+    const start = new Date(startYear, MONTHS[startMonth], Number(startDay));
+    const end = new Date(endYear, MONTHS[endMonth], Number(endDay));
+    if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
+      return { startDate: start, endDate: end };
+    }
+  }
+
+  const looseDayPattern = new RegExp(`\\b${dayRegex}\\s+${monthRegex}(?:\\s+(\\d{2,4}))?\\b`, 'gi');
+  const dayMatches = Array.from(normalized.matchAll(looseDayPattern));
+  if (dayMatches.length >= 2) {
+    const [first, second] = dayMatches;
+    const startDay = first[1];
+    const startMonth = first[2];
+    const startYear = normalizeYear(first[3]) ?? new Date().getFullYear();
+    const endDay = second[1];
+    const endMonth = second[2];
+    const endYear = normalizeYear(second[3]) ?? startYear;
+    const start = new Date(startYear, MONTHS[startMonth], Number(startDay));
+    const end = new Date(endYear, MONTHS[endMonth], Number(endDay));
+    if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
+      return { startDate: start, endDate: end };
+    }
+  }
+
+  return null;
+};
+
 const extractLocation = (text: string) => {
   const normalized = text.replace(/\s+/g, ' ').trim();
   if (!normalized) return null;
   const match = normalized.match(
     /\b(?:in|at|near|around|from|to|country|region|city)\s+([a-zA-Z][a-zA-Z\s-]{2,40})/i,
   );
-  if (!match) return null;
-  const location = match[1]
-    .replace(/\b(for|with|on|in|at|around)\b.*$/i, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-  return location || null;
+ if (match) {
+    const location = match[1]
+      .replace(/\b(for|with|on|in|at|around)\b.*$/i, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (location) return location;
+  }
+
+  const lowercase = normalized.toLowerCase();
+  let bestMatch: string | null = null;
+  for (const entry of COUNTRY_MATCHERS) {
+    const hit = entry.synonyms.find((synonym) => {
+      if (synonym.length <= 3) {
+        return new RegExp(`\\b${synonym.replace('.', '\\.')}\\b`, 'i').test(lowercase);
+      }
+      return lowercase.includes(synonym);
+    });
+    if (hit) {
+      if (!bestMatch || entry.name.length > bestMatch.length) {
+        bestMatch = entry.name;
+      }
+    }
+  }
+
+  if (bestMatch) return bestMatch;
+
+  const regionMatch = normalized.match(/\b(europe|asia|africa|oceania|north america|south america|middle east)\b/i);
+  if (regionMatch) return regionMatch[1];
+
+  return null;
 };
 
 const extractGuestCount = (text: string) => {
+
+  const normalized = text.toLowerCase();
+  const numberFromWord = (value?: string) =>
+    value ? NUMBER_WORDS[value.toLowerCase()] ?? Number(value) : undefined;
+
+  if (/\b(solo|alone|by myself|just me|only me)\b/.test(normalized)) return 1;
+  if (/\b(couple|my partner|my husband|my wife|my boyfriend|my girlfriend)\b/.test(normalized)) return 2;
+  if (/\b(me and (?:my )?(friend|partner|husband|wife|girlfriend|boyfriend))\b/.test(normalized)) return 2;
+  if (/\bwith my (friend|partner|husband|wife|girlfriend|boyfriend)\b/.test(normalized)) return 2;
+
   const match =
     text.match(/\b(\d{1,2})\s*(guests?|people|persons|travellers|travelers|adults|friends)\b/i) ||
     text.match(/\bfor\s+(\d{1,2})\b(?!\s*(nights?|days?|hours?))/i);
-  if (!match) return null;
-  const value = Number(match[1]);
-  return Number.isFinite(value) ? value : null;
+  if (match) {
+    const value = Number(match[1]);
+    return Number.isFinite(value) ? value : null;
+  }
+
+  const groupMatch = normalized.match(/\b(group|party|family) of (\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\b/);
+  if (groupMatch) {
+    const value = numberFromWord(groupMatch[2]);
+    return value && Number.isFinite(value) ? value : null;
+  }
+
+  const weMatch = normalized.match(/\b(we are|we're|we)\s+(\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\b/);
+  if (weMatch) {
+    const value = numberFromWord(weMatch[2]);
+    return value && Number.isFinite(value) ? value : null;
+  }
+
+  const meAndMatch = normalized.match(/\bme and (\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s+(friends|people|others)\b/);
+  if (meAndMatch) {
+    const value = numberFromWord(meAndMatch[1]);
+    return value && Number.isFinite(value) ? value + 1 : null;
+  }
+
+  const withFriendsMatch = normalized.match(/\bwith (\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s+(friends|people|others)\b/);
+  if (withFriendsMatch) {
+    const value = numberFromWord(withFriendsMatch[1]);
+    return value && Number.isFinite(value) ? value + 1 : null;
+  }
+
+  return null;
 };
 
 const extractCategory = (text: string) => {
@@ -255,20 +476,20 @@ const buildFollowUpReply = (params: {
 }) => {
   const focusLine = params.categoryHint
     ? `I can tailor it within "${params.categoryHint}" or something else you prefer.`
-    : `Pick a category like ${formatOptionList(CATEGORY_SUGGESTIONS)}.`;
+    : `Share the vibe or activity you want.`;
 
   const prompts: Record<string, string> = {
     location: 'Your country/region or city (or tap “Use my location”).',
-    category: `What you are looking for. ${focusLine}`,
-    dates: 'Your dates (YYYY-MM-DD to YYYY-MM-DD) so I can check availability.',
-    guests: 'Guest count so I can match the right capacity.',
+    category: `What kind of experience are you looking for? ${focusLine}`,
+    dates: 'Your dates (e.g., Jan 7 to Jan 10 2026) so I can check availability.',
+    guests: 'How many people are traveling (solo, with a friend, family of four, etc.).',
   };
 
   const missingLines = params.missing.map((key) => `• ${prompts[key]}`).join('\n');
 
   return [
     params.greeting,
-    'To curate the best matches, I just need a few details:',
+    '## To curate the best matches, I just need a few details:',
     missingLines,
     '',
     'Once I have them, I will check availability and rank listings by their reviews.',
@@ -359,13 +580,12 @@ export async function POST(request: Request) {
 
   const hfToken = process.env.HF_TOKEN?.trim() || process.env.HUGGINGFACE_API_KEY?.trim();
 
-  const prompt = lastUserText(normalizedMessages);
   const conversationText = normalizedMessages
     .filter((message) => message.role === 'user')
     .map((message) => message.content)
     .join(' ');
   const keywords = extractKeywords(conversationText);
-  const dateRange = parseDateRange(conversationText);
+  const dateRange = parseDateRange(conversationText) ?? parseNamedDateRange(conversationText);
   const guestCount = extractGuestCount(conversationText);
   const location = extractLocation(conversationText);
   const matchedCategory = extractCategory(conversationText);
@@ -412,7 +632,6 @@ export async function POST(request: Request) {
   });
 
   if (!hfToken) {
-    // const prompt = lastUserText(normalizedMessages);
     return NextResponse.json({
       reply: `Thanks! I will check availability for ${location} on ${dateRange?.startDate.toISOString().slice(0, 10)} → ${dateRange?.endDate.toISOString().slice(0, 10)} for ${guestCount} guests and rank the best-reviewed listings.`,
       recommendations,

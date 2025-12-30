@@ -30,6 +30,7 @@ import Counter from '../inputs/Counter';
 import useTranslations from '@/app/(marketplace)/hooks/useTranslations';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import VinAiSearchWidget from '../VinAiSearchWidget';
+import VinAiChatView from '../VinAiChatView';
 
 enum STEPS {
   AI = 0,
@@ -45,6 +46,7 @@ const SearchExperienceModal = () => {
   const t = useTranslations();
 
   const [step, setStep] = useState(STEPS.AI);
+  const [isAiFullscreen, setIsAiFullscreen] = useState(false);
   const { location, setLocation } = useExperienceSearchState();
   const [locationError, setLocationError] = useState(false);
   const [guestCount, setGuestCount] = useState(1);
@@ -77,6 +79,12 @@ const SearchExperienceModal = () => {
   useEffect(() => {
     if (!modal.isOpen) {
       setLocationError(false);
+    }
+  }, [modal.isOpen]);
+
+  useEffect(() => {
+    if (modal.isOpen) {
+      setIsAiFullscreen(false);
     }
   }, [modal.isOpen]);
 
@@ -206,7 +214,13 @@ const SearchExperienceModal = () => {
       <div className="space-y-6">
         <div className="rounded-3xl p-[1px]">
           <div className="rounded-[26px] bg-white/80 backdrop-blur p-6 shadow-xl">
-            <VinAiSearchWidget onSkip={() => setStep(STEPS.LOCATION)} />
+            <VinAiSearchWidget
+              onSkip={() => setStep(STEPS.LOCATION)}
+              onExpand={() => {
+                setIsAiFullscreen(true);
+                modal.onClose();
+              }}
+            />
           </div>
         </div>
         {/* <div className="flex flex-row flex-wrap gap-3 justify-center mt-2"> */}
@@ -322,32 +336,58 @@ const SearchExperienceModal = () => {
   }
 
   return (
-    <Modal
-      isOpen={modal.isOpen}
-      onClose={modal.onClose}
-      onSubmit={onSubmit}
-      actionLabel={actionLabel}
-      secondaryActionLabel={secondaryActionLabel}
-      secondaryAction={step === STEPS.AI ? undefined : onBack}
-      title="Explore your destination"
-      className="bg-transparent"
-      body={
-        <div className="relative">
-          <AnimatePresence mode="wait" initial={false}>
+     <>
+      <Modal
+        isOpen={modal.isOpen}
+        onClose={modal.onClose}
+        onSubmit={onSubmit}
+        actionLabel={actionLabel}
+        secondaryActionLabel={secondaryActionLabel}
+        secondaryAction={step === STEPS.AI ? undefined : onBack}
+        title="Explore your destination"
+        className="bg-transparent"
+        body={
+          <div className="relative">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={step}
+                custom={dir}
+                variants={STEP_VARIANTS}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
+                {bodyContent}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        }
+      />
+      <AnimatePresence>
+        {isAiFullscreen && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
             <motion.div
-              key={step}
-              custom={dir}
-              variants={STEP_VARIANTS}
-              initial="initial"
-              animate="animate"
-              exit="exit"
+              initial={{ opacity: 0, scale: 0.92 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.94 }}
+              transition={{ duration: 0.2 }}
+              className="h-full w-full origin-bottom-right overflow-hidden rounded-3xl bg-white shadow-2xl"
             >
-              {bodyContent}
+              <VinAiChatView
+                onBack={() => setIsAiFullscreen(false)}
+                isFullscreen
+                onClose={() => setIsAiFullscreen(false)}
+              />
             </motion.div>
-          </AnimatePresence>
-        </div>
-      }
-    />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 

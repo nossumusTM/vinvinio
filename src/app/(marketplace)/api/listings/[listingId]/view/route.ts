@@ -80,7 +80,7 @@ export async function POST(
       return NextResponse.json({ viewCount });
     }
 
-    if (error?.code === "P2025") {
+    if (error?.code === "P2026") {
       return new NextResponse("Listing not found", { status: 404 });
     }
 

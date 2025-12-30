@@ -183,6 +183,71 @@ const TypewriterText = ({
   return <div className="whitespace-pre-line leading-relaxed">{displayed}</div>;
 };
 
+const StructuredMessage = ({ text }: { text: string }) => {
+  const lines = text.split('\n');
+  const blocks: Array<{ type: 'h2' | 'p' | 'ul'; content: string | string[] }> = [];
+  let listItems: string[] = [];
+
+  const flushList = () => {
+    if (listItems.length) {
+      blocks.push({ type: 'ul', content: listItems });
+      listItems = [];
+    }
+  };
+
+  lines.forEach((line) => {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      flushList();
+      return;
+    }
+    if (trimmed.startsWith('## ')) {
+      flushList();
+      blocks.push({ type: 'h2', content: trimmed.replace(/^##\s+/, '') });
+      return;
+    }
+    if (trimmed.startsWith('• ')) {
+      listItems.push(trimmed.replace(/^•\s+/, ''));
+      return;
+    }
+    flushList();
+    blocks.push({ type: 'p', content: trimmed });
+  });
+
+  flushList();
+
+  return (
+    <div className="space-y-2">
+      {blocks.map((block, index) => {
+        if (block.type === 'h2') {
+          return (
+            <h2 key={`h2-${index}`} className="text-base font-semibold text-white">
+              {block.content as string}
+            </h2>
+          );
+        }
+        if (block.type === 'ul') {
+          return (
+            <ul key={`ul-${index}`} className="space-y-1 text-sm text-white/90">
+              {(block.content as string[]).map((item, itemIndex) => (
+                <li key={`li-${index}-${itemIndex}`} className="flex gap-2">
+                  <span>•</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          );
+        }
+        return (
+          <p key={`p-${index}`} className="text-sm text-white/90">
+            {block.content as string}
+          </p>
+        );
+      })}
+    </div>
+  );
+};
+
 const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewProps) => {
   const { messages, recommendations, criteriaMet, init, sendMessage, isSending, clear } = useVinAiChat();
   const { openChat } = useMessenger();
@@ -193,6 +258,8 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
   const [recordingStart, setRecordingStart] = useState<number | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [typedMessageIds, setTypedMessageIds] = useState<string[]>([]);
+  const hasSeededTyping = useRef(false);
+  const speechRecognitionRef = useRef<SpeechRecognition | null>(null);
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -228,12 +295,25 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
     node.scrollTop = node.scrollHeight;
   }, [messages.length, recommendations.length, isSending]);
 
+  useEffect(() => {
+    if (!messages.length) return;
+    if (!hasSeededTyping.current) {
+      setTypedMessageIds(messages.filter((message) => message.role === 'assistant').map((message) => message.id));
+      hasSeededTyping.current = true;
+      return;
+    }
+    if (messages.length <= 1) {
+      setTypedMessageIds(messages.filter((message) => message.role === 'assistant').map((message) => message.id));
+    }
+  }, [messages]);
+
   const lastUpdated = useMemo(() => messages[messages.length - 1]?.createdAt, [messages]);
 
   const lastAssistantId = useMemo(
     () => [...messages].reverse().find((message) => message.role === 'assistant')?.id,
     [messages],
   );
+  const isLatestAssistantTyped = !lastAssistantId || typedMessageIds.includes(lastAssistantId);
   const hasUserMessage = useMemo(
     () => messages.some((message) => message.role === 'user'),
     [messages],
@@ -279,8 +359,9 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
     await sendMessage(messageToSend);
   };
 
-  const handleEmojiSelect = (emoji: any) => {
-    setInput((prev) => `${prev}${emoji?.native ?? emoji?.shortcodes ?? ''}`);
+  const handleEmojiSelect = (emoji: unknown) => {
+    const e = emoji as { native?: string; shortcodes?: string };
+    setInput((prev) => `${prev}${e?.native ?? e?.shortcodes ?? ''}`);
   };
 
   const startVoiceRecording = async () => {
@@ -294,7 +375,7 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
       const recorder = new MediaRecorder(stream);
       audioChunksRef.current = [];
 
-    recorder.ondataavailable = (event) => {
+    recorder.ondataavailable = (event: BlobEvent) => {
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
         }
@@ -375,6 +456,48 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
     }
   };
 
+  const startSpeechToText = () => {
+    if (isListening || isRecording || isSending || isSendingVoice) return;
+    const SpeechRecognitionCtor =
+      window.SpeechRecognition ?? window.webkitSpeechRecognition;
+
+    if (!SpeechRecognitionCtor) {
+      toast.error('Voice to text is not supported in this browser.');
+      return;
+    }
+
+    const recognition = new SpeechRecognitionCtor();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = async (event: SpeechRecognitionEvent) => {
+      const transcript = Array.from(event.results)
+        .map((result) => result[0]?.transcript ?? '')
+        .join(' ')
+        .trim();
+      if (transcript) {
+        setInput('');
+        await sendMessage(transcript);
+      } else {
+        toast.error('I could not detect any speech. Please try again.');
+      }
+    };
+
+    recognition.onerror = () => {
+      toast.error('Voice to text failed. Please try again.');
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+      speechRecognitionRef.current = null;
+    };
+
+    speechRecognitionRef.current = recognition;
+    setIsListening(true);
+    recognition.start();
+  };
+
   const handleListingClick = (title: string) => {
     openChat(AI_FORCE_ASSISTANT);
     handleSend(`Show me more about ${title}`);
@@ -389,20 +512,28 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
       return <AudioPlayer src={message.audioUrl} durationMs={message.audioDurationMs} />;
     }
 
-  const shouldAnimate =
+  if (message.role === 'user') {
+      return <div className="whitespace-pre-line leading-relaxed">{message.content}</div>;
+    }
+
+    const shouldAnimate =
       message.role === 'assistant' &&
       message.id === lastAssistantId &&
       !typedMessageIds.includes(message.id);
 
-    return (
-      <TypewriterText
-        text={message.content}
-        shouldAnimate={shouldAnimate}
-        onComplete={() =>
-          setTypedMessageIds((prev) => (prev.includes(message.id) ? prev : [...prev, message.id]))
-        }
-      />
-    );
+    if (shouldAnimate) {
+      return (
+        <TypewriterText
+          text={message.content}
+          shouldAnimate={shouldAnimate}
+          onComplete={() =>
+            setTypedMessageIds((prev) => (prev.includes(message.id) ? prev : [...prev, message.id]))
+          }
+        />
+      );
+    }
+
+    return <StructuredMessage text={message.content} />;
   };
 
   return (
@@ -547,7 +678,7 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
           </motion.div>
         )}
 
-        {criteriaMet && recommendations.length > 0 && (
+        {criteriaMet && recommendations.length > 0 && isLatestAssistantTyped && (
           <motion.div
             layout
             initial={{ opacity: 0, y: 10 }}
@@ -696,6 +827,18 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
             }}
             disabled={isRecording}
           />
+          <button
+            type="button"
+            onClick={startSpeechToText}
+            className={clsx(
+              'flex h-10 w-10 items-center justify-center rounded-full border border-neutral-200 text-neutral-600 transition hover:border-neutral-300 hover:bg-neutral-100',
+              isListening && 'border-blue-200 bg-blue-50 text-blue-700'
+            )}
+            aria-label="Voice to text"
+            disabled={isRecording || isSending || isSendingVoice}
+          >
+            <HiMiniMicrophone className={clsx(isListening && 'animate-pulse')} />
+          </button>
           <button
             type="button"
             onMouseDown={scheduleRecording}

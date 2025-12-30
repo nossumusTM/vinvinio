@@ -34,7 +34,7 @@ export async function POST(request: Request) {
       maxPointValue: MAX_PARTNER_POINT_VALUE,
     });
   } catch (error: any) {
-    if (error?.code === "P2025" || error?.message === "Listing not found") {
+    if (error?.code === "P2026" || error?.message === "Listing not found") {
       return new NextResponse("Listing not found", { status: 404 });
     }
 

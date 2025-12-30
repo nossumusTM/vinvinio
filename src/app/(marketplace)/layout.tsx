@@ -37,10 +37,15 @@ import Footer from './components/Footer';
 import SessionProviderWrapper from './providers/SessionProviderWrapper';
 
 export const metadata = {
-  title: 'Vinvin - Experience World Beyond the Ordinary | 2025',
+  title: 'Vinvin - Experience World Beyond the Ordinary | 2026',
   description: 'Beyond Experiences & More',
   icons: {
-    icon: '/favicon.ico?',
+    icon: [
+      { url: '/favicon.svg?v=1.9', type: 'image/svg+xml' },
+      { url: '/favicon-32x32.png?v=1.9', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-16x16.png?v=1.9', sizes: '16x16', type: 'image/png' },
+    ],
+    apple: [{ url: '/apple-touch-icon.png?v=1.9', sizes: '180x180', type: 'image/png' }],
   },
 };
 

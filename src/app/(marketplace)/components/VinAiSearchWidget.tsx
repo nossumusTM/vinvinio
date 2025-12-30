@@ -17,6 +17,7 @@ import VinAiChatView from './VinAiChatView';
 
 interface VinAiSearchWidgetProps {
   onSkip: () => void;
+  onExpand?: () => void;
 }
 
 const quickPrompts = ['Where?', 'When?', 'Who?', 'Show listings'];
@@ -181,7 +182,72 @@ const TypewriterText = ({
   return <div className="whitespace-pre-line leading-relaxed">{displayed}</div>;
 };
 
-const VinAiSearchWidget = ({ onSkip }: VinAiSearchWidgetProps) => {
+const StructuredMessage = ({ text }: { text: string }) => {
+  const lines = text.split('\n');
+  const blocks: Array<{ type: 'h2' | 'p' | 'ul'; content: string | string[] }> = [];
+  let listItems: string[] = [];
+
+  const flushList = () => {
+    if (listItems.length) {
+      blocks.push({ type: 'ul', content: listItems });
+      listItems = [];
+    }
+  };
+
+  lines.forEach((line) => {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      flushList();
+      return;
+    }
+    if (trimmed.startsWith('## ')) {
+      flushList();
+      blocks.push({ type: 'h2', content: trimmed.replace(/^##\s+/, '') });
+      return;
+    }
+    if (trimmed.startsWith('• ')) {
+      listItems.push(trimmed.replace(/^•\s+/, ''));
+      return;
+    }
+    flushList();
+    blocks.push({ type: 'p', content: trimmed });
+  });
+
+  flushList();
+
+  return (
+    <div className="space-y-2">
+      {blocks.map((block, index) => {
+        if (block.type === 'h2') {
+          return (
+            <h2 key={`h2-${index}`} className="text-sm font-semibold text-neutral-900">
+              {block.content as string}
+            </h2>
+          );
+        }
+        if (block.type === 'ul') {
+          return (
+            <ul key={`ul-${index}`} className="space-y-1 text-xs text-neutral-700">
+              {(block.content as string[]).map((item, itemIndex) => (
+                <li key={`li-${index}-${itemIndex}`} className="flex gap-2">
+                  <span>•</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          );
+        }
+        return (
+          <p key={`p-${index}`} className="text-xs text-neutral-700">
+            {block.content as string}
+          </p>
+        );
+      })}
+    </div>
+  );
+};
+
+const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
   const { messages, recommendations, criteriaMet, init, sendMessage, isSending, clear } = useVinAiChat();
   const { openChat } = useMessenger();
   const [input, setInput] = useState('');
@@ -191,6 +257,9 @@ const VinAiSearchWidget = ({ onSkip }: VinAiSearchWidgetProps) => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [typedMessageIds, setTypedMessageIds] = useState<string[]>([]);
+  const hasSeededTyping = useRef(false);
+  const [isListening, setIsListening] = useState(false);
+  const speechRecognitionRef = useRef<SpeechRecognition | null>(null);
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -208,10 +277,23 @@ const VinAiSearchWidget = ({ onSkip }: VinAiSearchWidgetProps) => {
     node.scrollTop = node.scrollHeight;
   }, [messages.length, recommendations.length, isSending]);
 
+  useEffect(() => {
+    if (!messages.length) return;
+    if (!hasSeededTyping.current) {
+      setTypedMessageIds(messages.filter((message) => message.role === 'assistant').map((message) => message.id));
+      hasSeededTyping.current = true;
+      return;
+    }
+    if (messages.length <= 1) {
+      setTypedMessageIds(messages.filter((message) => message.role === 'assistant').map((message) => message.id));
+    }
+  }, [messages]);
+
   const lastAssistantId = useMemo(
     () => [...messages].reverse().find((message) => message.role === 'assistant')?.id,
     [messages],
   );
+  const isLatestAssistantTyped = !lastAssistantId || typedMessageIds.includes(lastAssistantId);
   const hasUserMessage = useMemo(
     () => messages.some((message) => message.role === 'user'),
     [messages],
@@ -370,6 +452,51 @@ const VinAiSearchWidget = ({ onSkip }: VinAiSearchWidgetProps) => {
     }
   };
 
+  const startSpeechToText = () => {
+    if (isListening || isRecording || isSending || isSendingVoice) return;
+    const SpeechRecognition =
+      (window as typeof window & { SpeechRecognition?: typeof window.SpeechRecognition })
+        .SpeechRecognition ||
+      (window as typeof window & { webkitSpeechRecognition?: typeof window.SpeechRecognition })
+        .webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      toast.error('Voice to text is not supported in this browser.');
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = async (event) => {
+      const transcript = Array.from(event.results)
+        .map((result) => result[0]?.transcript ?? '')
+        .join(' ')
+        .trim();
+      if (transcript) {
+        setInput('');
+        await sendMessage(transcript);
+      } else {
+        toast.error('I could not detect any speech. Please try again.');
+      }
+    };
+
+    recognition.onerror = () => {
+      toast.error('Voice to text failed. Please try again.');
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+      speechRecognitionRef.current = null;
+    };
+
+    speechRecognitionRef.current = recognition;
+    setIsListening(true);
+    recognition.start();
+  };
+
   const handleListingClick = (title: string) => {
     openChat(AI_FORCE_ASSISTANT);
     handleSend(`Show me more about ${title}`);
@@ -380,20 +507,28 @@ const VinAiSearchWidget = ({ onSkip }: VinAiSearchWidgetProps) => {
       return <AudioPlayer src={message.audioUrl} durationMs={message.audioDurationMs} />;
     }
 
+    if (message.role === 'user') {
+      return <div className="whitespace-pre-line leading-relaxed">{message.content}</div>;
+    }
+
     const shouldAnimate =
       message.role === 'assistant' &&
       message.id === lastAssistantId &&
       !typedMessageIds.includes(message.id);
 
-    return (
-      <TypewriterText
-        text={message.content}
-        shouldAnimate={shouldAnimate}
-        onComplete={() =>
-          setTypedMessageIds((prev) => (prev.includes(message.id) ? prev : [...prev, message.id]))
-        }
-      />
-    );
+    if (shouldAnimate) {
+      return (
+        <TypewriterText
+          text={message.content}
+          shouldAnimate={shouldAnimate}
+          onComplete={() =>
+            setTypedMessageIds((prev) => (prev.includes(message.id) ? prev : [...prev, message.id]))
+          }
+        />
+      );
+    }
+
+    return <StructuredMessage text={message.content} />;
   };
 
   return (
@@ -405,14 +540,20 @@ const VinAiSearchWidget = ({ onSkip }: VinAiSearchWidgetProps) => {
             <LuRocket className="h-4 w-4" />
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-semibold">Start with Vin AI</span>
-            <span className="text-xs text-neutral-500">Ask anything before choosing where, when, and who.</span>
+            <h2 className="text-sm font-semibold text-neutral-900">Start with Vin AI</h2>
+            <p className="text-xs text-neutral-500">Ask anything before choosing where, when, and who.</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setIsExpanded(true)}
+            onClick={() => {
+              if (onExpand) {
+                onExpand();
+                return;
+              }
+              setIsExpanded(true);
+            }}
             className="flex items-center gap-1 rounded-full border border-neutral-200 px-3 py-1 text-xs font-semibold text-neutral-600 transition hover:bg-neutral-100"
           >
             Zoom
@@ -487,7 +628,7 @@ const VinAiSearchWidget = ({ onSkip }: VinAiSearchWidgetProps) => {
           </motion.div>
         )}
 
-      {criteriaMet && recommendations.length > 0 && (
+      {criteriaMet && recommendations.length > 0 && isLatestAssistantTyped && (
           <motion.div
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
@@ -619,6 +760,18 @@ const VinAiSearchWidget = ({ onSkip }: VinAiSearchWidgetProps) => {
         />
         <button
           type="button"
+          onClick={startSpeechToText}
+          className={clsx(
+            'flex h-10 w-10 aspect-square items-center justify-center rounded-xl border border-neutral-200 text-neutral-600 shadow-sm transition hover:bg-neutral-100',
+            isListening && 'border-blue-200 bg-blue-50 text-blue-700'
+          )}
+          aria-label="Voice to text"
+          disabled={isRecording || isSending || isSendingVoice}
+        >
+          <HiMiniMicrophone className={clsx(isListening && 'animate-pulse')} size={16} />
+        </button>
+        <button
+          type="button"
           onMouseDown={scheduleRecording}
           onMouseUp={() => cancelScheduledRecording(true)}
           onMouseLeave={() => cancelScheduledRecording(isRecording || recordingActivatedRef.current)}
@@ -645,7 +798,7 @@ const VinAiSearchWidget = ({ onSkip }: VinAiSearchWidgetProps) => {
     </div>
 
       <AnimatePresence>
-        {isExpanded && (
+        {isExpanded && !onExpand && (
           <motion.div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
             initial={{ opacity: 0 }}

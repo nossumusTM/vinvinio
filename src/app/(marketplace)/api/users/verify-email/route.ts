@@ -64,7 +64,7 @@ export async function POST(req: Request) {
       data: { emailVerified: new Date() }
     });
   
-    // ✅ Prevent P2025 error by checking token existence again
+    // ✅ Prevent P2026 error by checking token existence again
     try {
       await prisma.emailVerificationToken.delete({
         where: { id: tokenRecord.id }
