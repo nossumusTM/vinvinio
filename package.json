@@ -48,6 +48,7 @@
     "next-cloudinary": "^4.28.0",
     "nodemailer": "^7.0.10",
     "npm": "^11.2.0",
+    "openai": "^6.15.0",
     "qrcode.react": "^4.2.0",
     "query-string": "^8.2.0",
     "react": "^18.2.0",
