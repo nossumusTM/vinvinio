@@ -226,14 +226,14 @@ const StructuredMessage = ({ text }: { text: string }) => {
       {blocks.map((block, index) => {
         if (block.type === 'h2') {
           return (
-            <h2 key={`h2-${index}`} className="text-base font-semibold text-white/95 tracking-tight">
+            <h2 key={`h2-${index}`} className="text-base font-semibold text-black/95 tracking-tight">
               {block.content as string}
             </h2>
           );
         }
         if (block.type === 'ul') {
           return (
-            <ul key={`ul-${index}`} className="space-y-1 text-sm text-white/90">
+            <ul key={`ul-${index}`} className="space-y-1 text-sm text-black/90">
               {(block.content as string[]).map((item, itemIndex) => (
                 <li key={`li-${index}-${itemIndex}`} className="flex gap-2">
                   <span>•</span>
@@ -244,7 +244,7 @@ const StructuredMessage = ({ text }: { text: string }) => {
           );
         }
         return (
-          <p key={`p-${index}`} className="text-sm text-white/90">
+          <p key={`p-${index}`} className="text-sm text-black/90">
             {block.content as string}
           </p>
         );
@@ -554,11 +554,18 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
                     'inline-flex w-fit max-w-[78%] flex-col rounded-2xl px-4 py-3 text-[15px] shadow-sm backdrop-blur',
                     isUser
                       ? 'bg-white text-neutral-800 ring-1 ring-neutral-100'
-                      : 'bg-gradient-to-br from-neutral-900 via-slate-900 to-indigo-900/90 text-white shadow-[0_12px_32px_rgba(15,23,42,0.3)]'
+                      : isFullscreen
+                      ? 'bg-sky-50 text-neutral-900'
+                      : 'bg-sky-50 text-white shadow-[0_12px_32px_rgba(15,23,42,0.3)]'
                   )}
                 >
                   {renderMessageContent(message)}
-                  <div className={clsx('mt-2 text-[11px]', isUser ? 'text-neutral-400' : 'text-neutral-300')}>
+                <div
+                    className={clsx(
+                      'mt-2 text-[11px]',
+                      isUser ? 'text-neutral-400' : isFullscreen ? 'text-neutral-500' : 'text-neutral-300'
+                    )}
+                  >
                     {new Date(message.createdAt).toLocaleString(undefined, {
                       hour: '2-digit',
                       minute: '2-digit',
@@ -854,7 +861,7 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
               'flex h-10 w-10 items-center justify-center rounded-full transition shadow-sm',
               isListening
                 ? 'bg-blue-600 text-white shadow-[0_0_18px_rgba(54,4,255,0.5)]'
-                : 'bg-neutral-900 text-white hover:bg-neutral-800'
+                : 'bg-sky-50 text-sky-700 ring-1 ring-sky-100 hover:bg-sky-100'
             )}
             aria-label="Send or hold to record"
             disabled={isSending}

@@ -219,7 +219,6 @@ const SearchExperienceModal = () => {
               onSkip={onSubmit}
               onExpand={() => {
                 setIsAiFullscreen(true);
-                modal.onClose();
               }}
             />
           </div>

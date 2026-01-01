@@ -881,7 +881,7 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
             handleSend();
           }}
           disabled={isSendingVoice || isSending}
-          className="flex h-10 w-10 aspect-square items-center justify-center rounded-xl bg-neutral-900 text-white shadow-sm transition hover:bg-neutral-800 disabled:opacity-60"
+                    className="flex h-10 w-10 aspect-square items-center justify-center rounded-xl bg-sky-50 text-sky-700 shadow-sm ring-1 ring-sky-100 transition hover:bg-sky-100 disabled:opacity-60"
           aria-label="Send or hold to record"
         >
           {isRecording ? <span className="text-lg">●</span> : <TbArrowElbowRight size={20} />}

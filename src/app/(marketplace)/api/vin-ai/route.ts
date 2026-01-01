@@ -824,7 +824,85 @@ export async function POST(request: Request) {
     take: 5,
   });
 
-  const recommendations = listings.map((listing) => {
+let listingsTier: 'strict' | 'noAvailability' | 'noGuests' | 'noCategory' | 'locationOnly' | 'fallback' = 'strict';
+  let matchedListings = listings;
+
+  if (!matchedListings.length) {
+    matchedListings = await prisma.listing.findMany({
+      where: {
+        status: 'approved',
+        ...buildKeywordWhere(resolvedKeywords),
+        ...buildCategoryWhere(resolvedCategory),
+        ...buildLocationWhere(resolvedLocation),
+        ...buildGuestWhere(resolvedGuestCount),
+      },
+      orderBy: [{ punti: 'desc' }, { likesCount: 'desc' }, { createdAt: 'desc' }],
+      take: 5,
+    });
+    if (matchedListings.length) {
+      listingsTier = 'noAvailability';
+    }
+  }
+
+  if (!matchedListings.length) {
+    matchedListings = await prisma.listing.findMany({
+      where: {
+        status: 'approved',
+        ...buildKeywordWhere(resolvedKeywords),
+        ...buildCategoryWhere(resolvedCategory),
+        ...buildLocationWhere(resolvedLocation),
+      },
+      orderBy: [{ punti: 'desc' }, { likesCount: 'desc' }, { createdAt: 'desc' }],
+      take: 5,
+    });
+    if (matchedListings.length) {
+      listingsTier = 'noGuests';
+    }
+  }
+
+  if (!matchedListings.length) {
+    matchedListings = await prisma.listing.findMany({
+      where: {
+        status: 'approved',
+        ...buildKeywordWhere(resolvedKeywords),
+        ...buildLocationWhere(resolvedLocation),
+      },
+      orderBy: [{ punti: 'desc' }, { likesCount: 'desc' }, { createdAt: 'desc' }],
+      take: 5,
+    });
+    if (matchedListings.length) {
+      listingsTier = 'noCategory';
+    }
+  }
+
+  if (!matchedListings.length) {
+    matchedListings = await prisma.listing.findMany({
+      where: {
+        status: 'approved',
+        ...buildLocationWhere(resolvedLocation),
+      },
+      orderBy: [{ punti: 'desc' }, { likesCount: 'desc' }, { createdAt: 'desc' }],
+      take: 5,
+    });
+    if (matchedListings.length) {
+      listingsTier = 'locationOnly';
+    }
+  }
+
+  if (!matchedListings.length) {
+    matchedListings = await prisma.listing.findMany({
+      where: {
+        status: 'approved',
+      },
+      orderBy: [{ punti: 'desc' }, { likesCount: 'desc' }, { createdAt: 'desc' }],
+      take: 5,
+    });
+    if (matchedListings.length) {
+      listingsTier = 'fallback';
+    }
+  }
+
+  const recommendations = matchedListings.map((listing) => {
     const rawCategory = Array.isArray(listing.category) ? listing.category[0] : listing.category;
     return {
       id: listing.id,
@@ -838,22 +916,37 @@ export async function POST(request: Request) {
     };
   });
 
-  if (!listings.length) {
+  if (!matchedListings.length) {
     return NextResponse.json({
       reply:
-        "I couldn’t find available matches for those details. Please reset the conversation and try a different location, category, or date.",
+        `I couldn’t find matches for ${resolvedLocation ?? 'that destination'} right now. Try adjusting the location or category and I’ll keep searching.`,
       recommendations: [],
-      criteriaMet: false,
+      criteriaMet,
       missingFields: [],
       memory: memorySnapshot,
     });
   }
 
+  const availabilityNote =
+    listingsTier === 'noAvailability'
+      ? `I couldn’t confirm availability for ${formatDateRangeLabel(resolvedDateRange)} yet, but here are the closest matches.`
+      : listingsTier === 'noGuests'
+      ? `I couldn’t match the exact guest count, but these experiences fit your other preferences.`
+      : listingsTier === 'noCategory'
+      ? `I couldn’t find an exact category match, but these experiences align with your location and keywords.`
+      : listingsTier === 'locationOnly'
+      ? `I couldn’t match the full criteria, but these are top experiences in ${resolvedLocation}.`
+      : listingsTier === 'fallback'
+      ? 'I couldn’t match the exact destination, but here are the most popular Vuola experiences to explore.'
+      : '';
+
   if (!hfToken) {
     return NextResponse.json({
-      reply: `Thanks! I will check availability for ${resolvedLocation} on ${formatDateRangeLabel(
-        resolvedDateRange,
-      )} for ${resolvedGuestCount} guests and rank the best-reviewed listings.`,
+      reply:
+        availabilityNote ||
+        `Thanks! I will check availability for ${resolvedLocation} on ${formatDateRangeLabel(
+          resolvedDateRange,
+        )} for ${resolvedGuestCount} guests and rank the best-reviewed listings.`,
       recommendations,
       criteriaMet,
       missingFields,
@@ -916,7 +1009,15 @@ export async function POST(request: Request) {
       data?.choices?.[0]?.message?.content ??
       'Ask me anything about your next stay and I will tailor the results.';
 
-    return NextResponse.json({ reply, recommendations, criteriaMet, missingFields, memory: memorySnapshot });
+    const mergedReply = availabilityNote ? `${availabilityNote}\n\n${reply}` : reply;
+
+    return NextResponse.json({
+      reply: mergedReply,
+      recommendations,
+      criteriaMet,
+      missingFields,
+      memory: memorySnapshot,
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('AI Force (HF Router) request failed', message);

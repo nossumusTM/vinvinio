@@ -198,7 +198,7 @@ import { useRouter } from "next/navigation";
               {([
                 { key: 'customer' as const, icon: <GiWingfoot size={14} />, label: 'Visitor' },
                 { key: 'host' as const, icon: <BsPlugin size={14} />, label: 'Provider' },
-                { key: 'promoter' as const, icon: <PiBarcode size={14} />, label: 'Promoter' },
+                // { key: 'promoter' as const, icon: <PiBarcode size={14} />, label: 'Promoter' },
               ]).map(({ key, icon, label }) => {
                 const isActive = role === key;
 
