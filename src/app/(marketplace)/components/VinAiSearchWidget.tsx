@@ -540,7 +540,7 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
             <LuRocket className="h-4 w-4" />
           </div>
           <div className="flex flex-col">
-            <h2 className="text-sm font-semibold text-neutral-900">Start with Vin AI</h2>
+            <h2 className="text-sm font-semibold text-neutral-900">Start with Force AI</h2>
             <p className="text-xs text-neutral-500">Ask anything before choosing where, when, and who.</p>
           </div>
         </div>
@@ -715,7 +715,7 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
         </div>
       )}
 
-      <div className="flex flex-wrap gap-2 text-xs text-neutral-600">
+      {/* <div className="flex flex-wrap gap-2 text-xs text-neutral-600">
         {quickPrompts.map((prompt) => (
           <button
             key={prompt}
@@ -726,7 +726,7 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
             {prompt}
           </button>
         ))}
-      </div>
+      </div> */}
 
       <div className="flex flex-row items-center gap-2">
         {/* <div className="relative">
@@ -749,7 +749,7 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="What you want to do?"
-          className="flex-1 rounded-2xl border border-neutral-200 bg-white px-1 text-center py-3 text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-900"
+          className="flex-1 rounded-2xl border border-neutral-200 bg-white px-3 text-baseline py-3 text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-900"
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
@@ -758,7 +758,7 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
           }}
           disabled={isRecording}
         />
-        <button
+        {/* <button
           type="button"
           onClick={startSpeechToText}
           className={clsx(
@@ -769,7 +769,7 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
           disabled={isRecording || isSending || isSendingVoice}
         >
           <HiMiniMicrophone className={clsx(isListening && 'animate-pulse')} size={16} />
-        </button>
+        </button> */}
         <button
           type="button"
           onMouseDown={scheduleRecording}

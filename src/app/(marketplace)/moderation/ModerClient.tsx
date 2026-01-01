@@ -6,6 +6,9 @@ import axios, { AxiosError } from 'axios';
 import { toast } from 'react-hot-toast';
 import { SafeUser } from '@/app/(marketplace)/types';
 import { useRouter } from 'next/navigation';
+import { GiWingfoot } from 'react-icons/gi';
+import { BsPlugin } from 'react-icons/bs';
+import { PiBarcode } from 'react-icons/pi';
 import PlatformCard from '../components/PlatformCard';
 import ConfirmPopup from '../components/ConfirmPopup';
 import useCurrencyFormatter from '@/app/(marketplace)/hooks/useCurrencyFormatter';
@@ -244,6 +247,9 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
   const [showSuspendConfirmPopup, setShowSuspendConfirmPopup] = useState(false);
   const [puntiUpdate, setPuntiUpdate] = useState({ listingId: '', punti: '' });
   const [isUpdatingPunti, setIsUpdatingPunti] = useState(false);
+  const [roleChangeIdentifier, setRoleChangeIdentifier] = useState('');
+  const [roleChangeTargetRole, setRoleChangeTargetRole] = useState<'customer' | 'host' | 'promoter'>('customer');
+  const [isUpdatingUserRole, setIsUpdatingUserRole] = useState(false);
 
   const [puntiResult, setPuntiResult] = useState<{ added: number; total: number } | null>(null);
   const [currentListingPunti, setCurrentListingPunti] = useState<number | null>(null);
@@ -465,6 +471,37 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
       setShowSuspendConfirmPopup(false);
     }
   }, [moderSuspendUserId, resolveUserId]);
+
+  const handleUserRoleChange = useCallback(async () => {
+    const userId = await resolveUserId(roleChangeIdentifier, 'user');
+
+    if (!userId) {
+      toast.error('Please provide a user identifier.');
+      return;
+    }
+
+    setIsUpdatingUserRole(true);
+
+    try {
+      const response = await axios.post('/api/moderation/users/role', {
+        userId,
+        targetRole: roleChangeTargetRole,
+      });
+
+      const updatedRole = response.data?.user?.role ?? roleChangeTargetRole;
+      toast.success(`Updated user role to ${updatedRole}.`);
+      setRoleChangeIdentifier('');
+    } catch (error) {
+      const message = axios.isAxiosError(error)
+        ? typeof error.response?.data === 'string'
+          ? error.response?.data
+          : (error.response?.data as { error?: string })?.error || 'Failed to update user role.'
+        : 'Failed to update user role.';
+      toast.error(message);
+    } finally {
+      setIsUpdatingUserRole(false);
+    }
+  }, [resolveUserId, roleChangeIdentifier, roleChangeTargetRole]);
 
   const regionNames = useMemo(() => {
     try {
@@ -1802,6 +1839,54 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
             >
               {isUpdatingPunti ? 'Adding…' : 'Add punti'}
             </button>
+
+            <div className="mt-6 space-y-4 border-t border-neutral-200/70 pt-6">
+              <div>
+                <h3 className="text-base font-semibold text-black">Change User Role</h3>
+                <p className="text-sm text-neutral-600">
+                  Switch a user between customer, host, or promoter by entering their username, email, or user ID.
+                </p>
+              </div>
+              <input
+                type="text"
+                placeholder="Enter username, email, or userId"
+                value={roleChangeIdentifier}
+                onChange={(event) => setRoleChangeIdentifier(event.target.value)}
+                className="w-full p-2 border rounded-xl"
+              />
+              <div className="flex flex-wrap gap-2">
+                {([
+                  { key: 'customer' as const, icon: <GiWingfoot size={14} />, label: 'Customer' },
+                  { key: 'host' as const, icon: <BsPlugin size={14} />, label: 'Host' },
+                  { key: 'promoter' as const, icon: <PiBarcode size={14} />, label: 'Promoter' },
+                ]).map(({ key, icon, label }) => {
+                  const isSelected = roleChangeTargetRole === key;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setRoleChangeTargetRole(key)}
+                      className={clsx(
+                        'inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold shadow-sm transition',
+                        isSelected
+                          ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-blue-200'
+                          : 'border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300 hover:text-neutral-900'
+                      )}
+                    >
+                      <span className="text-sm">{icon}</span>
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                onClick={handleUserRoleChange}
+                disabled={isUpdatingUserRole}
+                className="w-full rounded-xl bg-neutral-900 px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isUpdatingUserRole ? 'Updating…' : 'Update role'}
+              </button>
+            </div>
           </div>
 
           <div className="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-neutral-200/60">

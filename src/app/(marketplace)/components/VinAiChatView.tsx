@@ -779,7 +779,7 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
           </div>
           )}
 
-        <div className="flex flex-wrap gap-2 text-xs text-neutral-600">
+        {/* <div className="flex flex-wrap gap-2 text-xs text-neutral-600">
           {quickPrompts.map((prompt) => (
             <button
               key={prompt}
@@ -790,7 +790,7 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
               {prompt}
             </button>
           ))}
-        </div>
+        </div> */}
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -827,7 +827,7 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
             }}
             disabled={isRecording}
           />
-          <button
+          {/* <button
             type="button"
             onClick={startSpeechToText}
             className={clsx(
@@ -838,7 +838,7 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
             disabled={isRecording || isSending || isSendingVoice}
           >
             <HiMiniMicrophone className={clsx(isListening && 'animate-pulse')} />
-          </button>
+          </button> */}
           <button
             type="button"
             onMouseDown={scheduleRecording}

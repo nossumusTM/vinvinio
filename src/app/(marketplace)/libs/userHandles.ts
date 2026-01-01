@@ -76,9 +76,23 @@ export const findUserIdByHandle = async (
     },
   });
 
+  or.push({
+    email: {
+      equals: sanitized,
+      mode: 'insensitive',
+    },
+  });
+
   if (sanitized !== base) {
     or.push({
       username: {
+        equals: base,
+        mode: 'insensitive',
+      },
+    });
+    
+    or.push({
+      email: {
         equals: base,
         mode: 'insensitive',
       },
