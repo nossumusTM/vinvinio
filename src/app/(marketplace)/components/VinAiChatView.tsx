@@ -23,10 +23,6 @@ interface VinAiChatViewProps {
 
 const quickPrompts = ['Where?', 'When?', 'Who?', 'Show listings'];
 
-const uploadPreset = 'vuolapreset';
-const cloudName = 'dlomv0hbe';
-const MAX_UPLOAD_SIZE = 5 * 1024 * 1024;
-
 const formatSeconds = (seconds: number) => {
   const mins = Math.floor(seconds / 60);
   const secs = Math.max(0, Math.floor(seconds % 60));
@@ -253,37 +249,14 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
   const { openChat } = useMessenger();
   const [input, setInput] = useState('');
   const [isListening, setIsListening] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
-  const [isSendingVoice, setIsSendingVoice] = useState(false);
-  const [recordingStart, setRecordingStart] = useState<number | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [typedMessageIds, setTypedMessageIds] = useState<string[]>([]);
   const hasSeededTyping = useRef(false);
   const speechRecognitionRef = useRef<SpeechRecognition | null>(null);
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
+  
   const recordTriggerRef = useRef<NodeJS.Timeout | null>(null);
-  const recordingActivatedRef = useRef(false);
-
-  const uploadToCloudinary = async (file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', uploadPreset);
-
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
-      method: 'POST',
-      body: formData,
-    });
-
-    const data = await res.json();
-    if (!res.ok || !data?.secure_url) {
-      throw new Error('Upload failed');
-    }
-
-    return data.secure_url as string;
-  };
 
   useEffect(() => {
     init();
@@ -364,100 +337,25 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
     setInput((prev) => `${prev}${e?.native ?? e?.shortcodes ?? ''}`);
   };
 
-  const startVoiceRecording = async () => {
-    if (!navigator.mediaDevices?.getUserMedia) {
-      toast.error('Voice recording is not supported on this device.');
-      return;
-    }
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
-      audioChunksRef.current = [];
-
-    recorder.ondataavailable = (event: BlobEvent) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
-
-      recorder.onstop = () => {
-        stream.getTracks().forEach((track) => track.stop());
-      };
-
-      mediaRecorderRef.current = recorder;
-      recordingActivatedRef.current = true;
-      setIsRecording(true);
-      setRecordingStart(Date.now());
-      recorder.start();
-    } catch (error) {
-      console.error('Recording error:', error);
-      toast.error('Unable to start voice recording.');
-      recordingActivatedRef.current = false;
-    }
-  };
-
-  const stopVoiceRecording = async () => {
-    const recorder = mediaRecorderRef.current;
-    if (!recorder || !recordingActivatedRef.current) return;
-
-    setIsRecording(false);
-    recordingActivatedRef.current = false;
-
-    const stopped = new Promise<void>((resolve) => {
-      recorder.onstop = () => {
-        recorder.stream.getTracks().forEach((track) => track.stop());
-        resolve();
-      };
-    });
-
-    recorder.stop();
-    await stopped;
-
-    const durationMs = recordingStart ? Date.now() - recordingStart : 0;
-    const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-    audioChunksRef.current = [];
-
-    if (blob.size === 0) return;
-
-    if (blob.size > MAX_UPLOAD_SIZE) {
-      toast.error('Voice note is too large (max 5MB).');
-      return;
-    }
-
-    const file = new File([blob], `voice-${Date.now()}.webm`, { type: 'audio/webm' });
-
-    setIsSendingVoice(true);
-    try {
-      const url = await uploadToCloudinary(file);
-      await sendMessage('Voice message', { audioUrl: url, audioDurationMs: durationMs });
-    } catch (error) {
-      console.error('Failed to send voice message:', error);
-      toast.error('Could not send voice message.');
-    } finally {
-      setIsSendingVoice(false);
-    }
-  };
-
-  const scheduleRecording = () => {
+  const scheduleSpeechToText = () => {
     if (recordTriggerRef.current) clearTimeout(recordTriggerRef.current);
     recordTriggerRef.current = setTimeout(() => {
-      startVoiceRecording();
+      startSpeechToText();
     }, 350);
   };
 
-  const cancelScheduledRecording = (shouldStop?: boolean) => {
+  const cancelScheduledSpeechToText = (shouldStop?: boolean) => {
     if (recordTriggerRef.current) {
       clearTimeout(recordTriggerRef.current);
       recordTriggerRef.current = null;
     }
-    if (shouldStop && (isRecording || recordingActivatedRef.current)) {
-      stopVoiceRecording();
+    if (shouldStop && isListening) {
+      stopSpeechToText();
     }
   };
 
   const startSpeechToText = () => {
-    if (isListening || isRecording || isSending || isSendingVoice) return;
+    if (isListening || isSending) return;
     const SpeechRecognitionCtor =
       window.SpeechRecognition ?? window.webkitSpeechRecognition;
 
@@ -496,6 +394,12 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
     speechRecognitionRef.current = recognition;
     setIsListening(true);
     recognition.start();
+  };
+
+  const stopSpeechToText = () => {
+    const recognition = speechRecognitionRef.current;
+    if (!recognition) return;
+    recognition.stop();
   };
 
   const handleListingClick = (title: string) => {
@@ -749,15 +653,15 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
 
       <div className="space-y-4 border-t bg-white px-4 py-3 shadow-inner">
         <div className="flex items-center justify-between text-[11px] text-neutral-500 px-1">
-          <span className="font-medium text-neutral-700">Hold the send button to record a voice note.</span>
-          {(isRecording || isSendingVoice || isSending) && (
+          <span className="font-medium text-neutral-700">Hold the send button to speak (speech-to-text).</span>
+          {(isListening || isSending) && (
             <span className="flex items-center gap-2 text-blue-600 font-semibold">
-              {isRecording ? 'Recording…' : isSendingVoice ? 'Sending voice…' : 'Sending…'}
+              {isListening ? 'Listening…' : 'Sending…'}
             </span>
           )}
         </div>
 
-        {isRecording && (
+        {isListening && (
           <div className="flex items-center gap-3 rounded-2xl border border-blue-200/70 bg-white/70 px-3 py-2 shadow-[0_0_25px_rgba(54,4,255,0.2)]">
             <div className="relative h-10 w-10">
               <span className="absolute inset-0 rounded-full bg-blue-500/20 animate-ping" />
@@ -767,17 +671,11 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
               </span>
             </div>
             <div className="flex flex-col text-sm text-blue-800">
-              <span className="font-semibold">Recording voice…</span>
-              <span className="text-[11px] text-blue-700/80">Release to send your voice message.</span>
+              <span className="font-semibold">Listening…</span>
+              <span className="text-[11px] text-blue-700/80">Release to send your message.</span>
             </div>
           </div>
         )}
-
-        {isSendingVoice && !isRecording && (
-          <div className="text-xs text-blue-700 flex items-center gap-2 px-1">
-            <HiMiniMicrophone className="animate-pulse" /> Uploading voice note…
-          </div>
-          )}
 
         {/* <div className="flex flex-wrap gap-2 text-xs text-neutral-600">
           {quickPrompts.map((prompt) => (
@@ -825,7 +723,7 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
                 handleSend();
               }
             }}
-            disabled={isRecording}
+            disabled={isListening}
           />
           {/* <button
             type="button"
@@ -841,25 +739,25 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
           </button> */}
           <button
             type="button"
-            onMouseDown={scheduleRecording}
-            onMouseUp={() => cancelScheduledRecording(true)}
-            onMouseLeave={() => cancelScheduledRecording(isRecording || recordingActivatedRef.current)}
-            onTouchStart={scheduleRecording}
-            onTouchEnd={() => cancelScheduledRecording(true)}
+            onMouseDown={scheduleSpeechToText}
+            onMouseUp={() => cancelScheduledSpeechToText(true)}
+            onMouseLeave={() => cancelScheduledSpeechToText(isListening)}
+            onTouchStart={scheduleSpeechToText}
+            onTouchEnd={() => cancelScheduledSpeechToText(true)}
             onClick={() => {
-              if (recordingActivatedRef.current || isRecording) return;
+              if (isListening) return;
               handleSend();
             }}
             className={clsx(
               'flex h-10 w-10 items-center justify-center rounded-full transition shadow-sm',
-              isRecording
+              isListening
                 ? 'bg-blue-600 text-white shadow-[0_0_18px_rgba(54,4,255,0.5)]'
                 : 'bg-neutral-900 text-white hover:bg-neutral-800'
             )}
             aria-label="Send or hold to record"
-            disabled={isSendingVoice || isSending}
+            disabled={isSending}
           >
-            {isRecording ? <span className="text-lg">●</span> : <TbArrowElbowRight size={20} />}
+            {isListening ? <span className="text-lg">●</span> : <TbArrowElbowRight size={20} />}
           </button>
         </form>
       </div>

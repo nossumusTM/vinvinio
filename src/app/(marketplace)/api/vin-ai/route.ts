@@ -109,6 +109,14 @@ interface RequestMessage {
   content: string;
 }
 
+interface MemoryPayload {
+  location?: string | null;
+  category?: string | null;
+  dateRange?: { startDate?: string; endDate?: string } | null;
+  guestCount?: number | null;
+  keywords?: string[];
+}
+
 const CATEGORY_MATCHERS = [
   { label: 'Adventure & Outdoor', keywords: ['adventure', 'outdoor', 'hike', 'hiking', 'trek', 'camp'] },
   { label: 'Nature & Wildlife', keywords: ['nature', 'wildlife', 'safari', 'forest', 'eco'] },
@@ -244,6 +252,9 @@ const NUMBER_WORDS: Record<string, number> = {
   eleven: 11,
   twelve: 12,
 };
+
+const numberFromWord = (value?: string) =>
+  value ? NUMBER_WORDS[value.toLowerCase()] ?? Number(value) : undefined;
 
 const normalizeYear = (value?: string) => {
   if (!value) return null;
@@ -415,8 +426,6 @@ const extractLocation = (text: string) => {
 const extractGuestCount = (text: string) => {
 
   const normalized = text.toLowerCase();
-  const numberFromWord = (value?: string) =>
-    value ? NUMBER_WORDS[value.toLowerCase()] ?? Number(value) : undefined;
 
   if (/\b(solo|alone|by myself|just me|only me)\b/.test(normalized)) return 1;
   if (/\b(couple|my partner|my husband|my wife|my boyfriend|my girlfriend)\b/.test(normalized)) return 2;
@@ -458,6 +467,19 @@ const extractGuestCount = (text: string) => {
   return null;
 };
 
+const parseStandaloneGuestCount = (text: string) => {
+  const trimmed = text.trim().toLowerCase();
+  if (!trimmed) return null;
+  if (/^\d{1,2}$/.test(trimmed)) return Number(trimmed);
+  if (/^(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)$/.test(trimmed)) {
+    return numberFromWord(trimmed) ?? null;
+  }
+  return null;
+};
+
+const isGuestCountPrompt = (text: string) =>
+  /\b(guest|guests|people|persons|travellers|travelers|adults|party|group|family|how many|how much)\b/i.test(text);
+
 const extractCategory = (text: string) => {
   const lower = text.toLowerCase();
   const match = CATEGORY_MATCHERS.find((category) =>
@@ -473,6 +495,7 @@ const buildFollowUpReply = (params: {
   greeting?: string;
   missing: string[];
   categoryHint?: string | null;
+  knownFields?: string[];
 }) => {
   const focusLine = params.categoryHint
     ? `I can tailor it within "${params.categoryHint}" or something else you prefer.`
@@ -482,13 +505,18 @@ const buildFollowUpReply = (params: {
     location: 'Your country/region or city (or tap “Use my location”).',
     category: `What kind of experience are you looking for? ${focusLine}`,
     dates: 'Your dates (e.g., Jan 7 to Jan 10 2026) so I can check availability.',
-    guests: 'How many people are traveling (solo, with a friend, family of four, etc.).',
+    guests: 'How many people are traveling (solo, with a friend, family of four, etc.). You can reply with just a number.',
   };
 
+  const knownLine =
+    params.knownFields && params.knownFields.length > 0
+      ? `I’ve saved: ${params.knownFields.join(', ')}.`
+      : null;
   const missingLines = params.missing.map((key) => `• ${prompts[key]}`).join('\n');
 
   return [
     params.greeting,
+    knownLine,
     '## To curate the best matches, I just need a few details:',
     missingLines,
     '',
@@ -522,6 +550,27 @@ const buildKeywordWhere = (keywords: string[]) => {
       { locationType: { hasSome: keywords } },
       { durationCategory: { in: keywords } },
       ...textMatches,
+    ],
+  };
+};
+
+const buildCategoryWhere = (category: string | null) => {
+  if (!category) return {};
+  return {
+    OR: [
+      { primaryCategory: { equals: category, mode: 'insensitive' as const } },
+      { category: { has: category } },
+    ],
+  };
+};
+
+const buildLocationWhere = (location: string | null) => {
+  if (!location) return {};
+  return {
+    OR: [
+      { locationValue: { contains: location, mode: 'insensitive' as const } },
+      { locationDescription: { contains: location, mode: 'insensitive' as const } },
+      { meetingPoint: { contains: location, mode: 'insensitive' as const } },
     ],
   };
 };
@@ -564,8 +613,35 @@ const buildListingBadge = (listing: {
   listing.durationCategory ||
   'Featured';
 
+const normalizeMemory = (memory?: MemoryPayload) => {
+  if (!memory) return { location: null, category: null, dateRange: null, guestCount: null, keywords: [] };
+  const dateRange =
+    memory.dateRange?.startDate && memory.dateRange?.endDate
+      ? {
+          startDate: new Date(memory.dateRange.startDate),
+          endDate: new Date(memory.dateRange.endDate),
+        }
+      : null;
+  const safeDateRange =
+    dateRange &&
+    !Number.isNaN(dateRange.startDate.getTime()) &&
+    !Number.isNaN(dateRange.endDate.getTime())
+      ? dateRange
+      : null;
+  return {
+    location: memory.location ?? null,
+    category: memory.category ?? null,
+    dateRange: safeDateRange,
+    guestCount: typeof memory.guestCount === 'number' ? memory.guestCount : null,
+    keywords: Array.isArray(memory.keywords) ? memory.keywords : [],
+  };
+};
+
 export async function POST(request: Request) {
-  const { messages } = (await request.json()) as { messages?: RequestMessage[] };
+const { messages, memory } = (await request.json()) as {
+    messages?: RequestMessage[];
+    memory?: MemoryPayload;
+  };
 
   if (!messages || !Array.isArray(messages) || messages.length === 0) {
     return NextResponse.json({
@@ -580,6 +656,12 @@ export async function POST(request: Request) {
 
   const hfToken = process.env.HF_TOKEN?.trim() || process.env.HUGGINGFACE_API_KEY?.trim();
 
+  const existingMemory = normalizeMemory(memory);
+  const lastUserMessage = [...normalizedMessages].reverse().find((message) => message.role === 'user');
+  const lastAssistantMessage = [...normalizedMessages]
+    .reverse()
+    .find((message) => message.role === 'assistant');
+
   const conversationText = normalizedMessages
     .filter((message) => message.role === 'user')
     .map((message) => message.content)
@@ -589,30 +671,68 @@ export async function POST(request: Request) {
   const guestCount = extractGuestCount(conversationText);
   const location = extractLocation(conversationText);
   const matchedCategory = extractCategory(conversationText);
+  const standaloneGuestCount =
+    lastUserMessage && lastAssistantMessage && isGuestCountPrompt(lastAssistantMessage.content)
+      ? parseStandaloneGuestCount(lastUserMessage.content)
+      : null;
+  const resolvedLocation = location ?? existingMemory.location;
+  const resolvedCategory = matchedCategory ?? existingMemory.category;
+  const resolvedDateRange = dateRange ?? existingMemory.dateRange;
+  const resolvedGuestCount = guestCount ?? standaloneGuestCount ?? existingMemory.guestCount;
+  const resolvedKeywords = Array.from(new Set([...existingMemory.keywords, ...keywords]));
   const missingFields: string[] = [];
 
-  if (!location) missingFields.push('location');
-  if (!matchedCategory) missingFields.push('category');
-  if (!dateRange) missingFields.push('dates');
-  if (!guestCount) missingFields.push('guests');
+  if (!resolvedLocation) missingFields.push('location');
+  if (!resolvedCategory) missingFields.push('category');
+  if (!resolvedDateRange) missingFields.push('dates');
+  if (!resolvedGuestCount) missingFields.push('guests');
 
   const criteriaMet = missingFields.length === 0;
 
+  const memorySnapshot = {
+    location: resolvedLocation,
+    category: resolvedCategory,
+    dateRange: resolvedDateRange
+      ? {
+          startDate: resolvedDateRange.startDate.toISOString(),
+          endDate: resolvedDateRange.endDate.toISOString(),
+        }
+      : null,
+    guestCount: resolvedGuestCount,
+    keywords: resolvedKeywords,
+  };
+
   if (!criteriaMet) {
     return NextResponse.json({
-      reply: buildFollowUpReply({ missing: missingFields, categoryHint: matchedCategory }),
+      reply: buildFollowUpReply({
+        missing: missingFields,
+        categoryHint: resolvedCategory,
+        knownFields: [
+          resolvedLocation ? `Location: ${resolvedLocation}` : null,
+          resolvedCategory ? `Category: ${resolvedCategory}` : null,
+          resolvedDateRange
+            ? `Dates: ${resolvedDateRange.startDate.toISOString().slice(0, 10)} → ${resolvedDateRange.endDate
+                .toISOString()
+                .slice(0, 10)}`
+            : null,
+          resolvedGuestCount ? `Guests: ${resolvedGuestCount}` : null,
+        ].filter(Boolean) as string[],
+      }),
       recommendations: [],
       criteriaMet,
       missingFields,
+      memory: memorySnapshot,
     });
   }
 
   const listings = await prisma.listing.findMany({
     where: {
       status: 'approved',
-      ...buildKeywordWhere(keywords),
-      ...buildAvailabilityWhere(dateRange),
-      ...buildGuestWhere(guestCount),
+      ...buildKeywordWhere(resolvedKeywords),
+      ...buildCategoryWhere(resolvedCategory),
+      ...buildLocationWhere(resolvedLocation),
+      ...buildAvailabilityWhere(resolvedDateRange),
+      ...buildGuestWhere(resolvedGuestCount),
     },
     orderBy: [{ punti: 'desc' }, { likesCount: 'desc' }, { createdAt: 'desc' }],
     take: 5,
@@ -633,10 +753,11 @@ export async function POST(request: Request) {
 
   if (!hfToken) {
     return NextResponse.json({
-      reply: `Thanks! I will check availability for ${location} on ${dateRange?.startDate.toISOString().slice(0, 10)} → ${dateRange?.endDate.toISOString().slice(0, 10)} for ${guestCount} guests and rank the best-reviewed listings.`,
+      reply: `Thanks! I will check availability for ${resolvedLocation} on ${resolvedDateRange?.startDate.toISOString().slice(0, 10)} → ${resolvedDateRange?.endDate.toISOString().slice(0, 10)} for ${resolvedGuestCount} guests and rank the best-reviewed listings.`,
       recommendations,
       criteriaMet,
       missingFields,
+      memory: memorySnapshot,
     });
   }
 
@@ -658,7 +779,7 @@ export async function POST(request: Request) {
           {
             role: 'system',
             content:
-              `You are AI Force, a sales representative for a multibrand travel marketplace called Vuola. Keep responses business-only. Confirm the customer's country/region (${location}), category (${matchedCategory}), travel date(s), and guest count. Explain that you will check availability and rank listings by reviews. Offer concise bullet points and avoid off-topic replies.`,
+              `You are AI Force, a sales representative for a multibrand travel marketplace called Vuola. Keep responses business-only. Confirm the customer's country/region (${resolvedLocation}), category (${resolvedCategory}), travel date(s), and guest count. Explain that you will check availability and rank listings by reviews. Offer concise bullet points and avoid off-topic replies.`,
           },
           {
             role: 'assistant',
@@ -685,7 +806,7 @@ export async function POST(request: Request) {
           : 'I could not reach the AI model. Please try again in a moment.';
 
       return NextResponse.json(
-        { reply, recommendations, criteriaMet, missingFields },
+        { reply, recommendations, criteriaMet, missingFields, memory: memorySnapshot },
         { status: 200 },
       );
     }
@@ -695,7 +816,7 @@ export async function POST(request: Request) {
       data?.choices?.[0]?.message?.content ??
       'Ask me anything about your next stay and I will tailor the results.';
 
-    return NextResponse.json({ reply, recommendations, criteriaMet, missingFields });
+    return NextResponse.json({ reply, recommendations, criteriaMet, missingFields, memory: memorySnapshot });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('AI Force (HF Router) request failed', message);
@@ -705,6 +826,7 @@ export async function POST(request: Request) {
         recommendations,
         criteriaMet,
         missingFields,
+        memory: memorySnapshot,
       },
       { status: 200 },
     );
