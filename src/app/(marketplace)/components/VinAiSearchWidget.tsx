@@ -844,7 +844,7 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
   return (
      <>
       <div className="space-y-3">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <div className="flex h-9 w-9 aspect-square items-center justify-center rounded-xl bg-gradient-to-br from-white via-slate-50 to-sky-50 to-white text-[#2200ffff]">
             <LuRocket className="h-4 w-4" />

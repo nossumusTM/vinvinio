@@ -954,7 +954,7 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
               <LuRocket className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1 space-y-3 rounded-2xl bg-white px-4 py-3 shadow-sm">
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex md:flex-row flex-col items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-sm font-semibold text-neutral-700">
                   Curated for you
                   <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-500">Swipe</span>

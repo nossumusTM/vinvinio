@@ -660,24 +660,22 @@ const buildLocationWhere = (location: string | null) => {
     .split(',')
     .map((part) => part.trim())
     .filter(Boolean);
+    const baseFilters = [
+    { locationValue: { contains: location, mode: 'insensitive' as const } },
+    { locationDescription: { contains: location, mode: 'insensitive' as const } },
+    { meetingPoint: { contains: location, mode: 'insensitive' as const } },
+  ];
   if (parts.length > 1) {
+    const partFilters = parts.flatMap((part) => [
+      { locationValue: { contains: part, mode: 'insensitive' as const } },
+      { locationDescription: { contains: part, mode: 'insensitive' as const } },
+      { meetingPoint: { contains: part, mode: 'insensitive' as const } },
+    ]);
     return {
-      AND: parts.map((part) => ({
-        OR: [
-          { locationValue: { contains: part, mode: 'insensitive' as const } },
-          { locationDescription: { contains: part, mode: 'insensitive' as const } },
-          { meetingPoint: { contains: part, mode: 'insensitive' as const } },
-        ],
-      })),
+            OR: [...baseFilters, ...partFilters],
     };
   }
-  return {
-    OR: [
-      { locationValue: { contains: location, mode: 'insensitive' as const } },
-      { locationDescription: { contains: location, mode: 'insensitive' as const } },
-      { meetingPoint: { contains: location, mode: 'insensitive' as const } },
-    ],
-  };
+    return { OR: baseFilters };
 };
 
 const buildAvailabilityWhere = (range: DateRange | null) => {
