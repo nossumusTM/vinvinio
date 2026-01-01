@@ -134,8 +134,6 @@ const CATEGORY_MATCHERS = [
   { label: 'Romantic & Special Occasions', keywords: ['romantic', 'honeymoon', 'anniversary', 'proposal'] },
 ];
 
-const CATEGORY_SUGGESTIONS = CATEGORY_MATCHERS.map((category) => category.label);
-
 const COUNTRY_MATCHERS = [
   ...countries.map((country) => ({
     name: country.name.common,
@@ -583,9 +581,6 @@ const extractCategory = (text: string) => {
   return match?.label ?? null;
 };
 
-const formatOptionList = (values: string[], max = 6) =>
-  values.slice(0, max).join(', ');
-
 const buildFollowUpReply = (params: {
   greeting?: string;
   missing: string[];
@@ -790,8 +785,6 @@ export async function POST(request: Request) {
     .map((m) => ({ role: m.role, content: m.content }))
     .slice(-18);
 
-  const hfToken = process.env.HF_TOKEN?.trim() || process.env.HUGGINGFACE_API_KEY?.trim();
-
   const existingMemory = normalizeMemory(memory);
   const lastUserMessage = [...normalizedMessages].reverse().find((message) => message.role === 'user');
   const lastAssistantMessage = [...normalizedMessages]
@@ -858,12 +851,10 @@ export async function POST(request: Request) {
     });
   }
 
-  const baseOrderBy = [{ punti: 'desc' }, { likesCount: 'desc' }, { createdAt: 'desc' }] as const;
   const fetchListings = async (where: Record<string, unknown>) =>
     prisma.listing.findMany({
       where,
-      // orderBy: baseOrderBy,
-      take: 5,
+      take: 8,
     });
 
   type ListingsTier =
@@ -872,7 +863,6 @@ export async function POST(request: Request) {
     | 'noGuests'
     | 'noCategory'
     | 'locationOnly'
-    | 'fallback';
 
   let listingsTier: ListingsTier = 'strict';
 
@@ -925,12 +915,7 @@ export async function POST(request: Request) {
         ...buildLocationWhere(resolvedLocation),
       },
     },
-    {
-      tier: 'fallback',
-      where: {
-        status: 'approved',
-      },
-    },
+    
   ];
 
   let matchedListings: Awaited<ReturnType<typeof fetchListings>> = [];
@@ -948,7 +933,40 @@ export async function POST(request: Request) {
     }
   }
 
-  const recommendations = matchedListings.map((listing) => {
+const scoreListing = (listing: (typeof matchedListings)[number]) => {
+    let score = 0;
+    const lowerKeywords = resolvedKeywords.map((keyword) => keyword.toLowerCase());
+    const title = (listing.title ?? '').toLowerCase();
+    const description = (listing.description ?? '').toLowerCase();
+    const locationValue = (listing.locationValue ?? '').toLowerCase();
+    const categories = [
+      listing.primaryCategory,
+      ...(Array.isArray(listing.category) ? listing.category : listing.category ? [listing.category] : []),
+    ]
+      .filter(Boolean)
+      .map((value) => value!.toLowerCase());
+
+    if (resolvedCategory && categories.includes(resolvedCategory.toLowerCase())) score += 5;
+    if (resolvedLocation && locationValue.includes(resolvedLocation.toLowerCase())) score += 4;
+
+    lowerKeywords.forEach((keyword) => {
+      if (title.includes(keyword)) score += 2;
+      if (description.includes(keyword)) score += 1;
+      if (locationValue.includes(keyword)) score += 1;
+    });
+
+    if (resolvedGuestCount && listing.guestCount && listing.guestCount >= resolvedGuestCount) {
+      score += 1;
+    }
+
+    return score;
+  };
+
+  const bestListing = matchedListings
+    .map((listing) => ({ listing, score: scoreListing(listing) }))
+    .sort((a, b) => b.score - a.score)[0]?.listing;
+
+  const recommendations = (bestListing ? [bestListing] : []).map((listing) => {
     const rawCategory = Array.isArray(listing.category) ? listing.category[0] : listing.category;
     return {
       id: listing.id,
@@ -982,100 +1000,17 @@ export async function POST(request: Request) {
       ? `I couldn’t find an exact category match, but these experiences align with your location and keywords.`
       : listingsTier === 'locationOnly'
       ? `I couldn’t match the full criteria, but these are top experiences in ${resolvedLocation}.`
-      : listingsTier === 'fallback'
-      ? 'Here are the most popular Vuola experiences to explore.'
       : '';
 
-  if (!hfToken) {
-    return NextResponse.json({
-      reply:
-        availabilityNote ||
-        `Thanks! I will check availability for ${resolvedLocation} on ${formatDateRangeLabel(
-          resolvedDateRange,
-        )} for ${resolvedGuestCount} guests and rank the best-reviewed listings.`,
-      recommendations,
-      criteriaMet,
-      missingFields,
-      memory: memorySnapshot,
-    });
-  }
-
-  // Pick a router-compatible chat model.
-  // Docs examples show using model IDs like "moonshotai/Kimi-K2-Instruct-0905". :contentReference[oaicite:5]{index=5}
-  // Another docs example references "openai/gpt-oss-120b" (open-weights conversational). :contentReference[oaicite:6]{index=6}
-  const model = process.env.HF_CHAT_MODEL?.trim() || 'openai/gpt-oss-120b';
-
-  try {
-    const res = await fetch('https://router.huggingface.co/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${hfToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          {
-            role: 'system',
-            content:
-              `You are AI Force, a sales representative for a multibrand travel marketplace called Vuola. Keep responses business-only. Confirm the customer's country/region (${resolvedLocation}), category (${resolvedCategory}), travel date(s), and guest count. Explain that you will check availability and rank listings by reviews. Offer concise bullet points and avoid off-topic replies.`,
-          },
-          {
-            role: 'assistant',
-            content: `Structured categories include: Categories (${formatOptionList(CATEGORY_SUGGESTIONS)}), Group styles (${formatOptionList(
-              GROUP_STYLE_OPTIONS.map((option) => option.label),
-            )}), Environments (${formatOptionList(ENVIRONMENT_OPTIONS.map((option) => option.label))}), Duration (${formatOptionList(
-              DURATION_OPTIONS.map((option) => option.label),
-            )}), Activity forms (${formatOptionList(ACTIVITY_FORM_OPTIONS.map((option) => option.label))}).`,
-          },
-          ...normalizedMessages,
-        ],
-        temperature: 0.5,
-        max_tokens: 420,
-      }),
-    });
-
-    if (!res.ok) {
-      const errorText = await res.text();
-      console.error('AI Force (HF Router) request failed', { status: res.status, errorText });
-
-      const reply =
-        res.status === 429
-          ? 'AI Force is at capacity right now. Please try again soon.'
-          : 'I could not reach the AI model. Please try again in a moment.';
-
-      return NextResponse.json(
-        { reply, recommendations, criteriaMet, missingFields, memory: memorySnapshot },
-        { status: 200 },
-      );
-    }
-
-    const data = await res.json();
-    const reply =
-      data?.choices?.[0]?.message?.content ??
-      'Ask me anything about your next stay and I will tailor the results.';
-
-    const mergedReply = availabilityNote ? `${availabilityNote}\n\n${reply}` : reply;
-
-    return NextResponse.json({
-      reply: mergedReply,
-      recommendations,
-      criteriaMet,
-      missingFields,
-      memory: memorySnapshot,
-    });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('AI Force (HF Router) request failed', message);
-    return NextResponse.json(
-{
-        reply: 'I could not reach the AI model. Please try again in a moment.',
-        recommendations,
-        criteriaMet,
-        missingFields,
-        memory: memorySnapshot,
-      },
-      { status: 200 },
-    );
-  }
+  return NextResponse.json({
+    reply:
+      availabilityNote ||
+      `Thanks! I will check availability for ${resolvedLocation} on ${formatDateRangeLabel(
+        resolvedDateRange,
+      )} for ${resolvedGuestCount} guests and rank the best-reviewed listings.`,
+    recommendations,
+    criteriaMet,
+    missingFields,
+    memory: memorySnapshot,
+  });
 }

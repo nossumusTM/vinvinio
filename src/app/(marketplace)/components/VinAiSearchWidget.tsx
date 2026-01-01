@@ -293,6 +293,12 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
     date: false,
     guests: false,
   });
+  const [detailEdits, setDetailEdits] = useState({
+    location: '',
+    category: '',
+    dates: '',
+    guests: '',
+  });
   const router = useRouter();
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -374,6 +380,15 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
     const end = memory.dateRange.endDate?.slice(0, 10) ?? start;
     return start === end ? start : `${start} → ${end}`;
   }, [memory]);
+
+  useEffect(() => {
+    setDetailEdits({
+      location: memory?.location ?? '',
+      category: memory?.category ?? '',
+      dates: formattedDateRange ?? '',
+      guests: memory?.guestCount ? String(memory.guestCount) : '',
+    });
+  }, [memory?.category, memory?.guestCount, memory?.location, formattedDateRange]);
 
   const guidedStep = useMemo(() => {
     if (!guidedProgress.location) return 'location';
@@ -632,6 +647,37 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
       router.push(target);
     }
     setSelectedListing(null);
+  };
+
+  const handleDetailSubmit = async (field: keyof typeof detailEdits) => {
+    const rawValue = detailEdits[field].trim();
+    if (!rawValue) return;
+
+    if (field === 'guests') {
+      const count = Number(rawValue);
+      if (!Number.isFinite(count) || count < 1) {
+        toast.error('Please enter a valid guest count.');
+        return;
+      }
+      if (memory?.guestCount && Number(memory.guestCount) === Math.floor(count)) return;
+      await handleSend(`Guest count: ${Math.floor(count)}.`);
+      return;
+    }
+
+    const labelMap: Record<Exclude<keyof typeof detailEdits, 'guests'>, string> = {
+      location: 'Location',
+      category: 'Category',
+      dates: 'Travel dates',
+    };
+    const currentValueMap: Record<Exclude<keyof typeof detailEdits, 'guests'>, string> = {
+      location: memory?.location ?? '',
+      category: memory?.category ?? '',
+      dates: formattedDateRange ?? '',
+    };
+
+    if (rawValue === currentValueMap[field]) return;
+
+    await handleSend(`${labelMap[field]}: ${rawValue}.`);
   };
 
   const renderMessageContent = (message: AiMessage) => {
@@ -902,29 +948,79 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
                 Ready
               </span>
             </div>
-            <div className="mt-3 grid gap-2 text-[11px] text-neutral-600 sm:grid-cols-2">
+            <div className="mt-4 grid grid-cols-2 gap-3 text-[11px] text-neutral-600">
               {memory.location && (
-                <div className="rounded-xl bg-neutral-50 px-3 py-2">
+                <div className="rounded-2xl border border-sky-100 bg-sky-50/70 px-3 py-2 shadow-sm transition focus-within:border-sky-200 focus-within:ring-2 focus-within:ring-sky-100">
                   <p className="text-[10px] uppercase tracking-wide text-neutral-400">Location</p>
-                  <p className="font-semibold text-neutral-800">{memory.location}</p>
+                  <input
+                    value={detailEdits.location}
+                    onChange={(event) => setDetailEdits((prev) => ({ ...prev, location: event.target.value }))}
+                    onBlur={() => handleDetailSubmit('location')}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') {
+                        event.preventDefault();
+                        handleDetailSubmit('location');
+                      }
+                    }}
+                    inputMode="text"
+                    className="mt-1 w-full bg-transparent text-xs font-semibold text-neutral-800 outline-none"
+                  />
                 </div>
               )}
               {memory.category && (
-                <div className="rounded-xl bg-neutral-50 px-3 py-2">
+                <div className="rounded-2xl border border-sky-100 bg-sky-50/70 px-3 py-2 shadow-sm transition focus-within:border-sky-200 focus-within:ring-2 focus-within:ring-sky-100">
                   <p className="text-[10px] uppercase tracking-wide text-neutral-400">Category</p>
-                  <p className="font-semibold text-neutral-800">{memory.category}</p>
+                  <input
+                    value={detailEdits.category}
+                    onChange={(event) => setDetailEdits((prev) => ({ ...prev, category: event.target.value }))}
+                    onBlur={() => handleDetailSubmit('category')}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') {
+                        event.preventDefault();
+                        handleDetailSubmit('category');
+                      }
+                    }}
+                    inputMode="text"
+                    className="mt-1 w-full bg-transparent text-xs font-semibold text-neutral-800 outline-none"
+                  />
                 </div>
               )}
               {formattedDateRange && (
-                <div className="rounded-xl bg-neutral-50 px-3 py-2">
+                <div className="rounded-2xl border border-sky-100 bg-sky-50/70 px-3 py-2 shadow-sm transition focus-within:border-sky-200 focus-within:ring-2 focus-within:ring-sky-100">
                   <p className="text-[10px] uppercase tracking-wide text-neutral-400">Dates</p>
-                  <p className="font-semibold text-neutral-800">{formattedDateRange}</p>
+                  <input
+                    value={detailEdits.dates}
+                    onChange={(event) => setDetailEdits((prev) => ({ ...prev, dates: event.target.value }))}
+                    onBlur={() => handleDetailSubmit('dates')}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') {
+                        event.preventDefault();
+                        handleDetailSubmit('dates');
+                      }
+                    }}
+                    inputMode="text"
+                    className="mt-1 w-full bg-transparent text-xs font-semibold text-neutral-800 outline-none"
+                  />
                 </div>
               )}
               {memory.guestCount && (
-                <div className="rounded-xl bg-neutral-50 px-3 py-2">
+                <div className="rounded-2xl border border-sky-100 bg-sky-50/70 px-3 py-2 shadow-sm transition focus-within:border-sky-200 focus-within:ring-2 focus-within:ring-sky-100">
                   <p className="text-[10px] uppercase tracking-wide text-neutral-400">Guests</p>
-                  <p className="font-semibold text-neutral-800">{memory.guestCount}</p>
+                  <input
+                    value={detailEdits.guests}
+                    onChange={(event) => setDetailEdits((prev) => ({ ...prev, guests: event.target.value }))}
+                    onBlur={() => handleDetailSubmit('guests')}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') {
+                        event.preventDefault();
+                        handleDetailSubmit('guests');
+                      }
+                    }}
+                    inputMode="numeric"
+                    type="number"
+                    min={1}
+                    className="mt-1 w-full bg-transparent text-xs font-semibold text-neutral-800 outline-none"
+                  />
                 </div>
               )}
             </div>
