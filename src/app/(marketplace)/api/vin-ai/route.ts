@@ -861,21 +861,23 @@ let listingsTier: 'strict' | 'noAvailability' | 'noGuests' | 'noCategory' | 'loc
   }
 
   if (!matchedListings.length) {
-    matchedListings = await prisma.listing.findMany({
-      where: {
-        status: 'approved',
-        ...buildKeywordWhere(resolvedKeywords),
-        ...buildLocationWhere(resolvedLocation),
-      },
-      orderBy: [{ punti: 'desc' }, { likesCount: 'desc' }, { createdAt: 'desc' }],
-      take: 5,
-    });
-    if (matchedListings.length) {
-      listingsTier = 'noCategory';
+    if (!resolvedCategory) {
+      matchedListings = await prisma.listing.findMany({
+        where: {
+          status: 'approved',
+          ...buildKeywordWhere(resolvedKeywords),
+          ...buildLocationWhere(resolvedLocation),
+        },
+        orderBy: [{ punti: 'desc' }, { likesCount: 'desc' }, { createdAt: 'desc' }],
+        take: 5,
+      });
+      if (matchedListings.length) {
+        listingsTier = 'noCategory';
+      }
     }
   }
 
-  if (!matchedListings.length) {
+  if (!matchedListings.length && !resolvedCategory) {
     matchedListings = await prisma.listing.findMany({
       where: {
         status: 'approved',
@@ -889,7 +891,7 @@ let listingsTier: 'strict' | 'noAvailability' | 'noGuests' | 'noCategory' | 'loc
     }
   }
 
-  if (!matchedListings.length) {
+  if (!matchedListings.length && !resolvedCategory) {
     matchedListings = await prisma.listing.findMany({
       where: {
         status: 'approved',
@@ -937,7 +939,7 @@ let listingsTier: 'strict' | 'noAvailability' | 'noGuests' | 'noCategory' | 'loc
       : listingsTier === 'locationOnly'
       ? `I couldn’t match the full criteria, but these are top experiences in ${resolvedLocation}.`
       : listingsTier === 'fallback'
-      ? 'I couldn’t match the exact destination, but here are the most popular Vuola experiences to explore.'
+      ? 'I couldn’t find exact matches for your full criteria yet, but here are the most popular Vuola experiences to explore.'
       : '';
 
   if (!hfToken) {

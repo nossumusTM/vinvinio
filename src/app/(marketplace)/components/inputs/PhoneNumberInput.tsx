@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FiChevronDown } from 'react-icons/fi';
 import { twMerge } from 'tailwind-merge';
 import Image from 'next/image';
@@ -67,6 +67,17 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
     );
   }, [countryOptions, countryCode]);
 
+  const [flagSrc, setFlagSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!selectedCountry?.value) {
+      setFlagSrc(null);
+      return;
+    }
+
+    setFlagSrc(`/flags/${selectedCountry.value.toLowerCase()}.svg`);
+  }, [selectedCountry?.value]);
+
   return (
     <div className="flex flex-col gap-2">
       <label htmlFor={inputId} className="text-sm font-medium text-neutral-700">
@@ -74,14 +85,15 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
       </label>
       <div className="flex flex-row gap-2 sm:flex-row">
        <div className="relative w-full sm:max-w-[180px]">
-        {selectedCountry && (
+        {selectedCountry && flagSrc && (
           <div className="pointer-events-none absolute left-3 top-1/2 flex -translate-y-1/2 items-center">
-            <img
-              src={`/images/flags/${selectedCountry.value.toLowerCase()}.svg`}
+            <Image
+              src={flagSrc}
               alt={selectedCountry.label}
               width={20}
               height={14}
-              className="rounded-sm h-4 w-6 object-cover"
+              className="h-4 w-6 rounded-sm object-cover"
+              onError={() => setFlagSrc('/flags/globe.svg')}
             />
           </div>
         )}

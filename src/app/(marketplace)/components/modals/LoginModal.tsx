@@ -584,7 +584,7 @@ const LoginModal = () => {
               subtitle={
                 selectedMethod === 'email'
                   ? 'Use the email and password associated with your Vuola account.'
-                  : 'Enter the phone number linked to your Vuola account.'
+                  : 'Enter the phone number linked to your Vinvin account.'
               }
             />
             {selectedMethod === 'email' ? (
