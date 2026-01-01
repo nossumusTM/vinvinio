@@ -117,6 +117,8 @@ interface MemoryPayload {
   keywords?: string[];
 }
 
+type DateRange = { startDate: Date; endDate: Date };
+
 const CATEGORY_MATCHERS = [
   { label: 'Adventure & Outdoor', keywords: ['adventure', 'outdoor', 'hike', 'hiking', 'trek', 'camp'] },
   { label: 'Nature & Wildlife', keywords: ['nature', 'wildlife', 'safari', 'forest', 'eco'] },
@@ -275,7 +277,7 @@ const extractKeywords = (text: string) => {
   return Array.from(new Set(keywords)).slice(0, 12);
 };
 
-const parseDateRange = (text: string) => {
+const parseDateRange = (text: string): DateRange | null => {
   const matches = text.match(/\b\d{4}-\d{2}-\d{2}\b/g);
   if (!matches || matches.length < 2) return null;
   const [startRaw, endRaw] = matches;
@@ -287,7 +289,7 @@ const parseDateRange = (text: string) => {
   return { startDate, endDate };
 };
 
-const parseNamedDateRange = (text: string) => {
+const parseNamedDateRange = (text: string): DateRange | null => {
   const normalized = text
     .toLowerCase()
     .replace(/(\d)(st|nd|rd|th)\b/g, '$1')
@@ -385,7 +387,7 @@ const parseNamedDateRange = (text: string) => {
   return null;
 };
 
-const parseSingleDate = (text: string) => {
+const parseSingleDate = (text: string): DateRange | null => {
   const isoMatch = text.match(/\b(\d{4}-\d{2}-\d{2})\b/);
   if (isoMatch) {
     const date = new Date(isoMatch[1]);
@@ -648,7 +650,7 @@ const buildLocationWhere = (location: string | null) => {
   };
 };
 
-const buildAvailabilityWhere = (range: { startDate: Date; endDate: Date } | null) => {
+const buildAvailabilityWhere = (range: DateRange | null) => {
   if (!range) return {};
   const { startDate, endDate } = range;
   return {
@@ -695,21 +697,24 @@ const sanitizeLocation = (value?: string | null) => {
   return trimmed;
 };
 
+const parseDateValue = (value?: string | null) => {
+  if (!value) return null;
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (match) {
+    const [, year, month, day] = match;
+    return new Date(Number(year), Number(month) - 1, Number(day));
+  }
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
 const normalizeMemory = (memory?: MemoryPayload) => {
   if (!memory) return { location: null, category: null, dateRange: null, guestCount: null, keywords: [] };
-  const dateRange =
-    memory.dateRange?.startDate
-      ? {
-          startDate: new Date(memory.dateRange.startDate),
-          endDate: new Date(memory.dateRange.endDate ?? memory.dateRange.startDate),
-        }
-      : null;
-  const safeDateRange =
-    dateRange &&
-    !Number.isNaN(dateRange.startDate.getTime()) &&
-    !Number.isNaN(dateRange.endDate.getTime())
-      ? dateRange
-      : null;
+  const parsedStart = memory.dateRange?.startDate ? parseDateValue(memory.dateRange.startDate) : null;
+  const parsedEnd = memory.dateRange?.startDate
+    ? parseDateValue(memory.dateRange.endDate ?? memory.dateRange.startDate)
+    : null;
+  const safeDateRange: DateRange | null = parsedStart && parsedEnd ? { startDate: parsedStart, endDate: parsedEnd } : null;
   return {
     location: sanitizeLocation(memory.location ?? null),
     category: memory.category ?? null,
@@ -719,10 +724,17 @@ const normalizeMemory = (memory?: MemoryPayload) => {
   };
 };
 
-const formatDateRangeLabel = (range?: { startDate: Date; endDate: Date } | null) => {
+const formatDateValue = (date: Date) => {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const formatDateRangeLabel = (range?: DateRange | null) => {
   if (!range) return '';
-  const startLabel = range.startDate.toISOString().slice(0, 10);
-  const endLabel = range.endDate.toISOString().slice(0, 10);
+  const startLabel = formatDateValue(range.startDate);
+  const endLabel = formatDateValue(range.endDate);
   return startLabel === endLabel ? startLabel : `${startLabel} → ${endLabel}`;
 };
 
@@ -741,7 +753,7 @@ export async function POST(request: Request) {
 
   const normalizedMessages = messages
     .map((m) => ({ role: m.role, content: m.content }))
-    .slice(-12);
+    .slice(-18);
 
   const hfToken = process.env.HF_TOKEN?.trim() || process.env.HUGGINGFACE_API_KEY?.trim();
 
@@ -784,8 +796,8 @@ export async function POST(request: Request) {
     category: resolvedCategory,
     dateRange: resolvedDateRange
       ? {
-          startDate: resolvedDateRange.startDate.toISOString(),
-          endDate: resolvedDateRange.endDate.toISOString(),
+          startDate: formatDateValue(resolvedDateRange.startDate),
+          endDate: formatDateValue(resolvedDateRange.endDate),
         }
       : null,
     guestCount: resolvedGuestCount,
@@ -811,24 +823,41 @@ export async function POST(request: Request) {
     });
   }
 
-  const listings = await prisma.listing.findMany({
-    where: {
-      status: 'approved',
-      ...buildKeywordWhere(resolvedKeywords),
-      ...buildCategoryWhere(resolvedCategory),
-      ...buildLocationWhere(resolvedLocation),
-      ...buildAvailabilityWhere(resolvedDateRange),
-      ...buildGuestWhere(resolvedGuestCount),
-    },
-    orderBy: [{ punti: 'desc' }, { likesCount: 'desc' }, { createdAt: 'desc' }],
-    take: 5,
-  });
+  const baseOrderBy = [{ punti: 'desc' }, { likesCount: 'desc' }, { createdAt: 'desc' }] as const;
+  const fetchListings = async (where: Record<string, unknown>) =>
+    prisma.listing.findMany({
+      where,
+      // orderBy: baseOrderBy,
+      take: 5,
+    });
 
-let listingsTier: 'strict' | 'noAvailability' | 'noGuests' | 'noCategory' | 'locationOnly' | 'fallback' = 'strict';
-  let matchedListings = listings;
+  type ListingsTier =
+    | 'strict'
+    | 'noAvailability'
+    | 'noGuests'
+    | 'noCategory'
+    | 'locationOnly'
+    | 'fallback';
 
-  if (!matchedListings.length) {
-    matchedListings = await prisma.listing.findMany({
+  let listingsTier: ListingsTier = 'strict';
+
+  const searchTiers: Array<{
+    tier: ListingsTier;
+    where: Record<string, unknown>;
+  }> = [
+    {
+      tier: 'strict',
+      where: {
+        status: 'approved',
+        ...buildKeywordWhere(resolvedKeywords),
+        ...buildCategoryWhere(resolvedCategory),
+        ...buildLocationWhere(resolvedLocation),
+        ...buildAvailabilityWhere(resolvedDateRange),
+        ...buildGuestWhere(resolvedGuestCount),
+      },
+      },
+    {
+      tier: 'noAvailability',
       where: {
         status: 'approved',
         ...buildKeywordWhere(resolvedKeywords),
@@ -836,71 +865,51 @@ let listingsTier: 'strict' | 'noAvailability' | 'noGuests' | 'noCategory' | 'loc
         ...buildLocationWhere(resolvedLocation),
         ...buildGuestWhere(resolvedGuestCount),
       },
-      orderBy: [{ punti: 'desc' }, { likesCount: 'desc' }, { createdAt: 'desc' }],
-      take: 5,
-    });
-    if (matchedListings.length) {
-      listingsTier = 'noAvailability';
-    }
-  }
-
-  if (!matchedListings.length) {
-    matchedListings = await prisma.listing.findMany({
+      },
+    {
+      tier: 'noGuests',
       where: {
         status: 'approved',
         ...buildKeywordWhere(resolvedKeywords),
         ...buildCategoryWhere(resolvedCategory),
         ...buildLocationWhere(resolvedLocation),
       },
-      orderBy: [{ punti: 'desc' }, { likesCount: 'desc' }, { createdAt: 'desc' }],
-      take: 5,
-    });
-    if (matchedListings.length) {
-      listingsTier = 'noGuests';
-    }
-  }
-
-  if (!matchedListings.length) {
-    if (!resolvedCategory) {
-      matchedListings = await prisma.listing.findMany({
-        where: {
-          status: 'approved',
-          ...buildKeywordWhere(resolvedKeywords),
-          ...buildLocationWhere(resolvedLocation),
-        },
-        orderBy: [{ punti: 'desc' }, { likesCount: 'desc' }, { createdAt: 'desc' }],
-        take: 5,
-      });
-      if (matchedListings.length) {
-        listingsTier = 'noCategory';
-      }
-    }
-  }
-
-  if (!matchedListings.length && !resolvedCategory) {
-    matchedListings = await prisma.listing.findMany({
+      },
+    {
+      tier: 'noCategory',
+      where: {
+        status: 'approved',
+        ...buildKeywordWhere(resolvedKeywords),
+        ...buildLocationWhere(resolvedLocation),
+      },
+      },
+    {
+      tier: 'locationOnly',
       where: {
         status: 'approved',
         ...buildLocationWhere(resolvedLocation),
       },
-      orderBy: [{ punti: 'desc' }, { likesCount: 'desc' }, { createdAt: 'desc' }],
-      take: 5,
-    });
-    if (matchedListings.length) {
-      listingsTier = 'locationOnly';
-    }
-  }
-
-  if (!matchedListings.length && !resolvedCategory) {
-    matchedListings = await prisma.listing.findMany({
+    },
+    {
+      tier: 'fallback',
       where: {
         status: 'approved',
       },
-      orderBy: [{ punti: 'desc' }, { likesCount: 'desc' }, { createdAt: 'desc' }],
-      take: 5,
-    });
-    if (matchedListings.length) {
-      listingsTier = 'fallback';
+    },
+  ];
+
+  let matchedListings: Awaited<ReturnType<typeof fetchListings>> = [];
+  for (const tier of searchTiers) {
+    // Skip tiers that would be identical to previous when we have no location to filter by.
+    if (tier.tier === 'locationOnly' && !resolvedLocation) {
+      continue;
+    }
+
+    const results = await fetchListings(tier.where);
+    if (results.length) {
+      matchedListings = results;
+      listingsTier = tier.tier;
+      break;
     }
   }
 
@@ -921,7 +930,7 @@ let listingsTier: 'strict' | 'noAvailability' | 'noGuests' | 'noCategory' | 'loc
   if (!matchedListings.length) {
     return NextResponse.json({
       reply:
-        `I couldn’t find matches for ${resolvedLocation ?? 'that destination'} right now. Try adjusting the location or category and I’ll keep searching.`,
+        `I couldn’t find available listings for ${resolvedLocation ?? 'that destination'} right now, but I’ll keep searching as inventory updates.`,
       recommendations: [],
       criteriaMet,
       missingFields: [],
@@ -986,8 +995,8 @@ let listingsTier: 'strict' | 'noAvailability' | 'noGuests' | 'noCategory' | 'loc
           },
           ...normalizedMessages,
         ],
-        temperature: 0.4,
-        max_tokens: 280,
+        temperature: 0.5,
+        max_tokens: 420,
       }),
     });
 

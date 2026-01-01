@@ -474,21 +474,33 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
     return <StructuredMessage text={message.content} />;
   };
 
+  const handleBackAction = () => {
+    onBack();
+  };
+
+  const handleCloseAction = () => {
+    if (isFullscreen && onBack) {
+      onBack();
+      return;
+    }
+    onClose?.();
+  };
+
   return (
     <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -10 }}
-        transition={{ duration: 0.2 }}
-        className={clsx(
-          'flex flex-col overflow-hidden',
-          isFullscreen ? 'h-full w-full' : 'h-[66vh] max-h-[80vh]',
-        )}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.2 }}
+      className={clsx(
+        'flex flex-col overflow-hidden',
+        isFullscreen ? 'h-full w-full' : 'h-[66vh] max-h-[80vh]',
+      )}
     >
       <div className="flex items-center gap-3 border-b px-4 py-3">
         <button
           type="button"
-          onClick={onBack}
+          onClick={handleBackAction}
           className="flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 text-neutral-700 transition hover:border-neutral-300 hover:bg-neutral-100"
           aria-label="Back"
         >
@@ -512,16 +524,16 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
           >
             <LuTrash2 className="h-4 w-4" />
           </button>
-            {onClose && (
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 text-neutral-500 transition hover:border-neutral-300 hover:bg-neutral-50"
-                aria-label="Close"
-              >
-                <LuX className="h-4 w-4" />
-              </button>
-            )}
+          {onClose && (
+            <button
+              type="button"
+              onClick={handleCloseAction}
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 text-neutral-500 transition hover:border-neutral-300 hover:bg-neutral-50"
+              aria-label="Close"
+            >
+              <LuX className="h-4 w-4" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -555,15 +567,15 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
                     isUser
                       ? 'bg-white text-neutral-800 ring-1 ring-neutral-100'
                       : isFullscreen
-                      ? 'bg-sky-50 text-neutral-900'
-                      : 'bg-sky-50 text-white shadow-[0_12px_32px_rgba(15,23,42,0.3)]'
+                      ? 'bg-gradient-to-br from-white via-slate-50 to-sky-50 text-neutral-900'
+                      : 'bg-gradient-to-br from-white via-slate-50 to-sky-50 text-white shadow-[0_12px_32px_rgba(15,23,42,0.3)]'
                   )}
                 >
                   {renderMessageContent(message)}
                 <div
                     className={clsx(
                       'mt-2 text-[11px]',
-                      isUser ? 'text-neutral-400' : isFullscreen ? 'text-neutral-500' : 'text-neutral-300'
+                      isUser ? 'text-neutral-400' : isFullscreen ? 'text-neutral-500' : 'text-neutral-300',
                     )}
                   >
                     {new Date(message.createdAt).toLocaleString(undefined, {

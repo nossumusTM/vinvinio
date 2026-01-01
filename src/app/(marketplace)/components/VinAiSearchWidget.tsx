@@ -572,7 +572,7 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
       <div className="space-y-3">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 aspect-square items-center justify-center rounded-xl bg-gradient-to-br from-sky-50 via-indigo-50 to-white text-[#2200ffff]">
+          <div className="flex h-9 w-9 aspect-square items-center justify-center rounded-xl bg-gradient-to-br from-white via-slate-50 to-sky-50 to-white text-[#2200ffff]">
             <LuRocket className="h-4 w-4" />
           </div>
           <div className="flex flex-col">
@@ -625,7 +625,7 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
                   'inline-flex w-fit max-w-[78%] rounded-2xl px-3 py-2 text-[13px] shadow-sm',
                   message.role === 'user'
                     ? 'bg-neutral-900 text-white'
-                    : 'bg-gradient-to-br from-white via-slate-50 to-indigo-50 text-neutral-900'
+                    : 'bg-gradient-to-br from-white via-slate-50 to-sky-50 text-neutral-900'
                 )}
               >
                 {renderMessageContent(message)}
