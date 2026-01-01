@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { LuArrowLeft, LuRocket, LuTrash2, LuX } from 'react-icons/lu';
+import { useRouter } from 'next/navigation';
 import { TbArrowElbowRight, TbPlayerPause, TbPlayerPlay, TbPlayerStopFilled } from 'react-icons/tb';
 import { HiMiniMicrophone } from 'react-icons/hi2';
 import clsx from 'clsx';
@@ -13,7 +14,7 @@ import toast from 'react-hot-toast';
 import Avatar from './Avatar';
 import useMessenger from '../hooks/useMessager';
 import useVinAiChat, { AI_FORCE_ASSISTANT } from '../hooks/useVinAiChat';
-import type { AiMessage } from '../hooks/useVinAiChat';
+import type { AiListing, AiMessage } from '../hooks/useVinAiChat';
 
 interface VinAiChatViewProps {
   onBack: () => void;
@@ -152,6 +153,7 @@ const TypewriterText = ({
 }) => {
   const [displayed, setDisplayed] = useState(shouldAnimate ? '' : text);
   const onCompleteRef = useRef(onComplete);
+  const showCursor = shouldAnimate && displayed.length < text.length;
 
   useEffect(() => {
     onCompleteRef.current = onComplete;
@@ -176,7 +178,14 @@ const TypewriterText = ({
     return () => clearInterval(interval);
   }, [text, shouldAnimate]);
 
-  return <div className="whitespace-pre-line leading-relaxed">{displayed}</div>;
+  return (
+    <div className="whitespace-pre-line leading-relaxed">
+      {displayed}
+      {showCursor && (
+        <span className="ml-1 inline-flex h-2 w-2 align-middle animate-pulse rounded-full bg-white/70" />
+      )}
+    </div>
+  );
 };
 
 const StructuredMessage = ({ text }: { text: string }) => {
@@ -217,7 +226,7 @@ const StructuredMessage = ({ text }: { text: string }) => {
       {blocks.map((block, index) => {
         if (block.type === 'h2') {
           return (
-            <h2 key={`h2-${index}`} className="text-base font-semibold text-white">
+            <h2 key={`h2-${index}`} className="text-base font-semibold text-white/95 tracking-tight">
               {block.content as string}
             </h2>
           );
@@ -245,14 +254,17 @@ const StructuredMessage = ({ text }: { text: string }) => {
 };
 
 const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewProps) => {
-  const { messages, recommendations, criteriaMet, init, sendMessage, isSending, clear } = useVinAiChat();
+  const { messages, recommendations, criteriaMet, memory, init, sendMessage, isSending, clear } = useVinAiChat();
   const { openChat } = useMessenger();
   const [input, setInput] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [typedMessageIds, setTypedMessageIds] = useState<string[]>([]);
+  const [listingsUnlocked, setListingsUnlocked] = useState(false);
+  const [selectedListing, setSelectedListing] = useState<AiListing | null>(null);
   const hasSeededTyping = useRef(false);
   const speechRecognitionRef = useRef<SpeechRecognition | null>(null);
+  const router = useRouter();
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   
@@ -291,6 +303,17 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
     () => messages.some((message) => message.role === 'user'),
     [messages],
   );
+
+  useEffect(() => {
+    setListingsUnlocked(false);
+  }, [criteriaMet, memory, recommendations.length]);
+
+  const formattedDateRange = useMemo(() => {
+    if (!memory?.dateRange?.startDate) return null;
+    const start = memory.dateRange.startDate.slice(0, 10);
+    const end = memory.dateRange.endDate?.slice(0, 10) ?? start;
+    return start === end ? start : `${start} → ${end}`;
+  }, [memory]);
 
   const handleUseLocation = () => {
     if (!navigator.geolocation) {
@@ -402,9 +425,20 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
     recognition.stop();
   };
 
-  const handleListingClick = (title: string) => {
-    openChat(AI_FORCE_ASSISTANT);
-    handleSend(`Show me more about ${title}`);
+  const handleListingClick = (listing: AiListing) => {
+    setSelectedListing(listing);
+  };
+
+  const handleListingAction = (action: 'ask' | 'navigate') => {
+    if (!selectedListing) return;
+    if (action === 'ask') {
+      openChat(AI_FORCE_ASSISTANT);
+      handleSend(`Show me more about ${selectedListing.title}`);
+    } else {
+      const target = selectedListing.slug ? `/listings/${selectedListing.slug}` : `/listings/${selectedListing.id}`;
+      router.push(target);
+    }
+    setSelectedListing(null);
   };
 
   const handleQuickPrompt = (value: string) => {
@@ -519,8 +553,8 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
                   className={clsx(
                     'inline-flex w-fit max-w-[78%] flex-col rounded-2xl px-4 py-3 text-[15px] shadow-sm backdrop-blur',
                     isUser
-                      ? 'bg-white text-neutral-800'
-                      : 'bg-neutral-900 text-white shadow-[0_10px_30px_rgba(15,23,42,0.25)]'
+                      ? 'bg-white text-neutral-800 ring-1 ring-neutral-100'
+                      : 'bg-gradient-to-br from-neutral-900 via-slate-900 to-indigo-900/90 text-white shadow-[0_12px_32px_rgba(15,23,42,0.3)]'
                   )}
                 >
                   {renderMessageContent(message)}
@@ -582,7 +616,75 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
           </motion.div>
         )}
 
-        {criteriaMet && recommendations.length > 0 && isLatestAssistantTyped && (
+        {criteriaMet && recommendations.length > 0 && isLatestAssistantTyped && !listingsUnlocked && (
+          <motion.div
+            layout
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.18 }}
+            className="flex gap-3 text-left"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-900 text-white">
+              <LuRocket className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1 rounded-2xl bg-white px-4 py-4 shadow-sm">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold text-neutral-900">Confirm details</p>
+                  <p className="mt-1 text-xs text-neutral-500">Approve to surface the top matches.</p>
+                </div>
+                <span className="rounded-full bg-neutral-100 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
+                  Ready
+                </span>
+              </div>
+              <div className="mt-3 grid gap-2 text-xs text-neutral-600 sm:grid-cols-2">
+                {memory.location && (
+                  <div className="rounded-xl bg-neutral-50 px-3 py-2">
+                    <p className="text-[10px] uppercase tracking-wide text-neutral-400">Location</p>
+                    <p className="font-semibold text-neutral-800">{memory.location}</p>
+                  </div>
+                )}
+                {memory.category && (
+                  <div className="rounded-xl bg-neutral-50 px-3 py-2">
+                    <p className="text-[10px] uppercase tracking-wide text-neutral-400">Category</p>
+                    <p className="font-semibold text-neutral-800">{memory.category}</p>
+                  </div>
+                )}
+                {formattedDateRange && (
+                  <div className="rounded-xl bg-neutral-50 px-3 py-2">
+                    <p className="text-[10px] uppercase tracking-wide text-neutral-400">Dates</p>
+                    <p className="font-semibold text-neutral-800">{formattedDateRange}</p>
+                  </div>
+                )}
+                {memory.guestCount && (
+                  <div className="rounded-xl bg-neutral-50 px-3 py-2">
+                    <p className="text-[10px] uppercase tracking-wide text-neutral-400">Guests</p>
+                    <p className="font-semibold text-neutral-800">{memory.guestCount}</p>
+                  </div>
+                )}
+              </div>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={() => clear()}
+                  className="flex-1 rounded-full border border-neutral-200 px-4 py-2 text-xs font-semibold text-neutral-600 transition hover:bg-neutral-100"
+                >
+                  Reject
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setListingsUnlocked(true)}
+                  className="flex-1 rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-neutral-800"
+                >
+                  Accept & Show
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {criteriaMet && recommendations.length > 0 && isLatestAssistantTyped && listingsUnlocked && (
           <motion.div
             layout
             initial={{ opacity: 0, y: 10 }}
@@ -613,7 +715,7 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
                   <motion.button
                     key={card.id}
                     type="button"
-                    onClick={() => handleListingClick(card.title)}
+                    onClick={() => handleListingClick(card)}
                     initial={{ opacity: 0, scale: 0.96 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.2, delay: index * 0.04 }}
@@ -638,7 +740,7 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
                         <p className="text-sm text-white/80">{card.description}</p>
                       </div>
                       <div className="flex items-center justify-between text-xs text-white/80">
-                        <span>Tap to ask AI Force</span>
+                        <span>Tap for options</span>
                         <span className="rounded-full bg-white/20 px-2 py-1 text-[10px] font-semibold uppercase">AI pick</span>
                       </div>
                       
@@ -761,6 +863,55 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
           </button>
         </form>
       </div>
+       <AnimatePresence>
+        {selectedListing && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.94 }}
+              transition={{ duration: 0.2 }}
+              className="w-full max-w-sm rounded-3xl bg-white p-5 shadow-2xl"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-neutral-900">Choose an action</p>
+                  <p className="mt-1 text-xs text-neutral-500">{selectedListing.title}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedListing(null)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 text-neutral-500 transition hover:bg-neutral-100"
+                  aria-label="Close"
+                >
+                  <LuX className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="mt-4 space-y-2">
+                <button
+                  type="button"
+                  onClick={() => handleListingAction('ask')}
+                  className="w-full rounded-2xl bg-neutral-900 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-neutral-800"
+                >
+                  Ask AI Force
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleListingAction('navigate')}
+                  className="w-full rounded-2xl border border-neutral-200 px-4 py-3 text-sm font-semibold text-neutral-700 transition hover:bg-neutral-100"
+                >
+                  View listing
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };

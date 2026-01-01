@@ -31,6 +31,7 @@ import useTranslations from '@/app/(marketplace)/hooks/useTranslations';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import VinAiSearchWidget from '../VinAiSearchWidget';
 import VinAiChatView from '../VinAiChatView';
+import toast from 'react-hot-toast';
 
 enum STEPS {
   AI = 0,
@@ -215,7 +216,7 @@ const SearchExperienceModal = () => {
         <div className="rounded-3xl p-[1px]">
           <div className="rounded-[26px] bg-white/80 backdrop-blur p-6 shadow-xl">
             <VinAiSearchWidget
-              onSkip={() => setStep(STEPS.LOCATION)}
+              onSkip={onSubmit}
               onExpand={() => {
                 setIsAiFullscreen(true);
                 modal.onClose();
@@ -341,6 +342,7 @@ const SearchExperienceModal = () => {
         isOpen={modal.isOpen}
         onClose={modal.onClose}
         onSubmit={onSubmit}
+        submitOnEnter={step !== STEPS.AI}
         actionLabel={actionLabel}
         secondaryActionLabel={secondaryActionLabel}
         secondaryAction={step === STEPS.AI ? undefined : onBack}

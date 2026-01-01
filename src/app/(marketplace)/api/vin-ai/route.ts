@@ -385,21 +385,40 @@ const parseNamedDateRange = (text: string) => {
   return null;
 };
 
-const extractLocation = (text: string) => {
-  const normalized = text.replace(/\s+/g, ' ').trim();
-  if (!normalized) return null;
-  const match = normalized.match(
-    /\b(?:in|at|near|around|from|to|country|region|city)\s+([a-zA-Z][a-zA-Z\s-]{2,40})/i,
-  );
- if (match) {
-    const location = match[1]
-      .replace(/\b(for|with|on|in|at|around)\b.*$/i, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-    if (location) return location;
+const parseSingleDate = (text: string) => {
+  const isoMatch = text.match(/\b(\d{4}-\d{2}-\d{2})\b/);
+  if (isoMatch) {
+    const date = new Date(isoMatch[1]);
+    if (!Number.isNaN(date.getTime())) {
+      return { startDate: date, endDate: date };
+    }
   }
 
-  const lowercase = normalized.toLowerCase();
+  const normalized = text
+    .toLowerCase()
+    .replace(/(\d)(st|nd|rd|th)\b/g, '$1')
+    .replace(/[,]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!normalized) return null;
+
+  const monthRegex =
+    '(jan(?:uary)?|janury|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)';
+  const dayRegex = '(\\d{1,2})';
+
+  const match = normalized.match(new RegExp(`\\b${monthRegex}\\s+${dayRegex}(?:\\s+(\\d{2,4}))?\\b`, 'i'));
+  if (!match) return null;
+
+  const [, month, day, year] = match;
+  const yearValue = normalizeYear(year) ?? new Date().getFullYear();
+  const date = new Date(yearValue, MONTHS[month], Number(day));
+  if (Number.isNaN(date.getTime())) return null;
+  return { startDate: date, endDate: date };
+};
+
+const matchCountryInText = (text: string) => {
+  const lowercase = text.toLowerCase();
   let bestMatch: string | null = null;
   for (const entry of COUNTRY_MATCHERS) {
     const hit = entry.synonyms.find((synonym) => {
@@ -415,7 +434,46 @@ const extractLocation = (text: string) => {
     }
   }
 
-  if (bestMatch) return bestMatch;
+  return bestMatch;
+};
+
+const extractCityCountry = (text: string, country: string) => {
+  const escapedCountry = country.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = text.match(new RegExp(`\\b([a-zA-Z][a-zA-Z\\s-]{2,40})\\s*,?\\s+${escapedCountry}\\b`, 'i'));
+  if (!match) return null;
+  const city = match[1].trim();
+  if (!city) return null;
+  const lower = city.toLowerCase();
+  if (MONTHS[lower] !== undefined) return null;
+  return city;
+};
+
+const extractLocation = (text: string) => {
+  const normalized = text.replace(/\s+/g, ' ').trim();
+  if (!normalized) return null;
+  const match = normalized.match(
+    /\b(?:in|at|near|around|from|to|country|region|city)\s+([a-zA-Z][a-zA-Z\s,-]{2,60})/i,
+  );
+  if (match) {
+    const location = match[1]
+      .replace(/\b(for|with|on|in|at|around)\b.*$/i, '')
+      .replace(/\s*,\s*/g, ', ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (location) {
+      const lower = location.toLowerCase();
+      if (MONTHS[lower] !== undefined) return null;
+      return location;
+    }
+  }
+
+  const bestMatch = matchCountryInText(normalized);
+
+  if (bestMatch) {
+    const city = extractCityCountry(normalized, bestMatch);
+    if (city) return `${city}, ${bestMatch}`;
+    return bestMatch;
+  }
 
   const regionMatch = normalized.match(/\b(europe|asia|africa|oceania|north america|south america|middle east)\b/i);
   if (regionMatch) return regionMatch[1];
@@ -566,6 +624,21 @@ const buildCategoryWhere = (category: string | null) => {
 
 const buildLocationWhere = (location: string | null) => {
   if (!location) return {};
+  const parts = location
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (parts.length > 1) {
+    return {
+      AND: parts.map((part) => ({
+        OR: [
+          { locationValue: { contains: part, mode: 'insensitive' as const } },
+          { locationDescription: { contains: part, mode: 'insensitive' as const } },
+          { meetingPoint: { contains: part, mode: 'insensitive' as const } },
+        ],
+      })),
+    };
+  }
   return {
     OR: [
       { locationValue: { contains: location, mode: 'insensitive' as const } },
@@ -613,13 +686,22 @@ const buildListingBadge = (listing: {
   listing.durationCategory ||
   'Featured';
 
+const sanitizeLocation = (value?: string | null) => {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const lower = trimmed.toLowerCase();
+  if (MONTHS[lower] !== undefined) return null;
+  return trimmed;
+};
+
 const normalizeMemory = (memory?: MemoryPayload) => {
   if (!memory) return { location: null, category: null, dateRange: null, guestCount: null, keywords: [] };
   const dateRange =
-    memory.dateRange?.startDate && memory.dateRange?.endDate
+    memory.dateRange?.startDate
       ? {
           startDate: new Date(memory.dateRange.startDate),
-          endDate: new Date(memory.dateRange.endDate),
+          endDate: new Date(memory.dateRange.endDate ?? memory.dateRange.startDate),
         }
       : null;
   const safeDateRange =
@@ -629,7 +711,7 @@ const normalizeMemory = (memory?: MemoryPayload) => {
       ? dateRange
       : null;
   return {
-    location: memory.location ?? null,
+    location: sanitizeLocation(memory.location ?? null),
     category: memory.category ?? null,
     dateRange: safeDateRange,
     guestCount: typeof memory.guestCount === 'number' ? memory.guestCount : null,
@@ -637,8 +719,15 @@ const normalizeMemory = (memory?: MemoryPayload) => {
   };
 };
 
+const formatDateRangeLabel = (range?: { startDate: Date; endDate: Date } | null) => {
+  if (!range) return '';
+  const startLabel = range.startDate.toISOString().slice(0, 10);
+  const endLabel = range.endDate.toISOString().slice(0, 10);
+  return startLabel === endLabel ? startLabel : `${startLabel} → ${endLabel}`;
+};
+
 export async function POST(request: Request) {
-const { messages, memory } = (await request.json()) as {
+  const { messages, memory } = (await request.json()) as {
     messages?: RequestMessage[];
     memory?: MemoryPayload;
   };
@@ -667,7 +756,8 @@ const { messages, memory } = (await request.json()) as {
     .map((message) => message.content)
     .join(' ');
   const keywords = extractKeywords(conversationText);
-  const dateRange = parseDateRange(conversationText) ?? parseNamedDateRange(conversationText);
+  const dateRange =
+    parseDateRange(conversationText) ?? parseNamedDateRange(conversationText) ?? parseSingleDate(conversationText);
   const guestCount = extractGuestCount(conversationText);
   const location = extractLocation(conversationText);
   const matchedCategory = extractCategory(conversationText);
@@ -710,11 +800,7 @@ const { messages, memory } = (await request.json()) as {
         knownFields: [
           resolvedLocation ? `Location: ${resolvedLocation}` : null,
           resolvedCategory ? `Category: ${resolvedCategory}` : null,
-          resolvedDateRange
-            ? `Dates: ${resolvedDateRange.startDate.toISOString().slice(0, 10)} → ${resolvedDateRange.endDate
-                .toISOString()
-                .slice(0, 10)}`
-            : null,
+          resolvedDateRange ? `Dates: ${formatDateRangeLabel(resolvedDateRange)}` : null,
           resolvedGuestCount ? `Guests: ${resolvedGuestCount}` : null,
         ].filter(Boolean) as string[],
       }),
@@ -742,6 +828,7 @@ const { messages, memory } = (await request.json()) as {
     const rawCategory = Array.isArray(listing.category) ? listing.category[0] : listing.category;
     return {
       id: listing.id,
+      slug: listing.slug ?? null,
       title: listing.title,
       category: listing.primaryCategory ?? rawCategory ?? 'General',
       location: listing.locationValue ?? 'Worldwide',
@@ -751,9 +838,22 @@ const { messages, memory } = (await request.json()) as {
     };
   });
 
+  if (!listings.length) {
+    return NextResponse.json({
+      reply:
+        "I couldn’t find available matches for those details. Please reset the conversation and try a different location, category, or date.",
+      recommendations: [],
+      criteriaMet: false,
+      missingFields: [],
+      memory: memorySnapshot,
+    });
+  }
+
   if (!hfToken) {
     return NextResponse.json({
-      reply: `Thanks! I will check availability for ${resolvedLocation} on ${resolvedDateRange?.startDate.toISOString().slice(0, 10)} → ${resolvedDateRange?.endDate.toISOString().slice(0, 10)} for ${resolvedGuestCount} guests and rank the best-reviewed listings.`,
+      reply: `Thanks! I will check availability for ${resolvedLocation} on ${formatDateRangeLabel(
+        resolvedDateRange,
+      )} for ${resolvedGuestCount} guests and rank the best-reviewed listings.`,
       recommendations,
       criteriaMet,
       missingFields,

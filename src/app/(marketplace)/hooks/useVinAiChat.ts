@@ -16,6 +16,7 @@ export interface AiMessage {
 
 export interface AiListing {
   id: string;
+  slug?: string | null;
   title: string;
   category: string;
   location: string;
