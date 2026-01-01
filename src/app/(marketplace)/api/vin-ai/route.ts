@@ -948,7 +948,7 @@ export async function POST(request: Request) {
       : listingsTier === 'locationOnly'
       ? `I couldn’t match the full criteria, but these are top experiences in ${resolvedLocation}.`
       : listingsTier === 'fallback'
-      ? 'I couldn’t find exact matches for your full criteria yet, but here are the most popular Vuola experiences to explore.'
+      ? 'Here are the most popular Vuola experiences to explore.'
       : '';
 
   if (!hfToken) {

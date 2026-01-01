@@ -373,10 +373,10 @@ const SearchExperienceModal = () => {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.92 }}
+              initial={{ opacity: 0, scale: 0.88 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.94 }}
-              transition={{ duration: 0.2 }}
+              exit={{ opacity: 0, scale: 0.84 }}
+              transition={{ duration: 0.22, ease: 'easeOut' }}
               className="h-full w-full origin-bottom-right overflow-hidden rounded-3xl bg-white shadow-2xl"
             >
               <VinAiChatView

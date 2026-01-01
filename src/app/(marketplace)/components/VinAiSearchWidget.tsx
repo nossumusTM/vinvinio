@@ -184,7 +184,7 @@ const TypewriterText = ({
   }, [text, shouldAnimate]);
 
   return (
-    <div className="whitespace-pre-line leading-relaxed">
+    <div className="whitespace-pre-line text-black/90 leading-relaxed">
       {displayed}
       {showCursor && (
         <span className="ml-1 inline-flex h-2 w-2 align-middle animate-pulse rounded-full bg-neutral-400" />
@@ -544,7 +544,7 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
     }
 
     if (message.role === 'user') {
-      return <div className="whitespace-pre-line leading-relaxed">{message.content}</div>;
+      return <div className="whitespace-pre-line text-white/90 leading-relaxed">{message.content}</div>;
     }
 
     const shouldAnimate =
@@ -757,7 +757,7 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
                   initial={{ opacity: 0, scale: 0.96 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.2, delay: index * 0.04 }}
-                  whileHover={{ y: -3, scale: 1.01 }}
+                  whileHover={{ y: -3, scale: 0.95 }}
                   className="group relative min-w-[220px] max-w-[240px] overflow-hidden rounded-2xl border border-neutral-100 text-left shadow-sm"
                 >
                   <div
@@ -765,7 +765,7 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
                     style={{ backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.65) 70%), url(${card.image})` }}
                   />
                   <div className="relative flex h-full flex-col justify-between space-y-2 p-3 text-white">
-                    <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide">
+                    <div className="inline-flex w-fit items-center gap-2 rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide">
                       {card.badge || 'Featured'}
                     </div>
                     <div className="space-y-1">

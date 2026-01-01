@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { LuArrowLeft, LuRocket, LuTrash2, LuX } from 'react-icons/lu';
 import { useRouter } from 'next/navigation';
 import { TbArrowElbowRight, TbPlayerPause, TbPlayerPlay, TbPlayerStopFilled } from 'react-icons/tb';
@@ -10,11 +10,15 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Picker from '@emoji-mart/react';
 import data from '@emoji-mart/data';
 import toast from 'react-hot-toast';
+import { Range } from 'react-date-range';
 
 import Avatar from './Avatar';
 import useMessenger from '../hooks/useMessager';
 import useVinAiChat, { AI_FORCE_ASSISTANT } from '../hooks/useVinAiChat';
 import type { AiListing, AiMessage } from '../hooks/useVinAiChat';
+import CountrySearchSelect, { type CountrySelectValue } from './inputs/CountrySearchSelect';
+import SearchCalendar from './inputs/SearchCalendar';
+import Counter from './inputs/Counter';
 
 interface VinAiChatViewProps {
   onBack: () => void;
@@ -179,7 +183,7 @@ const TypewriterText = ({
   }, [text, shouldAnimate]);
 
   return (
-    <div className="whitespace-pre-line leading-relaxed">
+    <div className="whitespace-pre-line leading-relaxed text-black/90">
       {displayed}
       {showCursor && (
         <span className="ml-1 inline-flex h-2 w-2 align-middle animate-pulse rounded-full bg-white/70" />
@@ -262,6 +266,21 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
   const [typedMessageIds, setTypedMessageIds] = useState<string[]>([]);
   const [listingsUnlocked, setListingsUnlocked] = useState(false);
   const [selectedListing, setSelectedListing] = useState<AiListing | null>(null);
+  const [guidedLocation, setGuidedLocation] = useState<CountrySelectValue | null>(null);
+  const [guidedIntent, setGuidedIntent] = useState('');
+  const [guidedDateRange, setGuidedDateRange] = useState<Range>({
+    startDate: new Date(),
+    endDate: new Date(),
+    key: 'selection',
+  });
+  const [guidedGuests, setGuidedGuests] = useState(1);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [guidedProgress, setGuidedProgress] = useState({
+    location: false,
+    intent: false,
+    date: false,
+    guests: false,
+  });
   const hasSeededTyping = useRef(false);
   const speechRecognitionRef = useRef<SpeechRecognition | null>(null);
   const router = useRouter();
@@ -273,6 +292,46 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
   useEffect(() => {
     init();
   }, [init]);
+
+  useEffect(() => {
+    const hasMemory =
+      Boolean(memory?.location) ||
+      Boolean(memory?.category) ||
+      Boolean(memory?.dateRange?.startDate) ||
+      Boolean(memory?.guestCount);
+    if (!hasMemory && messages.length <= 1) {
+      setGuidedProgress({
+        location: false,
+        intent: false,
+        date: false,
+        guests: false,
+      });
+      setGuidedLocation(null);
+      setGuidedIntent('');
+      setGuidedDateRange({
+        startDate: new Date(),
+        endDate: new Date(),
+        key: 'selection',
+      });
+      setGuidedGuests(1);
+      setCalendarOpen(false);
+    }
+  }, [memory, messages.length]);
+
+  useEffect(() => {
+    setGuidedProgress((prev) => ({
+      location: prev.location || Boolean(memory?.location),
+      intent: prev.intent || Boolean(memory?.category) || Boolean(memory?.keywords?.length),
+      date: prev.date || Boolean(memory?.dateRange?.startDate),
+      guests: prev.guests || Boolean(memory?.guestCount),
+    }));
+  }, [memory]);
+
+  useEffect(() => {
+    if (memory?.guestCount) {
+      setGuidedGuests(memory.guestCount);
+    }
+  }, [memory?.guestCount]);
 
   useEffect(() => {
     const node = scrollRef.current;
@@ -314,6 +373,61 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
     const end = memory.dateRange.endDate?.slice(0, 10) ?? start;
     return start === end ? start : `${start} → ${end}`;
   }, [memory]);
+
+  const guidedStep = useMemo(() => {
+    if (!guidedProgress.location) return 'location';
+    if (!guidedProgress.intent) return 'intent';
+    if (!guidedProgress.date) return 'date';
+    if (!guidedProgress.guests) return 'guests';
+    return 'done';
+  }, [guidedProgress]);
+
+  const guidedComplete = guidedStep === 'done';
+
+  const formatLocationLabel = (value: CountrySelectValue | null) => {
+    if (!value) return '';
+    return value.city ? `${value.city}, ${value.label}` : value.label;
+  };
+
+  const handleGuidedLocationNext = useCallback(
+    () => async () => {
+      if (!guidedLocation) return;
+      setGuidedProgress((prev) => ({ ...prev, location: true }));
+      await handleSend(`My destination is ${formatLocationLabel(guidedLocation)}.`);
+    },
+    [guidedLocation],
+  );
+
+  const handleGuidedIntentNext = useCallback(
+    () => async () => {
+      const trimmed = guidedIntent.trim();
+      if (!trimmed) return;
+      setGuidedProgress((prev) => ({ ...prev, intent: true }));
+      await handleSend(`I'm looking for ${trimmed}.`);
+    },
+    [guidedIntent],
+  );
+
+  const handleGuidedDateNext = useCallback(
+    () => async () => {
+      if (!guidedDateRange?.startDate) return;
+      const start = guidedDateRange.startDate.toLocaleDateString();
+      const end = guidedDateRange.endDate?.toLocaleDateString() ?? start;
+      setGuidedProgress((prev) => ({ ...prev, date: true }));
+      setCalendarOpen(false);
+      await handleSend(`Travel dates: ${start}${end !== start ? ` to ${end}` : ''}.`);
+    },
+    [guidedDateRange],
+  );
+
+  const handleGuidedGuestsNext = useCallback(
+    () => async () => {
+      if (!guidedGuests) return;
+      setGuidedProgress((prev) => ({ ...prev, guests: true }));
+      await handleSend(`Guest count: ${guidedGuests}.`);
+    },
+    [guidedGuests],
+  );
 
   const handleUseLocation = () => {
     if (!navigator.geolocation) {
@@ -445,13 +559,146 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
     handleSend(value);
   };
 
+  const guidedStepContent = useMemo(() => {
+    if (guidedStep === 'location') {
+      return (
+        <div className="space-y-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">Step 1</p>
+            <h3 className="text-sm font-semibold text-neutral-900">Choose a destination</h3>
+            <p className="mt-1 text-xs text-neutral-500">Pick a city or country to start curating.</p>
+          </div>
+          <CountrySearchSelect value={guidedLocation} onChange={(value) => setGuidedLocation(value ?? null)} />
+          <button
+            type="button"
+            onClick={handleGuidedLocationNext}
+            className="w-full rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-neutral-800"
+          >
+            Continue
+          </button>
+        </div>
+      );
+    }
+
+    if (guidedStep === 'intent') {
+      return (
+        <div className="space-y-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">Step 2</p>
+            <h3 className="text-sm font-semibold text-neutral-900">What are you looking for?</h3>
+            <p className="mt-1 text-xs text-neutral-500">
+              Tell us the vibe, category, or activity style you want.
+            </p>
+          </div>
+          <input
+            value={guidedIntent}
+            onChange={(event) => setGuidedIntent(event.target.value)}
+            placeholder="Culture & History, food tours, hidden gems..."
+            className="w-full rounded-xl border border-neutral-200 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-900"
+          />
+          <button
+            type="button"
+            onClick={handleGuidedIntentNext}
+            className="w-full rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-neutral-800"
+          >
+            Continue
+          </button>
+        </div>
+      );
+    }
+
+    if (guidedStep === 'date') {
+      return (
+        <div className="space-y-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">Step 3</p>
+            <h3 className="text-sm font-semibold text-neutral-900">Select your travel date</h3>
+            <p className="mt-1 text-xs text-neutral-500">Choose the day you want to go.</p>
+          </div>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setCalendarOpen((prev) => !prev)}
+              className="flex w-full items-center justify-between rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-700 shadow-sm"
+            >
+              {guidedDateRange.startDate?.toLocaleDateString() ?? 'Select date'}
+              <span className="text-[11px] text-neutral-400">Tap to edit</span>
+            </button>
+            <AnimatePresence>
+              {calendarOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  className="absolute left-0 z-20 mt-2 w-full rounded-2xl border border-neutral-200 bg-white p-3 shadow-xl"
+                >
+                  <SearchCalendar
+                    value={guidedDateRange}
+                    onChange={(value) => setGuidedDateRange(value.selection)}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+          <button
+            type="button"
+            onClick={handleGuidedDateNext}
+            className="w-full rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-neutral-800"
+          >
+            Continue
+          </button>
+        </div>
+      );
+    }
+
+    if (guidedStep === 'guests') {
+      return (
+        <div className="space-y-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">Step 4</p>
+            <h3 className="text-sm font-semibold text-neutral-900">How many guests?</h3>
+            <p className="mt-1 text-xs text-neutral-500">Let us tailor the experience to your group size.</p>
+          </div>
+          <div className="rounded-2xl border border-neutral-100 bg-neutral-50 px-3 py-2">
+            <Counter
+              title="Guests"
+              subtitle="Add guests"
+              value={guidedGuests}
+              onChange={(value) => setGuidedGuests(value)}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={handleGuidedGuestsNext}
+            className="w-full rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-neutral-800"
+          >
+            Show listings
+          </button>
+        </div>
+      );
+    }
+
+    return null;
+  }, [
+    guidedStep,
+    guidedLocation,
+    guidedIntent,
+    guidedDateRange,
+    guidedGuests,
+    calendarOpen,
+    handleGuidedLocationNext,
+    handleGuidedIntentNext,
+    handleGuidedDateNext,
+    handleGuidedGuestsNext,
+  ]);
+
   const renderMessageContent = (message: AiMessage) => {
     if (message.messageType === 'audio' && message.audioUrl) {
       return <AudioPlayer src={message.audioUrl} durationMs={message.audioDurationMs} />;
     }
 
   if (message.role === 'user') {
-      return <div className="whitespace-pre-line leading-relaxed">{message.content}</div>;
+      return <div className="whitespace-pre-line text-black/90 leading-relaxed">{message.content}</div>;
     }
 
     const shouldAnimate =
@@ -541,6 +788,17 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
         ref={scrollRef}
         className="flex-1 min-h-0 space-y-4 overflow-y-auto bg-neutral-50 px-4 py-5"
         >
+          {!guidedComplete && (
+          <motion.div
+            layout
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            className="rounded-3xl border border-neutral-200 bg-white px-4 py-4 shadow-sm"
+          >
+            {guidedStepContent}
+          </motion.div>
+        )}
         <AnimatePresence>
           {messages.map((message) => {
             const isUser = message.role === 'user';
@@ -635,7 +893,7 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
           </motion.div>
         )}
 
-        {criteriaMet && recommendations.length > 0 && isLatestAssistantTyped && !listingsUnlocked && (
+        {guidedComplete && criteriaMet && recommendations.length > 0 && isLatestAssistantTyped && !listingsUnlocked && (
           <motion.div
             layout
             initial={{ opacity: 0, y: 10 }}
@@ -647,39 +905,39 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-900 text-white">
               <LuRocket className="h-5 w-5" />
             </div>
-            <div className="min-w-0 flex-1 rounded-2xl bg-white px-4 py-4 shadow-sm">
+            <div className="min-w-0 flex-1 rounded-2xl border border-sky-100 bg-gradient-to-br from-white via-sky-50 to-white px-4 py-4 shadow-sm">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-sm font-semibold text-neutral-900">Confirm details</p>
-                  <p className="mt-1 text-xs text-neutral-500">Approve to surface the top matches.</p>
+                 <p className="text-sm font-semibold uppercase tracking-[0.2em] text-sky-500">Confirmed Details</p>
+                  <p className="mt-2 text-sm font-semibold text-neutral-900">Everything looks set.</p>
                 </div>
-                <span className="rounded-full bg-neutral-100 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
+                <span className="rounded-full bg-white/70 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-sky-600">
                   Ready
                 </span>
               </div>
-              <div className="mt-3 grid gap-2 text-xs text-neutral-600 sm:grid-cols-2">
+              <div className="mt-4 space-y-2 text-sm text-neutral-700">
                 {memory.location && (
-                  <div className="rounded-xl bg-neutral-50 px-3 py-2">
-                    <p className="text-[10px] uppercase tracking-wide text-neutral-400">Location</p>
-                    <p className="font-semibold text-neutral-800">{memory.location}</p>
+                  <div className="flex items-center justify-between rounded-xl bg-white/80 px-3 py-2">
+                    <span className="font-semibold text-neutral-900">Location:</span>
+                    <span>{memory.location}</span>
                   </div>
                 )}
                 {memory.category && (
-                  <div className="rounded-xl bg-neutral-50 px-3 py-2">
-                    <p className="text-[10px] uppercase tracking-wide text-neutral-400">Category</p>
-                    <p className="font-semibold text-neutral-800">{memory.category}</p>
+                  <div className="flex items-center justify-between rounded-xl bg-white/80 px-3 py-2">
+                    <span className="font-semibold text-neutral-900">Category:</span>
+                    <span>{memory.category}</span>
                   </div>
                 )}
                 {formattedDateRange && (
-                  <div className="rounded-xl bg-neutral-50 px-3 py-2">
-                    <p className="text-[10px] uppercase tracking-wide text-neutral-400">Dates</p>
-                    <p className="font-semibold text-neutral-800">{formattedDateRange}</p>
+                  <div className="flex items-center justify-between rounded-xl bg-white/80 px-3 py-2">
+                    <span className="font-semibold text-neutral-900">Travel date:</span>
+                    <span>{formattedDateRange}</span>
                   </div>
                 )}
                 {memory.guestCount && (
-                  <div className="rounded-xl bg-neutral-50 px-3 py-2">
-                    <p className="text-[10px] uppercase tracking-wide text-neutral-400">Guests</p>
-                    <p className="font-semibold text-neutral-800">{memory.guestCount}</p>
+                  <div className="flex items-center justify-between rounded-xl bg-white/80 px-3 py-2">
+                    <span className="font-semibold text-neutral-900">Guests:</span>
+                    <span>{memory.guestCount} people</span>
                   </div>
                 )}
               </div>
@@ -703,7 +961,7 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
           </motion.div>
         )}
 
-        {criteriaMet && recommendations.length > 0 && isLatestAssistantTyped && listingsUnlocked && (
+        {guidedComplete && criteriaMet && recommendations.length > 0 && isLatestAssistantTyped && listingsUnlocked && (
           <motion.div
             layout
             initial={{ opacity: 0, y: 10 }}
@@ -738,7 +996,7 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
                     initial={{ opacity: 0, scale: 0.96 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.2, delay: index * 0.04 }}
-                    whileHover={{ y: -4, scale: 1.01 }}
+                    whileHover={{ y: 2, scale: 0.97 }}
                     className="group relative min-w-[240px] max-w-[260px] overflow-hidden rounded-2xl border border-neutral-100 text-left shadow-sm"
                   >
                     <div

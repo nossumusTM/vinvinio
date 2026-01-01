@@ -9,9 +9,13 @@ import Avatar from './Avatar';
 import { HiMiniMicrophone } from 'react-icons/hi2';
 import { HiOutlinePaperClip } from 'react-icons/hi';
 import { AiOutlineRobot } from 'react-icons/ai'
+import { MdOutlineVerified } from "react-icons/md";
+import { GoNorthStar } from "react-icons/go";
+import { GrSafariOption } from "react-icons/gr";
 import { SiOpenai } from "react-icons/si";
 import { TbBracketsContainStart } from "react-icons/tb";
 import { LuRocket } from 'react-icons/lu';
+import { TiPin } from "react-icons/ti";
 import { GiArtificialHive } from "react-icons/gi";
 import { MdOutlineShutterSpeed } from "react-icons/md";
 import useVinAiChat, { AI_FORCE_ASSISTANT } from '../hooks/useVinAiChat';
@@ -209,43 +213,73 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
                       src={user.id === VIN_AI_ID ? undefined : user.image}
                       name={user.id === VIN_AI_ID ? 'AI Force' : user.name}
                       size={48}
-                      fallbackIcon={user.id === VIN_AI_ID ? <GiArtificialHive className="h-7 w-7" /> : undefined}
+                      fallbackIcon={user.id === VIN_AI_ID ? <LuRocket className="h-7 w-7" /> : undefined}
                     />
 
                     {user.id === CUSTOMER_SERVICE_ID && (
-                      <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 50 50"
-                          width="20"
-                          height="20"
-                          style={{ display: 'inline-block', verticalAlign: 'middle' }}
-                        >
-                          <defs>
-                            <linearGradient id="verifiedGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                              <stop offset="0%" stopColor="#2200ffff" />
-                              <stop offset="50%" stopColor="#3d08ff" />
-                              <stop offset="100%" stopColor="#3604ff" />
-                            </linearGradient>
-                          </defs>
-                          <path
-                            d="M45.103,24.995l3.195-6.245l-5.892-3.807l-0.354-7.006l-7.006-0.35l-3.81-5.89l-6.242,3.2l-6.245-3.196l-3.806,5.893
-                            L7.938,7.948l-0.352,7.007l-5.89,3.81l3.2,6.242L1.702,31.25l5.892,3.807l0.354,7.006l7.006,0.35l3.81,5.891l6.242-3.2l6.245,3.195
-                            l3.806-5.893l7.005-0.354l0.352-7.006l5.89-3.81L45.103,24.995z"
-                            fill="url(#verifiedGradient)"
-                          />
-                          <path
-                            d="M22.24,32.562l-6.82-6.819l2.121-2.121l4.732,4.731l10.202-9.888l2.088,2.154L22.24,32.562z"
-                            fill="white"
-                          />
-                        </svg>
+                      <div className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center">
+                        <div className="relative flex items-center justify-center">
+                          {/* Gradient badge */}
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 50 50"
+                            width="20"
+                            height="20"
+                            className="block"
+                          >
+                            <defs>
+                              <linearGradient id="verifiedGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stopColor="#2200ff" />
+                                <stop offset="50%" stopColor="#3d08ff" />
+                                <stop offset="100%" stopColor="#3604ff" />
+                              </linearGradient>
+                            </defs>
+                            <path
+                              d="M45.103,24.995l3.195-6.245l-5.892-3.807l-0.354-7.006l-7.006-0.35l-3.81-5.89l-6.242,3.2l-6.245-3.196l-3.806,5.893
+                              L7.938,7.948l-0.352,7.007l-5.89,3.81l3.2,6.242L1.702,31.25l5.892,3.807l0.354,7.006l7.006,0.35l3.81,5.891l6.242-3.2l6.245,3.195
+                              l3.806-5.893l7.005-0.354l0.352-7.006l5.89-3.81L45.103,24.995z"
+                              fill="url(#verifiedGradient)"
+                            />
+                          </svg>
+
+                          {/* Verified icon overlay */}
+                          <GrSafariOption className="absolute h-2.5 w-2.5 text-white" />
+                        </div>
                       </div>
                     )}
-                    {/* {user.id === VIN_AI_ID && (
-                      <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#2200ffff] text-white shadow-sm">
-                        <LuRocket className="h-3 w-3" />
+
+
+                    {user.id === VIN_AI_ID && (
+                      <div className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center">
+                        <div className="relative flex items-center justify-center">
+                          {/* SVG badge */}
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 50 50"
+                            width="20"
+                            height="20"
+                            className="block"
+                          >
+                            <defs>
+                              <linearGradient id="verifiedGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stopColor="#2200ff" />
+                                <stop offset="50%" stopColor="#3d08ff" />
+                                <stop offset="100%" stopColor="#3604ff" />
+                              </linearGradient>
+                            </defs>
+                            <path
+                              d="M45.103,24.995l3.195-6.245l-5.892-3.807l-0.354-7.006l-7.006-0.35l-3.81-5.89l-6.242,3.2l-6.245-3.196l-3.806,5.893
+                              L7.938,7.948l-0.352,7.007l-5.89,3.81l3.2,6.242L1.702,31.25l5.892,3.807l0.354,7.006l7.006,0.35l3.81,5.891l6.242-3.2l6.245,3.195
+                              l3.806-5.893l7.005-0.354l0.352-7.006l5.89-3.81L45.103,24.995z"
+                              fill="url(#verifiedGradient)"
+                            />
+                          </svg>
+
+                          {/* Pin overlay */}
+                          <TiPin className="absolute h-3 w-3 text-white" />
+                        </div>
                       </div>
-                    )} */}
+                    )}
                   </motion.div>
 
                   <div>
