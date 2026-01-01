@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { LuMaximize2, LuRocket, LuSkipForward, LuX } from 'react-icons/lu';
 import { MdFullscreen } from "react-icons/md";
@@ -12,11 +12,16 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Picker from '@emoji-mart/react';
 import data from '@emoji-mart/data';
 import toast from 'react-hot-toast';
+import { Range } from 'react-date-range';
 
 import useVinAiChat, { AI_FORCE_ASSISTANT, AiMessage } from '../hooks/useVinAiChat';
 import type { AiListing } from '../hooks/useVinAiChat';
 import useMessenger from '../hooks/useMessager';
 import VinAiChatView from './VinAiChatView';
+
+import CountrySearchSelect, { type CountrySelectValue } from './inputs/CountrySearchSelect';
+import Calendar from './inputs/Calendar';
+import Counter from './inputs/Counter';
 
 interface VinAiSearchWidgetProps {
   onSkip: () => void;
@@ -273,6 +278,21 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
   const speechRecognitionRef = useRef<SpeechRecognition | null>(null);
   const [listingsUnlocked, setListingsUnlocked] = useState(false);
   const [selectedListing, setSelectedListing] = useState<AiListing | null>(null);
+  const [guidedLocation, setGuidedLocation] = useState<CountrySelectValue | null>(null);
+  const [guidedIntent, setGuidedIntent] = useState('');
+  const [guidedDateRange, setGuidedDateRange] = useState<Range>({
+    startDate: new Date(),
+    endDate: new Date(),
+    key: 'selection',
+  });
+  const [guidedGuests, setGuidedGuests] = useState(1);
+  const [guidedTime, setGuidedTime] = useState<string | null>(null);
+  const [guidedProgress, setGuidedProgress] = useState({
+    location: false,
+    intent: false,
+    date: false,
+    guests: false,
+  });
   const router = useRouter();
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -286,10 +306,44 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
   }, [init]);
 
   useEffect(() => {
-    const node = scrollRef.current;
-    if (!node) return;
-    node.scrollTop = node.scrollHeight;
-  }, [messages.length, recommendations.length, isSending]);
+    const hasMemory =
+      Boolean(memory?.location) ||
+      Boolean(memory?.category) ||
+      Boolean(memory?.dateRange?.startDate) ||
+      Boolean(memory?.guestCount);
+    if (!hasMemory && messages.length <= 1) {
+      setGuidedProgress({
+        location: false,
+        intent: false,
+        date: false,
+        guests: false,
+      });
+      setGuidedLocation(null);
+      setGuidedIntent('');
+      setGuidedDateRange({
+        startDate: new Date(),
+        endDate: new Date(),
+        key: 'selection',
+      });
+      setGuidedGuests(1);
+      setGuidedTime(null);
+    }
+  }, [memory, messages.length]);
+
+  useEffect(() => {
+    setGuidedProgress((prev) => ({
+      location: prev.location || Boolean(memory?.location),
+      intent: prev.intent || Boolean(memory?.category) || Boolean(memory?.keywords?.length),
+      date: prev.date || Boolean(memory?.dateRange?.startDate),
+      guests: prev.guests || Boolean(memory?.guestCount),
+    }));
+  }, [memory]);
+
+  useEffect(() => {
+    if (memory?.guestCount) {
+      setGuidedGuests(memory.guestCount);
+    }
+  }, [memory?.guestCount]);
 
   useEffect(() => {
     if (!messages.length) return;
@@ -308,10 +362,7 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
     [messages],
   );
   const isLatestAssistantTyped = !lastAssistantId || typedMessageIds.includes(lastAssistantId);
-  const hasUserMessage = useMemo(
-    () => messages.some((message) => message.role === 'user'),
-    [messages],
-  );
+  
 
   useEffect(() => {
     setListingsUnlocked(false);
@@ -323,6 +374,21 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
     const end = memory.dateRange.endDate?.slice(0, 10) ?? start;
     return start === end ? start : `${start} → ${end}`;
   }, [memory]);
+
+  const guidedStep = useMemo(() => {
+    if (!guidedProgress.location) return 'location';
+    if (!guidedProgress.intent) return 'intent';
+    if (!guidedProgress.date) return 'date';
+    if (!guidedProgress.guests) return 'guests';
+    return 'done';
+  }, [guidedProgress]);
+
+  const guidedComplete = guidedStep === 'done';
+
+  const formatLocationLabel = (value: CountrySelectValue | null) => {
+    if (!value) return '';
+    return value.city ? `${value.city}, ${value.label}` : value.label;
+  };
 
   const handleUseLocation = () => {
     if (!navigator.geolocation) {
@@ -344,9 +410,11 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
           ]
             .filter(Boolean)
             .join(', ');
+          setGuidedProgress((prev) => ({ ...prev, location: true }));
           await handleSend(label || `My location is ${coords.latitude}, ${coords.longitude}`);
         } catch (error) {
           console.error('Failed to fetch location label', error);
+          setGuidedProgress((prev) => ({ ...prev, location: true }));
           await handleSend(`My location is ${coords.latitude}, ${coords.longitude}`);
         }
       },
@@ -381,6 +449,34 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
     setShowEmojiPicker(false);
     await sendMessage(messageToSend);
   };
+
+  const handleGuidedLocationNext = useCallback(async () => {
+    if (!guidedLocation) return;
+    setGuidedProgress((prev) => ({ ...prev, location: true }));
+    await handleSend(`My destination is ${formatLocationLabel(guidedLocation)}.`);
+  }, [guidedLocation, formatLocationLabel]);
+
+  const handleGuidedIntentNext = useCallback(async () => {
+    const trimmed = guidedIntent.trim();
+    if (!trimmed) return;
+    setGuidedProgress((prev) => ({ ...prev, intent: true }));
+    await handleSend(`I'm looking for ${trimmed}.`);
+  }, [guidedIntent]);
+
+  const handleGuidedDateNext = useCallback(async () => {
+    if (!guidedDateRange?.startDate) return;
+    const start = guidedDateRange.startDate.toLocaleDateString();
+    const end = guidedDateRange.endDate?.toLocaleDateString() ?? start;
+    setGuidedProgress((prev) => ({ ...prev, date: true }));
+    const timeLabel = guidedTime ? ` at ${guidedTime}` : '';
+    await handleSend(`Travel dates: ${start}${end !== start ? ` to ${end}` : ''}${timeLabel}.`);
+  }, [guidedDateRange, guidedTime]);
+
+  const handleGuidedGuestsNext = useCallback(async () => {
+    if (!guidedGuests) return;
+    setGuidedProgress((prev) => ({ ...prev, guests: true }));
+    await handleSend(`Guest count: ${guidedGuests}.`);
+  }, [guidedGuests]);
 
   const handleEmojiSelect = (emoji: any) => {
     setInput((prev) => `${prev}${emoji?.native ?? emoji?.shortcodes ?? ''}`);
@@ -567,6 +663,138 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
     return <StructuredMessage text={message.content} />;
   };
 
+  const guidedStepContent = useMemo(() => {
+    if (guidedStep === 'location') {
+      return (
+        <div className="space-y-3">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-400">Step 1</p>
+            <h3 className="text-xs font-semibold text-neutral-900">Choose a destination</h3>
+            <p className="mt-1 text-[11px] text-neutral-500">Pick a city or country to start curating.</p>
+          </div>
+          <CountrySearchSelect value={guidedLocation} onChange={(value) => setGuidedLocation(value ?? null)} />
+          <button
+            type="button"
+            onClick={handleUseLocation}
+            className="w-full rounded-full border border-neutral-200 px-3 py-2 text-[11px] font-semibold text-neutral-700 shadow-sm transition hover:bg-neutral-50"
+          >
+            Use my location
+          </button>
+          <button
+            type="button"
+            onClick={handleGuidedLocationNext}
+            className="w-full rounded-full bg-neutral-900 px-3 py-2 text-[11px] font-semibold text-white shadow-sm transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300"
+            disabled={!guidedLocation}
+          >
+            Continue
+          </button>
+        </div>
+      );
+    }
+
+    if (guidedStep === 'intent') {
+      return (
+        <div className="space-y-3">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-400">Step 2</p>
+            <h3 className="text-xs font-semibold text-neutral-900">What are you looking for?</h3>
+            <p className="mt-1 text-[11px] text-neutral-500">Describe the activity vibe you want.</p>
+          </div>
+          <input
+            value={guidedIntent}
+            onChange={(event) => setGuidedIntent(event.target.value)}
+            placeholder="Food tours, hidden gems, art walks..."
+            className="w-full rounded-xl border border-neutral-200 px-3 py-2 text-[11px] shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-900"
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                handleGuidedIntentNext();
+              }
+            }}
+          />
+          <button
+            type="button"
+            onClick={handleGuidedIntentNext}
+            className="w-full rounded-full bg-neutral-900 px-3 py-2 text-[11px] font-semibold text-white shadow-sm transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300"
+            disabled={!guidedIntent.trim()}
+          >
+            Continue
+          </button>
+        </div>
+      );
+    }
+
+    if (guidedStep === 'date') {
+      return (
+        <div className="space-y-3">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-400">Step 3</p>
+            <h3 className="text-xs font-semibold text-neutral-900">Select your travel date</h3>
+            <p className="mt-1 text-[11px] text-neutral-500">Choose the dates that fit your trip.</p>
+          </div>
+          <Calendar
+            value={guidedDateRange}
+            onChange={(value) => setGuidedDateRange(value.selection)}
+            selectedTime={guidedTime}
+            onTimeChange={(time) => setGuidedTime(time || null)}
+            forceOpenTimes
+          />
+          <button
+            type="button"
+            onClick={handleGuidedDateNext}
+            className="w-full rounded-full bg-neutral-900 px-3 py-2 text-[11px] font-semibold text-white shadow-sm transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300"
+            disabled={!guidedDateRange?.startDate}
+          >
+            Continue
+          </button>
+        </div>
+      );
+    }
+
+    if (guidedStep === 'guests') {
+      return (
+        <div className="space-y-3">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-400">Step 4</p>
+            <h3 className="text-xs font-semibold text-neutral-900">How many people are traveling?</h3>
+            <p className="mt-1 text-[11px] text-neutral-500">You can reply with just a number.</p>
+          </div>
+          <div className="rounded-2xl border border-neutral-100 bg-neutral-50 px-3 py-2">
+            <Counter
+              title="Guests"
+              subtitle="Add guests"
+              value={guidedGuests}
+              onChange={(value) => setGuidedGuests(value)}
+              enableManualInput
+            />
+          </div>
+          <button
+            type="button"
+            onClick={handleGuidedGuestsNext}
+            className="w-full rounded-full bg-neutral-900 px-3 py-2 text-[11px] font-semibold text-white shadow-sm transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300"
+            disabled={guidedGuests < 1}
+          >
+            Show listings
+          </button>
+        </div>
+      );
+    }
+
+    return null;
+  }, [
+    guidedStep,
+    guidedLocation,
+    guidedIntent,
+    guidedDateRange,
+    guidedGuests,
+    guidedTime,
+    handleGuidedLocationNext,
+    handleGuidedIntentNext,
+    handleGuidedDateNext,
+    handleGuidedGuestsNext,
+    handleUseLocation,
+  ]);
+
   return (
      <>
       <div className="space-y-3">
@@ -634,22 +862,14 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
           ))}
         </AnimatePresence>
 
-        {!hasUserMessage && (
+        {!guidedComplete && (
           <motion.div
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.18 }}
-            className="rounded-2xl border border-neutral-100 bg-white px-3 py-2 text-sm shadow-sm"
+            className="rounded-2xl border border-neutral-100 bg-white px-3 py-3 text-sm shadow-sm"
           >
-            <p className="text-xs font-semibold text-neutral-700">Share your location</p>
-            <p className="mt-1 text-xs text-neutral-500">Use your device location to get local picks.</p>
-            <button
-              type="button"
-              onClick={handleUseLocation}
-              className="mt-2 inline-flex items-center gap-2 rounded-full bg-neutral-900 px-3 py-1.5 text-[11px] font-semibold text-white"
-            >
-              Use my location
-            </button>
+          {guidedStepContent}
           </motion.div>
         )}
 

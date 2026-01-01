@@ -50,7 +50,7 @@ const welcomeMessage: AiMessage = {
   id: 'vin-ai-welcome',
   role: 'assistant',
   content:
-    "Hi, I'm AI Force 👋 Tell me your country or region so I can curate the best experiences. You can also tap “Use my location.”",
+    "Hi, I'm AI Force 👋 Let's start with your destination. Choose a city or country, or tap “Use my location.”",
   createdAt: new Date().toISOString(),
 };
 

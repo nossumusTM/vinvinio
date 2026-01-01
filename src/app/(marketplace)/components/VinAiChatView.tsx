@@ -275,6 +275,7 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
     key: 'selection',
   });
   const [guidedGuests, setGuidedGuests] = useState(1);
+  const [guidedTime, setGuidedTime] = useState<string | null>(null);
 
   const [guidedProgress, setGuidedProgress] = useState({
     location: false,
@@ -315,7 +316,7 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
         key: 'selection',
       });
       setGuidedGuests(1);
-
+      setGuidedTime(null);
     }
   }, [memory, messages.length]);
 
@@ -333,12 +334,6 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
       setGuidedGuests(memory.guestCount);
     }
   }, [memory?.guestCount]);
-
-  useEffect(() => {
-    const node = scrollRef.current;
-    if (!node) return;
-    node.scrollTop = node.scrollHeight;
-  }, [messages.length, recommendations.length, isSending]);
 
   useEffect(() => {
     if (!messages.length) return;
@@ -381,50 +376,45 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
 
   const guidedComplete = guidedStep === 'done';
 
+   useEffect(() => {
+    const node = scrollRef.current;
+    if (!node) return;
+    node.scrollTop = node.scrollHeight;
+  }, [messages.length, recommendations.length, isSending, guidedStep]);
+
   const formatLocationLabel = (value: CountrySelectValue | null) => {
     if (!value) return '';
     return value.city ? `${value.city}, ${value.label}` : value.label;
   };
 
-  const handleGuidedLocationNext = useCallback(
-    () => async () => {
-      if (!guidedLocation) return;
-      setGuidedProgress((prev) => ({ ...prev, location: true }));
-      await handleSend(`My destination is ${formatLocationLabel(guidedLocation)}.`);
-    },
-    [guidedLocation, formatLocationLabel],
-  );
+  const handleGuidedLocationNext = useCallback(async () => {
+    if (!guidedLocation) return;
+    setGuidedProgress((prev) => ({ ...prev, location: true }));
+    await handleSend(`My destination is ${formatLocationLabel(guidedLocation)}.`);
+  }, [guidedLocation, formatLocationLabel]);
 
-  const handleGuidedIntentNext = useCallback(
-    () => async () => {
-      const trimmed = guidedIntent.trim();
-      if (!trimmed) return;
-      setGuidedProgress((prev) => ({ ...prev, intent: true }));
-      await handleSend(`I'm looking for ${trimmed}.`);
-    },
-    [guidedIntent],
-  );
+  const handleGuidedIntentNext = useCallback(async () => {
+    const trimmed = guidedIntent.trim();
+    if (!trimmed) return;
+    setGuidedProgress((prev) => ({ ...prev, intent: true }));
+    await handleSend(`I'm looking for ${trimmed}.`);
+  }, [guidedIntent]);
 
-  const handleGuidedDateNext = useCallback(
-    () => async () => {
-      if (!guidedDateRange?.startDate) return;
-      const start = guidedDateRange.startDate.toLocaleDateString();
-      const end = guidedDateRange.endDate?.toLocaleDateString() ?? start;
-      setGuidedProgress((prev) => ({ ...prev, date: true }));
+  const handleGuidedDateNext = useCallback(async () => {
+    if (!guidedDateRange?.startDate) return;
+    const start = guidedDateRange.startDate.toLocaleDateString();
+    const end = guidedDateRange.endDate?.toLocaleDateString() ?? start;
+    setGuidedProgress((prev) => ({ ...prev, date: true }));
 
-      await handleSend(`Travel dates: ${start}${end !== start ? ` to ${end}` : ''}.`);
-    },
-    [guidedDateRange],
-  );
+    const timeLabel = guidedTime ? ` at ${guidedTime}` : '';
+    await handleSend(`Travel dates: ${start}${end !== start ? ` to ${end}` : ''}${timeLabel}.`);
+  }, [guidedDateRange, guidedTime]);
 
-  const handleGuidedGuestsNext = useCallback(
-    () => async () => {
-      if (!guidedGuests) return;
-      setGuidedProgress((prev) => ({ ...prev, guests: true }));
-      await handleSend(`Guest count: ${guidedGuests}.`);
-    },
-    [guidedGuests],
-  );
+  const handleGuidedGuestsNext = useCallback(async () => {
+    if (!guidedGuests) return;
+    setGuidedProgress((prev) => ({ ...prev, guests: true }));
+    await handleSend(`Guest count: ${guidedGuests}.`);
+  }, [guidedGuests]);
 
   const handleUseLocation = () => {
     if (!navigator.geolocation) {
@@ -579,7 +569,7 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
             type="button"
             onClick={handleGuidedLocationNext}
             className="w-full rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300"
-            disabled={!guidedLocation}
+            disabled={guidedGuests < 1}
           >
             Continue
           </button>
@@ -602,12 +592,18 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
             onChange={(event) => setGuidedIntent(event.target.value)}
             placeholder="Culture & History, food tours, hidden gems..."
             className="w-full rounded-xl border border-neutral-200 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-900"
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                handleGuidedIntentNext();
+              }
+            }}
           />
           <button
             type="button"
             onClick={handleGuidedIntentNext}
-className="w-full rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300"
-            disabled={!guidedLocation}
+            className="w-full rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300"
+            disabled={!guidedIntent.trim()}
           >
             Continue
           </button>
@@ -626,12 +622,15 @@ className="w-full rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold te
           <Calendar
             value={guidedDateRange}
             onChange={(value) => setGuidedDateRange(value.selection)}
+            selectedTime={guidedTime}
+            onTimeChange={(time) => setGuidedTime(time || null)}
+            forceOpenTimes
           />
           <button
             type="button"
             onClick={handleGuidedDateNext}
             className="w-full rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300"
-            disabled={!guidedLocation}
+            disabled={!guidedDateRange?.startDate}
           >
             Continue
           </button>
@@ -653,13 +652,14 @@ className="w-full rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold te
               subtitle="Add guests"
               value={guidedGuests}
               onChange={(value) => setGuidedGuests(value)}
+              enableManualInput
             />
           </div>
           <button
             type="button"
             onClick={handleGuidedGuestsNext}
-className="w-full rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300"
-            disabled={!guidedLocation}
+            className="w-full rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300"
+            disabled={guidedGuests < 1}
           >
             Show listings
           </button>
@@ -674,6 +674,7 @@ className="w-full rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold te
     guidedIntent,
     guidedDateRange,
     guidedGuests,
+    guidedTime,
     handleGuidedLocationNext,
     handleGuidedIntentNext,
     handleGuidedDateNext,
@@ -782,17 +783,7 @@ className="w-full rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold te
         ref={scrollRef}
         className="flex-1 min-h-0 space-y-4 overflow-y-auto bg-neutral-50 px-4 py-5"
         >
-          {!guidedComplete && (
-          <motion.div
-            layout
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
-            className="rounded-3xl border border-neutral-200 bg-white px-4 py-4 shadow-sm"
-          >
-            {guidedStepContent}
-          </motion.div>
-        )}
+          
         <AnimatePresence>
           {messages.map((message) => {
             const isUser = message.role === 'user';
@@ -840,6 +831,23 @@ className="w-full rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold te
             );
           })}
         </AnimatePresence>
+
+        {!guidedComplete && (
+          <motion.div
+            layout
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            className="flex gap-3 text-left"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-900 text-white">
+              <LuRocket className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1 rounded-3xl border border-neutral-200 bg-white px-4 py-4 shadow-sm">
+              {guidedStepContent}
+            </div>
+          </motion.div>
+        )}
 
         {isSending && (
           <motion.div
