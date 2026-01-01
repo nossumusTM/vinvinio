@@ -18,6 +18,7 @@ import useVinAiChat, { AI_FORCE_ASSISTANT } from '../hooks/useVinAiChat';
 import type { AiListing, AiMessage } from '../hooks/useVinAiChat';
 import CountrySearchSelect, { type CountrySelectValue } from './inputs/CountrySearchSelect';
 import SearchCalendar from './inputs/SearchCalendar';
+import Calendar from './inputs/Calendar';
 import Counter from './inputs/Counter';
 
 interface VinAiChatViewProps {
@@ -274,7 +275,7 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
     key: 'selection',
   });
   const [guidedGuests, setGuidedGuests] = useState(1);
-  const [calendarOpen, setCalendarOpen] = useState(false);
+
   const [guidedProgress, setGuidedProgress] = useState({
     location: false,
     intent: false,
@@ -314,7 +315,7 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
         key: 'selection',
       });
       setGuidedGuests(1);
-      setCalendarOpen(false);
+
     }
   }, [memory, messages.length]);
 
@@ -358,11 +359,7 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
     [messages],
   );
   const isLatestAssistantTyped = !lastAssistantId || typedMessageIds.includes(lastAssistantId);
-  const hasUserMessage = useMemo(
-    () => messages.some((message) => message.role === 'user'),
-    [messages],
-  );
-
+  
   useEffect(() => {
     setListingsUnlocked(false);
   }, [criteriaMet, memory, recommendations.length]);
@@ -395,7 +392,7 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
       setGuidedProgress((prev) => ({ ...prev, location: true }));
       await handleSend(`My destination is ${formatLocationLabel(guidedLocation)}.`);
     },
-    [guidedLocation],
+    [guidedLocation, formatLocationLabel],
   );
 
   const handleGuidedIntentNext = useCallback(
@@ -414,7 +411,7 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
       const start = guidedDateRange.startDate.toLocaleDateString();
       const end = guidedDateRange.endDate?.toLocaleDateString() ?? start;
       setGuidedProgress((prev) => ({ ...prev, date: true }));
-      setCalendarOpen(false);
+
       await handleSend(`Travel dates: ${start}${end !== start ? ` to ${end}` : ''}.`);
     },
     [guidedDateRange],
@@ -449,9 +446,11 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
           ]
             .filter(Boolean)
             .join(', ');
+          setGuidedProgress((prev) => ({ ...prev, location: true }));
           await handleSend(label || `My location is ${coords.latitude}, ${coords.longitude}`);
         } catch (error) {
           console.error('Failed to fetch location label', error);
+          setGuidedProgress((prev) => ({ ...prev, location: true }));
           await handleSend(`My location is ${coords.latitude}, ${coords.longitude}`);
         }
       },
@@ -569,10 +568,18 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
             <p className="mt-1 text-xs text-neutral-500">Pick a city or country to start curating.</p>
           </div>
           <CountrySearchSelect value={guidedLocation} onChange={(value) => setGuidedLocation(value ?? null)} />
+            <button
+            type="button"
+            onClick={handleUseLocation}
+            className="w-full rounded-full border border-neutral-200 px-4 py-2 text-xs font-semibold text-neutral-700 shadow-sm transition hover:bg-neutral-50"
+          >
+            Use my location
+          </button>
           <button
             type="button"
             onClick={handleGuidedLocationNext}
-            className="w-full rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-neutral-800"
+            className="w-full rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300"
+            disabled={!guidedLocation}
           >
             Continue
           </button>
@@ -599,7 +606,8 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
           <button
             type="button"
             onClick={handleGuidedIntentNext}
-            className="w-full rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-neutral-800"
+className="w-full rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300"
+            disabled={!guidedLocation}
           >
             Continue
           </button>
@@ -613,37 +621,17 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">Step 3</p>
             <h3 className="text-sm font-semibold text-neutral-900">Select your travel date</h3>
-            <p className="mt-1 text-xs text-neutral-500">Choose the day you want to go.</p>
+            <p className="mt-1 text-xs text-neutral-500">Choose the dates that fit your trip.</p>
           </div>
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setCalendarOpen((prev) => !prev)}
-              className="flex w-full items-center justify-between rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-700 shadow-sm"
-            >
-              {guidedDateRange.startDate?.toLocaleDateString() ?? 'Select date'}
-              <span className="text-[11px] text-neutral-400">Tap to edit</span>
-            </button>
-            <AnimatePresence>
-              {calendarOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: -6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  className="absolute left-0 z-20 mt-2 w-full rounded-2xl border border-neutral-200 bg-white p-3 shadow-xl"
-                >
-                  <SearchCalendar
-                    value={guidedDateRange}
-                    onChange={(value) => setGuidedDateRange(value.selection)}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+          <Calendar
+            value={guidedDateRange}
+            onChange={(value) => setGuidedDateRange(value.selection)}
+          />
           <button
             type="button"
             onClick={handleGuidedDateNext}
-            className="w-full rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-neutral-800"
+            className="w-full rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300"
+            disabled={!guidedLocation}
           >
             Continue
           </button>
@@ -670,7 +658,8 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
           <button
             type="button"
             onClick={handleGuidedGuestsNext}
-            className="w-full rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-neutral-800"
+className="w-full rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300"
+            disabled={!guidedLocation}
           >
             Show listings
           </button>
@@ -685,11 +674,11 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
     guidedIntent,
     guidedDateRange,
     guidedGuests,
-    calendarOpen,
     handleGuidedLocationNext,
     handleGuidedIntentNext,
     handleGuidedDateNext,
     handleGuidedGuestsNext,
+    handleUseLocation,
   ]);
 
   const renderMessageContent = (message: AiMessage) => {
@@ -767,9 +756,14 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
           <button
             type="button"
             onClick={clear}
-            className="flex items-center gap-1 rounded-full border border-neutral-200 px-3 py-1 font-medium text-neutral-600 shadow-sm transition hover:border-neutral-300 hover:bg-neutral-50"
+            className={clsx(
+              'flex items-center rounded-full border border-neutral-200 font-medium text-neutral-600 shadow-sm transition hover:border-neutral-300 hover:bg-neutral-50',
+              isFullscreen ? 'gap-2 px-3 py-1' : 'h-8 w-8 justify-center',
+            )}
+            aria-label="Reset chat"
           >
             <LuTrash2 className="h-4 w-4" />
+            {isFullscreen && <span className="text-xs font-semibold">Reset</span>}
           </button>
           {onClose && (
             <button
@@ -824,16 +818,14 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
                     'inline-flex w-fit max-w-[78%] flex-col rounded-2xl px-4 py-3 text-[15px] shadow-sm backdrop-blur',
                     isUser
                       ? 'bg-white text-neutral-800 ring-1 ring-neutral-100'
-                      : isFullscreen
-                      ? 'bg-gradient-to-br from-white via-slate-50 to-sky-50 text-neutral-900'
-                      : 'bg-gradient-to-br from-white via-slate-50 to-sky-50 text-white shadow-[0_12px_32px_rgba(15,23,42,0.3)]'
+                      : 'bg-gradient-to-br from-white via-slate-50 to-sky-50 text-neutral-900 shadow-[0_12px_32px_rgba(15,23,42,0.08)]'
                   )}
                 >
                   {renderMessageContent(message)}
                 <div
                     className={clsx(
                       'mt-2 text-[11px]',
-                      isUser ? 'text-neutral-400' : isFullscreen ? 'text-neutral-500' : 'text-neutral-300',
+                      isUser ? 'text-neutral-400' : 'text-neutral-500',
                     )}
                   >
                     {new Date(message.createdAt).toLocaleString(undefined, {
@@ -848,33 +840,6 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
             );
           })}
         </AnimatePresence>
-
-        {!hasUserMessage && (
-          <motion.div
-            layout
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
-            className="flex gap-3 text-left"
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-900 text-white">
-              <LuRocket className="h-5 w-5" />
-            </div>
-            <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
-              <p className="text-sm font-semibold text-neutral-800">Share your location</p>
-              <p className="mt-1 text-xs text-neutral-500">
-                Tell me your country or region, or let me use your device location.
-              </p>
-              <button
-                type="button"
-                onClick={handleUseLocation}
-                className="mt-3 inline-flex items-center gap-2 rounded-full bg-neutral-900 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-neutral-800"
-              >
-                Use my location
-              </button>
-            </div>
-          </motion.div>
-        )}
 
         {isSending && (
           <motion.div

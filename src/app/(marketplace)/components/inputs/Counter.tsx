@@ -23,7 +23,7 @@ const Counter: React.FC<CounterProps> = ({
   }, [value]);
 
   const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
+  const holdTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const changeBy = useCallback(
     (delta: number) => {
       const current = valueRef.current;
@@ -39,14 +39,19 @@ const Counter: React.FC<CounterProps> = ({
       if (holdIntervalRef.current) {
         clearInterval(holdIntervalRef.current);
       }
+      if (holdTimeoutRef.current) {
+        clearTimeout(holdTimeoutRef.current);
+      }
 
       // immediate step
       changeBy(delta);
 
-      // continuous steps while held
-      holdIntervalRef.current = setInterval(() => {
-        changeBy(delta);
-      }, 120);
+      // continuous steps while held (after short delay)
+      holdTimeoutRef.current = setTimeout(() => {
+        holdIntervalRef.current = setInterval(() => {
+          changeBy(delta);
+        }, 120);
+      }, 350);
     },
     [changeBy],
   );
@@ -56,12 +61,19 @@ const Counter: React.FC<CounterProps> = ({
       clearInterval(holdIntervalRef.current);
       holdIntervalRef.current = null;
     }
+    if (holdTimeoutRef.current) {
+      clearTimeout(holdTimeoutRef.current);
+      holdTimeoutRef.current = null;
+    }
   }, []);
 
   useEffect(() => {
     return () => {
       if (holdIntervalRef.current) {
         clearInterval(holdIntervalRef.current);
+      }
+      if (holdTimeoutRef.current) {
+        clearTimeout(holdTimeoutRef.current);
       }
     };
   }, []);

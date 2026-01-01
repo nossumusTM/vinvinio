@@ -607,7 +607,7 @@ const SocialCardClient: React.FC<SocialCardClientProps> = ({ currentUser }) => {
             </div>
           </div>
 
-          <div className="mt-8 grid gap-6 lg:grid-cols-2">
+          <div className="mt-8 grid gap-6 lg:grid-cols-1">
             <div className="rounded-3xl border border-neutral-200 bg-white shadow-lg p-6 space-y-4">
               <h3 className="text-base font-semibold text-neutral-900">Visited destinations</h3>
               <p className="text-sm text-neutral-600">
