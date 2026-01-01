@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { LuArrowLeft, LuRocket, LuTrash2, LuX } from 'react-icons/lu';
+import { BiReset } from "react-icons/bi";
 import { useRouter } from 'next/navigation';
 import { TbArrowElbowRight, TbPlayerPause, TbPlayerPlay, TbPlayerStopFilled } from 'react-icons/tb';
 import { HiMiniMicrophone } from 'react-icons/hi2';
@@ -712,15 +713,21 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
   };
 
   const handleBackAction = () => {
+    if (isFullscreen && onClose) {
+      onClose();
+      return;
+    }
     onBack();
   };
 
   const handleCloseAction = () => {
-    if (isFullscreen && onBack) {
-      onBack();
+    if (onClose) {
+      onClose();
       return;
     }
-    onClose?.();
+    if (isFullscreen && onBack) {
+      onBack();
+    }
   };
 
   return (
@@ -753,7 +760,7 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
           </div>
         </div>
         <div className="ml-auto flex items-center gap-3 text-xs text-neutral-500">
-          {lastUpdated && <span>Updated {new Date(lastUpdated).toLocaleTimeString()}</span>}
+          {/* {lastUpdated && <span>Updated {new Date(lastUpdated).toLocaleTimeString()}</span>} */}
           <button
             type="button"
             onClick={clear}
@@ -763,7 +770,7 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
             )}
             aria-label="Reset chat"
           >
-            <LuTrash2 className="h-4 w-4" />
+            <BiReset className="h-4 w-4" />
             {isFullscreen && <span className="text-xs font-semibold">Reset</span>}
           </button>
           {onClose && (

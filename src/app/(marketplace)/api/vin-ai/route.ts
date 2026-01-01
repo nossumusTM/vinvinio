@@ -387,6 +387,26 @@ const parseNamedDateRange = (text: string): DateRange | null => {
   return null;
 };
 
+const parseNumericDate = (text: string): DateRange | null => {
+  const match = text.match(/\b(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})\b/);
+  if (!match) return null;
+  const [, first, second, yearRaw] = match;
+  const firstValue = Number(first);
+  const secondValue = Number(second);
+  const yearValue = normalizeYear(yearRaw);
+  if (!yearValue || !Number.isFinite(firstValue) || !Number.isFinite(secondValue)) return null;
+  const [month, day] =
+    firstValue > 12 && secondValue <= 12
+      ? [secondValue, firstValue]
+      : secondValue > 12 && firstValue <= 12
+        ? [firstValue, secondValue]
+        : [firstValue, secondValue];
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+  const date = new Date(yearValue, month - 1, day);
+  if (Number.isNaN(date.getTime()) || date.getMonth() !== month - 1) return null;
+  return { startDate: date, endDate: date };
+};
+
 const parseSingleDate = (text: string): DateRange | null => {
   const isoMatch = text.match(/\b(\d{4}-\d{2}-\d{2})\b/);
   if (isoMatch) {
@@ -395,6 +415,9 @@ const parseSingleDate = (text: string): DateRange | null => {
       return { startDate: date, endDate: date };
     }
   }
+
+  const numericMatch = parseNumericDate(text);
+  if (numericMatch) return numericMatch;
 
   const normalized = text
     .toLowerCase()
@@ -424,6 +447,11 @@ const matchCountryInText = (text: string) => {
   let bestMatch: string | null = null;
   for (const entry of COUNTRY_MATCHERS) {
     const hit = entry.synonyms.find((synonym) => {
+
+      if (STOP_WORDS.has(synonym)) {
+        return false;
+      }
+
       if (synonym.length <= 3) {
         return new RegExp(`\\b${synonym.replace('.', '\\.')}\\b`, 'i').test(lowercase);
       }
@@ -463,6 +491,7 @@ const extractLocation = (text: string) => {
       .replace(/\s+/g, ' ')
       .trim();
     if (location) {
+      if (!/[a-zA-Z]/.test(location)) return null;
       const lower = location.toLowerCase();
       if (MONTHS[lower] !== undefined) return null;
       return location;
@@ -486,6 +515,12 @@ const extractLocation = (text: string) => {
 const extractGuestCount = (text: string) => {
 
   const normalized = text.toLowerCase();
+
+  const directMatch = text.match(/\b(?:guest count|guest|guests|people|party size|group size)\s*[:\-]?\s*(\d{1,2})\b/i);
+  if (directMatch) {
+    const value = Number(directMatch[1]);
+    return Number.isFinite(value) ? value : null;
+  }
 
   if (/\b(solo|alone|by myself|just me|only me)\b/.test(normalized)) return 1;
   if (/\b(couple|my partner|my husband|my wife|my boyfriend|my girlfriend)\b/.test(normalized)) return 2;
