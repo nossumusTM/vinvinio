@@ -15,6 +15,7 @@ import { usePathname } from 'next/navigation';
 
 import { motion, type Variants } from 'framer-motion';
 import { LuLifeBuoy } from "react-icons/lu";
+import { SiLivechat } from "react-icons/si";
 
 interface NavBarProps {
     currentUser?: SafeUser | null;
@@ -142,14 +143,18 @@ if (!hasMounted) {
               {/* User Menu always on right */}
               <div className="flex-shrink-0 flex items-center gap-3 justify-center items-center z-10">
                 {/* Desktop: show Locale here */}
-                <div className="hidden md:block">
+                <div className="hidden md:flex flex-col items-center leading-none">
+                  {/* Live label */}
+                  {/* <span className="relative -mb-1 text-[7px] font-semibold uppercase tracking-[0.35em] text-sky-300">
+                    LIVE Assistance
+                  </span> */}
+
+                  {/* Help Center button */}
                   <Link
                     href="/help-center"
-                    className="inline-flex items-center gap-2 rounded-2xl bg-white/70 text-sm font-semibold text-neutral-800 transition hover:border-neutral-300 shadow-md px-4 py-2.5 hover:shadow-lg"
+                    className="inline-flex items-center gap-2 rounded-2xl bg-white/70 px-4 py-2.5 text-sm font-semibold text-neutral-800 shadow-md transition hover:shadow-lg hover:border-neutral-300"
                   >
-                    {/* <span className="flex h-9 w-9 items-center justify-center rounded-full bg-transparent shadow-md"> */}
-                      <LuLifeBuoy className="h-4 w-4" />
-                    {/* </span> */}
+                    <SiLivechat className="h-4 w-4" />
                     <span>Help Center</span>
                   </Link>
                 </div>
@@ -165,7 +170,7 @@ if (!hasMounted) {
           </Container>
         </div>
 
-        <div className="relative z-100">
+        <div className="relative z-40">
           <Categories />
         </div>
       </div>

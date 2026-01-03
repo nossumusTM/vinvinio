@@ -1595,7 +1595,7 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
               if (recordingActivatedRef.current || isRecording) return;
               handleSend();
             }}
-            className={`flex h-10 w-10 items-center justify-center rounded-full shadow-sm transition ${
+            className={`flex h-10 w-10 aspect-square items-center justify-center rounded-full transition shadow-sm bg-sky-50 text-sky-700 ring-1 ring-sky-100 hover:bg-sky-100 ${
               isRecording
                 ? 'bg-blue-600 text-white shadow-[0_0_18px_rgba(54,4,255,0.5)]'
                 : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'

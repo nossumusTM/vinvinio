@@ -810,7 +810,7 @@ useEffect(() => {
 
  const vinvinActionLabel =
   vinvinSuccess
-    ? `Redirecting in ${vinvinCountdown}s`
+    ? `Routing in ${vinvinCountdown}s`
     : vinvinStep === "info"
       ? "Next"
       : vinvinStep === "amount"

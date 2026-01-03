@@ -316,6 +316,10 @@ const SearchExperience = () => {
   }, [endDate, startDate]);
 
   return (
+    <div className='items-center justify-center flex flex-col'>
+      <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-neutral-400 md:hidden">
+        ASK FORCE AI
+      </p>
     <motion.button
           type="button"
           onClick={searchModal.onOpen}
@@ -353,6 +357,7 @@ const SearchExperience = () => {
         </div>
       </div>
     </motion.button>
+    </div>
   );
 };
 

@@ -830,7 +830,7 @@ const CategoriesInner: React.FC = () => {
         animate={{ height: visible ? 'auto' : 0, opacity: visible ? 1 : 0 }}
         transition={{ duration: 0.3 }}
         className={clsx(
-          'relative z-0 overflow-hidden',
+          'relative overflow-hidden',
           !visible && 'pointer-events-none',
         )}
         aria-hidden={!visible}
@@ -907,7 +907,7 @@ const CategoriesInner: React.FC = () => {
       <button
         type="button"
         onClick={() => setVisible((prev) => !prev)}
-        className="absolute bottom-[-12px] left-1/2 z-1 -translate-x-1/2 flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-md transition-transform duration-300"
+        className="absolute bottom-[-12px] left-1/2 -translate-x-1/2 flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-md transition-transform duration-300"
         aria-label={visible ? 'Collapse categories' : 'Expand categories'}
       >
         <motion.div
@@ -929,7 +929,7 @@ const CategoriesInner: React.FC = () => {
               }}
               tabIndex={-1}
               className="
-                fixed inset-0 z-[100]
+                fixed inset-0
                 h-screen
                 flex
                 items-start
@@ -946,7 +946,6 @@ const CategoriesInner: React.FC = () => {
                   pointer-events-auto
                   h-full w-[80vw] lg:w-[35vw]
                   rounded-2xl
-                  z-[101]
                   bg-white
                   shadow-2xl
                   backdrop-blur-3xl

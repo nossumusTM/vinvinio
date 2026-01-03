@@ -2,6 +2,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import dynamic from 'next/dynamic';
 import Container from "@/app/(marketplace)/components/Container";
 import ListingCard from "@/app/(marketplace)/components/listings/ListingCard";
 import EmptyState from "@/app/(marketplace)/components/EmptyState";
@@ -21,6 +22,7 @@ import useGeoLocationExperiment from '@/app/(marketplace)/hooks/useGeoLocationEx
 import useLocaleSettings from '@/app/(marketplace)/hooks/useLocaleSettings';
 import useExperienceSearchState from '@/app/(marketplace)/hooks/useExperienceSearchState';
 import LocationConsentModal from '@/app/(marketplace)/components/modals/LocationConsentModal';
+import { FiMap } from 'react-icons/fi';
 import {
   buildBrowserLocaleSuggestion,
   buildGeoLocaleSuggestion,
@@ -44,10 +46,16 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
   const [isFiltering, setIsFiltering] = useState(false);
   const [gridSize, setGridSize] = useState<GridSize>(4);
   const [categoriesVisible, setCategoriesVisible] = useState(true);
+  const [isMapOpen, setIsMapOpen] = useState(false);
   const searchParams = useSearchParams();
 
   const [isMobile, setIsMobile] = useState(false);
   const detectionInFlightRef = useRef(false);
+
+  const ListingsMapOverlay = useMemo(
+    () => dynamic(() => import('./ListingsMapOverlay'), { ssr: false }),
+    [],
+  );
 
   const {
     detection,
@@ -294,6 +302,12 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
     return () => window.removeEventListener('categories:toggle', handler as unknown as EventListener);
   }, []);
 
+  useEffect(() => {
+    const handleMapOpen = () => setIsMapOpen(true);
+    window.addEventListener('listings-map:open', handleMapOpen as EventListener);
+    return () => window.removeEventListener('listings-map:open', handleMapOpen as EventListener);
+  }, []);
+
   const loadMoreListings = async () => {
     if (loadingMore || !hasMore) return;
 
@@ -362,13 +376,23 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
       <ClientOnly>
         <LocationConsentModal />
         <Container>
-          <div className="relative z-30">
-            <div className="absolute left-1/2 transform -translate-x-1/2 z-[9999]">
-              <ListingFilter gridSize={gridSize} onGridChange={handleGridChange} />
-            </div>
+        <div className="relative z-30">
+          <div className="absolute left-1/2 transform -translate-x-1/2 z-[9999]">
+            <ListingFilter gridSize={gridSize} onGridChange={handleGridChange} />
+          </div>
+          <div className="absolute right-4 top-4 z-[9999]">
+            {/* <button
+              type="button"
+              onClick={() => setIsMapOpen(true)}
+              className="flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-4 py-2 text-xs font-semibold text-neutral-700 shadow-sm transition hover:border-neutral-300"
+            >
+              <FiMap className="text-neutral-600" />
+              Map view
+            </button> */}
+          </div>
 
-            <div className={`${gridBaseClasses} ${gapClass} ${gridColumnsClass}`}>
-              <motion.div
+          <div className={`${gridBaseClasses} ${gapClass} ${gridColumnsClass}`}>
+            <motion.div
                 layout
                 transition={{ type: 'spring', duration: 0.35, bounce: 0.2 }}
                 className={`${gridBaseClasses} ${gapClass} ${gridColumnsClass}`}
@@ -380,6 +404,11 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
             </div>
           </div>
         </Container>
+        <ListingsMapOverlay
+          isOpen={isMapOpen}
+          onClose={() => setIsMapOpen(false)}
+          initialListings={(listings ?? initialListings) as typeof initialListings}
+        />
       </ClientOnly>
     );
   }
@@ -393,6 +422,17 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
         <div className="relative z-30">
           <div className="absolute left-1/2 transform -translate-x-1/2 z-[9999]">
             <ListingFilter gridSize={gridSize} onGridChange={handleGridChange} />
+          </div>
+
+          <div className="absolute right-4 top-4 z-[9999]">
+            {/* <button
+              type="button"
+              onClick={() => setIsMapOpen(true)}
+              className="flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-4 py-2 text-xs font-semibold text-neutral-700 shadow-sm transition hover:border-neutral-300"
+            >
+              <FiMap className="text-neutral-600" />
+              Map view
+            </button> */}
           </div>
 
           <div className={`${gridBaseClasses} ${gapClass} ${gridColumnsClass}`}>
@@ -435,6 +475,11 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
           )}
         </div>
       </Container>
+      <ListingsMapOverlay
+        isOpen={isMapOpen}
+        onClose={() => setIsMapOpen(false)}
+        initialListings={(listings ?? initialListings) as typeof initialListings}
+      />
     </ClientOnly>
   );
 };

@@ -515,7 +515,7 @@ const VinPointBoostModal: React.FC<VinPointBoostModalProps> = ({
                 </div>
                 <h3 className="text-lg font-semibold text-neutral-900">Payment successful</h3>
                 <p className="text-sm text-neutral-600">
-                  We updated VIN POINT for <span className="font-semibold">{listing.title}</span>. Redirecting…
+                  We updated VIN POINT for <span className="font-semibold">{listing.title}</span>. Routing...
                 </p>
                 <PaymentConfetti />
               </div>
@@ -553,7 +553,7 @@ const VinPointBoostModal: React.FC<VinPointBoostModalProps> = ({
   );
 
     const vinvinActionLabel = vinvinSuccess
-    ? `Redirecting in ${vinvinCountdown}s`
+    ? `Routing in ${vinvinCountdown}s`
     : isProcessingPayment
       ? "Processing…"
       : vinvinStep === "info"

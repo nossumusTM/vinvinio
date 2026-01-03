@@ -510,7 +510,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
               (Array.isArray(seoKeywords) && seoKeywords.length > 0)
             ) && (
             <div className="p-5 md:col-span-7 rounded-2xl">
-                <h2 className="text-lg font-semibold mb-2">Moodboard</h2>
+                <h2 className="text-lg font-semibold mb-2">Service Details</h2>
 
                 {Array.isArray(locationType) && locationType.length > 0 && (
                 <div className="flex items-center flex-wrap gap-2 text-sm font-semibold text-neutral-700 mb-3">

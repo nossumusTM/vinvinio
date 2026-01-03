@@ -43,7 +43,7 @@ const Messenger = ({ currentUser }: MessengerProps) => {
           className={clsx(
             'fixed z-50 flex items-end justify-center',        // ⬅ flex + alignment
             isMobile
-              ? 'bottom-0 left-0 h-[65vh] w-full'              // ⬅ fixed height on mobile
+              ? 'bottom-0 left-0 h-[74vh] w-full'              // ⬅ fixed height on mobile
               : 'bottom-4 right-4 h-[650px] w-[500px]'         // ⬅ fixed height on desktop
           )}
         >

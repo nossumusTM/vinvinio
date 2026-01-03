@@ -335,7 +335,7 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
             } ${isLoading ? 'animate-pulse' : ''}`}
           >
             <Button
-              label={isLoading ? 'Redirecting…' : 'Book Now'}
+              label={isLoading ? 'Booking...' : 'Book Now'}
               onClick={handleReserve}
               disabled={disabled || isLoading}
             />

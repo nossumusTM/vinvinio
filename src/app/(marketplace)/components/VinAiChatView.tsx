@@ -585,7 +585,7 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
             <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">Step 2</p>
             <h3 className="text-sm font-semibold text-neutral-900">What are you looking for?</h3>
             <p className="mt-1 text-xs text-neutral-500">
-              Tell us the vibe, category, or activity style you want.
+              Tell us the vibe, category, or activity style you want. Text or voice works.
             </p>
           </div>
           <input
@@ -765,13 +765,13 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
             type="button"
             onClick={clear}
             className={clsx(
-              'flex items-center rounded-full border border-neutral-200 font-medium text-neutral-600 shadow-sm transition hover:border-neutral-300 hover:bg-neutral-50',
-              isFullscreen ? 'gap-2 px-3 py-1' : 'h-8 w-8 justify-center',
+              'flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 text-neutral-500 transition hover:border-neutral-300 hover:bg-neutral-50',
+              isFullscreen ? 'h-8 w-8 gap-2 px-2 py-1' : 'h-8 w-8 justify-center',
             )}
             aria-label="Reset chat"
           >
             <BiReset className="h-4 w-4" />
-            {isFullscreen && <span className="text-xs font-semibold">Reset</span>}
+            {/* {isFullscreen && <span className="text-xs font-semibold">Reset</span>} */}
           </button>
           {onClose && (
             <button
@@ -895,7 +895,7 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
                   Ready
                 </span>
               </div>
-              <div className="mt-4 space-y-2 text-sm text-neutral-700">
+              <div className="mt-4 grid grid-cols-2 gap-3 text-[11px] text-neutral-600 space-y-2 text-sm text-neutral-700">
                 {memory.location && (
                   <div className="flex items-center justify-between rounded-xl bg-white/80 px-3 py-2">
                     <span className="font-semibold text-neutral-900">Location:</span>
@@ -1108,7 +1108,7 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
               handleSend();
             }}
             className={clsx(
-              'flex h-10 w-10 items-center justify-center rounded-full transition shadow-sm',
+              'flex h-10 w-10 aspect-square items-center justify-center rounded-full transition shadow-sm',
               isListening
                 ? 'bg-blue-600 text-white shadow-[0_0_18px_rgba(54,4,255,0.5)]'
                 : 'bg-sky-50 text-sky-700 ring-1 ring-sky-100 hover:bg-sky-100'

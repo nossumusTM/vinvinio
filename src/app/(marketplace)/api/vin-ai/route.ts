@@ -467,13 +467,20 @@ const matchCountryInText = (text: string) => {
 
 const extractCityCountry = (text: string, country: string) => {
   const escapedCountry = country.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const match = text.match(new RegExp(`\\b([a-zA-Z][a-zA-Z\\s-]{2,40})\\s*,?\\s+${escapedCountry}\\b`, 'i'));
+  const match = text.match(
+      new RegExp(`\\b([a-zA-Z][a-zA-Z\\s-]{2,40})\\s*,?\\s+${escapedCountry}\\b`, 'i'),
+    );
   if (!match) return null;
-  const city = match[1].trim();
-  if (!city) return null;
-  const lower = city.toLowerCase();
+  const cleaned = match[1]
+    .replace(/^(?:my\s+)?destination\s+is\s+/i, '')
+    .replace(/^(?:travel(?:ing)?|going|heading|flying|trip)\s+(?:to|for)\s+/i, '')
+    .replace(/^to\s+/i, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!cleaned) return null;
+  const lower = cleaned.toLowerCase();
   if (MONTHS[lower] !== undefined) return null;
-  return city;
+  return cleaned;
 };
 
 const extractLocation = (text: string) => {
@@ -583,32 +590,42 @@ const extractCategory = (text: string) => {
 
 const buildFollowUpReply = (params: {
   greeting?: string;
-  missing: string[];
+  location?: string | null;
+  category?: string | null;
+  dateRange?: DateRange | null;
+  guestCount?: number | null;
   categoryHint?: string | null;
-  knownFields?: string[];
 }) => {
   const focusLine = params.categoryHint
     ? `I can tailor it within "${params.categoryHint}" or something else you prefer.`
-    : `Share the vibe or activity you want.`;
+    : `Share the vibe or activity you want. You can answer by text or voice.`;
 
-  const prompts: Record<string, string> = {
-    location: 'Your country/region or city (or tap “Use my location”).',
+  const prompts = {
+    location: 'Destination (choose a city or country, or tap “Use my location”).',
     category: `What kind of experience are you looking for? ${focusLine}`,
     dates: 'Your dates (e.g., Jan 7 to Jan 10 2026) so I can check availability.',
     guests: 'How many people are traveling (solo, with a friend, family of four, etc.). You can reply with just a number.',
   };
 
-  const knownLine =
-    params.knownFields && params.knownFields.length > 0
-      ? `I’ve saved: ${params.knownFields.join(', ')}.`
-      : null;
-  const missingLines = params.missing.map((key) => `• ${prompts[key]}`).join('\n');
+  const listLines = [
+    params.location
+      ? `• ✅ Destination: ${params.location}.`
+      : `• ⬜ ${prompts.location}`,
+    params.category
+      ? `• ✅ Experience: ${params.category}.`
+      : `• ⬜ ${prompts.category}`,
+    params.dateRange
+      ? `• ✅ Dates: ${formatDateRangeLabel(params.dateRange)}.`
+      : `• ⬜ ${prompts.dates}`,
+    params.guestCount
+      ? `• ✅ Guests: ${params.guestCount}.`
+      : `• ⬜ ${prompts.guests}`,
+  ];
 
   return [
     params.greeting,
-    knownLine,
     '## To curate the best matches, I just need a few details:',
-    missingLines,
+    listLines.join('\n'),
     '',
     'Once I have them, I will check availability and rank listings by their reviews.',
   ]
@@ -793,11 +810,17 @@ export async function POST(request: Request) {
     .filter((message) => message.role === 'user')
     .map((message) => message.content)
     .join(' ');
+  const latestLocation =
+    [...normalizedMessages]
+      .reverse()
+      .filter((message) => message.role === 'user')
+      .map((message) => extractLocation(message.content))
+      .find((value) => value) ?? null;
   const keywords = extractKeywords(conversationText);
   const dateRange =
     parseDateRange(conversationText) ?? parseNamedDateRange(conversationText) ?? parseSingleDate(conversationText);
   const guestCount = extractGuestCount(conversationText);
-  const location = extractLocation(conversationText);
+  const location = latestLocation;
   const matchedCategory = extractCategory(conversationText);
   const standaloneGuestCount =
     lastUserMessage && lastAssistantMessage && isGuestCountPrompt(lastAssistantMessage.content)
@@ -833,14 +856,11 @@ export async function POST(request: Request) {
   if (!criteriaMet) {
     return NextResponse.json({
       reply: buildFollowUpReply({
-        missing: missingFields,
+        location: resolvedLocation,
+        category: resolvedCategory,
+        dateRange: resolvedDateRange,
+        guestCount: resolvedGuestCount,
         categoryHint: resolvedCategory,
-        knownFields: [
-          resolvedLocation ? `Location: ${resolvedLocation}` : null,
-          resolvedCategory ? `Category: ${resolvedCategory}` : null,
-          resolvedDateRange ? `Dates: ${formatDateRangeLabel(resolvedDateRange)}` : null,
-          resolvedGuestCount ? `Guests: ${resolvedGuestCount}` : null,
-        ].filter(Boolean) as string[],
       }),
       recommendations: [],
       criteriaMet,

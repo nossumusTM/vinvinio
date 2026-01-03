@@ -8,6 +8,7 @@ import { TbArrowElbowRight, TbPlayerPause, TbPlayerPlay, TbPlayerStopFilled } fr
 import { HiMiniMicrophone } from 'react-icons/hi2';
 import clsx from 'clsx';
 import { AnimatePresence, motion } from 'framer-motion';
+import { BiReset } from "react-icons/bi";
 
 import Picker from '@emoji-mart/react';
 import data from '@emoji-mart/data';
@@ -719,21 +720,23 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
             <p className="mt-1 text-[11px] text-neutral-500">Pick a city or country to start curating.</p>
           </div>
           <CountrySearchSelect value={guidedLocation} onChange={(value) => setGuidedLocation(value ?? null)} />
-          <button
-            type="button"
-            onClick={handleUseLocation}
-            className="w-full rounded-full border border-neutral-200 px-3 py-2 text-[11px] font-semibold text-neutral-700 shadow-sm transition hover:bg-neutral-50"
-          >
-            Use my location
-          </button>
-          <button
-            type="button"
-            onClick={handleGuidedLocationNext}
-            className="w-full rounded-full bg-neutral-900 px-3 py-2 text-[11px] font-semibold text-white shadow-sm transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300"
-            disabled={!guidedLocation}
-          >
-            Continue
-          </button>
+          <div className='flex flex-row gap-2'>
+            <button
+              type="button"
+              onClick={handleUseLocation}
+              className="w-full rounded-2xl border border-neutral-200 px-3 py-2 text-[11px] font-semibold text-neutral-700 shadow-sm transition hover:bg-neutral-50"
+            >
+              Use my location
+            </button>
+            <button
+              type="button"
+              onClick={handleGuidedLocationNext}
+              className="w-full rounded-2xl bg-neutral-900 px-3 py-2 text-[11px] font-semibold text-white shadow-sm transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300"
+              disabled={!guidedLocation}
+            >
+              Continue
+            </button>
+          </div>
         </div>
       );
     }
@@ -745,6 +748,7 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
             <p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-400">Step 2</p>
             <h3 className="text-xs font-semibold text-neutral-900">What are you looking for?</h3>
             <p className="mt-1 text-[11px] text-neutral-500">Describe the activity vibe you want.</p>
+            <p className="text-[11px] text-neutral-500">You can answer by text or voice.</p>
           </div>
           <input
             value={guidedIntent}
@@ -844,14 +848,15 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
   return (
      <>
       <div className="space-y-3">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-3">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-3">
+        <div className="hidden md:flex flex items-center gap-2">
           <div className="flex h-9 w-9 aspect-square items-center justify-center rounded-xl bg-gradient-to-br from-white via-slate-50 to-sky-50 to-white text-[#2200ffff]">
             <LuRocket className="h-4 w-4" />
           </div>
           <div className="flex flex-col">
             <h2 className="text-sm font-semibold text-neutral-900">Start with Force AI</h2>
-            <p className="text-xs text-neutral-500">Ask anything before choosing where, when, and who.</p>
+            <p className="text-xs text-neutral-500">Ask anything you need for.</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -871,12 +876,21 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
           </button>
           <button
             type="button"
+            onClick={clear}
+            className="rounded-xl border flex gap-1 items-center border-neutral-200 px-3 py-1 text-xs font-semibold text-neutral-600 transition hover:bg-neutral-100"
+          >
+            Reset
+            <BiReset size={16}  />
+          </button>
+          <button
+            type="button"
             onClick={onSkip}
             className="flex items-center gap-1 rounded-full border border-neutral-200 px-3 py-1 text-xs font-semibold text-neutral-600 transition hover:bg-neutral-100"
           >
             Skip
             <LuSkipForward className="h-4 w-4" />
           </button>
+        </div>
         </div>
       </div>
 
@@ -1201,13 +1215,6 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
           aria-label="Send or hold to record"
         >
           {isRecording ? <span className="text-lg">●</span> : <TbArrowElbowRight size={20} />}
-        </button>
-        <button
-          type="button"
-          onClick={clear}
-          className="rounded-xl border border-neutral-200 px-3 py-3 text-xs font-semibold text-neutral-600 transition hover:bg-neutral-100"
-        >
-          R
         </button>
       </div>
     </div>
