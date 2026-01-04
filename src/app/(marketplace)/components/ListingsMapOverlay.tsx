@@ -1,7 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { MouseEvent } from 'react';
 import L from 'leaflet';
+import Image from 'next/image';
 import Link from 'next/link';
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -24,6 +26,8 @@ const DEFAULT_CENTER: L.LatLngTuple = [41.8719, 12.5674];
 const PAGE_SIZE = 100;
 const MAX_FETCHED = 500;
 const NEARBY_RADIUS_KM = 30;
+const DESCRIPTION_MAX_CHARS = 180;
+const VIDEO_EXTENSIONS = /\.(mp4|webm|ogg)$/i;
 
 const COLOR_OPTIONS = [
   { label: 'Ocean', value: '#2563eb' },
@@ -117,6 +121,98 @@ const haversineKm = (a: L.LatLngTuple, b: L.LatLngTuple) => {
     Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
 
   return 2 * 6371 * Math.asin(Math.sqrt(h));
+};
+
+const getListingImages = (listing: SafeListing) => {
+  const sources = Array.isArray(listing.imageSrc) ? listing.imageSrc : [];
+  return sources.filter((src) => !VIDEO_EXTENSIONS.test(src));
+};
+
+const buildListingSnippet = (listing: SafeListing) => {
+  const raw = `${listing.description ?? ''}`.replace(/\s+/g, ' ').trim();
+  if (!raw) return 'A thoughtful, tailored experience shaped around your pace and style.';
+  if (raw.length <= DESCRIPTION_MAX_CHARS) return raw;
+  return `${raw.slice(0, DESCRIPTION_MAX_CHARS).trimEnd()}…`;
+};
+
+const ListingImageSlider = ({
+  images,
+  title,
+  className,
+  imageClassName,
+  showIndicators = true,
+}: {
+  images: string[];
+  title: string;
+  className?: string;
+  imageClassName?: string;
+  showIndicators?: boolean;
+}) => {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const safeImages = images.length > 0 ? images : ['/placeholder.jpg'];
+
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [images.length]);
+
+  const handlePrev = (event: MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setActiveIndex((prev) => (prev - 1 + safeImages.length) % safeImages.length);
+  };
+
+  const handleNext = (event: MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setActiveIndex((prev) => (prev + 1) % safeImages.length);
+  };
+
+  return (
+    <div className={clsx('relative overflow-hidden rounded-xl bg-neutral-100', className)}>
+      <Image
+        src={safeImages[activeIndex]}
+        alt={title}
+        fill
+        sizes="(max-width: 640px) 80vw, 320px"
+        className={clsx('object-cover', imageClassName)}
+      />
+      {safeImages.length > 1 && (
+        <>
+          <div className="absolute inset-0 flex items-center justify-between px-2">
+            <button
+              type="button"
+              onClick={handlePrev}
+              aria-label="Previous image"
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-black/30 text-white transition hover:bg-black/50"
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              onClick={handleNext}
+              aria-label="Next image"
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-black/30 text-white transition hover:bg-black/50"
+            >
+              ›
+            </button>
+          </div>
+          {showIndicators && (
+            <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-1">
+              {safeImages.map((_, index) => (
+                <span
+                  key={`${title}-dot-${index}`}
+                  className={clsx(
+                    'h-1.5 w-1.5 rounded-full bg-white/60',
+                    index === activeIndex && 'bg-white',
+                  )}
+                />
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
 };
 
 const ListingsMapOverlay = ({ isOpen, onClose, initialListings }: ListingsMapOverlayProps) => {
@@ -268,6 +364,11 @@ const ListingsMapOverlay = ({ isOpen, onClose, initialListings }: ListingsMapOve
     return firstListing ? coordsMap[firstListing.id] : DEFAULT_CENTER;
   }, [coordsMap, filteredListings, selectedListingId, userLocation]);
 
+  const selectedListing = useMemo(
+    () => listings.find((listing) => listing.id === selectedListingId) ?? null,
+    [listings, selectedListingId],
+  );
+
   const handleUseLocation = () => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
@@ -301,10 +402,16 @@ const ListingsMapOverlay = ({ isOpen, onClose, initialListings }: ListingsMapOve
   return (
     <div className="fixed inset-0 z-50 bg-white">
       <div className="absolute inset-0">
-        <MapContainer center={activeCenter} zoom={10} className="h-full w-full" zoomControl={false}>
+        <MapContainer
+          center={activeCenter}
+          zoom={10}
+          className="h-full w-full"
+          zoomControl={false}
+          attributionControl={false}
+        >
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            // attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           />
           <MapReady onReady={handleMapReady} />
           <MapUpdater center={activeCenter} />
@@ -327,7 +434,7 @@ const ListingsMapOverlay = ({ isOpen, onClose, initialListings }: ListingsMapOve
                   <div className="space-y-1 text-sm">
                     <Link
                       href={listingHref}
-                      className="font-semibold text-neutral-900 transition hover:text-neutral-700"
+                      className="font-semibold text-neutral-600 transition hover:text-neutral-800"
                     >
                       {listing.title}
                     </Link>
@@ -356,6 +463,61 @@ const ListingsMapOverlay = ({ isOpen, onClose, initialListings }: ListingsMapOve
         <MapZoomControls onZoomIn={handleZoomIn} onZoomOut={handleZoomOut} />
       </div>
 
+      {selectedListing && (
+        <div className="absolute bottom-6 left-1/2 z-20 w-[92vw] max-w-xl -translate-x-1/2">
+          <div className="rounded-2xl border border-neutral-200 bg-white/95 p-4 shadow-xl backdrop-blur">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center gap-2 text-xs text-neutral-500">
+                  <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
+                    {(selectedListing.primaryCategory ||
+                      selectedListing.category?.[0] ||
+                      'Service')?.toString()}
+                  </span>
+                  <span className="truncate">
+                    {(
+                      selectedListing.locationDescription ||
+                      selectedListing.locationValue ||
+                      selectedListing.meetingPoint ||
+                      ''
+                    ).toString()}
+                  </span>
+                </div>
+                <p className="text-sm leading-relaxed text-neutral-500 line-clamp-2">
+                  <Link
+                    href={hrefForListing(selectedListing)}
+                    className="font-semibold text-neutral-600 transition hover:text-neutral-800"
+                  >
+                    {selectedListing.title}
+                  </Link>
+                  <span className="text-neutral-400"> · </span>
+                  <span>{buildListingSnippet(selectedListing)}</span>
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedListingId(null)}
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 transition hover:border-neutral-300 hover:text-neutral-800"
+                aria-label="Close listing preview"
+              >
+                <IoClose size={16} />
+              </button>
+            </div>
+            <Link
+              href={hrefForListing(selectedListing)}
+              className="mt-3 block"
+            >
+              <ListingImageSlider
+                images={getListingImages(selectedListing)}
+                title={selectedListing.title}
+                className="h-48 w-full"
+                imageClassName="rounded-xl"
+              />
+            </Link>
+          </div>
+        </div>
+      )}
+
       <div className="absolute inset-x-0 top-0 z-10 flex flex-col items-center gap-4 px-4 py-4 sm:px-8">
         <div className="flex w-full max-w-3xl items-center gap-3 rounded-2xl bg-white/90 p-3 shadow-lg backdrop-blur">
           <button
@@ -382,6 +544,7 @@ const ListingsMapOverlay = ({ isOpen, onClose, initialListings }: ListingsMapOve
                 ) : (
                   suggestions.map((listing) => {
                     const listingHref = hrefForListing(listing);
+                    const listingImages = getListingImages(listing);
                     return (
                       <div
                         key={listing.id}
@@ -390,17 +553,33 @@ const ListingsMapOverlay = ({ isOpen, onClose, initialListings }: ListingsMapOve
                           selectedListingId === listing.id && 'bg-neutral-50',
                         )}
                       >
+                        <Link
+                          href={listingHref}
+                          className="shrink-0"
+                        >
+                          <ListingImageSlider
+                            images={listingImages}
+                            title={listing.title}
+                            className="h-20 w-28"
+                            imageClassName="rounded-lg"
+                            showIndicators={false}
+                          />
+                        </Link>
                         <div className="flex flex-1 flex-col gap-1">
-                          <Link
-                            href={listingHref}
-                            className="font-medium text-neutral-900 transition hover:text-neutral-700"
-                          >
-                            {listing.title}
-                          </Link>
                           <span className="text-xs text-neutral-500">
                             {(listing.primaryCategory || listing.category?.[0] || 'Service').toString()} ·{' '}
                             {(listing.locationDescription || listing.locationValue || '').toString()}
                           </span>
+                          <p className="text-[11px] leading-relaxed text-neutral-500 line-clamp-2">
+                            <Link
+                              href={listingHref}
+                              className="font-semibold text-neutral-600 transition hover:text-neutral-800"
+                            >
+                              {listing.title}
+                            </Link>
+                            <span className="text-neutral-400"> · </span>
+                            <span>{buildListingSnippet(listing)}</span>
+                          </p>
                         </div>
                         <button
                           type="button"

@@ -4,6 +4,8 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import useSearchExperienceModal from "@/app/(marketplace)/hooks/useSearchExperienceModal";
+import { AI_FORCE_ASSISTANT } from "@/app/(marketplace)/hooks/useVinAiChat";
+import useMessenger from "@/app/(marketplace)/hooks/useMessager";
 import { RiSpaceShipFill } from "react-icons/ri";
 import { TiRefreshOutline } from "react-icons/ti";
 import { HiMap } from "react-icons/hi";
@@ -11,6 +13,7 @@ import { HiMap } from "react-icons/hi";
 const Logo = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const messenger = useMessenger();
   const searchModal = useSearchExperienceModal();
 
   useEffect(() => {
@@ -25,7 +28,7 @@ const Logo = () => {
   }, []);
 
   const handleAskForceAi = () => {
-    searchModal.onOpen();
+    messenger.openChat(AI_FORCE_ASSISTANT);
     setIsMenuOpen(false);
   };
 

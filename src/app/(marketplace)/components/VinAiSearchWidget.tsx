@@ -1267,7 +1267,7 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
                 <button
                   type="button"
                   onClick={() => setSelectedListing(null)}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 text-neutral-500 transition hover:bg-neutral-100"
+                  className="flex aspect-square h-8 w-8 items-center justify-center rounded-full border border-neutral-200 text-neutral-500 transition hover:bg-neutral-100"
                   aria-label="Close"
                 >
                   <LuX className="h-4 w-4" />
