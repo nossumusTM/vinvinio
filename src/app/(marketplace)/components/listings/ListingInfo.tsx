@@ -15,7 +15,7 @@ import { useEffect, useState, useCallback } from "react";
 import Button from "../Button";
 
 import useCountries from "@/app/(marketplace)/hooks/useCountries";
-import { SafeUser } from "@/app/(marketplace)/types";
+import type { SafeListing, SafeUser } from "@/app/(marketplace)/types";
 import { profilePathForUser } from "@/app/(marketplace)/utils/profilePath";
 
 import Avatar from "../Avatar";
@@ -31,6 +31,7 @@ const MapListing = dynamic(() => import('../MapListing'), {
 });
 
 interface ListingInfoProps {
+    listing?: SafeListing;
     user: SafeUser,
     description: string;
     guestCount: number;
@@ -64,6 +65,7 @@ interface ListingInfoProps {
 }
 
 const ListingInfo: React.FC<ListingInfoProps> = ({
+    listing,
     user,
     description,
     guestCount,
@@ -748,7 +750,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
 
             {/* <Map key={coordinates?.join(',') || 'default'} center={coordinates} /> */}
             <div className="p-2 md:p-0 md:px-4">
-            <MapListing searchQuery={meetingPoint}/>
+            <MapListing searchQuery={meetingPoint} listing={listing} />
             </div>
 
         </div>

@@ -7,6 +7,9 @@ import { motion } from 'framer-motion';
 import clsx from 'clsx';
 import type { IconType } from 'react-icons';
 import { GiSpinningTop } from "react-icons/gi";
+import { TiPinOutline } from "react-icons/ti";
+import { TiPin } from "react-icons/ti";
+import { SiPingdom } from "react-icons/si";
 import { LuSparkles } from 'react-icons/lu';
 
 interface CategoryBoxProps {
@@ -78,12 +81,12 @@ const CategoryBoxInner: React.FC<CategoryBoxProps> = ({
           initial={{ opacity: 0, y: -6, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.35, ease: 'easeOut' }}
-          className="aspect-square absolute right-2 top-2 inline-flex items-center justify-center gap-0 rounded-full bg-[#2200ffff] px-1 py-0.5 text-[8px] font-normal uppercase tracking-tight text-white shadow-md shadow-blue-200/70"
+          className="aspect-square absolute right-3.5 top-2 inline-flex items-center justify-center gap-0 rounded-full px-1 py-0.5 text-[8px] font-normal uppercase tracking-tight text-[#2200ffff]"
           aria-label="Pinned category"
         >
           {/* <LuSparkles className="h-2 w-2" aria-hidden="true" /> */}
           {/* <span>Hotspot</span> */}
-          <GiSpinningTop />
+          <SiPingdom size={18} />
         </motion.span>
       )}
 

@@ -46,12 +46,40 @@ interface VinAiState {
 }
 
 const STORAGE_KEY = 'vin_ai_conversation';
-const welcomeMessage: AiMessage = {
-  id: 'vin-ai-welcome',
-  role: 'assistant',
-  content:
-    "Hi, I'm AI Force 👋 Let's start with your destination. Choose a city or country, or tap “Use my location.”",
-  createdAt: new Date().toISOString(),
+const getTimeGreeting = (date = new Date()) => {
+  const hour = date.getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 18) return 'Good afternoon';
+  return 'Good evening';
+};
+
+const pickWelcomeVariant = (timeGreeting: string) => {
+  const variants = [
+    `## ${timeGreeting}, I'm AI Force 👋`,
+    `## ${timeGreeting}! AI Force here 👋`,
+    `## ${timeGreeting} — I’m AI Force 👋`,
+  ];
+  return variants[Math.floor(Math.random() * variants.length)] ?? variants[0];
+};
+
+const buildWelcomeMessage = (): AiMessage => {
+  const intro = pickWelcomeVariant(getTimeGreeting());
+  const content = [
+    intro,
+    "Let’s start with your destination.",
+    "Choose a city or country, or tap “Use my location.”",
+    '',
+    '## How I can help you find the right stay',
+    '• Tell me the kind of trip you want (romantic escape, family getaway, work retreat).',
+    '• Share dates, budget range, number of guests, and must-haves.',
+    '• I’ll search listings, highlight the best fits, and refine based on your feedback.',
+  ].join('\n');
+  return {
+    id: `vin-ai-welcome-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    role: 'assistant',
+    content,
+    createdAt: new Date().toISOString(),
+  };
 };
 
 const AI_FORCE_ASSISTANT = {
@@ -77,10 +105,10 @@ const loadState = (): {
   memory: AiMemory;
 } => {
   if (typeof window === 'undefined') {
-    return { messages: [welcomeMessage], recommendations: [], criteriaMet: false, memory: {} };
+    return { messages: [buildWelcomeMessage()], recommendations: [], criteriaMet: false, memory: {} };
   }
   const cached = localStorage.getItem(STORAGE_KEY);
-  if (!cached) return { messages: [welcomeMessage], recommendations: [], criteriaMet: false, memory: {} };
+  if (!cached) return { messages: [buildWelcomeMessage()], recommendations: [], criteriaMet: false, memory: {} };
   try {
     const parsed = JSON.parse(cached) as Partial<{
       messages: AiMessage[];
@@ -88,7 +116,8 @@ const loadState = (): {
       criteriaMet: boolean;
       memory: AiMemory;
     }>;
-    const messages = Array.isArray(parsed?.messages) && parsed.messages.length > 0 ? parsed.messages : [welcomeMessage];
+  const messages =
+      Array.isArray(parsed?.messages) && parsed.messages.length > 0 ? parsed.messages : [buildWelcomeMessage()];
     const recommendations = Array.isArray(parsed?.recommendations) ? parsed.recommendations : [];
     return {
       messages,
@@ -99,7 +128,7 @@ const loadState = (): {
   } catch (error) {
     console.error('Failed to parse cached AI Force messages', error);
   }
-  return { messages: [welcomeMessage], recommendations: [], criteriaMet: false, memory: {} };
+  return { messages: [buildWelcomeMessage()], recommendations: [], criteriaMet: false, memory: {} };
 };
 
 const generateId = () =>
@@ -120,7 +149,7 @@ const useVinAiChat = create<VinAiState>((set, get) => ({
     set({ messages, recommendations, criteriaMet, memory, initialized: true });
   },
   clear: () => {
-    const resetMessages = [welcomeMessage];
+    const resetMessages = [buildWelcomeMessage()];
     persistPayload({ messages: resetMessages, recommendations: [], criteriaMet: false, memory: {} });
     set({ messages: resetMessages, recommendations: [], criteriaMet: false, memory: {} });
   },

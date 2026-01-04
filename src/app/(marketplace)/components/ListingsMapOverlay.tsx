@@ -20,6 +20,9 @@ interface ListingsMapOverlayProps {
   isOpen: boolean;
   onClose: () => void;
   initialListings: SafeListing[];
+  highlightedListingId?: string | null;
+  highlightedCoords?: L.LatLngTuple | null;
+  highlightedLabel?: string | null;
 }
 
 const DEFAULT_CENTER: L.LatLngTuple = [41.8719, 12.5674];
@@ -34,6 +37,21 @@ const COLOR_OPTIONS = [
   { label: 'Forest', value: '#15803d' },
   { label: 'Sunset', value: '#f97316' },
 ];
+
+const buildHighlightIcon = () =>
+  L.divIcon({
+    className: 'listing-highlight-icon',
+    html: `
+      <svg width="38" height="38" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M24 4C16.3 4 10 10.3 10 18c0 10.5 14 26 14 26s14-15.5 14-26c0-7.7-6.3-14-14-14Z" fill="#facc15"/>
+        <circle cx="24" cy="18" r="6.5" fill="#0f172a"/>
+        <circle cx="24" cy="18" r="3.5" fill="#facc15"/>
+      </svg>
+    `,
+    iconSize: [38, 38],
+    iconAnchor: [19, 36],
+    popupAnchor: [0, -30],
+  });
 
 const buildTagIcon = (color: string) =>
   L.divIcon({
@@ -215,7 +233,14 @@ const ListingImageSlider = ({
   );
 };
 
-const ListingsMapOverlay = ({ isOpen, onClose, initialListings }: ListingsMapOverlayProps) => {
+const ListingsMapOverlay = ({
+  isOpen,
+  onClose,
+  initialListings,
+  highlightedListingId,
+  highlightedCoords,
+  highlightedLabel,
+}: ListingsMapOverlayProps) => {
   const [listings, setListings] = useState<SafeListing[]>(initialListings);
   const [loadingListings, setLoadingListings] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -235,6 +260,12 @@ const ListingsMapOverlay = ({ isOpen, onClose, initialListings }: ListingsMapOve
   useEffect(() => {
     coordsMapRef.current = coordsMap;
   }, [coordsMap]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    if (!highlightedListingId) return;
+    setSelectedListingId(highlightedListingId);
+  }, [highlightedListingId, isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -356,13 +387,14 @@ const ListingsMapOverlay = ({ isOpen, onClose, initialListings }: ListingsMapOve
   );
 
   const activeCenter = useMemo(() => {
+    if (highlightedCoords) return highlightedCoords;
     if (selectedListingId && coordsMap[selectedListingId]) {
       return coordsMap[selectedListingId];
     }
     if (userLocation) return userLocation;
     const firstListing = filteredListings.find((listing) => coordsMap[listing.id]);
     return firstListing ? coordsMap[firstListing.id] : DEFAULT_CENTER;
-  }, [coordsMap, filteredListings, selectedListingId, userLocation]);
+  }, [coordsMap, filteredListings, highlightedCoords, selectedListingId, userLocation]);
 
   const selectedListing = useMemo(
     () => listings.find((listing) => listing.id === selectedListingId) ?? null,
@@ -415,6 +447,15 @@ const ListingsMapOverlay = ({ isOpen, onClose, initialListings }: ListingsMapOve
           />
           <MapReady onReady={handleMapReady} />
           <MapUpdater center={activeCenter} />
+          {highlightedCoords && (
+            <Marker position={highlightedCoords} icon={buildHighlightIcon()}>
+              {highlightedLabel && (
+                <Popup>
+                  <div className="text-sm font-semibold text-neutral-800">{highlightedLabel}</div>
+                </Popup>
+              )}
+            </Marker>
+          )}
           {filteredListings.map((listing) => {
             const coords = coordsMap[listing.id];
             if (!coords) return null;

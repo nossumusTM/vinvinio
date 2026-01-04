@@ -724,6 +724,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                     <div className="grid grid-cols-1 md:grid-cols-7 md:gap-10 mt-6 relative">
                         <div className="md:col-span-4 flex flex-col gap-6">
                             <ListingInfo
+                                listing={listing}
                                 user={listing.user}
                                 category={category}
                                 description={listing.description}

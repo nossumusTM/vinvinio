@@ -340,7 +340,7 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
   useEffect(() => {
     setGuidedProgress((prev) => ({
       location: prev.location || Boolean(memory?.location),
-      intent: prev.intent || Boolean(memory?.category) || Boolean(memory?.keywords?.length),
+      intent: prev.intent,
       date: prev.date || Boolean(memory?.dateRange?.startDate),
       guests: prev.guests || Boolean(memory?.guestCount),
     }));

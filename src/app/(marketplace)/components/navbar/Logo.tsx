@@ -8,13 +8,17 @@ import { AI_FORCE_ASSISTANT } from "@/app/(marketplace)/hooks/useVinAiChat";
 import useMessenger from "@/app/(marketplace)/hooks/useMessager";
 import { RiSpaceShipFill } from "react-icons/ri";
 import { TiRefreshOutline } from "react-icons/ti";
+import { TbLayoutBottombarCollapseFilled } from "react-icons/tb";
 import { HiMap } from "react-icons/hi";
+import { useRouter } from 'next/navigation';
 
 const Logo = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const messenger = useMessenger();
   const searchModal = useSearchExperienceModal();
+  const router = useRouter();
 
   useEffect(() => {
     const handleOutside = (event: MouseEvent) => {
@@ -33,7 +37,8 @@ const Logo = () => {
   };
 
   const handleRefresh = () => {
-    window.location.reload();
+    router.push('/');
+    router.refresh();
   };
 
   const handleOpenMap = () => {
@@ -48,7 +53,9 @@ const Logo = () => {
       <button
         type="button"
         onClick={() => setIsMenuOpen((prev) => !prev)}
-        className="cursor-pointer rounded-full p-1 transition"
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
+        className="group relative cursor-pointer rounded-full p-1 transition"
         aria-label="Open quick actions menu"
       >
         {/* Desktop Logo (shown on md and up) */}
@@ -59,7 +66,7 @@ const Logo = () => {
           height={30}
           priority
           className={`hidden md:block transition-transform duration-300 ${
-            isMenuOpen ? 'rotate-6 scale-110' : 'rotate-0 scale-100'
+            isMenuOpen || isHovering ? 'rotate-6 scale-110' : 'rotate-0 scale-100'
           }`}
         />
 
@@ -70,11 +77,27 @@ const Logo = () => {
           width={30}
           height={30}
           priority
-          className={`block md:hidden mr-1 transition-transform duration-300 ${
-            isMenuOpen ? 'rotate-6 scale-110' : 'rotate-0 scale-100'
+                  className={`block md:hidden mr-1 transition-transform duration-300 ${
+            isMenuOpen || isHovering ? 'rotate-6 scale-110' : 'rotate-0 scale-100'
           }`}
         />
       </button>
+
+      <AnimatePresence>
+        {isHovering && !isMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            transition={{ duration: 0.2 }}
+            className="pointer-events-none absolute -bottom-[-2] -translate-x-1/2
+                      rounded-full bg-black/80 px-2 py-0.5 text-[10px]
+                      font-medium tracking-wide text-white backdrop-blur"
+          >
+            vinvin.io
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {isMenuOpen && (
@@ -108,8 +131,8 @@ const Logo = () => {
               className="flex items-center gap-2 rounded-full border border-neutral-200 bg-black/90 px-3 py-1.5 text-xs font-semibold text-neutral-100 shadow-sm transition hover:border-neutral-300"
               aria-label="Refresh"
             >
-              <TiRefreshOutline className="h-4 w-4" />
-              <span>Refresh</span>
+              <TbLayoutBottombarCollapseFilled className="h-4 w-4" />
+              <span>Main</span>
             </button>
 
             {/* Map */}
