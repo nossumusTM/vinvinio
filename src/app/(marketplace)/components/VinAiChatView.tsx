@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { LuArrowLeft, LuRocket, LuTrash2, LuX } from 'react-icons/lu';
+import { LuArrowLeft, LuLoader2, LuRocket, LuStar, LuTrash2, LuX } from 'react-icons/lu';
 import { BiReset } from "react-icons/bi";
 import { useRouter } from 'next/navigation';
 import { TbArrowElbowRight, TbPlayerPause, TbPlayerPlay, TbPlayerStopFilled } from 'react-icons/tb';
@@ -18,6 +18,7 @@ import useMessenger from '../hooks/useMessager';
 import useVinAiChat, { AI_FORCE_ASSISTANT } from '../hooks/useVinAiChat';
 import type { AiListing, AiMessage } from '../hooks/useVinAiChat';
 import CountrySearchSelect, { type CountrySelectValue } from './inputs/CountrySearchSelect';
+import { categories as experienceCategories } from './navbar/Categories';
 import SearchCalendar from './inputs/SearchCalendar';
 import Calendar from './inputs/Calendar';
 import Counter from './inputs/Counter';
@@ -260,7 +261,19 @@ const StructuredMessage = ({ text }: { text: string }) => {
 };
 
 const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewProps) => {
-  const { messages, recommendations, criteriaMet, memory, init, sendMessage, isSending, clear } = useVinAiChat();
+const {
+    messages,
+    recommendations,
+    criteriaMet,
+    memory,
+    init,
+    sendMessage,
+    isSending,
+    clear,
+    loadMoreRecommendations,
+    hasMoreRecommendations,
+    isLoadingMore,
+  } = useVinAiChat();
   const { openChat } = useMessenger();
   const [input, setInput] = useState('');
   const [isListening, setIsListening] = useState(false);
@@ -276,6 +289,7 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
     key: 'selection',
   });
   const [guidedGuests, setGuidedGuests] = useState(1);
+  const [guidedCategory, setGuidedCategory] = useState<string | null>(null);
   const [guidedTime, setGuidedTime] = useState<string | null>(null);
 
   const [guidedProgress, setGuidedProgress] = useState({
@@ -317,6 +331,7 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
         key: 'selection',
       });
       setGuidedGuests(1);
+      setGuidedCategory(null);
       setGuidedTime(null);
     }
   }, [memory, messages.length]);
@@ -335,6 +350,12 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
       setGuidedGuests(memory.guestCount);
     }
   }, [memory?.guestCount]);
+
+  useEffect(() => {
+    if (memory?.category) {
+      setGuidedCategory(memory.category);
+    }
+  }, [memory?.category]);
 
   useEffect(() => {
     if (!messages.length) return;
@@ -396,10 +417,14 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
 
   const handleGuidedIntentNext = useCallback(async () => {
     const trimmed = guidedIntent.trim();
-    if (!trimmed) return;
+    const selectedCategory = guidedCategory?.trim();
+    if (!trimmed && !selectedCategory) return;
     setGuidedProgress((prev) => ({ ...prev, intent: true }));
-    await handleSend(`I'm looking for ${trimmed}.`);
-  }, [guidedIntent]);
+    const messageParts = [];
+    if (trimmed) messageParts.push(`I'm looking for ${trimmed}.`);
+    if (selectedCategory) messageParts.push(`Category: ${selectedCategory}.`);
+    await handleSend(messageParts.join(' '));
+  }, [guidedIntent, guidedCategory]);
 
   const handleGuidedDateNext = useCallback(async () => {
     if (!guidedDateRange?.startDate) return;
@@ -550,6 +575,7 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
   };
 
   const guidedStepContent = useMemo(() => {
+    const categoryOptions = experienceCategories.map((category) => category.label);
     if (guidedStep === 'location') {
       return (
         <div className="space-y-4">
@@ -600,11 +626,34 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
               }
             }}
           />
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-neutral-700">Or just select a category</p>
+            <div className="flex flex-wrap gap-2">
+              {categoryOptions.map((category) => {
+                const isSelected = guidedCategory === category;
+                return (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() => setGuidedCategory(isSelected ? null : category)}
+                    className={clsx(
+                      'rounded-full px-3 py-1 text-[11px] font-semibold transition',
+                      isSelected
+                        ? 'bg-neutral-900 text-white'
+                        : 'border border-neutral-200 text-neutral-600 hover:border-neutral-400 hover:text-neutral-900',
+                    )}
+                  >
+                    {category}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           <button
             type="button"
             onClick={handleGuidedIntentNext}
             className="w-full rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300"
-            disabled={!guidedIntent.trim()}
+            disabled={!guidedIntent.trim() && !guidedCategory}
           >
             Continue
           </button>
@@ -673,6 +722,7 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
     guidedStep,
     guidedLocation,
     guidedIntent,
+    guidedCategory,
     guidedDateRange,
     guidedGuests,
     guidedTime,
@@ -957,7 +1007,9 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
               <div className="flex md:flex-row flex-col items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-sm font-semibold text-neutral-700">
                   Curated for you
-                  <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-500">Swipe</span>
+                  <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-500">
+                    {recommendations.length} listings
+                  </span>
                 </div>
                 <button
                   type="button"
@@ -967,7 +1019,7 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
                   Refresh
                 </button>
               </div>
-              <div className="no-scrollbar flex gap-3 overflow-x-auto pb-1">
+              <div className="grid gap-3 md:grid-cols-2">
                 {recommendations.map((card, index) => (
                   <motion.button
                     key={card.id}
@@ -975,9 +1027,9 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
                     onClick={() => handleListingClick(card)}
                     initial={{ opacity: 0, scale: 0.96 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.2, delay: index * 0.04 }}
-                    whileHover={{ y: 2, scale: 0.97 }}
-                    className="group relative min-w-[240px] max-w-[260px] overflow-hidden rounded-2xl border border-neutral-100 text-left shadow-sm"
+                    transition={{ duration: 0.2, delay: index * 0.03 }}
+                    whileHover={{ y: 2, scale: 0.98 }}
+                    className="group relative overflow-hidden rounded-2xl border border-neutral-100 text-left shadow-sm"
                   >
                     <div
                       className="absolute inset-0 bg-cover bg-center"
@@ -996,6 +1048,15 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
                         <h4 className="text-lg font-bold leading-tight">{card.title}</h4>
                         <p className="text-sm text-white/80">{card.description}</p>
                       </div>
+                      <div className="flex flex-wrap items-center gap-2 text-[11px] text-white/80">
+                        {/* {card.vinPoints !== undefined && <span>Vin {card.vinPoints}</span>} */}
+                        {card.rating !== undefined && (
+                          <span className="inline-flex items-center gap-1">
+                            <LuStar className="h-3 w-3" /> {card.rating}
+                          </span>
+                        )}
+                        {card.reviewCount !== undefined && <span>{card.reviewCount} reviews</span>}
+                      </div>
                       <div className="flex items-center justify-between text-xs text-white/80">
                         <span>Tap for options</span>
                         <span className="rounded-full bg-white/20 px-2 py-1 text-[10px] font-semibold uppercase">AI pick</span>
@@ -1005,6 +1066,17 @@ const VinAiChatView = ({ onBack, isFullscreen = false, onClose }: VinAiChatViewP
                   </motion.button>
                 ))}
               </div>
+              {hasMoreRecommendations && (
+                <button
+                  type="button"
+                  onClick={loadMoreRecommendations}
+                  disabled={isLoadingMore}
+                  className="mt-2 flex w-full items-center justify-center gap-2 rounded-full border border-neutral-200 px-3 py-2 text-xs font-semibold text-neutral-700 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:bg-neutral-100"
+                >
+                  {isLoadingMore && <LuLoader2 className="h-4 w-4 animate-spin" />}
+                  Load more
+                </button>
+              )}
             </div>
           </motion.div>
         )}

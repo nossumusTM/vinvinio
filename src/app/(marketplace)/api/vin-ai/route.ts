@@ -1,98 +1,3 @@
-// import { NextResponse } from 'next/server';
-
-// interface RequestMessage {
-//   role: 'assistant' | 'user';
-//   content: string;
-// }
-
-// export async function POST(request: Request) {
-//   const { messages } = (await request.json()) as { messages?: RequestMessage[] };
-//   const openaiApiKey = process.env.OPENAI_API_KEY?.trim();
-//   const openaiProject = process.env.OPENAI_PROJECT_ID?.trim();
-//   const openaiOrganization = process.env.OPENAI_ORG_ID?.trim();
-
-//   if (!messages || !Array.isArray(messages) || messages.length === 0) {
-//     return NextResponse.json({ reply: 'Tell me what you are looking for and I will curate listings for you.' });
-//   }
-
-//   const normalizedMessages = messages.map((m) => ({ role: m.role, content: m.content })).slice(-12);
-
-//   if (!openaiApiKey) {
-//     const lastUserMessage = [...normalizedMessages].reverse().find((m) => m.role === 'user');
-//     return NextResponse.json({
-//       reply: `Here is a tailored shortlist for "${lastUserMessage?.content ?? 'your trip'}". Pick a city, dates, and guest count so I can surface the right listings.`,
-//     });
-//   }
-
-//   try {
-//     const headers: Record<string, string> = {
-//       Authorization: `Bearer ${openaiApiKey}`,
-//       'Content-Type': 'application/json',
-//     };
-
-//     if (openaiProject) {
-//       headers['OpenAI-Project'] = openaiProject;
-//     }
-
-//     if (openaiOrganization) {
-//       headers['OpenAI-Organization'] = openaiOrganization;
-//     }
-
-//     const completion = await fetch('https://api.openai.com/v1/chat/completions', {
-//       method: 'POST',
-//       headers,
-//       body: JSON.stringify({
-//         model: 'gpt-4o-mini',
-//         messages: [
-//           {
-//             role: 'system',
-//             content:
-//               'You are AI Force, a travel concierge for Vuola. Answer concisely with bullet points and surface relevant listing hints: where, when, and who should travel.',
-//           },
-//           ...normalizedMessages,
-//         ],
-//         temperature: 0.4,
-//         max_tokens: 280,
-//       }),
-//     });
-
-//     if (!completion.ok) {
-//       const errorBody = await completion.text();
-//       let errorMessage = errorBody;
-//       let reply = 'I could not reach the AI model. Please try again in a moment.';
-
-//       try {
-//         const parsed = JSON.parse(errorBody) as { error?: { message?: string; code?: string } };
-//         if (parsed?.error?.message) {
-//           errorMessage = parsed.error.message;
-//         }
-
-//         if (completion.status === 429 || parsed?.error?.code === 'insufficient_quota') {
-//           reply = 'AI Force is at capacity right now. Please try again soon.';
-//         }
-//       } catch (parseError) {
-//         if (completion.status === 429) {
-//           reply = 'AI Force is at capacity right now. Please try again soon.';
-//         }
-//       }
-
-//       console.error('AI Force request failed', {
-//         status: completion.status,
-//         message: errorMessage,
-//       });
-//       return NextResponse.json({ reply }, { status: 200 });
-//     }
-
-//     const data = await completion.json();
-//     const reply = data?.choices?.[0]?.message?.content as string | undefined;
-//     return NextResponse.json({ reply: reply ?? 'Ask me anything about your next stay and I will tailor the results.' });
-//   } catch (error) {
-//     const message = error instanceof Error ? error.message : 'Unknown error';
-//     console.error('AI Force request failed', message);
-//     return NextResponse.json({ reply: 'I could not reach the AI model. Please try again in a moment.' }, { status: 200 });
-//   }
-// }
-
 import { NextResponse } from 'next/server';
 import prisma from '@/app/(marketplace)/libs/prismadb';
 import {
@@ -102,6 +7,7 @@ import {
   GROUP_STYLE_OPTIONS,
 } from '@/app/(marketplace)/constants/experienceFilters';
 
+import getCurrentUser from '@/app/(marketplace)/actions/getCurrentUser';
 import countries from 'world-countries';
 
 interface RequestMessage {
@@ -783,10 +689,53 @@ const formatDateRangeLabel = (range?: DateRange | null) => {
   return startLabel === endLabel ? startLabel : `${startLabel} → ${endLabel}`;
 };
 
+const whatToDoPattern = /\b(what to do|things to do|activities to do|what should i do|ideas for)\b/i;
+
+const formatHobbyHighlight = (hobby: string, location: string) => {
+  const lower = hobby.toLowerCase();
+  if (/(food|cook|culinary|wine|taste)/.test(lower)) {
+    return `Sample ${location} food markets, cooking classes, and tastings tailored to ${hobby}.`;
+  }
+  if (/(art|museum|gallery|design)/.test(lower)) {
+    return `Plan art walks and gallery visits around ${location} that lean into ${hobby}.`;
+  }
+  if (/(photo|photography|camera)/.test(lower)) {
+    return `Book golden-hour photo walks in ${location} to match your ${hobby} interests.`;
+  }
+  if (/(history|culture|heritage)/.test(lower)) {
+    return `Explore ${location}'s heritage tours that align with your ${hobby} passion.`;
+  }
+  if (/(music|nightlife|dj|concert)/.test(lower)) {
+    return `Line up live music and nightlife experiences in ${location} that fit ${hobby}.`;
+  }
+  if (/(nature|outdoor|hike|trek|adventure)/.test(lower)) {
+    return `Curate outdoor excursions around ${location} that suit your ${hobby} vibe.`;
+  }
+  if (/(wellness|spa|yoga|fitness)/.test(lower)) {
+    return `Blend wellness experiences in ${location} that complement ${hobby}.`;
+  }
+  return `Find ${location} activities that spotlight your interest in ${hobby}.`;
+};
+
+const buildWhatToDoReply = (params: { location: string; hobbies: string[] }) => {
+  const highlights = params.hobbies.slice(0, 4).map((hobby) => `• ${formatHobbyHighlight(hobby, params.location)}`);
+  return [
+    `## Based on your provided hobbies on your Vin social card, I propose these activities in ${params.location}:`,
+    highlights.join('\n'),
+    '',
+    'Want me to prioritize any of these or add dates and group size so I can surface listings?',
+  ]
+    .filter(Boolean)
+    .join('\n');
+};
+
 export async function POST(request: Request) {
-  const { messages, memory } = (await request.json()) as {
+  const { messages, memory, offset, limit, mode } = (await request.json()) as {
     messages?: RequestMessage[];
     memory?: MemoryPayload;
+    offset?: number;
+    limit?: number;
+    mode?: 'recommendations';
   };
 
   if (!messages || !Array.isArray(messages) || messages.length === 0) {
@@ -832,6 +781,8 @@ export async function POST(request: Request) {
   const resolvedGuestCount = guestCount ?? standaloneGuestCount ?? existingMemory.guestCount;
   const resolvedKeywords = Array.from(new Set([...existingMemory.keywords, ...keywords]));
   const missingFields: string[] = [];
+  const isWhatToDoPrompt =
+    Boolean(lastUserMessage?.content) && whatToDoPattern.test(lastUserMessage?.content ?? '');
 
   if (!resolvedLocation) missingFields.push('location');
   if (!resolvedCategory) missingFields.push('category');
@@ -853,6 +804,34 @@ export async function POST(request: Request) {
     keywords: resolvedKeywords,
   };
 
+  if (isWhatToDoPrompt && resolvedLocation) {
+    const currentUser = await getCurrentUser();
+    const hobbies = Array.isArray(currentUser?.hobbies) ? currentUser?.hobbies.filter(Boolean) : [];
+
+    if (hobbies.length > 0) {
+      return NextResponse.json({
+        reply: buildWhatToDoReply({ location: resolvedLocation, hobbies }),
+        recommendations: [],
+        criteriaMet: false,
+        missingFields,
+        memory: memorySnapshot,
+        hasMore: false,
+      });
+    }
+
+    return NextResponse.json({
+      reply: [
+        `## What do you love doing in a city like ${resolvedLocation}?`,
+        'Tell me your hobbies and interests so I can suggest the right activities.',
+      ].join('\n'),
+      recommendations: [],
+      criteriaMet: false,
+      missingFields,
+      memory: memorySnapshot,
+      hasMore: false,
+    });
+  }
+
   if (!criteriaMet) {
     return NextResponse.json({
       reply: buildFollowUpReply({
@@ -866,13 +845,26 @@ export async function POST(request: Request) {
       criteriaMet,
       missingFields,
       memory: memorySnapshot,
+      hasMore: false,
     });
   }
+
+  const PAGE_SIZE = 10;
+  const MAX_RESULTS = 60;
+  const safeOffset = Number.isFinite(offset) ? Math.max(0, Number(offset)) : 0;
+  const safeLimit = Number.isFinite(limit) ? Math.min(Math.max(Number(limit), 1), PAGE_SIZE) : PAGE_SIZE;
 
   const fetchListings = async (where: Record<string, unknown>) =>
     prisma.listing.findMany({
       where,
-      take: 8,
+      take: MAX_RESULTS,
+      include: {
+        reviews: {
+          select: {
+            rating: true,
+          },
+        },
+      },
     });
 
   type ListingsTier =
@@ -951,7 +943,7 @@ export async function POST(request: Request) {
     }
   }
 
-const scoreListing = (listing: (typeof matchedListings)[number]) => {
+  const scoreListing = (listing: (typeof matchedListings)[number]) => {
     let score = 0;
     const lowerKeywords = resolvedKeywords.map((keyword) => keyword.toLowerCase());
     const title = (listing.title ?? '').toLowerCase();
@@ -980,11 +972,35 @@ const scoreListing = (listing: (typeof matchedListings)[number]) => {
     return score;
   };
 
-  const bestListing = matchedListings
-    .map((listing) => ({ listing, score: scoreListing(listing) }))
-    .sort((a, b) => b.score - a.score)[0]?.listing;
+  const rankedListings = matchedListings
+    .map((listing) => {
+      const reviewCount = listing.reviews?.length ?? 0;
+      const rating =
+        reviewCount > 0
+          ? listing.reviews.reduce((sum, review) => sum + (review.rating ?? 0), 0) / reviewCount
+          : 0;
+      const score =
+        scoreListing(listing) +
+        (listing.punti ?? 0) / 5 +
+        rating * 3 +
+        Math.min(reviewCount, 50) * 0.1;
+      return { listing, score, rating, reviewCount };
+    })
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      if ((b.listing.punti ?? 0) !== (a.listing.punti ?? 0)) {
+        return (b.listing.punti ?? 0) - (a.listing.punti ?? 0);
+      }
+      if (b.rating !== a.rating) return b.rating - a.rating;
+      if (b.reviewCount !== a.reviewCount) return b.reviewCount - a.reviewCount;
+      return 0;
+    });
 
-  const recommendations = (bestListing ? [bestListing] : []).map((listing) => {
+  const totalMatches = rankedListings.length;
+  const pageListings = rankedListings.slice(safeOffset, safeOffset + safeLimit);
+  const hasMore = safeOffset + safeLimit < totalMatches;
+
+  const recommendations = pageListings.map(({ listing, rating, reviewCount }) => {
     const rawCategory = Array.isArray(listing.category) ? listing.category[0] : listing.category;
     return {
       id: listing.id,
@@ -995,6 +1011,9 @@ const scoreListing = (listing: (typeof matchedListings)[number]) => {
       badge: buildListingBadge(listing),
       description: truncate(listing.description ?? ''),
       image: listing.imageSrc?.[0] ?? '/images/promo-banner-1.jpg',
+      vinPoints: listing.punti ?? 0,
+      rating: Number.isFinite(rating) ? Number(rating.toFixed(1)) : 0,
+      reviewCount,
     };
   });
 
@@ -1006,6 +1025,7 @@ const scoreListing = (listing: (typeof matchedListings)[number]) => {
       criteriaMet,
       missingFields: [],
       memory: memorySnapshot,
+      hasMore: false,
     });
   }
 
@@ -1022,13 +1042,16 @@ const scoreListing = (listing: (typeof matchedListings)[number]) => {
 
   return NextResponse.json({
     reply:
-      availabilityNote ||
-      `Thanks! I will check availability for ${resolvedLocation} on ${formatDateRangeLabel(
-        resolvedDateRange,
-      )} for ${resolvedGuestCount} guests and rank the best-reviewed listings.`,
+      mode === 'recommendations'
+        ? undefined
+        : availabilityNote ||
+          `Thanks! I will check availability for ${resolvedLocation} on ${formatDateRangeLabel(
+            resolvedDateRange,
+          )} for ${resolvedGuestCount} guests and rank the best-reviewed listings.`,
     recommendations,
     criteriaMet,
     missingFields,
     memory: memorySnapshot,
+    hasMore,
   });
 }

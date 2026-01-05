@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { LuMaximize2, LuRocket, LuSkipForward, LuX } from 'react-icons/lu';
+import { LuLoader2, LuMaximize2, LuRocket, LuSkipForward, LuStar, LuX } from 'react-icons/lu';
 import { MdFullscreen } from "react-icons/md";
 import { TbArrowElbowRight, TbPlayerPause, TbPlayerPlay, TbPlayerStopFilled } from 'react-icons/tb';
 import { HiMiniMicrophone } from 'react-icons/hi2';
@@ -19,6 +19,7 @@ import useVinAiChat, { AI_FORCE_ASSISTANT, AiMessage } from '../hooks/useVinAiCh
 import type { AiListing } from '../hooks/useVinAiChat';
 import useMessenger from '../hooks/useMessager';
 import VinAiChatView from './VinAiChatView';
+import { categories as experienceCategories } from './navbar/Categories';
 
 import CountrySearchSelect, { type CountrySelectValue } from './inputs/CountrySearchSelect';
 import Calendar from './inputs/Calendar';
@@ -265,7 +266,19 @@ const StructuredMessage = ({ text }: { text: string }) => {
 };
 
 const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
-  const { messages, recommendations, criteriaMet, memory, init, sendMessage, isSending, clear } = useVinAiChat();
+const {
+    messages,
+    recommendations,
+    criteriaMet,
+    memory,
+    init,
+    sendMessage,
+    isSending,
+    clear,
+    loadMoreRecommendations,
+    hasMoreRecommendations,
+    isLoadingMore,
+  } = useVinAiChat();
   const { openChat } = useMessenger();
   const [input, setInput] = useState('');
   const [isRecording, setIsRecording] = useState(false);
@@ -287,6 +300,7 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
     key: 'selection',
   });
   const [guidedGuests, setGuidedGuests] = useState(1);
+  const [guidedCategory, setGuidedCategory] = useState<string | null>(null);
   const [guidedTime, setGuidedTime] = useState<string | null>(null);
   const [guidedProgress, setGuidedProgress] = useState({
     location: false,
@@ -333,6 +347,7 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
         key: 'selection',
       });
       setGuidedGuests(1);
+      setGuidedCategory(null);
       setGuidedTime(null);
     }
   }, [memory, messages.length]);
@@ -351,6 +366,12 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
       setGuidedGuests(memory.guestCount);
     }
   }, [memory?.guestCount]);
+
+  useEffect(() => {
+    if (memory?.category) {
+      setGuidedCategory(memory.category);
+    }
+  }, [memory?.category]);
 
   useEffect(() => {
     if (!messages.length) return;
@@ -474,10 +495,14 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
 
   const handleGuidedIntentNext = useCallback(async () => {
     const trimmed = guidedIntent.trim();
-    if (!trimmed) return;
+    const selectedCategory = guidedCategory?.trim();
+    if (!trimmed && !selectedCategory) return;
     setGuidedProgress((prev) => ({ ...prev, intent: true }));
-    await handleSend(`I'm looking for ${trimmed}.`);
-  }, [guidedIntent]);
+    const messageParts = [];
+    if (trimmed) messageParts.push(`I'm looking for ${trimmed}.`);
+    if (selectedCategory) messageParts.push(`Category: ${selectedCategory}.`);
+    await handleSend(messageParts.join(' '));
+  }, [guidedIntent, guidedCategory]);
 
   const handleGuidedDateNext = useCallback(async () => {
     if (!guidedDateRange?.startDate) return;
@@ -711,6 +736,7 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
   };
 
   const guidedStepContent = useMemo(() => {
+    const categoryOptions = experienceCategories.map((category) => category.label);
     if (guidedStep === 'location') {
       return (
         <div className="space-y-3">
@@ -762,11 +788,34 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
               }
             }}
           />
+          <div className="space-y-2">
+            <p className="text-[11px] font-semibold text-neutral-700">Or just select a category</p>
+            <div className="flex flex-wrap gap-2">
+              {categoryOptions.map((category) => {
+                const isSelected = guidedCategory === category;
+                return (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() => setGuidedCategory(isSelected ? null : category)}
+                    className={clsx(
+                      'rounded-full px-3 py-1 text-[10px] font-semibold transition',
+                      isSelected
+                        ? 'bg-neutral-900 text-white'
+                        : 'border border-neutral-200 text-neutral-600 hover:border-neutral-400 hover:text-neutral-900',
+                    )}
+                  >
+                    {category}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           <button
             type="button"
             onClick={handleGuidedIntentNext}
             className="w-full rounded-full bg-neutral-900 px-3 py-2 text-[11px] font-semibold text-white shadow-sm transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300"
-            disabled={!guidedIntent.trim()}
+            disabled={!guidedIntent.trim() && !guidedCategory}
           >
             Continue
           </button>
@@ -835,6 +884,7 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
     guidedStep,
     guidedLocation,
     guidedIntent,
+    guidedCategory,
     guidedDateRange,
     guidedGuests,
     guidedTime,
@@ -1057,7 +1107,7 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
           </motion.div>
         )}
 
-      {criteriaMet && recommendations.length > 0 && isLatestAssistantTyped && listingsUnlocked && (
+        {criteriaMet && recommendations.length > 0 && isLatestAssistantTyped && listingsUnlocked && (
           <motion.div
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1067,7 +1117,9 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm font-semibold text-neutral-700">
                 Curated for you
-                <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-500">Swipe</span>
+                <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-500">
+                  {recommendations.length} listings
+                </span>
               </div>
               <button
                 type="button"
@@ -1078,7 +1130,7 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
               </button>
 
               </div>
-            <div className="mt-2 no-scrollbar flex gap-3 overflow-x-auto pb-1">
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
               {recommendations.map((card, index) => (
                 <motion.button
                   key={card.id}
@@ -1086,9 +1138,9 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
                   onClick={() => handleListingClick(card)}
                   initial={{ opacity: 0, scale: 0.96 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.2, delay: index * 0.04 }}
-                  whileHover={{ y: -3, scale: 0.95 }}
-                  className="group relative min-w-[220px] max-w-[240px] overflow-hidden rounded-2xl border border-neutral-100 text-left shadow-sm"
+                  transition={{ duration: 0.2, delay: index * 0.03 }}
+                  whileHover={{ y: -3, scale: 0.98 }}
+                  className="group relative overflow-hidden rounded-2xl border border-neutral-100 text-left shadow-sm"
                 >
                   <div
                     className="absolute inset-0 bg-cover bg-center"
@@ -1103,11 +1155,31 @@ const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
                       <h4 className="text-base font-bold leading-tight">{card.title}</h4>
                       <p className="text-xs text-white/80">{card.description}</p>
                     </div>
+                    <div className="flex flex-wrap items-center gap-2 text-[10px] text-white/80">
+                      {/* {card.vinPoints !== undefined && <span>Vin {card.vinPoints}</span>} */}
+                      {card.rating !== undefined && (
+                        <span className="inline-flex items-center gap-1">
+                          <LuStar className="h-3 w-3" /> {card.rating}
+                        </span>
+                      )}
+                      {card.reviewCount !== undefined && <span>{card.reviewCount} reviews</span>}
+                    </div>
                     <span className="text-[10px] font-semibold uppercase text-white/70">Tap for options</span>
                   </div>
                 </motion.button>
               ))}
             </div>
+            {hasMoreRecommendations && (
+              <button
+                type="button"
+                onClick={loadMoreRecommendations}
+                disabled={isLoadingMore}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-full border border-neutral-200 px-3 py-2 text-xs font-semibold text-neutral-700 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:bg-neutral-100"
+              >
+                {isLoadingMore && <LuLoader2 className="h-4 w-4 animate-spin" />}
+                Load more
+              </button>
+            )}
           </motion.div>
         )}
       </div>

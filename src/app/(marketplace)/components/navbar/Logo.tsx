@@ -10,7 +10,8 @@ import { RiSpaceShipFill } from "react-icons/ri";
 import { TiRefreshOutline } from "react-icons/ti";
 import { TbLayoutBottombarCollapseFilled } from "react-icons/tb";
 import { HiMap } from "react-icons/hi";
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
+import { createPortal } from "react-dom";
 
 const Logo = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -18,12 +19,25 @@ const Logo = () => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const messenger = useMessenger();
   const searchModal = useSearchExperienceModal();
+  const [mounted, setMounted] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     const handleOutside = (event: MouseEvent) => {
-      if (!containerRef.current) return;
-      if (containerRef.current.contains(event.target as Node)) return;
+      const target = event.target as Node;
+
+      // ignore clicks inside logo container
+      if (containerRef.current?.contains(target)) return;
+
+      // ignore clicks inside portal menu
+      if (menuRef.current?.contains(target)) return;
+
       setIsMenuOpen(false);
     };
 
@@ -37,8 +51,16 @@ const Logo = () => {
   };
 
   const handleRefresh = () => {
-    router.push('/');
-    router.refresh();
+    setIsMenuOpen(false);
+
+    // If already on homepage, force a real page reload (guaranteed)
+    if (pathname === '/') {
+      window.location.reload();
+      return;
+    }
+
+    // If not on homepage, navigate to homepage (hard navigation also reloads)
+    window.location.assign('/');
   };
 
   const handleOpenMap = () => {
@@ -99,60 +121,75 @@ const Logo = () => {
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {isMenuOpen && (
-          <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2
-                          md:left-1/2 md:top-auto md:top-full md:ml-0
-                          md:-translate-x-1/2 md:-translate-y-0
-                          z-[50000]">
-            <motion.div
-              key="logo-menu"
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2 }}
-              className="flex items-center gap-2 rounded-full border border-neutral-200 bg-gradient-to-b from-white/95 via-white/90 to-slate-100/90 px-3 py-2 shadow-[0_18px_35px_rgba(15,23,42,0.18)] backdrop-blur"
-            >
-            {/* AI */}
-            <button
-              type="button"
-              onClick={handleAskForceAi}
-              className="flex items-center gap-2 rounded-full border border-neutral-200 bg-white/90 px-3 py-1.5 text-xs font-semibold text-neutral-700 shadow-sm transition hover:border-neutral-300"
-              aria-label="AI"
-            >
-              <RiSpaceShipFill className="h-4 w-4" />
-              <span>AI</span>
-            </button>
+      {mounted &&
+        createPortal(
+          <AnimatePresence>
+            {isMenuOpen && (
+              <>
+                {/* Backdrop (mobile only) */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setIsMenuOpen(false)}
+                  className="fixed inset-0 z-[99998] bg-black/25 backdrop-blur-sm md:bg-black/15 md:backdrop-blur-md"
+                />
 
-            {/* Refresh */}
-            <button
-              type="button"
-              onClick={handleRefresh}
-              className="flex items-center gap-2 rounded-full border border-neutral-200 bg-black/90 px-3 py-1.5 text-xs font-semibold text-neutral-100 shadow-sm transition hover:border-neutral-300"
-              aria-label="Refresh"
-            >
-              <TbLayoutBottombarCollapseFilled className="h-4 w-4" />
-              <span>Main</span>
-            </button>
+                {/* Menu (true viewport fixed, bottom center) */}
+                <motion.div
+                  key="logo-menu"
+                  initial={{ opacity: 0, y: 40 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 40 }}
+                  transition={{ duration: 0.25, ease: "easeOut" }}
+                  className="fixed bottom-4 inset-x-0 z-[99999] flex justify-center md:bottom-6"
+                >
+                  <div
+                    ref={menuRef}
+                    className="flex items-center gap-2 rounded-full border border-neutral-200 bg-gradient-to-b from-white/95 via-white/90 to-slate-100/90 px-3 py-2 shadow-[0_18px_35px_rgba(15,23,42,0.18)] backdrop-blur md:gap-3"
+                  >
 
-            {/* Map */}
-            <button
-              type="button"
-              onClick={handleOpenMap}
-              className="flex items-center gap-2 rounded-full border border-neutral-200 bg-white/90 px-3 py-1.5 text-xs font-semibold text-neutral-700 shadow-sm transition hover:border-neutral-300"
-              aria-label="Map"
-            >
-              <HiMap className="h-4 w-4" />
-              <span>Map</span>
-            </button>
-          </motion.div>
-          </div>
+                    {/* AI */}
+                    <button
+                      type="button"
+                      onClick={handleAskForceAi}
+                      className="flex items-center gap-2 rounded-full border border-neutral-200 bg-white/90 px-3 py-1.5 text-xs font-semibold text-neutral-700 shadow-sm transition hover:border-neutral-300"
+                    >
+                      <RiSpaceShipFill className="h-4 w-4" />
+                      <span>AI</span>
+                    </button>
+
+                    {/* Main */}
+                    <button
+                      type="button"
+                      onClick={handleRefresh}
+                      className="flex items-center gap-2 rounded-full border border-neutral-200 bg-black/90 px-3 py-1.5 text-xs font-semibold text-neutral-100 shadow-sm transition hover:border-neutral-300"
+                    >
+                      <TbLayoutBottombarCollapseFilled className="h-4 w-4" />
+                      <span>Main</span>
+                    </button>
+
+                    {/* Map */}
+                    <button
+                      type="button"
+                      onClick={handleOpenMap}
+                      className="flex items-center gap-2 rounded-full border border-neutral-200 bg-white/90 px-3 py-1.5 text-xs font-semibold text-neutral-700 shadow-sm transition hover:border-neutral-300"
+                    >
+                      <HiMap className="h-4 w-4" />
+                      <span>Map</span>
+                    </button>
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
+
+
     </div>
   </div>
   );
-
 };
 
 export default Logo;

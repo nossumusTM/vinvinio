@@ -23,6 +23,9 @@ export interface AiListing {
   badge?: string;
   description: string;
   image: string;
+  vinPoints?: number;
+  rating?: number;
+  reviewCount?: number;
 }
 
 export interface AiMemory {
@@ -40,8 +43,11 @@ interface VinAiState {
   memory: AiMemory;
   initialized: boolean;
   isSending: boolean;
+  isLoadingMore: boolean;
+  hasMoreRecommendations: boolean; // ✅ add this
   init: () => void;
   sendMessage: (content: string, options?: { audioUrl?: string; audioDurationMs?: number }) => Promise<void>;
+  loadMoreRecommendations: () => Promise<void>;
   clear: () => void;
 }
 
@@ -93,6 +99,7 @@ const persistPayload = (payload: {
   recommendations: AiListing[];
   criteriaMet: boolean;
   memory: AiMemory;
+  hasMoreRecommendations?: boolean;
 }) => {
   if (typeof window === 'undefined') return;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
@@ -103,18 +110,28 @@ const loadState = (): {
   recommendations: AiListing[];
   criteriaMet: boolean;
   memory: AiMemory;
+  hasMoreRecommendations: boolean;
 } => {
   if (typeof window === 'undefined') {
-    return { messages: [buildWelcomeMessage()], recommendations: [], criteriaMet: false, memory: {} };
+    return { messages: [buildWelcomeMessage()], recommendations: [], criteriaMet: false, memory: {}, hasMoreRecommendations: false };
   }
   const cached = localStorage.getItem(STORAGE_KEY);
-  if (!cached) return { messages: [buildWelcomeMessage()], recommendations: [], criteriaMet: false, memory: {} };
+  if (!cached) {
+      return {
+        messages: [buildWelcomeMessage()],
+        recommendations: [],
+        criteriaMet: false,
+        memory: {},
+        hasMoreRecommendations: false,
+      };
+    }
   try {
     const parsed = JSON.parse(cached) as Partial<{
       messages: AiMessage[];
       recommendations: AiListing[];
       criteriaMet: boolean;
       memory: AiMemory;
+      hasMoreRecommendations: boolean;
     }>;
   const messages =
       Array.isArray(parsed?.messages) && parsed.messages.length > 0 ? parsed.messages : [buildWelcomeMessage()];
@@ -124,11 +141,12 @@ const loadState = (): {
       recommendations,
       criteriaMet: Boolean(parsed?.criteriaMet),
       memory: parsed?.memory ?? {},
+      hasMoreRecommendations: Boolean(parsed?.hasMoreRecommendations),
     };
   } catch (error) {
     console.error('Failed to parse cached AI Force messages', error);
   }
-  return { messages: [buildWelcomeMessage()], recommendations: [], criteriaMet: false, memory: {} };
+  return { messages: [buildWelcomeMessage()], recommendations: [], criteriaMet: false, memory: {}, hasMoreRecommendations: false };
 };
 
 const generateId = () =>
@@ -143,15 +161,17 @@ const useVinAiChat = create<VinAiState>((set, get) => ({
   memory: {},
   initialized: false,
   isSending: false,
+  isLoadingMore: false,
+  hasMoreRecommendations: false,
   init: () => {
     if (get().initialized) return;
-    const { messages, recommendations, criteriaMet, memory } = loadState();
-    set({ messages, recommendations, criteriaMet, memory, initialized: true });
+    const { messages, recommendations, criteriaMet, memory, hasMoreRecommendations } = loadState();
+    set({ messages, recommendations, criteriaMet, memory, hasMoreRecommendations, initialized: true });
   },
   clear: () => {
     const resetMessages = [buildWelcomeMessage()];
-    persistPayload({ messages: resetMessages, recommendations: [], criteriaMet: false, memory: {} });
-    set({ messages: resetMessages, recommendations: [], criteriaMet: false, memory: {} });
+     persistPayload({ messages: resetMessages, recommendations: [], criteriaMet: false, memory: {}, hasMoreRecommendations: false });
+    set({ messages: resetMessages, recommendations: [], criteriaMet: false, memory: {}, hasMoreRecommendations: false });
   },
   sendMessage: async (content: string, options?: { audioUrl?: string; audioDurationMs?: number }) => {
     const trimmed = content.trim();
@@ -176,6 +196,7 @@ const useVinAiChat = create<VinAiState>((set, get) => ({
       recommendations: optimisticRecommendations,
       criteriaMet: optimisticCriteriaMet,
       memory: optimisticMemory,
+      hasMoreRecommendations: get().hasMoreRecommendations,
     });
     set({
       messages: optimisticMessages,
@@ -209,8 +230,9 @@ const useVinAiChat = create<VinAiState>((set, get) => ({
       const apiRecommendations = Array.isArray(data?.recommendations) ? data.recommendations : optimisticRecommendations;
       const criteriaMet = Boolean(data?.criteriaMet);
       const memory: AiMemory = (data?.memory ?? optimisticMemory) as AiMemory;
-      persistPayload({ messages: updatedMessages, recommendations: apiRecommendations, criteriaMet, memory });
-      set({ messages: updatedMessages, recommendations: apiRecommendations, criteriaMet, memory });
+      const hasMoreRecommendations = Boolean(data?.hasMore);
+      persistPayload({ messages: updatedMessages, recommendations: apiRecommendations, criteriaMet, memory, hasMoreRecommendations });
+      set({ messages: updatedMessages, recommendations: apiRecommendations, criteriaMet, memory, hasMoreRecommendations });
     } catch (error) {
       console.error('AI Force failed to respond', error);
       const fallback: AiMessage = {
@@ -226,6 +248,7 @@ const useVinAiChat = create<VinAiState>((set, get) => ({
         recommendations: optimisticRecommendations,
         criteriaMet: optimisticCriteriaMet,
         memory: optimisticMemory,
+        hasMoreRecommendations: get().hasMoreRecommendations,
       });
       set({
         messages: updatedMessages,
@@ -235,6 +258,43 @@ const useVinAiChat = create<VinAiState>((set, get) => ({
       });
     } finally {
       set({ isSending: false });
+    }
+  },
+  loadMoreRecommendations: async () => {
+    const { messages, memory, recommendations, criteriaMet, isLoadingMore, hasMoreRecommendations } = get();
+    if (!criteriaMet || isLoadingMore || !hasMoreRecommendations) return;
+    set({ isLoadingMore: true });
+    try {
+      const res = await fetch('/api/vin-ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: messages.map(({ role, content }) => ({ role, content })),
+          memory,
+          offset: recommendations.length,
+          limit: 10,
+          mode: 'recommendations',
+        }),
+      });
+      const data = await res.json();
+      const nextRecommendations = Array.isArray(data?.recommendations) ? data.recommendations : [];
+      const merged = [...recommendations, ...nextRecommendations];
+      const hasMoreRecommendations = Boolean(data?.hasMore);
+      persistPayload({
+        messages,
+        recommendations: merged,
+        criteriaMet,
+        memory,
+        hasMoreRecommendations,
+      });
+      set({
+        recommendations: merged,
+        hasMoreRecommendations,
+      });
+    } catch (error) {
+      console.error('AI Force failed to load more listings', error);
+    } finally {
+      set({ isLoadingMore: false });
     }
   },
 }));
