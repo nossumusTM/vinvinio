@@ -135,14 +135,15 @@ const Logo = () => {
                   className="fixed inset-0 z-[99998] bg-black/25 backdrop-blur-sm md:bg-black/15 md:backdrop-blur-md"
                 />
 
-                {/* Menu (true viewport fixed, bottom center) */}
+              {/* Menu (true viewport fixed, bottom center) */}
+              <div className="fixed z-[99999] left-1/2 -translate-x-1/2 bottom-12 md:bottom-auto md:top-1/2 md:-translate-y-1/2">
+                {/* Animated content (motion) */}
                 <motion.div
                   key="logo-menu"
                   initial={{ opacity: 0, y: 40 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 40 }}
                   transition={{ duration: 0.25, ease: "easeOut" }}
-                  className="fixed bottom-4 inset-x-0 z-[99999] flex justify-center md:bottom-6"
                 >
                   <div
                     ref={menuRef}
@@ -180,6 +181,7 @@ const Logo = () => {
                     </button>
                   </div>
                 </motion.div>
+                </div>
               </>
             )}
           </AnimatePresence>,

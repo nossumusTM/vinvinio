@@ -154,6 +154,24 @@ const TypingIndicator = () => (
   </div>
 );
 
+const StatusIcon = ({ status }: { status: 'done' | 'todo' }) => {
+  if (status === 'done') {
+    return (
+      <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-blue-500 text-white">
+        <svg viewBox="0 0 16 16" className="h-2.5 w-2.5" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M3.5 8.5l2.5 2.5 6-6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </span>
+    );
+  }
+
+  return (
+    <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full border border-neutral-300 bg-white">
+      <span className="h-1 w-1 rounded-full bg-neutral-300" />
+    </span>
+  );
+};
+
 const TypewriterText = ({
   text,
   shouldAnimate,
@@ -246,12 +264,17 @@ const StructuredMessage = ({ text }: { text: string }) => {
         if (block.type === 'ul') {
           return (
             <ul key={`ul-${index}`} className="space-y-1 text-xs text-neutral-700">
-              {(block.content as string[]).map((item, itemIndex) => (
-                <li key={`li-${index}-${itemIndex}`} className="flex gap-2">
-                  <span>•</span>
-                  <span>{item}</span>
-                </li>
-              ))}
+              {(block.content as string[]).map((item, itemIndex) => {
+                const match = item.match(/^\[(done|todo)\]\s*(.*)$/i);
+                const status = match?.[1]?.toLowerCase() as 'done' | 'todo' | undefined;
+                const label = match?.[2] ?? item;
+                return (
+                  <li key={`li-${index}-${itemIndex}`} className="flex gap-2">
+                    {status ? <StatusIcon status={status} /> : <span>•</span>}
+                    <span>{label}</span>
+                  </li>
+                );
+              })}
             </ul>
           );
         }
@@ -278,6 +301,9 @@ const {
     loadMoreRecommendations,
     hasMoreRecommendations,
     isLoadingMore,
+    listingsUnlocked,
+    confirmedCriteriaKey,
+    setListingsUnlocked,
   } = useVinAiChat();
   const { openChat } = useMessenger();
   const [input, setInput] = useState('');
@@ -290,7 +316,6 @@ const {
   const hasSeededTyping = useRef(false);
   const [isListening, setIsListening] = useState(false);
   const speechRecognitionRef = useRef<SpeechRecognition | null>(null);
-  const [listingsUnlocked, setListingsUnlocked] = useState(false);
   const [selectedListing, setSelectedListing] = useState<AiListing | null>(null);
   const [guidedLocation, setGuidedLocation] = useState<CountrySelectValue | null>(null);
   const [guidedIntent, setGuidedIntent] = useState('');
@@ -355,7 +380,7 @@ const {
   useEffect(() => {
     setGuidedProgress((prev) => ({
       location: prev.location || Boolean(memory?.location),
-      intent: prev.intent,
+      intent: prev.intent || Boolean(memory?.category),
       date: prev.date || Boolean(memory?.dateRange?.startDate),
       guests: prev.guests || Boolean(memory?.guestCount),
     }));
@@ -390,11 +415,6 @@ const {
     [messages],
   );
   const isLatestAssistantTyped = !lastAssistantId || typedMessageIds.includes(lastAssistantId);
-  
-
-  useEffect(() => {
-    setListingsUnlocked(false);
-  }, [criteriaMet, memory, recommendations.length]);
 
   const formattedDateRange = useMemo(() => {
     if (!memory?.dateRange?.startDate) return null;
@@ -420,7 +440,29 @@ const {
     return 'done';
   }, [guidedProgress]);
 
-  const guidedComplete = guidedStep === 'done';
+  const guidedComplete = criteriaMet || guidedStep === 'done';
+
+  const criteriaKey = useMemo(
+    () =>
+      JSON.stringify({
+        location: memory?.location ?? null,
+        category: memory?.category ?? null,
+        dateRange: memory?.dateRange ?? null,
+        guestCount: memory?.guestCount ?? null,
+      }),
+    [memory?.category, memory?.dateRange, memory?.guestCount, memory?.location],
+  );
+
+  useEffect(() => {
+    if (!listingsUnlocked) return;
+    if (!confirmedCriteriaKey) {
+      setListingsUnlocked(true, criteriaKey);
+      return;
+    }
+    if (criteriaKey !== confirmedCriteriaKey) {
+      setListingsUnlocked(false);
+    }
+  }, [confirmedCriteriaKey, criteriaKey, listingsUnlocked, setListingsUnlocked]);
 
   const formatLocationLabel = (value: CountrySelectValue | null) => {
     if (!value) return '';
@@ -1098,7 +1140,7 @@ const {
               </button>
               <button
                 type="button"
-                onClick={() => setListingsUnlocked(true)}
+                onClick={() => setListingsUnlocked(true, criteriaKey)}
                 className="flex-1 rounded-full bg-neutral-900 px-3 py-2 text-[11px] font-semibold text-white shadow-sm transition hover:bg-neutral-800"
               >
                 Accept & Show

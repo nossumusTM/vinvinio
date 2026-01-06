@@ -45,9 +45,12 @@ interface VinAiState {
   isSending: boolean;
   isLoadingMore: boolean;
   hasMoreRecommendations: boolean; // ✅ add this
+  listingsUnlocked: boolean;
+  confirmedCriteriaKey: string | null;
   init: () => void;
   sendMessage: (content: string, options?: { audioUrl?: string; audioDurationMs?: number }) => Promise<void>;
   loadMoreRecommendations: () => Promise<void>;
+  setListingsUnlocked: (value: boolean, criteriaKey?: string | null) => void;
   clear: () => void;
 }
 
@@ -100,6 +103,8 @@ const persistPayload = (payload: {
   criteriaMet: boolean;
   memory: AiMemory;
   hasMoreRecommendations?: boolean;
+  listingsUnlocked?: boolean;
+  confirmedCriteriaKey?: string | null;
 }) => {
   if (typeof window === 'undefined') return;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
@@ -111,9 +116,19 @@ const loadState = (): {
   criteriaMet: boolean;
   memory: AiMemory;
   hasMoreRecommendations: boolean;
+  listingsUnlocked: boolean;
+  confirmedCriteriaKey: string | null;
 } => {
   if (typeof window === 'undefined') {
-    return { messages: [buildWelcomeMessage()], recommendations: [], criteriaMet: false, memory: {}, hasMoreRecommendations: false };
+  return {
+      messages: [buildWelcomeMessage()],
+      recommendations: [],
+      criteriaMet: false,
+      memory: {},
+      hasMoreRecommendations: false,
+      listingsUnlocked: false,
+      confirmedCriteriaKey: null,
+    };
   }
   const cached = localStorage.getItem(STORAGE_KEY);
   if (!cached) {
@@ -123,6 +138,8 @@ const loadState = (): {
         criteriaMet: false,
         memory: {},
         hasMoreRecommendations: false,
+        listingsUnlocked: false,
+        confirmedCriteriaKey: null,
       };
     }
   try {
@@ -132,6 +149,8 @@ const loadState = (): {
       criteriaMet: boolean;
       memory: AiMemory;
       hasMoreRecommendations: boolean;
+      listingsUnlocked: boolean;
+      confirmedCriteriaKey: string | null;
     }>;
   const messages =
       Array.isArray(parsed?.messages) && parsed.messages.length > 0 ? parsed.messages : [buildWelcomeMessage()];
@@ -142,11 +161,21 @@ const loadState = (): {
       criteriaMet: Boolean(parsed?.criteriaMet),
       memory: parsed?.memory ?? {},
       hasMoreRecommendations: Boolean(parsed?.hasMoreRecommendations),
+      listingsUnlocked: Boolean(parsed?.listingsUnlocked),
+      confirmedCriteriaKey: parsed?.confirmedCriteriaKey ?? null,
     };
   } catch (error) {
     console.error('Failed to parse cached AI Force messages', error);
   }
-  return { messages: [buildWelcomeMessage()], recommendations: [], criteriaMet: false, memory: {}, hasMoreRecommendations: false };
+  return {
+    messages: [buildWelcomeMessage()],
+    recommendations: [],
+    criteriaMet: false,
+    memory: {},
+    hasMoreRecommendations: false,
+    listingsUnlocked: false,
+    confirmedCriteriaKey: null,
+  };
 };
 
 const generateId = () =>
@@ -163,15 +192,64 @@ const useVinAiChat = create<VinAiState>((set, get) => ({
   isSending: false,
   isLoadingMore: false,
   hasMoreRecommendations: false,
+  listingsUnlocked: false,
+  confirmedCriteriaKey: null,
   init: () => {
     if (get().initialized) return;
-    const { messages, recommendations, criteriaMet, memory, hasMoreRecommendations } = loadState();
-    set({ messages, recommendations, criteriaMet, memory, hasMoreRecommendations, initialized: true });
+    const {
+      messages,
+      recommendations,
+      criteriaMet,
+      memory,
+      hasMoreRecommendations,
+      listingsUnlocked,
+      confirmedCriteriaKey,
+    } = loadState();
+    set({
+      messages,
+      recommendations,
+      criteriaMet,
+      memory,
+      hasMoreRecommendations,
+      listingsUnlocked,
+      confirmedCriteriaKey,
+      initialized: true,
+    });
   },
   clear: () => {
     const resetMessages = [buildWelcomeMessage()];
-     persistPayload({ messages: resetMessages, recommendations: [], criteriaMet: false, memory: {}, hasMoreRecommendations: false });
-    set({ messages: resetMessages, recommendations: [], criteriaMet: false, memory: {}, hasMoreRecommendations: false });
+     persistPayload({
+       messages: resetMessages,
+       recommendations: [],
+       criteriaMet: false,
+       memory: {},
+       hasMoreRecommendations: false,
+       listingsUnlocked: false,
+       confirmedCriteriaKey: null,
+     });
+    set({
+      messages: resetMessages,
+      recommendations: [],
+      criteriaMet: false,
+      memory: {},
+      hasMoreRecommendations: false,
+      listingsUnlocked: false,
+      confirmedCriteriaKey: null,
+    });
+  },
+  setListingsUnlocked: (value: boolean, criteriaKey?: string | null) => {
+    const { messages, recommendations, criteriaMet, memory, hasMoreRecommendations } = get();
+    const confirmedCriteriaKey = value ? criteriaKey ?? null : null;
+    persistPayload({
+      messages,
+      recommendations,
+      criteriaMet,
+      memory,
+      hasMoreRecommendations,
+      listingsUnlocked: value,
+      confirmedCriteriaKey,
+    });
+    set({ listingsUnlocked: value, confirmedCriteriaKey });
   },
   sendMessage: async (content: string, options?: { audioUrl?: string; audioDurationMs?: number }) => {
     const trimmed = content.trim();
@@ -197,6 +275,8 @@ const useVinAiChat = create<VinAiState>((set, get) => ({
       criteriaMet: optimisticCriteriaMet,
       memory: optimisticMemory,
       hasMoreRecommendations: get().hasMoreRecommendations,
+      listingsUnlocked: get().listingsUnlocked,
+      confirmedCriteriaKey: get().confirmedCriteriaKey,
     });
     set({
       messages: optimisticMessages,
@@ -231,7 +311,15 @@ const useVinAiChat = create<VinAiState>((set, get) => ({
       const criteriaMet = Boolean(data?.criteriaMet);
       const memory: AiMemory = (data?.memory ?? optimisticMemory) as AiMemory;
       const hasMoreRecommendations = Boolean(data?.hasMore);
-      persistPayload({ messages: updatedMessages, recommendations: apiRecommendations, criteriaMet, memory, hasMoreRecommendations });
+      persistPayload({
+        messages: updatedMessages,
+        recommendations: apiRecommendations,
+        criteriaMet,
+        memory,
+        hasMoreRecommendations,
+        listingsUnlocked: get().listingsUnlocked,
+        confirmedCriteriaKey: get().confirmedCriteriaKey,
+      });
       set({ messages: updatedMessages, recommendations: apiRecommendations, criteriaMet, memory, hasMoreRecommendations });
     } catch (error) {
       console.error('AI Force failed to respond', error);
@@ -249,6 +337,8 @@ const useVinAiChat = create<VinAiState>((set, get) => ({
         criteriaMet: optimisticCriteriaMet,
         memory: optimisticMemory,
         hasMoreRecommendations: get().hasMoreRecommendations,
+        listingsUnlocked: get().listingsUnlocked,
+        confirmedCriteriaKey: get().confirmedCriteriaKey,
       });
       set({
         messages: updatedMessages,
@@ -286,6 +376,8 @@ const useVinAiChat = create<VinAiState>((set, get) => ({
         criteriaMet,
         memory,
         hasMoreRecommendations,
+        listingsUnlocked: get().listingsUnlocked,
+        confirmedCriteriaKey: get().confirmedCriteriaKey,
       });
       set({
         recommendations: merged,

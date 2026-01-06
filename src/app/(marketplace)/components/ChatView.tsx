@@ -1253,7 +1253,8 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
     animate={{ opacity: 1 }}
     exit={{ opacity: 0 }}
     transition={{ duration: 0.25 }}
-    className="flex h-[66vh] max-h-[66vh] flex-col overflow-hidden"
+    // className="flex h-[66vh] max-h-[66vh] flex-col overflow-hidden"
+    className="px-2 flex h-full min-h-0 flex-1 flex-col overflow-hidden"
   >
     {/* Header */}
     <div className="flex items-center justify-between gap-3 border-b p-4">
@@ -1300,7 +1301,7 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
     <div className="flex min-h-0 flex-1 flex-col">
       <div
         ref={scrollContainerRef}
-        className="flex-1 min-h-0 space-y-4 overflow-y-auto p-4"
+        className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4"
       >
         {messages.map((msg) => {
           const isAudioMessage = Boolean(msg.audioUrl);

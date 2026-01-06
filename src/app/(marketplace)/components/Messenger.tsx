@@ -43,8 +43,8 @@ const Messenger = ({ currentUser }: MessengerProps) => {
           className={clsx(
             'fixed z-50 flex items-end justify-center',        // ⬅ flex + alignment
             isMobile
-              ? 'bottom-0 left-0 h-[74vh] w-full'              // ⬅ fixed height on mobile
-              : 'bottom-4 right-4 h-[650px] w-[500px]'         // ⬅ fixed height on desktop
+              ? 'bottom-0 left-0 h-[80vh] w-full'              // ⬅ fixed height on mobile
+              : 'bottom-4 right-4 h-[700px] w-[500px]'         // ⬅ fixed height on desktop
           )}
         >
           <Draggable
@@ -73,7 +73,7 @@ const Messenger = ({ currentUser }: MessengerProps) => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
                   transition={{ duration: 0.2 }}
-                  className="flex-1"
+                  className="flex-1 min-h-0"
                 >
                   {recipient.id === AI_FORCE_ASSISTANT.id ? (
                     <VinAiChatView onBack={openList} />

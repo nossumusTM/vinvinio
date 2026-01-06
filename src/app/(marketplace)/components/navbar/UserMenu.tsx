@@ -293,7 +293,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
   const initials = currentUser?.name?.[0]?.toUpperCase() || 'V';
 
   return (
-    <div className="relative" ref={menuRef}>
+    <div className="relative z-50" ref={menuRef}>
       <div className="flex flex-row items-center gap-3">
         {/* {userRole === 'host' && (
           <div
@@ -417,7 +417,8 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
               overflow-hidden 
               right-0 
               top-14 
-              text-sm"
+              text-sm
+              z-50"
           >
           <div className="flex flex-col cursor-pointer">
             {currentUser ? (

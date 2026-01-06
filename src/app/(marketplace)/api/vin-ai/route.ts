@@ -515,17 +515,17 @@ const buildFollowUpReply = (params: {
 
   const listLines = [
     params.location
-      ? `• ✅ Destination: ${params.location}.`
-      : `• ⬜ ${prompts.location}`,
+      ? `• [done] Destination: ${params.location}.`
+      : `• [todo] ${prompts.location}`,
     params.category
-      ? `• ✅ Experience: ${params.category}.`
-      : `• ⬜ ${prompts.category}`,
+      ? `• [done] Experience: ${params.category}.`
+      : `• [todo] ${prompts.category}`,
     params.dateRange
-      ? `• ✅ Dates: ${formatDateRangeLabel(params.dateRange)}.`
-      : `• ⬜ ${prompts.dates}`,
+      ? `• [done] Dates: ${formatDateRangeLabel(params.dateRange)}.`
+      : `• [todo] ${prompts.dates}`,
     params.guestCount
-      ? `• ✅ Guests: ${params.guestCount}.`
-      : `• ⬜ ${prompts.guests}`,
+      ? `• [done] Guests: ${params.guestCount}.`
+      : `• [todo] ${prompts.guests}`,
   ];
 
   return [

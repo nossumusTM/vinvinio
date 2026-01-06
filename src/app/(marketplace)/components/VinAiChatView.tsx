@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useLayoutEffect } from 'react';
 import { LuArrowLeft, LuLoader2, LuRocket, LuStar, LuTrash2, LuX } from 'react-icons/lu';
 import { BiReset } from "react-icons/bi";
 import { useRouter } from 'next/navigation';
@@ -149,6 +150,21 @@ const TypingIndicator = () => (
   </div>
 );
 
+const StatusIcon = ({ status }: { status: 'done' | 'todo' }) => (
+  <span
+    className={clsx(
+      'aspect-square flex h-4 w-4 items-center justify-center rounded-full',
+      status === 'done'
+        ? 'bg-blue-500 text-white'
+        : 'border border-neutral-300 bg-white text-neutral-400'
+    )}
+  >
+    <svg viewBox="0 0 16 16" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M3.5 8.5l2.5 2.5 6-6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  </span>
+);
+
 const TypewriterText = ({
   text,
   shouldAnimate,
@@ -187,7 +203,7 @@ const TypewriterText = ({
 
   return (
     <div className="whitespace-pre-line leading-relaxed text-black/90">
-      {displayed}
+      <StructuredMessage text={displayed} />
       {showCursor && (
         <span className="ml-1 inline-flex h-2 w-2 align-middle animate-pulse rounded-full bg-white/70" />
       )}
@@ -241,12 +257,17 @@ const StructuredMessage = ({ text }: { text: string }) => {
         if (block.type === 'ul') {
           return (
             <ul key={`ul-${index}`} className="space-y-1 text-sm text-black/90">
-              {(block.content as string[]).map((item, itemIndex) => (
-                <li key={`li-${index}-${itemIndex}`} className="flex gap-2">
-                  <span>•</span>
-                  <span>{item}</span>
-                </li>
-              ))}
+              {(block.content as string[]).map((item, itemIndex) => {
+                const match = item.match(/^\[(done|todo)\]\s*(.*)$/i);
+                const status = match?.[1]?.toLowerCase() as 'done' | 'todo' | undefined;
+                const label = match?.[2] ?? item;
+                return (
+                  <li key={`li-${index}-${itemIndex}`} className="flex gap-2">
+                    {status ? <StatusIcon status={status} /> : <span>•</span>}
+                    <span>{label}</span>
+                  </li>
+                );
+              })}
             </ul>
           );
         }
@@ -273,13 +294,16 @@ const {
     loadMoreRecommendations,
     hasMoreRecommendations,
     isLoadingMore,
+    listingsUnlocked,
+    confirmedCriteriaKey,
+    setListingsUnlocked,
   } = useVinAiChat();
   const { openChat } = useMessenger();
   const [input, setInput] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [typedMessageIds, setTypedMessageIds] = useState<string[]>([]);
-  const [listingsUnlocked, setListingsUnlocked] = useState(false);
+  // const [listingsUnlocked, setListingsUnlocked] = useState(false);
   const [selectedListing, setSelectedListing] = useState<AiListing | null>(null);
   const [guidedLocation, setGuidedLocation] = useState<CountrySelectValue | null>(null);
   const [guidedIntent, setGuidedIntent] = useState('');
@@ -291,6 +315,12 @@ const {
   const [guidedGuests, setGuidedGuests] = useState(1);
   const [guidedCategory, setGuidedCategory] = useState<string | null>(null);
   const [guidedTime, setGuidedTime] = useState<string | null>(null);
+  const [detailEdits, setDetailEdits] = useState({
+    location: '',
+    category: '',
+    dates: '',
+    guests: '',
+  });
 
   const [guidedProgress, setGuidedProgress] = useState({
     location: false,
@@ -339,7 +369,7 @@ const {
   useEffect(() => {
     setGuidedProgress((prev) => ({
       location: prev.location || Boolean(memory?.location),
-      intent: prev.intent,
+      intent: prev.intent || Boolean(memory?.category),
       date: prev.date || Boolean(memory?.dateRange?.startDate),
       guests: prev.guests || Boolean(memory?.guestCount),
     }));
@@ -376,17 +406,30 @@ const {
     [messages],
   );
   const isLatestAssistantTyped = !lastAssistantId || typedMessageIds.includes(lastAssistantId);
-  
-  useEffect(() => {
-    setListingsUnlocked(false);
-  }, [criteriaMet, memory, recommendations.length]);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
 
+  const scrollToBottom = () => {
+    // do it a few times across layout ticks (framer-motion + images can shift height)
+    requestAnimationFrame(() => bottomRef.current?.scrollIntoView({ block: 'end' }));
+    setTimeout(() => bottomRef.current?.scrollIntoView({ block: 'end' }), 0);
+    setTimeout(() => bottomRef.current?.scrollIntoView({ block: 'end' }), 50);
+  };
+  
   const formattedDateRange = useMemo(() => {
     if (!memory?.dateRange?.startDate) return null;
     const start = memory.dateRange.startDate.slice(0, 10);
     const end = memory.dateRange.endDate?.slice(0, 10) ?? start;
     return start === end ? start : `${start} → ${end}`;
   }, [memory]);
+
+  useEffect(() => {
+    setDetailEdits({
+      location: memory?.location ?? '',
+      category: memory?.category ?? '',
+      dates: formattedDateRange ?? '',
+      guests: memory?.guestCount ? String(memory.guestCount) : '',
+    });
+  }, [memory?.category, memory?.guestCount, memory?.location, formattedDateRange]);
 
   const guidedStep = useMemo(() => {
     if (!guidedProgress.location) return 'location';
@@ -396,12 +439,36 @@ const {
     return 'done';
   }, [guidedProgress]);
 
-  const guidedComplete = guidedStep === 'done';
+const guidedComplete = criteriaMet || guidedStep === 'done';
 
-   useEffect(() => {
-    const node = scrollRef.current;
-    if (!node) return;
-    node.scrollTop = node.scrollHeight;
+  const criteriaKey = useMemo(
+    () =>
+      JSON.stringify({
+        location: memory?.location ?? null,
+        category: memory?.category ?? null,
+        dateRange: memory?.dateRange ?? null,
+        guestCount: memory?.guestCount ?? null,
+      }),
+    [memory?.category, memory?.dateRange, memory?.guestCount, memory?.location],
+  );
+
+  useEffect(() => {
+    if (!listingsUnlocked) return;
+    if (!confirmedCriteriaKey) {
+      setListingsUnlocked(true, criteriaKey);
+      return;
+    }
+    if (criteriaKey !== confirmedCriteriaKey) {
+      setListingsUnlocked(false);
+    }
+  }, [confirmedCriteriaKey, criteriaKey, listingsUnlocked, setListingsUnlocked]);
+
+  useLayoutEffect(() => {
+    scrollToBottom();
+  }, []);
+
+  useLayoutEffect(() => {
+    scrollToBottom();
   }, [messages.length, recommendations.length, isSending, guidedStep]);
 
   const formatLocationLabel = (value: CountrySelectValue | null) => {
@@ -568,6 +635,37 @@ const {
       router.push(target);
     }
     setSelectedListing(null);
+  };
+
+  const handleDetailSubmit = async (field: keyof typeof detailEdits) => {
+    const rawValue = detailEdits[field].trim();
+    if (!rawValue) return;
+
+    if (field === 'guests') {
+      const count = Number(rawValue);
+      if (!Number.isFinite(count) || count < 1) {
+        toast.error('Please enter a valid guest count.');
+        return;
+      }
+      if (memory?.guestCount && Number(memory.guestCount) === Math.floor(count)) return;
+      await handleSend(`Guest count: ${Math.floor(count)}.`);
+      return;
+    }
+
+    const labelMap: Record<Exclude<keyof typeof detailEdits, 'guests'>, string> = {
+      location: 'Location',
+      category: 'Category',
+      dates: 'Travel dates',
+    };
+    const currentValueMap: Record<Exclude<keyof typeof detailEdits, 'guests'>, string> = {
+      location: memory?.location ?? '',
+      category: memory?.category ?? '',
+      dates: formattedDateRange ?? '',
+    };
+
+    if (rawValue === currentValueMap[field]) return;
+
+    await handleSend(`${labelMap[field]}: ${rawValue}.`);
   };
 
   const handleQuickPrompt = (value: string) => {
@@ -782,13 +880,13 @@ const {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.2 }}
+      initial={{ opacity: 0, x: 12 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -12 }}
+      transition={{ duration: 0.18, ease: 'easeOut' }}
       className={clsx(
-        'flex flex-col overflow-hidden',
-        isFullscreen ? 'h-full w-full' : 'h-[66vh] max-h-[80vh]',
+        'px-2 flex h-full min-h-0 flex-col overflow-hidden',
+        isFullscreen ? 'w-full' : null,
       )}
     >
       <div className="flex items-center gap-3 border-b px-4 py-3">
@@ -947,27 +1045,77 @@ const {
               </div>
               <div className="mt-4 grid grid-cols-2 gap-3 text-[11px] text-neutral-600 space-y-2 text-sm text-neutral-700">
                 {memory.location && (
-                  <div className="flex items-center justify-between rounded-xl bg-white/80 px-3 py-2">
-                    <span className="font-semibold text-neutral-900">Location:</span>
-                    <span>{memory.location}</span>
+                  <div className="rounded-xl border border-sky-100 bg-white/80 px-3 py-2 shadow-sm transition focus-within:border-sky-200 focus-within:ring-2 focus-within:ring-sky-100">
+                    <p className="text-[10px] uppercase tracking-wide text-neutral-400">Location</p>
+                    <input
+                      value={detailEdits.location}
+                      onChange={(event) => setDetailEdits((prev) => ({ ...prev, location: event.target.value }))}
+                      onBlur={() => handleDetailSubmit('location')}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter') {
+                          event.preventDefault();
+                          handleDetailSubmit('location');
+                        }
+                      }}
+                      inputMode="text"
+                      className="mt-1 w-full bg-transparent text-xs font-semibold text-neutral-800 outline-none"
+                    />
                   </div>
                 )}
                 {memory.category && (
-                  <div className="flex items-center justify-between rounded-xl bg-white/80 px-3 py-2">
-                    <span className="font-semibold text-neutral-900">Category:</span>
-                    <span>{memory.category}</span>
+                  <div className="rounded-xl border border-sky-100 bg-white/80 px-3 py-2 shadow-sm transition focus-within:border-sky-200 focus-within:ring-2 focus-within:ring-sky-100">
+                    <p className="text-[10px] uppercase tracking-wide text-neutral-400">Category</p>
+                    <input
+                      value={detailEdits.category}
+                      onChange={(event) => setDetailEdits((prev) => ({ ...prev, category: event.target.value }))}
+                      onBlur={() => handleDetailSubmit('category')}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter') {
+                          event.preventDefault();
+                          handleDetailSubmit('category');
+                        }
+                      }}
+                      inputMode="text"
+                      className="mt-1 w-full bg-transparent text-xs font-semibold text-neutral-800 outline-none"
+                    />
                   </div>
                 )}
                 {formattedDateRange && (
-                  <div className="flex items-center justify-between rounded-xl bg-white/80 px-3 py-2">
-                    <span className="font-semibold text-neutral-900">Travel date:</span>
-                    <span>{formattedDateRange}</span>
+                   <div className="rounded-xl border border-sky-100 bg-white/80 px-3 py-2 shadow-sm transition focus-within:border-sky-200 focus-within:ring-2 focus-within:ring-sky-100">
+                    <p className="text-[10px] uppercase tracking-wide text-neutral-400">Dates</p>
+                    <input
+                      value={detailEdits.dates}
+                      onChange={(event) => setDetailEdits((prev) => ({ ...prev, dates: event.target.value }))}
+                      onBlur={() => handleDetailSubmit('dates')}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter') {
+                          event.preventDefault();
+                          handleDetailSubmit('dates');
+                        }
+                      }}
+                      inputMode="text"
+                      className="mt-1 w-full bg-transparent text-xs font-semibold text-neutral-800 outline-none"
+                    />
                   </div>
                 )}
                 {memory.guestCount && (
-                  <div className="flex items-center justify-between rounded-xl bg-white/80 px-3 py-2">
-                    <span className="font-semibold text-neutral-900">Guests:</span>
-                    <span>{memory.guestCount} people</span>
+                  <div className="rounded-xl border border-sky-100 bg-white/80 px-3 py-2 shadow-sm transition focus-within:border-sky-200 focus-within:ring-2 focus-within:ring-sky-100">
+                    <p className="text-[10px] uppercase tracking-wide text-neutral-400">Guests</p>
+                    <input
+                      value={detailEdits.guests}
+                      onChange={(event) => setDetailEdits((prev) => ({ ...prev, guests: event.target.value }))}
+                      onBlur={() => handleDetailSubmit('guests')}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter') {
+                          event.preventDefault();
+                          handleDetailSubmit('guests');
+                        }
+                      }}
+                      inputMode="numeric"
+                      type="number"
+                      min={1}
+                      className="mt-1 w-full bg-transparent text-xs font-semibold text-neutral-800 outline-none"
+                    />
                   </div>
                 )}
               </div>
@@ -981,7 +1129,7 @@ const {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setListingsUnlocked(true)}
+                  onClick={() => setListingsUnlocked(true, criteriaKey)}
                   className="flex-1 rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-neutral-800"
                 >
                   Accept & Show
@@ -1080,6 +1228,7 @@ const {
             </div>
           </motion.div>
         )}
+      <div ref={bottomRef} />
       </div>
 
       <div className="space-y-4 border-t bg-white px-4 py-3 shadow-inner">
