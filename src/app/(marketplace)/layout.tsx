@@ -95,7 +95,7 @@ export default async function RootLayout({
               <div className="flex-1">
                 {children}
                 </div>
-                <div className="w-full pt-20 mt-auto">
+                <div className="w-full pt-0 mt-auto">
                 {/* <Footer currentUser={currentUser} /> */}
               </div>
             </main>

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { LuLoader2, LuMaximize2, LuRocket, LuSkipForward, LuStar, LuX } from 'react-icons/lu';
+import { RiSpaceShipFill } from 'react-icons/ri';
 import { MdFullscreen } from "react-icons/md";
 import { TbArrowElbowRight, TbPlayerPause, TbPlayerPlay, TbPlayerStopFilled } from 'react-icons/tb';
 import { HiMiniMicrophone } from 'react-icons/hi2';
@@ -944,7 +945,7 @@ const {
         <div className="flex flex-col md:flex-row items-center justify-between gap-3">
         <div className="hidden md:flex flex items-center gap-2">
           <div className="flex h-9 w-9 aspect-square items-center justify-center rounded-xl bg-gradient-to-br from-white via-slate-50 to-sky-50 to-white text-[#2200ffff]">
-            <LuRocket className="h-4 w-4" />
+            <RiSpaceShipFill className="h-4 w-4" />
           </div>
           <div className="flex flex-col">
             <h2 className="text-sm font-semibold text-neutral-900">Start with Force AI</h2>

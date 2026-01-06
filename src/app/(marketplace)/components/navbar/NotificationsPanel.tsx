@@ -511,7 +511,7 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isOpen, onClose
         <>
           <motion.div
             key="notifications-backdrop"
-            className=" fixed inset-0 z-[100] h-screen flex items-start p-3 pointer-events-auto outline-none focus:outline-none bg-black/30 w-full "
+            className=" fixed inset-0 z-[99990] h-screen flex items-start p-3 pointer-events-auto outline-none focus:outline-none bg-black/30 w-full "
             variants={backdropVariants}
             initial="hidden"
             animate="visible"
@@ -522,7 +522,7 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isOpen, onClose
           <motion.aside
             key="notifications-panel"
             onClick={(e) => e.stopPropagation()}
-            className="fixed right-0 top-0 z-[101] m-[8px] flex h-[calc(100dvh-16px)] w-fit min-w-md max-w-md flex-col rounded-3xl bg-white shadow-2xl"
+            className="fixed right-0 top-0 z-[99999] m-[8px] flex h-[calc(100dvh-16px)] w-fit min-w-md max-w-md flex-col rounded-3xl bg-white shadow-2xl"
             variants={panelVariants}
             initial="hidden"
             animate="visible"

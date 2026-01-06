@@ -15,6 +15,7 @@ import { GrSafariOption } from "react-icons/gr";
 import { SiOpenai } from "react-icons/si";
 import { TbBracketsContainStart } from "react-icons/tb";
 import { LuRocket } from 'react-icons/lu';
+import { RiSpaceShipFill } from 'react-icons/ri';
 import { TiPin } from "react-icons/ti";
 import { GiArtificialHive } from "react-icons/gi";
 import { MdOutlineShutterSpeed } from "react-icons/md";
@@ -213,7 +214,7 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
                       src={user.id === VIN_AI_ID ? undefined : user.image}
                       name={user.id === VIN_AI_ID ? 'AI Force' : user.name}
                       size={48}
-                      fallbackIcon={user.id === VIN_AI_ID ? <LuRocket className="h-7 w-7" /> : undefined}
+                      fallbackIcon={user.id === VIN_AI_ID ? <RiSpaceShipFill className="h-7 w-7" /> : undefined}
                     />
 
                     {user.id === CUSTOMER_SERVICE_ID && (

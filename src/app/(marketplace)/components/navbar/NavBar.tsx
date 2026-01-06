@@ -141,7 +141,7 @@ if (!hasMounted) {
               </motion.div>
 
               {/* User Menu always on right */}
-              <div className="flex-shrink-0 flex items-center gap-3 justify-center items-center z-50">
+              <div className="flex-shrink-0 flex items-center gap-3 justify-center items-center z-100">
                 {/* Desktop: show Locale here */}
                 <div className="hidden md:flex flex-col items-center leading-none">
                   {/* Live label */}

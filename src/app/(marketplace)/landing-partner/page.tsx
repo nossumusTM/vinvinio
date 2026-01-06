@@ -81,7 +81,7 @@ const formSteps = [
 export default function LandingPartnerPage() {
   return (
     <section className="relative min-h-screen overflow-hidden">
-      <div className="mx-auto max-w-6xl px-6 pb-24 pt-16 md:px-10">
+      <div className="mx-auto max-w-6xl px-6 pb-16 pt-4 md:pt-8 md:px-10">
         <div className="grid gap-12 lg:grid-cols-[1.1fr,0.9fr]">
           <div>
             <span className="inline-flex items-center rounded-full bg-white/80 px-3 py-1 text-sm font-semibold uppercase tracking-wide text-[#0000ff] shadow-sm">
@@ -122,10 +122,10 @@ export default function LandingPartnerPage() {
           </div>
           <div className="relative">
             <div
-              className="absolute inset-0 rounded-[2.75rem] bg-gradient-to-br from-blue-200 via-transparent to-blue-300 blur-3xl"
+              className="absolute inset-0 rounded-[2.75rem] to-blue-300 blur-xs"
               aria-hidden
             />
-            <div className="relative overflow-hidden rounded-[2.5rem] border border-white/60 bg-white shadow-2xl shadow-slate-300">
+            <div className="relative overflow-hidden rounded-[2.5rem] border border-white/60 bg-white shadow-md ">
               <div className="relative h-80 w-full">
                 <Image
                   src="/images/vinvintraveltheworld.png"
@@ -162,7 +162,7 @@ export default function LandingPartnerPage() {
         </div>
 
         <div className="mt-20 grid gap-10 lg:grid-cols-[1fr,1.1fr]">
-          <div className="rounded-[2.5rem] border border-white/70 bg-white/90 p-10 shadow-2xl shadow-slate-200 backdrop-blur">
+          <div className="rounded-[2.5rem] border border-white/70 bg-white/90 p-10 shadow-md shadow-slate-200 backdrop-blur">
             <h2 className="text-2xl font-semibold text-slate-900">
               How to fill the form for a standout listing
             </h2>
@@ -196,7 +196,7 @@ export default function LandingPartnerPage() {
           </div>
         </div>
 
-        <div className="mt-20 rounded-[2.75rem] border border-blue-100 bg-gradient-to-r from-[#0000ff] via-blue-500 to-blue-400 p-[1px] shadow-[0_35px_70px_-35px_rgba(37,99,235,0.6)]">
+        <div className="mt-20 rounded-[2.75rem] border border-blue-100 bg-gradient-to-r from-[#0000ff] via-blue-500 to-blue-400 p-[1px] shadow-[0_35px_70px_-35px_rgba(37,99,235,0.1)]">
           <div className="flex flex-col gap-8 rounded-[2.5rem] bg-white/95 p-10 text-center shadow-inner shadow-white/30 sm:flex-row sm:items-center sm:justify-between sm:text-left">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#0000ff]">

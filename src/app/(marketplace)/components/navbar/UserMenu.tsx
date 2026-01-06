@@ -293,7 +293,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
   const initials = currentUser?.name?.[0]?.toUpperCase() || 'V';
 
   return (
-    <div className="relative z-50" ref={menuRef}>
+    <div className="relative" ref={menuRef}>
       <div className="flex flex-row items-center gap-3">
         {/* {userRole === 'host' && (
           <div

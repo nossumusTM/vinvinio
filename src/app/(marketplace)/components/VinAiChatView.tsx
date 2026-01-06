@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLayoutEffect } from 'react';
 import { LuArrowLeft, LuLoader2, LuRocket, LuStar, LuTrash2, LuX } from 'react-icons/lu';
+import { RiSpaceShipFill } from 'react-icons/ri';
 import { BiReset } from "react-icons/bi";
 import { useRouter } from 'next/navigation';
 import { TbArrowElbowRight, TbPlayerPause, TbPlayerPlay, TbPlayerStopFilled } from 'react-icons/tb';
@@ -683,21 +684,23 @@ const guidedComplete = criteriaMet || guidedStep === 'done';
             <p className="mt-1 text-xs text-neutral-500">Pick a city or country to start curating.</p>
           </div>
           <CountrySearchSelect value={guidedLocation} onChange={(value) => setGuidedLocation(value ?? null)} />
+            <div className='flex flex-row gap-2'>
+              <button
+              type="button"
+              onClick={handleUseLocation}
+              className="w-full rounded-full border border-neutral-200 px-4 py-2 text-xs font-semibold text-neutral-700 shadow-sm transition hover:bg-neutral-50"
+            >
+              Use my location
+            </button>
             <button
-            type="button"
-            onClick={handleUseLocation}
-            className="w-full rounded-full border border-neutral-200 px-4 py-2 text-xs font-semibold text-neutral-700 shadow-sm transition hover:bg-neutral-50"
-          >
-            Use my location
-          </button>
-          <button
-            type="button"
-            onClick={handleGuidedLocationNext}
-            className="w-full rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300"
-            disabled={guidedGuests < 1}
-          >
-            Continue
-          </button>
+              type="button"
+              onClick={handleGuidedLocationNext}
+              className="w-full rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300"
+              disabled={guidedGuests < 1}
+            >
+              Continue
+            </button>
+          </div>
         </div>
       );
     }
@@ -900,7 +903,7 @@ const guidedComplete = criteriaMet || guidedStep === 'done';
         </button>
         <div className="flex items-center gap-2">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-900 text-white">
-            <LuRocket className="h-5 w-5" />
+            <RiSpaceShipFill className="h-5 w-5" />
           </div>
           <div className="flex flex-col">
             <span className="font-semibold">AI Force</span>
@@ -956,7 +959,7 @@ const guidedComplete = criteriaMet || guidedStep === 'done';
                   <Avatar name="You" size={40} />
                 ) : (
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-900 text-white">
-                    <LuRocket className="h-5 w-5" />
+                    <RiSpaceShipFill className="h-5 w-5" />
                   </div>
                 )}
                 <div
@@ -996,7 +999,7 @@ const guidedComplete = criteriaMet || guidedStep === 'done';
             className="flex gap-3 text-left"
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-900 text-white">
-              <LuRocket className="h-5 w-5" />
+              <RiSpaceShipFill className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1 rounded-3xl border border-neutral-200 bg-white px-4 py-4 shadow-sm">
               {guidedStepContent}
@@ -1013,7 +1016,7 @@ const guidedComplete = criteriaMet || guidedStep === 'done';
             className="flex gap-3 text-left"
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-900 text-white">
-              <LuRocket className="h-5 w-5" />
+              <RiSpaceShipFill className="h-5 w-5" />
             </div>
             <div className="inline-flex w-fit max-w-[78%] items-center rounded-2xl bg-neutral-900 px-4 py-3 text-sm text-white shadow-[0_10px_30px_rgba(15,23,42,0.25)]">
               <TypingIndicator />
@@ -1031,7 +1034,7 @@ const guidedComplete = criteriaMet || guidedStep === 'done';
             className="flex gap-3 text-left"
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-900 text-white">
-              <LuRocket className="h-5 w-5" />
+              <RiSpaceShipFill className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1 rounded-2xl border border-sky-100 bg-gradient-to-br from-white via-sky-50 to-white px-4 py-4 shadow-sm">
               <div className="flex items-start justify-between gap-4">
@@ -1149,7 +1152,7 @@ const guidedComplete = criteriaMet || guidedStep === 'done';
             className="flex gap-3 text-left"
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-900 text-white">
-              <LuRocket className="h-5 w-5" />
+              <RiSpaceShipFill className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1 space-y-3 rounded-2xl bg-white px-4 py-3 shadow-sm">
               <div className="flex md:flex-row flex-col items-center justify-between gap-3">

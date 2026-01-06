@@ -69,7 +69,7 @@ const Logo = () => {
   };
 
   return (
-  <div ref={containerRef} className="relative z-[200] flex items-center justify-center">
+   <div ref={containerRef} className="relative z-10 flex items-center justify-center">
     {/* Anchor wrapper: menu positions relative to this */}
     <div className="relative inline-flex items-center justify-center">
       <button
