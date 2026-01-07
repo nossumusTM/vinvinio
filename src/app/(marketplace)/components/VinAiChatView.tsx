@@ -688,14 +688,14 @@ const guidedComplete = criteriaMet || guidedStep === 'done';
               <button
               type="button"
               onClick={handleUseLocation}
-              className="w-full rounded-full border border-neutral-200 px-4 py-2 text-xs font-semibold text-neutral-700 shadow-sm transition hover:bg-neutral-50"
+              className="w-full rounded-2xl border border-neutral-200 px-4 py-2 text-xs font-semibold text-neutral-700 shadow-sm transition hover:bg-neutral-50"
             >
               Use my location
             </button>
             <button
               type="button"
               onClick={handleGuidedLocationNext}
-              className="w-full rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300"
+              className="w-full rounded-2xl bg-neutral-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300"
               disabled={guidedGuests < 1}
             >
               Continue

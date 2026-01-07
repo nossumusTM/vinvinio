@@ -341,6 +341,14 @@ interface ExperienceWizardProps {
   headingOverride?: { title: string; subtitle?: string };
 }
 
+type ListingDraftSummary = {
+  id: string;
+  title: string | null;
+  step: number | null;
+  updatedAt: string;
+  data?: Record<string, unknown> | null;
+};
+
 const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
   currentUser,
   initialListing = null,
@@ -529,6 +537,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
     handleSubmit,
     setValue,
     watch,
+    getValues,
     reset,
     control,
     formState: { errors }
@@ -565,6 +574,10 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
 
   const editingListing = initialListing;
   const isEditing = Boolean(editingListing);
+  const [savedDrafts, setSavedDrafts] = useState<ListingDraftSummary[]>([]);
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [isSavedServicesOpen, setIsSavedServicesOpen] = useState(true);
 
   const setCustomValue = useCallback(
     (id: string, value: any) => {
@@ -576,6 +589,27 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
     },
     [setValue],
   );
+
+  const fetchSavedDrafts = useCallback(async () => {
+    if (!currentUser) {
+      return;
+    }
+
+    try {
+      const response = await axios.get('/api/listings/drafts');
+      setSavedDrafts(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.error('Failed to fetch saved drafts', error);
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (!currentUser) {
+      return;
+    }
+
+    void fetchSavedDrafts();
+  }, [currentUser, fetchSavedDrafts]);
 
   const editingHydration = useMemo(() => {
     if (!editingListing) {
@@ -1258,6 +1292,8 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
       : 'Complete every section to publish a compelling experience and start hosting.',
   };
 
+  const hasSavedDrafts = savedDrafts.length > 0;
+
   const handleStepSelect = (target: STEPS) => {
     if (target <= step) {
       setStep(target);
@@ -1274,6 +1310,82 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
     if (secondaryLabel && onCancel) {
       onCancel();
     }
+  };
+
+  const handleSaveDraft = async (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+
+    if (!currentUser) {
+      toast.error('Please sign in to save your draft.');
+      return;
+    }
+
+    setIsSavingDraft(true);
+
+    try {
+      const values = getValues();
+      const titleValue =
+        typeof values.title === 'string' && values.title.trim().length > 0
+          ? values.title.trim()
+          : null;
+
+      const response = await axios.post('/api/listings/drafts', {
+        draftId,
+        title: titleValue,
+        step,
+        data: values,
+      });
+
+      const saved = response.data as ListingDraftSummary;
+      setDraftId(saved.id);
+      setSavedDrafts((prev) => {
+        const filtered = prev.filter((draft) => draft.id !== saved.id);
+        return [saved, ...filtered];
+      });
+      toast.success('Saved for later.');
+      if (onCancel) {
+        onCancel();
+      } else {
+        router.push('/my-listings');
+      }
+    } catch (error) {
+      console.error('Failed to save draft', error);
+      toast.error('Unable to save your draft.');
+    } finally {
+      setIsSavingDraft(false);
+    }
+  };
+
+  const handleDraftSelect = (draft: ListingDraftSummary) => {
+    const draftData = draft.data ?? {};
+    const mergedValues = {
+      ...defaultFormValues,
+      ...draftData,
+    };
+
+    reset(mergedValues);
+    setDraftId(draft.id);
+
+    const targetStep =
+      typeof draft.step === 'number' && draft.step >= 0
+        ? Math.min(draft.step, stepsMeta.length - 1)
+        : STEPS.CATEGORY;
+
+    const draftLocation =
+      typeof mergedValues.location === 'object' && mergedValues.location
+        ? (mergedValues.location as { label?: string; city?: string })
+        : null;
+
+    if (draftLocation) {
+      setLocationQuery(
+        `${draftLocation.city ? `${draftLocation.city}, ` : ''}${draftLocation.label ?? ''}`.trim(),
+      );
+    }
+
+    setIsSavedServicesOpen(false);
+    requestAnimationFrame(() => {
+      setStep(targetStep);
+    });
   };
 
   // const handlePrimaryClick = (event: MouseEvent<HTMLButtonElement>) => {
@@ -1395,6 +1507,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
     nextStepGuard();
   };
 
+  const showSaveDraft = !isEditing;
 
   let bodyContent: JSX.Element = <div />;
 
@@ -2200,6 +2313,68 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
         </aside>
 
         <div className="flex-1 space-y-6 p-8 shadow-md rounded-xl">
+         {hasSavedDrafts && (
+            <section className="rounded-2xl border border-neutral-200 bg-white/90 p-6 shadow-sm">
+              <button
+                type="button"
+                onClick={() => setIsSavedServicesOpen((prev) => !prev)}
+                className="flex w-full items-start justify-between gap-4 text-left"
+              >
+                <div className="space-y-1">
+                  <h2 className="text-lg font-semibold text-neutral-900">Saved services</h2>
+                  <p className="text-sm text-neutral-500">
+                    Pick up where you left off or keep track of draft experiences you are still building.
+                  </p>
+                </div>
+                <span className="text-sm font-semibold text-neutral-500">
+                  {isSavedServicesOpen ? 'Hide' : 'Show'}
+                </span>
+              </button>
+              <AnimatePresence initial={false}>
+                {isSavedServicesOpen && (
+                  <motion.div
+                    className="mt-4 grid gap-3"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {savedDrafts.map((draft) => {
+                      const fallbackTitle =
+                        typeof draft.data?.title === 'string' && draft.data.title.trim().length > 0
+                          ? draft.data.title.trim()
+                          : 'Untitled experience';
+                      const displayTitle = draft.title ?? fallbackTitle;
+                      const updatedLabel = draft.updatedAt
+                        ? new Date(draft.updatedAt).toLocaleString()
+                        : 'Just now';
+
+                      return (
+                        <button
+                          key={draft.id}
+                          type="button"
+                          onClick={() => handleDraftSelect(draft)}
+                          className="rounded-xl border border-neutral-200 bg-white p-4 text-left shadow-sm transition hover:border-neutral-300 hover:shadow-md"
+                        >
+                          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                              <p className="text-sm font-semibold text-neutral-900">{displayTitle}</p>
+                              <p className="text-xs text-neutral-500">Last saved {updatedLabel}</p>
+                            </div>
+                            {draft.step !== null && draft.step !== undefined && (
+                              <span className="text-xs font-semibold text-neutral-500">
+                                Step {draft.step + 1} of {stepsMeta.length}
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </section>
+          )}
           <div className="lg:hidden">
             <div className="-mx-4 flex gap-3 pb-8 md:pb-0 overflow-x-auto px-4 pb-2">
               {stepsMeta.map((item, index) => {
@@ -2269,7 +2444,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
             </AnimatePresence>
           </div>
 
-          <div className="flex w-full flex-col gap-3 sm:flex-row">
+          <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap">
             {secondaryLabel && (
               <div className="w-full sm:flex-1">
                 <Button
@@ -2277,6 +2452,17 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
                   label={secondaryLabel}
                   onClick={handleSecondaryClick}
                   disabled={isLoading || (isFirstStep && !onCancel)}
+                />
+              </div>
+            )}
+            {showSaveDraft && (
+              <div className="w-full sm:flex-1">
+                <Button
+                  outline
+                  label="Save & Proceed Later"
+                  onClick={handleSaveDraft}
+                  disabled={isLoading || isSavingDraft}
+                  loading={isSavingDraft}
                 />
               </div>
             )}

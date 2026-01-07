@@ -109,10 +109,10 @@ export default function LandingPartnerPage() {
             <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
               <Link
                 href="/become-a-partner"
-                className="inline-flex items-center justify-center rounded-full bg-[#0000ff] px-8 py-3 text-base font-semibold text-white shadow-[0_20px_45px_-15px_rgba(0,0,255,0.6)] transition hover:-translate-y-0.5 hover:bg-[#0000e0] focus:outline-none focus:ring-2 focus:ring-[#0000ff] focus:ring-offset-2"
+                className="inline-flex items-center justify-center rounded-full bg-[#0000ff] px-8 py-3 text-base font-semibold text-white shadow-[0_2px_15px_-5px_rgba(0,0,255,0.6)] transition hover:-translate-y-0.5 hover:bg-[#0000e0] focus:outline-none focus:ring-2 focus:ring-[#0000ff] focus:ring-offset-2"
               >
                 <div className='flex flex-row justify-center items-center'>
-                  Start the Form
+                  Compile Now!
                 </div>
               </Link>
               <p className="text-sm text-slate-500">
