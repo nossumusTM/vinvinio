@@ -427,7 +427,7 @@ const ListingHead: React.FC<ListingHeadProps> = ({
           {/* Overall Rating */}
           <div className="flex items-center gap-2 cursor-pointer" onClick={handleScrollToReviews}>
               {/* SVG Star with partial fill */}
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                   <defs>
                    <linearGradient id="starGradient">
                       <stop offset={`${(averageRating / 5) * 100}%`} stopColor="black" />
@@ -443,7 +443,7 @@ const ListingHead: React.FC<ListingHeadProps> = ({
                </svg>
 
                {/* Rating and count */}
-              <span className="text-lg text-neutral-700 font-normal border-b border-neutral-500 hover:border-neutral-800 transition">
+              <span className="text-sm text-neutral-700 font-normal border-b border-neutral-500 hover:border-neutral-800 transition">
                   {averageRating.toFixed(1)} · {reviews.length} review{reviews.length !== 1 ? 's' : ''}
                </span>
           </div>

@@ -154,13 +154,14 @@ const backdropVariants = {
 };
 
 const panelVariants: Variants = {
-  hidden: { x: '100%', opacity: 0 },
+  hidden: { x: '100%', opacity: 0, width: 320 },
   visible: {
     x: 0,
     opacity: 1,
-    transition: { type: 'spring' as const, stiffness: 260, damping: 30 },
+    width: 420,
+    transition: { type: 'spring' as const, stiffness: 260, damping: 30, width: { type: 'spring' as const, stiffness: 220, damping: 28 }, },
   },
-  exit: { x: '100%', opacity: 0, transition: { duration: 0.2 } },
+  exit: { x: '100%', opacity: 0, width: 320, transition: { duration: 0.2 } },
 };
 
 const itemVariants: Variants = {
@@ -522,7 +523,7 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isOpen, onClose
           <motion.aside
             key="notifications-panel"
             onClick={(e) => e.stopPropagation()}
-            className="fixed right-0 top-0 z-[99999] m-[8px] flex h-[calc(100dvh-16px)] w-fit min-w-md max-w-md flex-col rounded-3xl bg-white shadow-2xl"
+            className="fixed right-0 top-0 z-[99999] m-[8px] flex h-[calc(100dvh-16px)] max-w-[95vw] flex-col rounded-3xl bg-white shadow-2xl overflow-hidden"
             variants={panelVariants}
             initial="hidden"
             animate="visible"

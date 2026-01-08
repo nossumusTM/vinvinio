@@ -952,7 +952,7 @@ const {
             <p className="text-xs text-neutral-500">Ask anything you need for.</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="pb-1 flex items-center gap-2">
           <button
             type="button"
             onClick={() => {
@@ -987,7 +987,14 @@ const {
         </div>
       </div>
 
-      <div ref={scrollRef} className="max-h-64 space-y-3 overflow-y-auto rounded-2xl border border-neutral-100 bg-white/80 p-3 shadow-inner">
+       <div
+        ref={scrollRef}
+        className="
+          space-y-3 overflow-y-auto rounded-2xl border border-neutral-100 bg-white/80 p-3 shadow-inner
+          h-[calc(100dvh-260px)] max-h-[calc(80dvh-260px)]
+          sm:h-auto sm:max-h-
+        "
+      >
         <AnimatePresence>
           {messages.map((message) => (
             <motion.div
@@ -1334,35 +1341,59 @@ const {
       </div>
     </div>
 
-      <AnimatePresence>
+     <AnimatePresence>
         {isExpanded && !onExpand && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
+          <>
+            {/* Backdrop */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.92 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.94 }}
-              transition={{ duration: 0.2 }}
-              className="h-full w-full origin-bottom-right overflow-hidden rounded-3xl bg-white shadow-2xl"
+              key="vinai-fullscreen-backdrop"
+              className="fixed inset-0 z-50 bg-black/40"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.22, ease: 'easeInOut' }}
+              onClick={() => setIsExpanded(false)}
+            />
+
+            {/* Panel container (like Messenger positioning rules) */}
+            <motion.div
+              key="vinai-fullscreen-shell"
+              className="fixed inset-0 z-[51] flex items-end justify-center p-0 sm:p-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.22, ease: 'easeInOut' }}
             >
-              <VinAiChatView
-                onBack={() => setIsExpanded(false)}
-                isFullscreen
-                onClose={() => setIsExpanded(false)}
-              />
+              {/* The actual panel */}
+              <motion.div
+                key="vinai-fullscreen-panel"
+                onClick={(e) => e.stopPropagation()}
+                className="
+                  pointer-events-auto w-full bg-white shadow-2xl overflow-hidden
+                  min-h-[100dvh] sm:min-h-0
+                  h-[100dvh] sm:h-full
+                  rounded-none sm:rounded-3xl
+                "
+                initial={{ y: 24, scale: 0.985, opacity: 0 }}
+                animate={{ y: 0, scale: 1, opacity: 1 }}
+                exit={{ y: 24, scale: 0.985, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 260, damping: 28 }}
+              >
+                <VinAiChatView
+                  onBack={() => setIsExpanded(false)}
+                  isFullscreen
+                  onClose={() => setIsExpanded(false)}
+                />
+              </motion.div>
             </motion.div>
-          </motion.div>
+          </>
         )}
       </AnimatePresence>
 
       <AnimatePresence>
         {selectedListing && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-0 sm:p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

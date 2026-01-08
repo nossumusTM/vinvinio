@@ -58,6 +58,7 @@ const SearchExperienceModal = () => {
   });
 
   const searchInputRef = useRef<CountrySearchSelectHandle | null>(null);
+  const wasAiFullscreen = useRef(false);
   const [dir, setDir] = useState<1 | -1>(1);
 
   const STEP_VARIANTS: Variants = {
@@ -84,12 +85,6 @@ const SearchExperienceModal = () => {
   }, [modal.isOpen]);
 
   useEffect(() => {
-    if (modal.isOpen) {
-      setIsAiFullscreen(false);
-    }
-  }, [modal.isOpen]);
-
-  useEffect(() => {
     if (location) {
       setLocationError(false);
     }
@@ -103,6 +98,12 @@ const SearchExperienceModal = () => {
     setDir(1);
     setStep((val) => val + 1);
   }, []);
+
+  const handleFullscreenExit = useCallback(() => {
+    setStep(STEPS.AI);
+    setIsAiFullscreen(false);
+    modal.onOpen();
+  }, [modal]);
 
   const onSubmit = useCallback(() => {
 
@@ -155,7 +156,7 @@ const SearchExperienceModal = () => {
 
   const actionLabel = useMemo(() => {
     if (step === STEPS.GUESTS) return t('search');
-    if (step === STEPS.AI) return 'Continue';
+    if (step === STEPS.AI) return '';
     if (step === STEPS.LOCATION && !location) return 'Choose a destination';
     if (step === STEPS.DATE && (!dateRange?.startDate || !dateRange?.endDate)) return t('selectDates');
     return t('next');
@@ -218,6 +219,7 @@ const SearchExperienceModal = () => {
             <VinAiSearchWidget
               onSkip={onSubmit}
               onExpand={() => {
+                modal.onClose();
                 setIsAiFullscreen(true);
               }}
             />
@@ -380,9 +382,9 @@ const SearchExperienceModal = () => {
               className="h-full w-full origin-bottom-right overflow-hidden rounded-3xl bg-white shadow-2xl"
             >
               <VinAiChatView
-                onBack={() => setIsAiFullscreen(false)}
+                onBack={handleFullscreenExit}
                 isFullscreen
-                onClose={() => setIsAiFullscreen(false)}
+                onClose={handleFullscreenExit}
               />
             </motion.div>
           </motion.div>

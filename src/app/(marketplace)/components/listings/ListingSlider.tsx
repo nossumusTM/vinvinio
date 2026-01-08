@@ -44,7 +44,7 @@ const ListingSlider = ({
     <div className="w-full px-4 md:px-20 h-fit overflow-hidden">
       <Slider {...sliderSettings}>
         {listings.map((listing) => (
-          <div key={listing.id} className="px-2 md:px-4 h-screen">
+          <div key={listing.id} className="px-2 md:px-4 h-fit md:h-full pb-0 md:pb-4">
             <ListingCard data={listing} currentUser={currentUser} />
           </div>
         ))}

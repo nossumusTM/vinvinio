@@ -41,9 +41,9 @@ const Messenger = ({ currentUser }: MessengerProps) => {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25, ease: 'easeInOut' }}
           className={clsx(
-            'fixed z-50 flex items-end justify-center',        // ⬅ flex + alignment
+            'fixed z-50 flex p-3 items-end justify-center',        // ⬅ flex + alignment
             isMobile
-              ? 'bottom-0 left-0 h-[80vh] w-full'              // ⬅ fixed height on mobile
+              ? 'bottom-0 left-0 h-[100dvh] w-full'            // ⬅ full height on mobile
               : 'bottom-4 right-4 h-[700px] w-[500px]'         // ⬅ fixed height on desktop
           )}
         >
