@@ -795,7 +795,7 @@ const {
               onClick={handleUseLocation}
               className="w-full rounded-2xl border border-neutral-200 px-3 py-2 text-[11px] font-semibold text-neutral-700 shadow-sm transition hover:bg-neutral-50"
             >
-              Use my location
+              Position
             </button>
             <button
               type="button"

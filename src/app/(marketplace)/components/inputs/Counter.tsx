@@ -34,33 +34,29 @@ const Counter: React.FC<CounterProps> = ({
   const changeBy = useCallback(
     (delta: number) => {
       const current = valueRef.current;
-      if (delta < 0 && current <= 1) return;
-      onChange(current + delta);
+      const next = Math.max(1, current + delta);
+
+      // stop if no change (prevents spam at 1)
+      if (next === current) return;
+
+      // IMPORTANT: update ref immediately so repeats don't "skip"
+      valueRef.current = next;
+
+      onChange(next);
     },
     [onChange],
   );
 
-  const startAutoChange = useCallback(
+  const stepOnce = useCallback(
     (delta: number) => {
-      // clear existing interval if any
-      if (holdIntervalRef.current) {
-        clearInterval(holdIntervalRef.current);
-      }
-      if (holdTimeoutRef.current) {
-        clearTimeout(holdTimeoutRef.current);
-      }
+      const current = valueRef.current;
+      if (delta < 0 && current <= 1) return;
 
-      // immediate step
-      changeBy(delta);
-
-      // continuous steps while held (after short delay)
-      holdTimeoutRef.current = setTimeout(() => {
-        holdIntervalRef.current = setInterval(() => {
-          changeBy(delta);
-        }, 120);
-      }, 350);
+      const next = current + delta;
+      valueRef.current = next;
+      onChange(next);
     },
-    [changeBy],
+    [onChange],
   );
 
   const stopAutoChange = useCallback(() => {
@@ -104,12 +100,8 @@ const Counter: React.FC<CounterProps> = ({
         </div>
         <div className="flex flex-row items-center gap-4">
           <div
-            onMouseDown={(e) => { e.preventDefault(); startAutoChange(-1); }}
-            onMouseUp={stopAutoChange}
-            onMouseLeave={stopAutoChange}
-            onTouchStart={(e) => { e.preventDefault(); startAutoChange(-1); }}
-            onTouchEnd={stopAutoChange}
-                    className="
+          onClick={() => stepOnce(-1)}
+          className="
             w-10
             h-10
             rounded-xl
@@ -185,12 +177,8 @@ const Counter: React.FC<CounterProps> = ({
                   )}
                 </div>
         <div
-            onMouseDown={(e) => { e.preventDefault(); startAutoChange(1); }}
-            onMouseUp={stopAutoChange}
-            onMouseLeave={stopAutoChange}
-            onTouchStart={(e) => { e.preventDefault(); startAutoChange(1); }}
-            onTouchEnd={stopAutoChange}
-                    className="
+          onClick={() => stepOnce(1)}
+          className="
             w-10
             h-10
             rounded-xl
