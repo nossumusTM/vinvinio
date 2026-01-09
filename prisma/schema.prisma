@@ -37,6 +37,11 @@ enum PricingType {
   custom
 }
 
+enum SubscriptionInterval {
+  monthly
+  yearly
+}
+
 enum NewsletterType {
   experience
   product
@@ -121,6 +126,9 @@ model User {
   notificationDismissals NotificationDismissal[]
   giftVoucher       GiftVoucher?
 
+  subscriptions     Subscription[]    @relation("UserSubscriptions")
+  hostedSubscriptions Subscription[]  @relation("HostSubscriptions")
+
   @@map("User")
 }
 
@@ -191,6 +199,10 @@ model Listing {
   viewCount           Int           @default(0)   // 👈 ADD THIS
   giftVoucherPinned   Boolean       @default(false)
 
+  vinSubscriptionEnabled Boolean     @default(false)
+  vinSubscriptionInterval SubscriptionInterval?
+  vinSubscriptionPrice  Int?
+
   moderationNoteText        String?
   moderationNoteAttachments Json?
 
@@ -200,11 +212,35 @@ model Listing {
   reviews             Review[]
   likes               ListingLike[]
   views               ListingView[]
+  
+  subscriptions       Subscription[]
 
   slug             String?    // ← temporarily nullable & not unique
   primaryCategory  String?    // ← optional
 
   @@map("Listing")
+}
+
+model Subscription {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  vinCardId  String   @unique
+  interval   SubscriptionInterval
+  price      Int
+  active     Boolean  @default(true)
+  startDate  DateTime @default(now())
+  endDate    DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user     User    @relation("UserSubscriptions", fields: [userId], references: [id], onDelete: Cascade)
+  userId   String  @db.ObjectId
+  host     User    @relation("HostSubscriptions", fields: [hostId], references: [id], onDelete: Cascade)
+  hostId   String  @db.ObjectId
+  listing  Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listingId String @db.ObjectId
+
+  @@index([userId, listingId])
+  @@index([hostId])
 }
 
 model ListingDraft {

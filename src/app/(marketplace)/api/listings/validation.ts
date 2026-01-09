@@ -205,6 +205,34 @@ const normalizeHoursInAdvance = (value: unknown): number => {
   return parsed;
 };
 
+const SUBSCRIPTION_INTERVALS = new Set(['monthly', 'yearly']);
+
+const normalizeVinSubscriptionEnabled = (value: unknown): boolean => {
+  return Boolean(value);
+};
+
+const normalizeVinSubscriptionInterval = (value: unknown): 'monthly' | 'yearly' | null => {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const normalized = value.trim().toLowerCase();
+  return SUBSCRIPTION_INTERVALS.has(normalized) ? (normalized as 'monthly' | 'yearly') : null;
+};
+
+const normalizeVinSubscriptionPrice = (value: unknown, enabled: boolean): number | null => {
+  if (!enabled) {
+    return null;
+  }
+
+  const parsed = Math.round(Number(value));
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    throw new ListingValidationError('Subscription price must be a positive number');
+  }
+
+  return parsed;
+};
+
 export interface ListingUpdatePayload {
   title?: unknown;
   description?: unknown;
@@ -230,6 +258,9 @@ export interface ListingUpdatePayload {
   groupSize?: unknown;
   customPricing?: unknown;
   availabilityRules?: unknown;
+  vinSubscriptionEnabled?: unknown;
+  vinSubscriptionInterval?: unknown;
+  vinSubscriptionPrice?: unknown;
 }
 
 export interface NormalizedListingUpdate {
@@ -262,6 +293,9 @@ export interface NormalizedListingUpdate {
     activityForms: { set: string[] };
     seoKeywords: { set: string[] };
     availabilityRules: Record<string, unknown> | null;
+    vinSubscriptionEnabled: boolean;
+    vinSubscriptionInterval: 'monthly' | 'yearly' | null;
+    vinSubscriptionPrice: number | null;
   };
   pricingMode: PricingMode;
   groupPrice: number | null;
@@ -312,6 +346,13 @@ export const normalizeListingUpdatePayload = (
   const activityForms = normalizeStringArray(payload.activityForms);
   const seoKeywords = normalizeStringArray(payload.seoKeywords);
   const availabilityRules = normalizeAvailabilityRules(payload.availabilityRules);
+  const vinSubscriptionEnabled = normalizeVinSubscriptionEnabled(payload.vinSubscriptionEnabled);
+  const vinSubscriptionInterval = normalizeVinSubscriptionInterval(payload.vinSubscriptionInterval);
+  const vinSubscriptionPrice = normalizeVinSubscriptionPrice(payload.vinSubscriptionPrice, vinSubscriptionEnabled);
+
+  if (vinSubscriptionEnabled && (!vinSubscriptionInterval || !vinSubscriptionPrice)) {
+    throw new ListingValidationError('Subscription interval and price are required when VIN subscription is enabled');
+  }
 
   const pricingSnapshot = {
     mode: pricingMode,
@@ -350,6 +391,9 @@ export const normalizeListingUpdatePayload = (
       activityForms: { set: activityForms },
       seoKeywords: { set: seoKeywords },
       availabilityRules: availabilityRules ? { ...availabilityRules } : null,
+      vinSubscriptionEnabled,
+      vinSubscriptionInterval,
+      vinSubscriptionPrice,
     },
     pricingMode,
     groupPrice: pricingSnapshot.groupPrice,

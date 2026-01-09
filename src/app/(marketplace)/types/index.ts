@@ -179,6 +179,9 @@ export type SafeListing = Simplify<
 
     bookingCount?: number;
     giftVoucherPinned?: boolean;
+    vinSubscriptionEnabled?: boolean;
+    vinSubscriptionInterval?: 'monthly' | 'yearly' | null;
+    vinSubscriptionPrice?: number | null;
 
     // Keep your custom fields, but make them permissive
     hostDescription?: string | null;

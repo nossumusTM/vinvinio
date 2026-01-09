@@ -34,11 +34,11 @@ const CategoryInput: React.FC<CategoryInputProps> = ({
     >
       <div
         className={[
-          'flex h-14 w-14 items-center justify-center rounded-xl',
+          'flex h-14 w-14 items-center justify-center rounded-2xl',
           'shadow-sm transition-transform duration-200',
           'group-hover:scale-105',
           selected
-            ? 'bg-neutral-900 text-white shadow-lg'
+            ? 'bg-[#2200ffff] text-white shadow-lg'
             : 'bg-neutral-50 text-neutral-700',
         ].join(' ')}
       >

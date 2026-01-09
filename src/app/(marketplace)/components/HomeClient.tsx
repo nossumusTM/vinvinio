@@ -369,7 +369,7 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
   // drop sm:grid-cols-1 so mobile can show multiple columns
   // const gridBaseClasses = `listingscontainer ${categoriesVisible ? 'listingscontainer--withCategories' : 'listingscontainer--collapsed'} ${topPadClass} grid max-w-screen-2xl mx-auto relative z-10`;
   const gridBaseClasses =
-  `p-5 md:p-0 listingscontainer ${categoriesVisible ? 'listingscontainer--withCategories' : 'listingscontainer--collapsed'} ${topPadClass} grid max-w-screen-2xl mx-auto relative z-10 transition-[padding] duration-300 ease-out`;
+  `p-3 mb-6 md:mb-8 md:p-0 listingscontainer ${categoriesVisible ? 'listingscontainer--withCategories' : 'listingscontainer--collapsed'} ${topPadClass} grid max-w-screen-2xl mx-auto relative z-10 transition-[padding] duration-300 ease-out`;
 
   if (!listings && !isFiltering) {
     return (

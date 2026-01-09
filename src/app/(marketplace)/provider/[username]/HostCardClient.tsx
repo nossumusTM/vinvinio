@@ -57,7 +57,26 @@ interface HostCardClientProps {
   isFollowing?: boolean;
 }
 
-type TabKey = 'experiences' | 'reviews';
+type TabKey = 'experiences' | 'reviews' | 'subscriptions';
+
+type HostSubscriptionSummary = {
+  id: string;
+  vinCardId: string;
+  interval: 'monthly' | 'yearly';
+  price: number;
+  startDate: string;
+  endDate: string;
+  listing: {
+    id: string;
+    title: string;
+  };
+  customer: {
+    id: string;
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+  };
+};
 
 const tabVariants = {
   initial: { opacity: 0, y: 8 },
@@ -82,6 +101,9 @@ const formatPrice = (price: number) => {
 const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews, currentUser, isFollowing }) => {
   const [activeTab, setActiveTab] = useState<TabKey>('experiences');
   const { getByValue } = useCountries();
+
+  const [subscriptions, setSubscriptions] = useState<HostSubscriptionSummary[]>([]);
+  const [subscriptionsLoading, setSubscriptionsLoading] = useState(false);
 
   const messenger = useMessenger();
   const loginModal = useLoginModal();
@@ -279,6 +301,17 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
   const handleTabChange = (tab: TabKey) => {
     setActiveTab(tab);
   };
+
+  const availableTabs = useMemo<TabKey[]>(
+    () => (isOwner ? ['experiences', 'reviews', 'subscriptions'] : ['experiences', 'reviews']),
+    [isOwner],
+  );
+
+  useEffect(() => {
+    if (!isOwner && activeTab === 'subscriptions') {
+      setActiveTab('experiences');
+    }
+  }, [activeTab, isOwner]);
 
   const slugifySegment = (s: string) =>
     s
@@ -512,6 +545,40 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
     })();
     return () => { alive = false; };
   }, [host.id]);
+
+  useEffect(() => {
+    if (!isOwner) return;
+    let alive = true;
+
+    const fetchSubscriptions = async () => {
+      setSubscriptionsLoading(true);
+      try {
+        const response = await fetch('/api/subscriptions/host', {
+          credentials: 'include',
+          cache: 'no-store',
+        });
+        if (!response.ok) {
+          throw new Error('Failed to load subscriptions');
+        }
+        const data = await response.json();
+        if (alive) {
+          setSubscriptions(Array.isArray(data) ? data : []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch host subscriptions', error);
+      } finally {
+        if (alive) {
+          setSubscriptionsLoading(false);
+        }
+      }
+    };
+
+    fetchSubscriptions();
+
+    return () => {
+      alive = false;
+    };
+  }, [isOwner]);
 
   return (
     <div className="pageadjust max-w-6xl mx-auto py-12 px-4 sm:px-6 lg:px-8 space-y-8">
@@ -819,7 +886,7 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
           {/* STATS → DIRECT MESSAGE → TABS */}
           <div className="flex w-full flex-col md:flex-row md:items-center md:justify-between gap-4">
             {/* LEFT: Followers / Bookings / Likes */}
-            <div className="flex w-full flex-row flex-nowrap gap-2 overflow-x-auto scroll-smooth md:w-auto md:flex-wrap md:overflow-visible md:gap-3">
+            <div className="pb-4 flex w-full flex-row flex-nowrap gap-2 overflow-x-auto scroll-smooth md:w-auto md:flex-wrap md:overflow-visible md:gap-3">
               {/* Followers */}
               <div className="inline-flex shrink-0 min-w-[100px] flex-col rounded-2xl border border-white/15 bg-white/10 px-3 py-2 text-black/90 shadow-md backdrop-blur-md">
                 <div className="flex items-center gap-1">
@@ -861,7 +928,7 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
             </div>
 
             {/* RIGHT: Direct Message + Experiences / Reviews switcher */}
-            <div className="w-full md:flex-1 flex flex-col md:flex-row md:items-center md:justify-end md:gap-3">
+            <div className="gap-4 w-full md:flex-1 flex flex-col md:flex-row md:items-center md:justify-end md:gap-3">
               {/* Direct Message — to the left of the switch on desktop */}
               <div className="w-full md:w-auto flex justify-center md:justify-end">
                 <button
@@ -876,12 +943,19 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
               {/* Experiences / Reviews switcher */}
               <div className="w-full md:w-auto flex justify-center md:justify-end">
                 <div className="shadow-md flex w-full md:w-auto rounded-full bg-neutral-50 p-1">
-                  {(['experiences', 'reviews'] as TabKey[]).map((tab) => {
+                  {availableTabs.map((tab) => {
                     const reviewCount = reviews.length;
                     const reviewLabel =
                       reviewCount === 0 ? 'Reviews'
                       : reviewCount === 1 ? '1 Review'
                       : `${reviewCount} Reviews`;
+
+                      const tabLabel =
+                      tab === 'experiences'
+                        ? 'Services'
+                        : tab === 'subscriptions'
+                          ? 'Subscriptions'
+                          : reviewLabel;
 
                     return (
                       <button
@@ -901,7 +975,7 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                             <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 shadow-md" />
                           </div>
                         )}
-                        {tab === 'experiences' ? 'Experiences' : reviewLabel}
+                        {tabLabel}
                       </button>
                     );
                   })}
@@ -977,6 +1051,77 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                         </div>
                       </Link>
                     ))}
+                  </motion.div>
+                  ) : activeTab === 'subscriptions' ? (
+                  <motion.div
+                    key="subscriptions"
+                    variants={tabVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    transition={{ duration: 0.25 }}
+                    className="mt-4 space-y-4"
+                  >
+                    {subscriptionsLoading ? (
+                      <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 p-6 text-center text-sm text-neutral-500">
+                        Loading subscriptions...
+                      </div>
+                    ) : subscriptions.length === 0 ? (
+                      <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 p-6 text-center text-sm text-neutral-500">
+                        No active subscriptions yet.
+                      </div>
+                    ) : (
+                      <div className="grid gap-4 md:grid-cols-2">
+                        {subscriptions.map((subscription) => {
+                          const startDate = new Date(subscription.startDate).toLocaleDateString();
+                          const endDate = new Date(subscription.endDate).toLocaleDateString();
+                          const intervalLabel = subscription.interval === 'yearly' ? 'Yearly' : 'Monthly';
+
+                          return (
+                            <motion.div
+                              key={subscription.id}
+                              initial={{ opacity: 0, y: 8 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm"
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div>
+                                  <p className="text-xs uppercase tracking-[0.25em] text-neutral-400">Subscription</p>
+                                  <h4 className="mt-2 text-base font-semibold text-neutral-900">
+                                    {subscription.listing.title}
+                                  </h4>
+                                  <p className="mt-1 text-xs text-neutral-500">
+                                    VIN card ID: <span className="font-semibold text-neutral-700">{subscription.vinCardId}</span>
+                                  </p>
+                                </div>
+                                <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold text-neutral-700">
+                                  {intervalLabel}
+                                </span>
+                              </div>
+
+                              <div className="mt-3 flex items-center gap-3">
+                                {subscription.customer.image ? (
+                                  <Avatar src={subscription.customer.image} name={subscription.customer.name ?? 'Customer'} size={36} />
+                                ) : (
+                                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-900 text-sm font-semibold text-white">
+                                    {(subscription.customer.name?.[0] || 'C').toUpperCase()}
+                                  </div>
+                                )}
+                                <div>
+                                  <p className="text-sm font-semibold text-neutral-900">
+                                    {subscription.customer.name ?? subscription.customer.email ?? 'Customer'}
+                                  </p>
+                                  <p className="text-xs text-neutral-500">
+                                    Active {startDate} → {endDate}
+                                  </p>
+                                </div>
+                              </div>
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </motion.div>
                 ) : (
                   <motion.div

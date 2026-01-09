@@ -56,7 +56,7 @@ import { TbWorldUpload } from "react-icons/tb";
 import { AggregateEntry, summarizeEntries } from "@/app/(marketplace)/libs/aggregateTotals";
 import FilterHostAnalytics, { HostAnalyticsFilter } from "../components/FilterHostAnalytics";
 import FilterPromoterAnalytics from "../components/FilterPromoterAnalytics";
-import VinVoucherCard from "../components/VinVaucherCard";
+import Link from "next/link";
 
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
@@ -153,11 +153,24 @@ interface EarningsEntry {
   books?: number;
 }
 
-type GiftVoucher = {
+type SubscriptionSummary = {
   id: string;
-  name: string;
-  balance: number;
-  currency: string;
+  vinCardId: string;
+  interval: 'monthly' | 'yearly';
+  price: number;
+  startDate: string;
+  endDate: string;
+  listing: {
+    id: string;
+    title: string;
+    imageSrc?: string[] | null;
+  };
+  host: {
+    id: string;
+    name?: string | null;
+    username?: string | null;
+    image?: string | null;
+  };
 };
 
 type HostAnalytics = {
@@ -283,8 +296,8 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   const [confirmingPhoneCode, setConfirmingPhoneCode] = useState(false);
   const [phoneVerificationError, setPhoneVerificationError] = useState<string | null>(null);
 
-  const [giftVoucher, setGiftVoucher] = useState<GiftVoucher | null>(null);
-  const [giftVoucherLoading, setGiftVoucherLoading] = useState(true);
+  const [subscriptions, setSubscriptions] = useState<SubscriptionSummary[]>([]);
+  const [subscriptionsLoading, setSubscriptionsLoading] = useState(true);
   
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(Boolean(currentUser?.twoFactorEnabled));
   const [twoFactorSecret, setTwoFactorSecret] = useState<string | null>(null);
@@ -960,7 +973,7 @@ const coverImage = useMemo(() => {
     ? 'Manage listings, payouts and analytics without losing guest-facing data.'
     : 'Preview as a guest while we keep your host workspace untouched.';
     
-  const paymentsTitle = viewRole === 'host' ? 'Payments & Transfers' : 'Payments & Vouchers';
+  const paymentsTitle = viewRole === 'host' ? 'Payments & Transfers' : 'Payments & Subscriptions';
 
   const lastPasswordUpdateDate = useMemo(
     () => (currentUser.passwordUpdatedAt ? new Date(currentUser.passwordUpdatedAt) : null),
@@ -2331,28 +2344,28 @@ const coverImage = useMemo(() => {
   useEffect(() => {
     let isActive = true;
 
-    const fetchGiftVoucher = async () => {
-      setGiftVoucherLoading(true);
+    const fetchSubscriptions = async () => {
+      setSubscriptionsLoading(true);
       try {
-        const res = await axios.post('/api/vouchers/vin', { currency });
+        const res = await axios.get('/api/subscriptions');
         if (isActive) {
-          setGiftVoucher(res.data);
+          setSubscriptions(Array.isArray(res.data) ? res.data : []);
         }
       } catch (error) {
-        console.error('Failed to fetch gift voucher', error);
+        console.error('Failed to fetch subscriptions', error);
       } finally {
         if (isActive) {
-          setGiftVoucherLoading(false);
+          setSubscriptionsLoading(false);
         }
       }
     };
 
-    fetchGiftVoucher();
+    fetchSubscriptions();
 
     return () => {
       isActive = false;
     };
-  }, [currency]);
+  }, []);
 
   // useEffect(() => {
   //   const fetchAnalytics = async () => {
@@ -4636,23 +4649,72 @@ const coverImage = useMemo(() => {
                   )}
 
                   <div className="mt-10">
-                      <Heading title="Vin Voucher" subtitle="Track your gift voucher balance" />
-                      {giftVoucherLoading ? (
-                        <p className="mt-3 text-sm text-neutral-500">Loading voucher...</p>
-                      ) : giftVoucher ? (
-                        <div className="mt-4">
-                          <VinVoucherCard
-                            name={giftVoucher.name}
-                            balance={giftVoucher.balance}
-                            currency={giftVoucher.currency || currency}
-                          />
-                        </div>
-                      ) : (
-                        <p className="mt-3 text-sm text-neutral-500">
-                          Voucher details are unavailable right now.
-                        </p>
-                      )}
-                    </div>
+                      <Heading title="Subscriptions" subtitle="Manage your active VIN subscriptions" />
+                    {subscriptionsLoading ? (
+                      <p className="mt-3 text-sm text-neutral-500">Loading subscriptions...</p>
+                    ) : subscriptions.length > 0 ? (
+                      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                        {subscriptions.map((subscription) => {
+                          const startLabel = new Date(subscription.startDate).toLocaleDateString();
+                          const endLabel = new Date(subscription.endDate).toLocaleDateString();
+                          const intervalLabel = subscription.interval === 'yearly' ? 'Yearly' : 'Monthly';
+                          return (
+                            <motion.div
+                              key={subscription.id}
+                              initial={{ opacity: 0, y: 8 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm"
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div>
+                                  <p className="text-xs uppercase tracking-[0.25em] text-neutral-400">VIN Card</p>
+                                  <h4 className="mt-2 text-base font-semibold text-neutral-900">
+                                    {subscription.listing.title}
+                                  </h4>
+                                  <p className="mt-1 text-xs text-neutral-500">
+                                    Host: {subscription.host.name ?? subscription.host.username ?? 'Host'}
+                                  </p>
+                                </div>
+                                <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold text-neutral-700">
+                                  {intervalLabel}
+                                </span>
+                              </div>
+
+                              <div className="mt-3 space-y-1 text-xs text-neutral-500">
+                                <p>
+                                  Active from <span className="font-semibold text-neutral-700">{startLabel}</span> to{' '}
+                                  <span className="font-semibold text-neutral-700">{endLabel}</span>
+                                </p>
+                                <p>
+                                  VIN card ID: <span className="font-semibold text-neutral-700">{subscription.vinCardId}</span>
+                                </p>
+                                <p>
+                                  Price:{' '}
+                                  <span className="font-semibold text-neutral-700">
+                                    {formatConverted(subscription.price)}
+                                  </span>
+                                </p>
+                              </div>
+
+                              <div className="mt-4">
+                                <Link
+                                  href={`/listings/${subscription.listing.id}`}
+                                  className="inline-flex items-center text-sm font-semibold text-black hover:underline"
+                                >
+                                  View listing
+                                </Link>
+                              </div>
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="mt-3 text-sm text-neutral-500">
+                        You don’t have any active subscriptions yet.
+                      </p>
+                    )}
+                  </div>
                     
                     <div className="mt-10">
                       <Heading

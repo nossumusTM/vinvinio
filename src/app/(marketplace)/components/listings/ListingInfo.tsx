@@ -22,6 +22,8 @@ import Avatar from "../Avatar";
 import ListingCategory from "./ListingCategory";
 import { useRouter } from "next/navigation";
 
+import VinSubscriptionCard from "./src/app/(marketplace)/components/listings/VinSubscriptionCard";
+
 const Map = dynamic(() => import('../Map'), {
     ssr: false
 });
@@ -33,6 +35,7 @@ const MapListing = dynamic(() => import('../MapListing'), {
 interface ListingInfoProps {
     listing?: SafeListing;
     user: SafeUser,
+    currentUser?: SafeUser | null;
     description: string;
     guestCount: number;
     category: {
@@ -67,6 +70,7 @@ interface ListingInfoProps {
 const ListingInfo: React.FC<ListingInfoProps> = ({
     listing,
     user,
+    currentUser,
     description,
     guestCount,
     category,
@@ -753,8 +757,19 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
             <MapListing searchQuery={meetingPoint} listing={listing} />
             </div>
 
+            {listing?.vinSubscriptionEnabled && listing.vinSubscriptionInterval && listing.vinSubscriptionPrice ? (
+              <div className="mt-6 px-2 md:px-4">
+                <VinSubscriptionCard
+                  listing={listing}
+                  hostName={hostName}
+                  currentUser={currentUser}
+                />
+              </div>
+            ) : null}
+
         </div>
     );
 }
+
 
 export default ListingInfo;

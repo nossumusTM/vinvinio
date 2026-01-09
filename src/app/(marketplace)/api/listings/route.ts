@@ -42,6 +42,9 @@ export async function POST(request: Request) {
     groupSize,
     customPricing,
     hoursInAdvance,
+    vinSubscriptionEnabled,
+    vinSubscriptionInterval,
+    vinSubscriptionPrice,
   } = body;
 
   if (
@@ -76,6 +79,24 @@ export async function POST(request: Request) {
     : null;
 
   const parsedHoursInAdvance = Math.max(0, Math.round(Number(hoursInAdvance ?? 0)));
+
+  const normalizedVinSubscriptionEnabled = Boolean(vinSubscriptionEnabled);
+  const normalizedVinSubscriptionInterval =
+    typeof vinSubscriptionInterval === 'string' && ['monthly', 'yearly'].includes(vinSubscriptionInterval)
+      ? vinSubscriptionInterval
+      : null;
+  const parsedVinSubscriptionPrice = normalizedVinSubscriptionEnabled
+    ? Math.round(Number(vinSubscriptionPrice))
+    : null;
+
+  if (normalizedVinSubscriptionEnabled) {
+    if (!normalizedVinSubscriptionInterval) {
+      return new NextResponse('Subscription interval must be monthly or yearly', { status: 400 });
+    }
+    if (!Number.isFinite(parsedVinSubscriptionPrice) || (parsedVinSubscriptionPrice ?? 0) <= 0) {
+      return new NextResponse('Subscription price must be a positive number', { status: 400 });
+    }
+  }
 
   if (normalizedPricingType === 'group') {
     if (!parsedGroupPrice || parsedGroupPrice <= 0 || !parsedGroupSize || parsedGroupSize <= 0) {
@@ -211,6 +232,9 @@ export async function POST(request: Request) {
       activityForms: { set: normalizedActivityForms },
       seoKeywords: { set: normalizedSeoKeywords },
       availabilityRules: availabilityRules ? { ...availabilityRules } : null,
+      vinSubscriptionEnabled: normalizedVinSubscriptionEnabled,
+      vinSubscriptionInterval: normalizedVinSubscriptionInterval,
+      vinSubscriptionPrice: parsedVinSubscriptionPrice,
       status: 'pending',
       user: {
         connect: {

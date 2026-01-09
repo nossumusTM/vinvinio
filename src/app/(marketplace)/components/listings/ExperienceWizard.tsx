@@ -528,6 +528,9 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
           price: 100,
         },
       ] as PricingTier[],
+      vinSubscriptionEnabled: false,
+      vinSubscriptionInterval: 'monthly',
+      vinSubscriptionPrice: null,
     }),
     [],
   );
@@ -562,6 +565,9 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
   const groupPrice = watch('groupPrice');
   const groupSize = watch('groupSize');
   const price = watch('price');
+  const vinSubscriptionEnabled = watch('vinSubscriptionEnabled');
+  const vinSubscriptionInterval = watch('vinSubscriptionInterval');
+  const vinSubscriptionPrice = watch('vinSubscriptionPrice');
 
   const {
     fields: customPricingFields,
@@ -821,6 +827,12 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
         groupPrice: editingListing.groupPrice ?? null,
         groupSize: editingListing.groupSize ?? null,
         customPricing: normalizedCustomPricing,
+        vinSubscriptionEnabled: Boolean(editingListing.vinSubscriptionEnabled),
+        vinSubscriptionInterval: editingListing.vinSubscriptionInterval ?? defaultFormValues.vinSubscriptionInterval,
+        vinSubscriptionPrice:
+          typeof editingListing.vinSubscriptionPrice === 'number'
+            ? editingListing.vinSubscriptionPrice
+            : defaultFormValues.vinSubscriptionPrice,
       },
       locationQueryText:
         resolvedLocation
@@ -1083,6 +1095,23 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
         }
       }
 
+      if (vinSubscriptionEnabled) {
+        const validInterval =
+          typeof vinSubscriptionInterval === 'string' &&
+          ['monthly', 'yearly'].includes(vinSubscriptionInterval);
+        const parsedSubscriptionPrice = ensurePositiveNumber(vinSubscriptionPrice);
+
+        if (!validInterval) {
+          toast.error('Choose a valid VIN subscription interval.');
+          return;
+        }
+
+        if (!parsedSubscriptionPrice) {
+          toast.error('Enter a valid VIN subscription price.');
+          return;
+        }
+      }
+
       setIsLoading(true);
 
       const toValueArray = (value: any) => {
@@ -1219,7 +1248,12 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
                 price: Math.max(1, Math.round(tier.price)),
               }))
             : null,
-            availabilityRules: normalizedAvailability,
+        availabilityRules: normalizedAvailability,
+        vinSubscriptionEnabled: Boolean(vinSubscriptionEnabled),
+        vinSubscriptionInterval: vinSubscriptionEnabled ? vinSubscriptionInterval : null,
+        vinSubscriptionPrice: vinSubscriptionEnabled
+          ? Math.round(Number(vinSubscriptionPrice ?? 0))
+          : null,
       };
 
       const request = isEditing && editingListing
@@ -2259,6 +2293,92 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
             </motion.div>
           )}
         </AnimatePresence>
+
+        <motion.div
+          variants={panelVariants}
+          initial="hidden"
+          animate="show"
+          className="rounded-2xl border border-neutral-200 bg-white/90 p-5 shadow-sm"
+        >
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 className="text-base font-semibold text-neutral-900">VIN subscription</h3>
+                <p className="text-sm text-neutral-500">
+                  Offer a subscription-based VIN card for monthly or yearly access to this service.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCustomValue('vinSubscriptionEnabled', !vinSubscriptionEnabled)}
+                className={clsx(
+                  'flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition',
+                  vinSubscriptionEnabled
+                    ? 'border-black bg-black text-white'
+                    : 'border-neutral-300 bg-white text-neutral-700 hover:border-neutral-400',
+                )}
+                aria-pressed={vinSubscriptionEnabled}
+              >
+                {vinSubscriptionEnabled ? 'Enabled' : 'Disabled'}
+              </button>
+            </div>
+
+            <AnimatePresence mode="wait">
+              {vinSubscriptionEnabled && (
+                <motion.div
+                  key="vin-subscription-settings"
+                  variants={panelVariants}
+                  initial="hidden"
+                  animate="show"
+                  exit="exit"
+                  className="space-y-4"
+                >
+                  <div className="flex flex-col gap-3">
+                    <span className="text-sm font-semibold text-neutral-700">Subscription interval</span>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {[
+                        { value: 'monthly', label: 'Monthly', description: 'Charged every month' },
+                        { value: 'yearly', label: 'Yearly', description: 'Charged once per year' },
+                      ].map((option) => {
+                        const isActive = vinSubscriptionInterval === option.value;
+                        return (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => setCustomValue('vinSubscriptionInterval', option.value)}
+                            className={clsx(
+                              'rounded-2xl border p-4 text-left shadow-sm transition',
+                              isActive
+                                ? 'border-black bg-white shadow-md shadow-black/10'
+                                : 'border-neutral-200 bg-white/80 hover:border-black/30',
+                            )}
+                          >
+                            <p className="text-sm font-semibold text-neutral-900">{option.label}</p>
+                            <p className="text-xs text-neutral-500">{option.description}</p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <Input
+                    id="vinSubscriptionPrice"
+                    name="vinSubscriptionPrice"
+                    label={`Price per ${vinSubscriptionInterval === 'yearly' ? 'year' : 'month'}`}
+                    type="number"
+                    formatPrice
+                    disabled={isLoading}
+                    register={register}
+                    errors={errors}
+                    required={vinSubscriptionEnabled}
+                    inputClassName="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </motion.div>
+        
       </div>
     );
   }
