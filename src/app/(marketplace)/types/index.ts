@@ -178,6 +178,7 @@ export type SafeListing = Simplify<
     updatedAt: string;
 
     bookingCount?: number;
+    giftVoucherPinned?: boolean;
 
     // Keep your custom fields, but make them permissive
     hostDescription?: string | null;

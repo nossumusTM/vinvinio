@@ -26,6 +26,7 @@ import Button from '@/app/(marketplace)/components/Button';
 import { MAX_PARTNER_POINT_VALUE } from '@/app/(marketplace)/constants/partner';
 import type { SafeListing, SafeUser } from '@/app/(marketplace)/types';
 import VinPointBoostModal from '../components/VinPointBoostModal';
+import VinVoucherPinToggle from '../components/listings/VinVaucherPinToggle';
 
 type KnownListingStatus = Extract<SafeListing['status'], string>;
 
@@ -451,6 +452,10 @@ const MyListingsClient: React.FC<MyListingsClientProps> = ({ listings, currentUs
             </div>
 
             <div className="flex flex-col gap-3 sm:items-end">
+              <VinVoucherPinToggle
+                listingId={listing.id}
+                initialPinned={Boolean(listing.giftVoucherPinned)}
+              />
               {listing.status === 'approved' && (
                 <div className="sm:w-40">
                   <Button

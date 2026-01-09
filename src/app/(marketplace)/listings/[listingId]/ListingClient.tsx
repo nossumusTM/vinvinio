@@ -29,6 +29,7 @@ import { categories } from "@/app/(marketplace)/components/navbar/Categories";
 import ListingHead from "@/app/(marketplace)/components/listings/ListingHead";
 import ListingInfo from "@/app/(marketplace)/components/listings/ListingInfo";
 import ListingReservation from "@/app/(marketplace)/components/listings/ListingReservation";
+import VinVoucherSellCard from "../../components/listings/VinVaucherSellCard";
 import { motion, AnimatePresence } from 'framer-motion'
 import Avatar from "@/app/(marketplace)/components/Avatar";
 
@@ -754,6 +755,14 @@ const ListingClient: React.FC<ListingClientProps> = ({
                         </div>
                         <div className="order-first mb-10 md:order-last md:col-span-3">
                             <div className="md:sticky md:top-32">
+                            {listing.giftVoucherPinned && (
+                              <div className="mb-6">
+                                <VinVoucherSellCard
+                                  listingId={listing.id}
+                                  hostName={listing.user?.name}
+                                />
+                              </div>
+                            )}
                             <ListingReservation
                                 listingId={listing.id}
                                 price={perPersonPrice}

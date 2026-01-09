@@ -119,8 +119,22 @@ model User {
   resetTokens PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
   notificationDismissals NotificationDismissal[]
+  giftVoucher       GiftVoucher?
 
   @@map("User")
+}
+
+model GiftVoucher {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @unique @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  balance   Float    @default(0)
+  currency  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("GiftVoucher")
 }
 
 model Account {
@@ -175,6 +189,7 @@ model Listing {
   punti               Int            @default(0)
   likesCount          Int            @default(0)
   viewCount           Int           @default(0)   // 👈 ADD THIS
+  giftVoucherPinned   Boolean       @default(false)
 
   moderationNoteText        String?
   moderationNoteAttachments Json?

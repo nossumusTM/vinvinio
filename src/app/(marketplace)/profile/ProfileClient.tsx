@@ -47,7 +47,7 @@ import {
   computeHostShareFromCommission,
   getPuntiLabel,
 } from "@/app/(marketplace)/constants/partner";
-import { BASE_CURRENCY } from "@/app/(marketplace)/constants/locale";
+import { BASE_CURRENCY, getCurrencyOption } from "@/app/(marketplace)/constants/locale";
 
 import VerificationBadge from "../components/VerificationBadge";
 import { maskPhoneNumber } from "@/app/(marketplace)/utils/phone";
@@ -56,6 +56,7 @@ import { TbWorldUpload } from "react-icons/tb";
 import { AggregateEntry, summarizeEntries } from "@/app/(marketplace)/libs/aggregateTotals";
 import FilterHostAnalytics, { HostAnalyticsFilter } from "../components/FilterHostAnalytics";
 import FilterPromoterAnalytics from "../components/FilterPromoterAnalytics";
+import VinVoucherCard from "../components/VinVaucherCard";
 
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
@@ -152,6 +153,13 @@ interface EarningsEntry {
   books?: number;
 }
 
+type GiftVoucher = {
+  id: string;
+  name: string;
+  balance: number;
+  currency: string;
+};
+
 type HostAnalytics = {
   totalBooks: number;
   totalRevenue: number;
@@ -233,7 +241,8 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   const searchParams = useSearchParams();
   const { formatConverted, baseCurrency } = useCurrencyFormatter();
   const { getByValue } = useCountries();
-  const { currencySymbol } = useLocaleSettings();
+  const { currencySymbol, currency } = useLocaleSettings();
+  const currencyOption = useMemo(() => getCurrencyOption(currency), [currency]);
   const suspensionDate = useMemo(() => {
     const raw = currentUser?.suspendedAt;
     if (!raw) return null;
@@ -273,6 +282,9 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
   const [phoneVerificationCode, setPhoneVerificationCode] = useState('');
   const [confirmingPhoneCode, setConfirmingPhoneCode] = useState(false);
   const [phoneVerificationError, setPhoneVerificationError] = useState<string | null>(null);
+
+  const [giftVoucher, setGiftVoucher] = useState<GiftVoucher | null>(null);
+  const [giftVoucherLoading, setGiftVoucherLoading] = useState(true);
   
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(Boolean(currentUser?.twoFactorEnabled));
   const [twoFactorSecret, setTwoFactorSecret] = useState<string | null>(null);
@@ -2316,6 +2328,32 @@ const coverImage = useMemo(() => {
     fetchSavedCard();
   }, [cardUpdated]);  
 
+  useEffect(() => {
+    let isActive = true;
+
+    const fetchGiftVoucher = async () => {
+      setGiftVoucherLoading(true);
+      try {
+        const res = await axios.post('/api/vouchers/vin', { currency });
+        if (isActive) {
+          setGiftVoucher(res.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch gift voucher', error);
+      } finally {
+        if (isActive) {
+          setGiftVoucherLoading(false);
+        }
+      }
+    };
+
+    fetchGiftVoucher();
+
+    return () => {
+      isActive = false;
+    };
+  }, [currency]);
+
   // useEffect(() => {
   //   const fetchAnalytics = async () => {
   //     const res = await axios.get('/api/analytics/get');
@@ -3554,9 +3592,14 @@ const coverImage = useMemo(() => {
                       <p className="text-xs uppercase tracking-wide text-neutral-500 md:text-sm">{label}</p>
 
                       {key === 'contact' && (
-                        <p className="mt-1 text-[11px] leading-snug text-neutral-500 md:text-xs">
-                          WhatsApp: <span className="italic">es. +39&nbsp;555&nbsp;666&nbsp;7777</span>{' '} or leave it blank and use Platform messenger ↗
-                        </p>
+                        <>
+                          <p className="mt-1 text-[11px] leading-snug text-neutral-500 md:text-xs">
+                            WhatsApp: <span className="italic">es. +39&nbsp;555&nbsp;666&nbsp;7777</span>{' '} or leave it blank and use Platform messenger ↗
+                          </p>
+                          <p className="mt-1 text-[11px] leading-snug text-neutral-500 md:text-xs">
+                            Preferred currency: {currencyOption.currency} ({currencyOption.symbol})
+                          </p>
+                        </>
                       )}
 
                       <AnimatePresence initial={false} mode="wait">
@@ -4591,6 +4634,26 @@ const coverImage = useMemo(() => {
                       </div>
                     </div>
                   )}
+
+                  <div className="mt-10">
+                      <Heading title="Vin Voucher" subtitle="Track your gift voucher balance" />
+                      {giftVoucherLoading ? (
+                        <p className="mt-3 text-sm text-neutral-500">Loading voucher...</p>
+                      ) : giftVoucher ? (
+                        <div className="mt-4">
+                          <VinVoucherCard
+                            name={giftVoucher.name}
+                            balance={giftVoucher.balance}
+                            currency={giftVoucher.currency || currency}
+                          />
+                        </div>
+                      ) : (
+                        <p className="mt-3 text-sm text-neutral-500">
+                          Voucher details are unavailable right now.
+                        </p>
+                      )}
+                    </div>
+                    
                     <div className="mt-10">
                       <Heading
                         title="Voucher"
