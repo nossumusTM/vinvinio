@@ -164,7 +164,7 @@ const Logo = () => {
                     <button
                       type="button"
                       onClick={handleRefresh}
-                      className="flex items-center gap-2 rounded-full border border-neutral-200 bg-[#2200ffff] px-3 py-1.5 text-xs font-semibold text-neutral-100 shadow-sm transition hover:border-neutral-300"
+                      className="flex items-center gap-2 rounded-full border border-neutral-200 bg-[#000] px-3 py-1.5 text-xs font-semibold text-neutral-100 shadow-sm transition hover:border-neutral-300"
                     >
                       <TbLayoutBottombarCollapseFilled className="h-4 w-4" />
                       <span>Main</span>

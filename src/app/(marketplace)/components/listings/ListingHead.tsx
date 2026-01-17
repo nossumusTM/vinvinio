@@ -828,7 +828,7 @@ const ListingHead: React.FC<ListingHeadProps> = ({
               <path
                 d="M15 18l-6-6 6-6"
                 fill="none"
-                stroke="currentColor"
+                stroke="#000"
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -840,7 +840,7 @@ const ListingHead: React.FC<ListingHeadProps> = ({
               <path
                 d="M9 6l6 6-6 6"
                 fill="none"
-                stroke="currentColor"
+                stroke="#000"
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -849,7 +849,7 @@ const ListingHead: React.FC<ListingHeadProps> = ({
           ),
           // 👇 new close icon
           iconClose: () => (
-            <LuX className="w-[20px] h-[20px]" />
+            <LuX className="w-[20px] h-[20px] bg-neutral-900" />
           ),
         }}
 

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState, useRef, type ReactNode } fro
 
 import qs from 'query-string';
 import { useSearchParams, usePathname } from 'next/navigation';
+import Link from "next/link";
 import { formatISO } from 'date-fns';
 
 import { toast } from "react-hot-toast";
@@ -31,11 +32,15 @@ import ListingInfo from "@/app/(marketplace)/components/listings/ListingInfo";
 import ListingReservation from "@/app/(marketplace)/components/listings/ListingReservation";
 import { motion, AnimatePresence } from 'framer-motion'
 import Avatar from "@/app/(marketplace)/components/Avatar";
+import Lightbox from 'yet-another-react-lightbox';
+import 'yet-another-react-lightbox/styles.css';
+import Slider from "react-slick";
 
 import useCountries from "@/app/(marketplace)/hooks/useCountries";
 import useExperienceSearchState from "@/app/(marketplace)/hooks/useExperienceSearchState";
 
 import ReviewsModal from "@/app/(marketplace)/components/modals/ReviewModal";
+import { profilePathForUser } from "@/app/(marketplace)/utils/profilePath";
 
 const initialDateRange = {
     startDate: new Date(),
@@ -214,6 +219,10 @@ const ListingClient: React.FC<ListingClientProps> = ({
         comment: string;
         userName: string;
         userImage?: string;
+        images?: string[];
+        username?: string | null;
+        legalName?: string | null;
+        role?: string | null;
         createdAt: string;
     }[]>([]);
 
@@ -221,6 +230,67 @@ const ListingClient: React.FC<ListingClientProps> = ({
 
     const messenger = useMessenger();
     const [useDarkButton, setUseDarkButton] = useState(false);
+    const [reviewLightboxOpen, setReviewLightboxOpen] = useState(false);
+    const [reviewLightboxSlides, setReviewLightboxSlides] = useState<{ src: string }[]>([]);
+    const [reviewLightboxIndex, setReviewLightboxIndex] = useState(0);
+    const [reviewLightboxMounted, setReviewLightboxMounted] = useState(false);
+    const [reviewLightboxAnimatingOut, setReviewLightboxAnimatingOut] = useState(false);
+    const [reviewLightboxMeta, setReviewLightboxMeta] = useState<{
+        comment: string;
+        userName: string;
+        username?: string | null;
+        rating: number;
+    } | null>(null);
+
+    useEffect(() => {
+        if (reviewLightboxOpen) {
+            setReviewLightboxMounted(true);
+            setReviewLightboxAnimatingOut(false);
+            return;
+        }
+
+        if (!reviewLightboxMounted) {
+            return;
+        }
+
+        setReviewLightboxAnimatingOut(true);
+        const timeout = setTimeout(() => {
+            setReviewLightboxMounted(false);
+            setReviewLightboxAnimatingOut(false);
+        }, 250);
+
+        return () => clearTimeout(timeout);
+    }, [reviewLightboxOpen, reviewLightboxMounted]);
+
+    const reviewImageSliderSettings = useMemo(
+        () => ({
+            infinite: true,
+            speed: 500,
+            slidesToShow: 1,
+            slidesToScroll: 1,
+            arrows: false,
+            dots: true,
+            swipeToSlide: true,
+            adaptiveHeight: true,
+        }),
+        []
+    );
+
+    const openReviewLightbox = useCallback(
+        (review: { comment: string; userName: string; legalName?: string | null; username?: string | null; rating: number; images?: string[] }, startIndex: number) => {
+            const images = Array.isArray(review.images) ? review.images.filter(Boolean) : [];
+            setReviewLightboxSlides(images.map((src) => ({ src })));
+            setReviewLightboxIndex(Math.max(0, Math.min(startIndex, images.length - 1)));
+            setReviewLightboxMeta({
+                comment: review.comment,
+                userName: review.legalName || review.userName,
+                username: review.username ?? null,
+                rating: review.rating,
+            });
+            setReviewLightboxOpen(true);
+        },
+        []
+    );
 
     const rawCustomPricing = listing.customPricing as unknown;
     const pricingTiers = useMemo(
@@ -536,12 +606,6 @@ const ListingClient: React.FC<ListingClientProps> = ({
     }, [dateRange.startDate, pricing.totalPrice]);
 
     useEffect(() => {
-        if (listing.pricingType === 'group' && listing.groupSize) {
-            setGuestCount(listing.groupSize);
-        }
-    }, [listing.groupSize, listing.pricingType]);
-    
-    useEffect(() => {
         const fetchReviews = async () => {
           try {
             const res = await fetch('/api/reviews/get-by-listing', {
@@ -549,9 +613,15 @@ const ListingClient: React.FC<ListingClientProps> = ({
               body: JSON.stringify({ listingId: listing.id }),
             });
             const data = await res.json();
-            setReviews(data || []);
+            const nextReviews = Array.isArray(data)
+              ? data
+              : Array.isArray(data?.reviews)
+              ? data.reviews
+              : [];
+            setReviews(nextReviews);
           } catch (err) {
             console.error('Failed to fetch reviews:', err);
+            setReviews([]);
           }
         };
       
@@ -628,7 +698,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
           setReviews(updatedReviews);
         };
       
-        if (reviews.length > 0) fetchUserImages();
+        if (Array.isArray(reviews) && reviews.length > 0) fetchUserImages();
     }, [reviews]);
 
     useEffect(() => {
@@ -730,6 +800,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
     // }, [reviews]);
 
     const averageRating = useMemo(() => {
+        if (!Array.isArray(reviews)) return 0;
         if (reviews.length === 0) return 0;
         let total = 0;
         for (const review of reviews) {
@@ -896,8 +967,23 @@ const ListingClient: React.FC<ListingClientProps> = ({
                             
                             {/* Individual Reviews */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 p-4">
-                            {reviews.slice(0, 6).map((review, i) => (
-                                <div key={i} className="rounded-2xl p-8 shadow-md hover:shadow-lg transition">
+                            {reviews.slice(0, 6).map((review, i) => {
+                                const reviewImages = Array.isArray(review.images)
+                                    ? review.images.filter(Boolean)
+                                    : [];
+                                const reviewProfileHref = profilePathForUser(
+                                    { username: review.username, role: review.role },
+                                    null,
+                                    review.role
+                                );
+                                const displayLegalName = review.legalName || review.userName || 'Anonymous';
+                                const displayUsername = review.username ? `@${review.username}` : null;
+
+                                return (
+                                <div
+                                    key={i}
+                                    className="rounded-2xl p-8 shadow-md hover:shadow-lg transition w-full md:w-fit md:max-w-sm md:justify-self-start"
+                                >
                                 {/* Rating Stars */}
                                 <div className="flex gap-1 mb-2">
                                     {[1, 2, 3, 4, 5].map((star) => (
@@ -912,6 +998,34 @@ const ListingClient: React.FC<ListingClientProps> = ({
 
                                 {/* Comment */}
                                 <p className="text-neutral-700 text-justify">{review.comment}</p>
+
+                                {reviewImages.length > 0 && (
+                                    <div className="mt-5 overflow-hidden rounded-2xl">
+                                        <Slider {...reviewImageSliderSettings}>
+                                            {reviewImages.map((src, index) => (
+                                                <button
+                                                    type="button"
+                                                    key={`${src}-${index}`}
+                                                    onClick={() => openReviewLightbox(review, index)}
+                                                    className="relative block w-full overflow-hidden focus:outline-none"
+                                                >
+                                                    <motion.div
+                                                        initial={{ opacity: 0, scale: 0.98 }}
+                                                        animate={{ opacity: 1, scale: 1 }}
+                                                        transition={{ duration: 0.35, ease: 'easeOut' }}
+                                                        className="relative aspect-square w-full max-w-sm overflow-hidden rounded-2xl bg-neutral-100 md:aspect-square md:max-w-sm md:mx-auto"
+                                                    >
+                                                        <img
+                                                            src={src}
+                                                            alt={`Review by ${review.userName}`}
+                                                            className="h-full w-full object-cover"
+                                                        />
+                                                    </motion.div>
+                                                </button>
+                                            ))}
+                                        </Slider>
+                                    </div>
+                                )}
 
                                 {/* User info + date */}
                                 {/* <div className="flex items-center gap-3 mt-4">
@@ -928,7 +1042,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                                 {/* User info + date */}
                                 <div className="flex items-center gap-3 mt-4">
                                 {review.userImage ? (
-                                    <Avatar src={review.userImage} name={review.userName} size={30} />
+                                    <Avatar src={review.userImage ?? '/images/placeholder.jpg'} name={review.userName} />
                                 ) : (
                                     <div
                                     className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm bg-black"
@@ -938,7 +1052,20 @@ const ListingClient: React.FC<ListingClientProps> = ({
                                 )}
 
                                 <div>
-                                    <p className="text-sm font-semibold text-neutral-800">{review.userName}</p>
+                                    {reviewProfileHref ? (
+                                        <Link
+                                            href={reviewProfileHref}
+                                            className="text-sm font-semibold text-neutral-800 hover:underline"
+                                        >
+                                            {displayLegalName}
+                                            {displayUsername ? ` · ${displayUsername}` : ''}
+                                        </Link>
+                                    ) : (
+                                        <p className="text-sm font-semibold text-neutral-800">
+                                            {displayLegalName}
+                                            {displayUsername ? ` · ${displayUsername}` : ''}
+                                        </p>
+                                    )}
                                     <p className="text-xs text-neutral-500">
                                     {new Date(review.createdAt).toLocaleString('en-US', {
                                         month: 'long',
@@ -946,11 +1073,12 @@ const ListingClient: React.FC<ListingClientProps> = ({
                                     })}
                                     </p>
                                 </div>
-                                </div>
+                                 </div>
 
 
                                 </div>
-                            ))}
+                            );
+                            })}
                             </div>
 
                             {/* Show all reviews button */}
@@ -978,6 +1106,76 @@ const ListingClient: React.FC<ListingClientProps> = ({
                 </div>
             </div>
         </Container>
+
+        {reviewLightboxMounted && (
+            <Lightbox
+                open={reviewLightboxOpen || reviewLightboxAnimatingOut}
+                close={() => setReviewLightboxOpen(false)}
+                slides={reviewLightboxSlides}
+                index={reviewLightboxIndex}
+                animation={{ fade: 300, swipe: 450 }}
+                carousel={{ finite: false }}
+                render={{
+                    slide: ({ slide }) => {
+                        const typed = slide as { src: string };
+
+                        return (
+                            <div
+                                className="relative flex h-full w-full items-center justify-center"
+                                onClick={() => setReviewLightboxOpen(false)}
+                            >
+                                <img
+                                    src={typed.src}
+                                    alt=""
+                                    className="max-h-[90vh] max-w-[90vw] object-contain"
+                                    onClick={(event) => event.stopPropagation()}
+                                />
+                                {reviewLightboxMeta && (
+                                    <div className="pointer-events-none absolute bottom-6 left-1/2 w-[90%] max-w-3xl -translate-x-1/2 rounded-2xl bg-black/70 px-6 py-4 text-center text-white backdrop-blur-sm">
+                                        <p className="text-sm md:text-base">{reviewLightboxMeta.comment}</p>
+                                    <p className="mt-2 text-xs text-white/80">
+                                        {reviewLightboxMeta.userName}
+                                        {reviewLightboxMeta.username ? ` · @${reviewLightboxMeta.username}` : ''} · {reviewLightboxMeta.rating}★
+                                    </p>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    },
+                }}
+                styles={{
+                    container: {
+                        backgroundColor: "rgba(0,0,0,0.6)",
+                        animation: reviewLightboxAnimatingOut
+                            ? "reviewLightboxOut 240ms ease-in forwards"
+                            : "reviewLightboxIn 280ms ease-out forwards",
+                    },
+                }}
+            />
+        )}
+
+        <style jsx global>{`
+            @keyframes reviewLightboxIn {
+                from {
+                    opacity: 0;
+                    transform: scale(0.98);
+                }
+                to {
+                    opacity: 1;
+                    transform: scale(1);
+                }
+            }
+            @keyframes reviewLightboxOut {
+                from {
+                    opacity: 1;
+                    transform: scale(1);
+                }
+                to {
+                    opacity: 0;
+                    transform: scale(0.98);
+                }
+            }
+        `}</style>
 
         <div className="pointer-events-none fixed inset-x-0 bottom-5 z-40 flex justify-baseline px-4">
             <div className="pointer-events-auto w-full max-w-xl">

@@ -53,17 +53,30 @@ export async function POST(req: Request) {
     const userIds = [...new Set(reviews.map((r) => r.userId))];
     const users = await prisma.user.findMany({
       where: { id: { in: userIds } },
-      select: { id: true, name: true },
+      select: { id: true, name: true, username: true, legalName: true, role: true },
     });
 
-    const userMap = Object.fromEntries(users.map((u) => [u.id, u.name]));
+    const userMap = Object.fromEntries(
+      users.map((u) => [
+        u.id,
+        {
+          name: u.name,
+          username: u.username,
+          legalName: u.legalName,
+          role: u.role,
+        },
+      ])
+    );
 
     // Step 3: Format response with safe fallback
     const formatted = reviews.map((r) => ({
       rating: r.rating,
       comment: r.comment,
       images: Array.isArray(r.images) ? r.images : [],
-      userName: userMap[r.userId] || 'Anonymous',
+      userName: userMap[r.userId]?.name || 'Anonymous',
+      username: userMap[r.userId]?.username ?? null,
+      legalName: userMap[r.userId]?.legalName ?? null,
+      role: userMap[r.userId]?.role ?? null,
       createdAt: r.createdAt,
     }));
 
