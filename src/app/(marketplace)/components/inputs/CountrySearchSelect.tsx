@@ -71,6 +71,19 @@ const extractCountryFromText = (text: string) => {
   return norm(parts[parts.length - 1] || '');
 };
 
+const preloadImages = (sources: string[]) =>
+  Promise.all(
+    sources.map(
+      (src) =>
+        new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve(true);
+          img.onerror = () => resolve(false);
+          img.src = src;
+        }),
+    ),
+  );
+
 const destionationVariants: Variants = {
   hidden: { opacity: 0, y: -8, scale: 0.98 },
   visible: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring', stiffness: 420, damping: 28, mass: 0.3 } },
@@ -105,6 +118,7 @@ const CountrySearchSelect = forwardRef<CountrySearchSelectHandle, CountrySelectP
     const [isOpen, setIsOpen] = useState(false);
     const [highlightedIndex, setHighlightedIndex] = useState(0);
     const [placeholderIndex, setPlaceholderIndex] = useState(0);
+    const [rotationReady, setRotationReady] = useState(false);
 
     const [portalReady, setPortalReady] = useState(false);
     const [dropdownRect, setDropdownRect] = useState<{ left: number; top: number; width: number; } | null>(null);
@@ -119,6 +133,50 @@ const CountrySearchSelect = forwardRef<CountrySearchSelectHandle, CountrySelectP
     const countrySuggestions = useMemo<Suggestion[]>(() => getAll(), [getAll]);
 
     // ✅ INSIDE the component, after countrySuggestions
+    const rotatingFlagCodes = useMemo(() => {
+      const findCodeByCountryName = (countryNameLower: string) => {
+        const match = countrySuggestions.find(
+          (c) => norm(c.label) === countryNameLower
+        );
+        return match?.value?.toLowerCase();
+      };
+
+      const codes = ROTATING_ITEMS.map((item) => {
+        const countryLower = extractCountryFromText(item);
+        return findCodeByCountryName(countryLower) ?? 'globe';
+      });
+
+      return Array.from(new Set(codes));
+    }, [countrySuggestions]);
+
+    const rotatingFlagSources = useMemo(
+      () => rotatingFlagCodes.map((code) => `/flags/${code}.svg`),
+      [rotatingFlagCodes],
+    );
+
+    useEffect(() => {
+      let cancelled = false;
+
+      const preload = async () => {
+        if (!rotatingFlagSources.length) {
+          setRotationReady(true);
+          return;
+        }
+
+        setRotationReady(false);
+        await preloadImages(rotatingFlagSources);
+        if (!cancelled) {
+          setRotationReady(true);
+        }
+      };
+
+      void preload();
+
+      return () => {
+        cancelled = true;
+      };
+    }, [rotatingFlagSources]);
+
     const displayedFlagCode = useMemo(() => {
       // 1) If user selected a value, lock to that country code
       if (value?.value) {
@@ -296,13 +354,14 @@ const CountrySearchSelect = forwardRef<CountrySearchSelectHandle, CountrySelectP
 
     useEffect(() => {
       if (query.trim().length > 0) return; // pause rotation while user types
+      if (!rotationReady) return;
 
       const id = setInterval(() => {
         setPlaceholderIndex((i) => (i + 1) % ROTATING_ITEMS.length);
       }, ROTATION_DELAY);
 
       return () => clearInterval(id);
-    }, [query]);
+    }, [query, rotationReady]);
 
      useEffect(() => { setPortalReady(true); }, []);
      
@@ -352,6 +411,9 @@ const CountrySearchSelect = forwardRef<CountrySearchSelectHandle, CountrySelectP
         animate="visible"
         exit="exit"
         variants={destionationVariants}
+        onError={(event) => {
+          event.currentTarget.src = '/flags/globe.svg';
+        }}
         className="mr-1.5 h-4 w-6 object-cover rounded"
       />
     </AnimatePresence>

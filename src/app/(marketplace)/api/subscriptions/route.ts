@@ -60,6 +60,7 @@ export async function POST(request: Request) {
 
   const body = await request.json();
   const listingId = typeof body?.listingId === 'string' ? body.listingId : null;
+  const optionId = typeof body?.optionId === 'string' ? body.optionId : null;
   if (!listingId) {
     return new NextResponse('Listing ID is required', { status: 400 });
   }
@@ -77,7 +78,8 @@ export async function POST(request: Request) {
     return new NextResponse('Hosts cannot subscribe to their own listings', { status: 400 });
   }
 
-  if (!listing.vinSubscriptionEnabled || !listing.vinSubscriptionInterval || !listing.vinSubscriptionPrice) {
+  const hasOptions = Array.isArray(listing.vinSubscriptionOptions) && listing.vinSubscriptionOptions.length > 0;
+  if (!listing.vinSubscriptionEnabled || (!hasOptions && (!listing.vinSubscriptionInterval || !listing.vinSubscriptionPrice))) {
     return new NextResponse('VIN subscriptions are not enabled for this listing', { status: 400 });
   }
 
@@ -95,17 +97,34 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: 'You already have an active subscription for this listing.' }, { status: 409 });
   }
 
-  const interval = listing.vinSubscriptionInterval;
-  const price = listing.vinSubscriptionPrice;
+  const selectedOption = hasOptions
+    ? (listing.vinSubscriptionOptions as any[]).find((option) => option?.id === optionId)
+      ?? (listing.vinSubscriptionOptions as any[])[0]
+    : null;
+
+  const interval = selectedOption?.interval ?? listing.vinSubscriptionInterval;
+  const price = selectedOption?.price ?? listing.vinSubscriptionPrice;
+
+  if (!interval || !price) {
+    return new NextResponse('VIN subscription plan is invalid', { status: 400 });
+  }
   const endDate = interval === 'yearly' ? addYears(now, 1) : addMonths(now, 1);
 
   const subscription = await prisma.subscription.create({
     data: {
-      userId: currentUser.id,
-      hostId: listing.userId,
-      listingId: listing.id,
       interval,
       price,
+
+      // required relations
+      user: { connect: { id: currentUser.id } },
+      host: { connect: { id: listing.userId } },     // host is listing owner
+      listing: { connect: { id: listing.id } },
+
+      // optional option metadata (keep if your schema has these)
+      optionId: selectedOption?.id ?? null,
+      optionLabel: selectedOption?.label ?? null,
+      optionDescription: selectedOption?.description ?? null,
+
       vinCardId: randomUUID(),
       startDate: now,
       endDate,

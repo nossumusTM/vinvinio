@@ -283,41 +283,73 @@ const ListingClient: React.FC<ListingClientProps> = ({
         return sortedCustomPricingTiers[0]?.price ?? listing.price;
     }, [customPricingMeta, listing.price, sortedCustomPricingTiers]);
 
+    const subscriptionInfo = useMemo(() => {
+        if (!listing.vinSubscriptionEnabled || !listing.vinSubscriptionInterval || !listing.vinSubscriptionPrice) {
+            return null;
+        }
+
+        const intervalLabel = listing.vinSubscriptionInterval === 'yearly' ? 'year' : 'month';
+
+        return {
+            formattedPrice: formatConverted(listing.vinSubscriptionPrice),
+            intervalLabel,
+        };
+    }, [formatConverted, listing.vinSubscriptionEnabled, listing.vinSubscriptionInterval, listing.vinSubscriptionPrice]);
+
     const pricingIndicator = useMemo(() => {
+        const subscriptionDetail = subscriptionInfo
+            ? `Subscription available: ${subscriptionInfo.formattedPrice} / ${subscriptionInfo.intervalLabel}`
+            : null;
+
+        const appendSubscription = (text: string) =>
+            subscriptionDetail ? `${text} • ${subscriptionDetail}` : text;
+
         switch (pricingMode) {
             case 'custom':
                 return {
                     label: 'Custom pricing',
                     headline: `${formatConverted(baseCustomPrice)}+ / person`,
-                    description: 'Rates adapt to your group size.',
+                    description: appendSubscription('Rates adapt to your group size.'),
                 };
             case 'group':
                 return {
                     label: 'Group pricing',
                     headline: `${formatConverted(groupFlatPrice)} total`,
-                    description: `Flat rate for up to ${groupGuestLimit} guests`,
+                    description: appendSubscription(`Flat rate for up to ${groupGuestLimit} guests`),
                 };
             default:
                 return {
                     label: 'Price per person',
                     headline: `${formatConverted(perPersonPrice)} / guest`,
-                    description: 'Simple pay-per-guest rate.',
+                    description: appendSubscription('Simple pay-per-guest rate.'),
                 };
         }
-    }, [baseCustomPrice, formatConverted, groupFlatPrice, groupGuestLimit, perPersonPrice, pricingMode]);
+    }, [
+        baseCustomPrice,
+        formatConverted,
+        groupFlatPrice,
+        groupGuestLimit,
+        perPersonPrice,
+        pricingMode,
+        subscriptionInfo,
+    ]);
+
 
     const pricingPopoverContent = useMemo<ReactNode>(() => {
+        let baseContent: ReactNode;
+
         switch (pricingMode) {
             case 'custom': {
                 if (sortedCustomPricingTiers.length === 0) {
-                    return (
+                    baseContent = (
                         <p className="text-sm text-neutral-600">
                             The host will confirm custom pricing details once you share your group size.
                         </p>
                     );
+                    break;
                 }
 
-                return (
+                baseContent = (
                     <div className="space-y-3">
                         <p className="text-sm text-neutral-600">
                             Pick a guest count and we will snap to the correct tier.
@@ -337,9 +369,10 @@ const ListingClient: React.FC<ListingClientProps> = ({
                         </div>
                     </div>
                 );
+                break;
             }
             case 'group':
-                return (
+                baseContent = (
                     <div className="space-y-3 text-sm text-neutral-600">
                     <p>
                         This experience uses a flat group price. The total stays the same and currently
@@ -358,8 +391,9 @@ const ListingClient: React.FC<ListingClientProps> = ({
                     </div>
                     </div>
                 );
+                break;
             default:
-                return (
+                baseContent = (
                     <div className="space-y-3 text-sm text-neutral-600">
                         <p>Each guest pays the same rate. Adjust the counter to see your total update live.</p>
                         <div className="rounded-3xl border border-neutral-200 bg-white/90 p-4 shadow-sm">
@@ -371,7 +405,33 @@ const ListingClient: React.FC<ListingClientProps> = ({
                     </div>
                 );
         }
-    }, [formatConverted, guestCount, groupFlatPrice, groupGuestLimit, perPersonPrice, pricing.totalPrice, pricingMode, sortedCustomPricingTiers]);
+
+        if (!subscriptionInfo) {
+            return baseContent;
+        }
+
+        return (
+            <div className="space-y-4">
+                {baseContent}
+                <div className="rounded-3xl border border-emerald-100 bg-emerald-50/80 p-4 text-sm text-emerald-700 shadow-sm">
+                    <p className="text-xs uppercase tracking-[0.3em] text-emerald-500">VIN subscription available</p>
+                    <p className="mt-2 text-base font-semibold text-emerald-900">
+                        {subscriptionInfo.formattedPrice} / {subscriptionInfo.intervalLabel}
+                    </p>
+                </div>
+            </div>
+        );
+    }, [
+        formatConverted,
+        guestCount,
+        groupFlatPrice,
+        groupGuestLimit,
+        perPersonPrice,
+        pricing.totalPrice,
+        pricingMode,
+        sortedCustomPricingTiers,
+        subscriptionInfo,
+    ]);
 
     const hasCustomPricing = listing.pricingType === 'custom' && sortedCustomPricingTiers.length > 0;
     const [showCustomPricingDetails, setShowCustomPricingDetails] = useState(false);
@@ -663,9 +723,18 @@ const ListingClient: React.FC<ListingClientProps> = ({
         return () => observer.disconnect();
         }, []);
 
+    // const averageRating = useMemo(() => {
+    //     if (reviews.length === 0) return 0;
+    //     const total = reviews.reduce((sum, review) => sum + review.rating, 0);
+    //     return total / reviews.length;
+    // }, [reviews]);
+
     const averageRating = useMemo(() => {
         if (reviews.length === 0) return 0;
-        const total = reviews.reduce((sum, review) => sum + review.rating, 0);
+        let total = 0;
+        for (const review of reviews) {
+            total += review.rating;
+        }
         return total / reviews.length;
     }, [reviews]);
 

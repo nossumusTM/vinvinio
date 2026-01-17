@@ -158,6 +158,7 @@ type SubscriptionSummary = {
   vinCardId: string;
   interval: 'monthly' | 'yearly';
   price: number;
+  optionLabel?: string | null;
   startDate: string;
   endDate: string;
   listing: {
@@ -298,6 +299,7 @@ const ProfileClient: React.FC<ProfileClientProps> = ({
 
   const [subscriptions, setSubscriptions] = useState<SubscriptionSummary[]>([]);
   const [subscriptionsLoading, setSubscriptionsLoading] = useState(true);
+  const [cancelingSubscriptionId, setCancelingSubscriptionId] = useState<string | null>(null);
   
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(Boolean(currentUser?.twoFactorEnabled));
   const [twoFactorSecret, setTwoFactorSecret] = useState<string | null>(null);
@@ -2366,6 +2368,24 @@ const coverImage = useMemo(() => {
       isActive = false;
     };
   }, []);
+
+  const handleCancelSubscription = async (subscriptionId: string) => {
+    setCancelingSubscriptionId(subscriptionId);
+    try {
+      const res = await axios.patch(`/api/subscriptions/${subscriptionId}`);
+      if (res.status >= 200 && res.status < 300) {
+        setSubscriptions((prev) => prev.filter((subscription) => subscription.id !== subscriptionId));
+        toast.success('Subscription cancelled.');
+      } else {
+        throw new Error('Failed to cancel subscription');
+      }
+    } catch (error) {
+      console.error('Failed to cancel subscription', error);
+      toast.error('Unable to cancel subscription.');
+    } finally {
+      setCancelingSubscriptionId(null);
+    }
+  };
 
   // useEffect(() => {
   //   const fetchAnalytics = async () => {
@@ -4695,15 +4715,28 @@ const coverImage = useMemo(() => {
                                     {formatConverted(subscription.price)}
                                   </span>
                                 </p>
+                                {subscription.optionLabel && (
+                                  <p>
+                                    Plan: <span className="font-semibold text-neutral-700">{subscription.optionLabel}</span>
+                                  </p>
+                                )}
                               </div>
 
-                              <div className="mt-4">
+                              <div className="mt-4 flex flex-wrap items-center gap-4">
                                 <Link
                                   href={`/listings/${subscription.listing.id}`}
                                   className="inline-flex items-center text-sm font-semibold text-black hover:underline"
                                 >
                                   View listing
                                 </Link>
+                                <button
+                                  type="button"
+                                  onClick={() => handleCancelSubscription(subscription.id)}
+                                  disabled={cancelingSubscriptionId === subscription.id}
+                                  className="text-sm font-semibold text-rose-500 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-60"
+                                >
+                                  {cancelingSubscriptionId === subscription.id ? 'Cancelling...' : 'Cancel subscription'}
+                                </button>
                               </div>
                             </motion.div>
                           );

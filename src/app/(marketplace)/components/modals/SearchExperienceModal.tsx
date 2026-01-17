@@ -218,6 +218,7 @@ const SearchExperienceModal = () => {
           <div className="rounded-[26px] bg-white/80 backdrop-blur p-6 shadow-xl">
             <VinAiSearchWidget
               onSkip={onSubmit}
+              isModalOpen={modal.isOpen}
               onExpand={() => {
                 modal.onClose();
                 setIsAiFullscreen(true);

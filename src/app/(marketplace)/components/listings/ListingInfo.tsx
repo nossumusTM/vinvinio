@@ -757,7 +757,9 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
             <MapListing searchQuery={meetingPoint} listing={listing} />
             </div>
 
-            {listing?.vinSubscriptionEnabled && listing.vinSubscriptionInterval && listing.vinSubscriptionPrice ? (
+            {listing?.vinSubscriptionEnabled &&
+            ((Array.isArray(listing?.vinSubscriptionOptions) && listing.vinSubscriptionOptions.length > 0) ||
+              (listing.vinSubscriptionInterval && listing.vinSubscriptionPrice)) ? (
               <div className="mt-6 px-2 md:px-4">
                 <VinSubscriptionCard
                   listing={listing}

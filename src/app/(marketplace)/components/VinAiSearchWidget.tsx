@@ -29,6 +29,7 @@ import Counter from './inputs/Counter';
 interface VinAiSearchWidgetProps {
   onSkip: () => void;
   onExpand?: () => void;
+  isModalOpen?: boolean;
 }
 
 const quickPrompts = ['Where?', 'When?', 'Who?', 'Show listings'];
@@ -158,7 +159,7 @@ const TypingIndicator = () => (
 const StatusIcon = ({ status }: { status: 'done' | 'todo' }) => {
   if (status === 'done') {
     return (
-      <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-blue-500 text-white">
+      <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#2200ffff] text-white">
         <svg viewBox="0 0 16 16" className="h-2.5 w-2.5" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M3.5 8.5l2.5 2.5 6-6" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
@@ -167,7 +168,7 @@ const StatusIcon = ({ status }: { status: 'done' | 'todo' }) => {
   }
 
   return (
-    <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full border border-neutral-300 bg-white">
+    <span className="flex h-3.5 w-3.5 aspect-square items-center justify-center rounded-full border border-neutral-300 bg-white">
       <span className="h-1 w-1 rounded-full bg-neutral-300" />
     </span>
   );
@@ -289,7 +290,7 @@ const StructuredMessage = ({ text }: { text: string }) => {
   );
 };
 
-const VinAiSearchWidget = ({ onSkip, onExpand }: VinAiSearchWidgetProps) => {
+const VinAiSearchWidget = ({ onSkip, onExpand, isModalOpen }: VinAiSearchWidgetProps) => {
 const {
     messages,
     recommendations,
@@ -343,6 +344,7 @@ const {
   const router = useRouter();
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const recordTriggerRef = useRef<NodeJS.Timeout | null>(null);
@@ -351,6 +353,17 @@ const {
   useEffect(() => {
     init();
   }, [init]);
+
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'auto') => {
+    if (!bottomRef.current) return;
+    requestAnimationFrame(() => bottomRef.current?.scrollIntoView({ block: 'end', behavior }));
+    setTimeout(() => bottomRef.current?.scrollIntoView({ block: 'end', behavior }), 50);
+  }, []);
+
+  useEffect(() => {
+    if (!isModalOpen) return;
+    scrollToBottom('smooth');
+  }, [isModalOpen, scrollToBottom]);
 
   useEffect(() => {
     const hasMemory =
@@ -1232,6 +1245,7 @@ const {
             )}
           </motion.div>
         )}
+        <div ref={bottomRef} />
       </div>
 
       <div className="flex items-center justify-between text-[11px] text-neutral-500 px-1">
@@ -1393,7 +1407,7 @@ const {
       <AnimatePresence>
         {selectedListing && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-0 sm:p-4"
+            className="rounded-3xl fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-0 sm:p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

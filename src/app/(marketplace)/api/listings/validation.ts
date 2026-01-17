@@ -261,6 +261,8 @@ export interface ListingUpdatePayload {
   vinSubscriptionEnabled?: unknown;
   vinSubscriptionInterval?: unknown;
   vinSubscriptionPrice?: unknown;
+  vinSubscriptionTerms?: unknown;
+  vinSubscriptionOptions?: unknown;
 }
 
 export interface NormalizedListingUpdate {
@@ -296,12 +298,69 @@ export interface NormalizedListingUpdate {
     vinSubscriptionEnabled: boolean;
     vinSubscriptionInterval: 'monthly' | 'yearly' | null;
     vinSubscriptionPrice: number | null;
+    vinSubscriptionTerms: string | null;
+    vinSubscriptionOptions: Array<{
+      id: string;
+      label: string;
+      description: string | null;
+      price: number;
+      interval: 'monthly' | 'yearly';
+    }>;
   };
   pricingMode: PricingMode;
   groupPrice: number | null;
   groupSize: number | null;
   nextStatus: ListingStatus;
 }
+
+const normalizeVinSubscriptionTerms = (value: unknown): string | null => {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+};
+
+const normalizeVinSubscriptionOptions = (value: unknown) => {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((option) => {
+      const id = typeof option?.id === 'string' && option.id.trim().length > 0
+        ? option.id.trim()
+        : null;
+      const label = typeof option?.label === 'string' ? option.label.trim() : '';
+      const description = typeof option?.description === 'string'
+        ? option.description.trim()
+        : '';
+      const price = Math.round(Number(option?.price ?? 0));
+      const interval =
+        typeof option?.interval === 'string' && ['monthly', 'yearly'].includes(option.interval)
+          ? option.interval
+          : null;
+
+      if (!id || !label || !interval || !Number.isFinite(price) || price <= 0) {
+        return null;
+      }
+
+      return {
+        id,
+        label,
+        description: description.length > 0 ? description : null,
+        price,
+        interval,
+      };
+    })
+    .filter(
+      (
+        option,
+      ): option is {
+        id: string;
+        label: string;
+        description: string | null;
+        price: number;
+        interval: 'monthly' | 'yearly';
+      } => Boolean(option),
+    );
+};
 
 export const normalizeListingUpdatePayload = (
   payload: ListingUpdatePayload,
@@ -350,7 +409,22 @@ export const normalizeListingUpdatePayload = (
   const vinSubscriptionInterval = normalizeVinSubscriptionInterval(payload.vinSubscriptionInterval);
   const vinSubscriptionPrice = normalizeVinSubscriptionPrice(payload.vinSubscriptionPrice, vinSubscriptionEnabled);
 
-  if (vinSubscriptionEnabled && (!vinSubscriptionInterval || !vinSubscriptionPrice)) {
+  const vinSubscriptionTerms = normalizeVinSubscriptionTerms(payload.vinSubscriptionTerms);
+  const vinSubscriptionOptions = normalizeVinSubscriptionOptions(payload.vinSubscriptionOptions);
+
+  const hasLegacySubscription = Boolean(vinSubscriptionInterval && vinSubscriptionPrice);
+  const hasOptionSubscription = vinSubscriptionOptions.length > 0;
+
+  if (vinSubscriptionEnabled && !hasLegacySubscription && !hasOptionSubscription) {
+    throw new ListingValidationError('Add at least one VIN subscription option or provide an interval and price.');
+  }
+
+  const resolvedSubscriptionInterval =
+    vinSubscriptionOptions[0]?.interval ?? vinSubscriptionInterval ?? null;
+  const resolvedSubscriptionPrice =
+    vinSubscriptionOptions[0]?.price ?? vinSubscriptionPrice ?? null;
+
+  if (vinSubscriptionEnabled && (!resolvedSubscriptionInterval || !resolvedSubscriptionPrice)) {
     throw new ListingValidationError('Subscription interval and price are required when VIN subscription is enabled');
   }
 
@@ -392,8 +466,10 @@ export const normalizeListingUpdatePayload = (
       seoKeywords: { set: seoKeywords },
       availabilityRules: availabilityRules ? { ...availabilityRules } : null,
       vinSubscriptionEnabled,
-      vinSubscriptionInterval,
-      vinSubscriptionPrice,
+      vinSubscriptionInterval: resolvedSubscriptionInterval,
+      vinSubscriptionPrice: resolvedSubscriptionPrice,
+      vinSubscriptionTerms,
+      vinSubscriptionOptions,
     },
     pricingMode,
     groupPrice: pricingSnapshot.groupPrice,

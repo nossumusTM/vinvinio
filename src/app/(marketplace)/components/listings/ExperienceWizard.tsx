@@ -327,6 +327,14 @@ type PricingTier = {
   price: number;
 };
 
+type VinSubscriptionOptionForm = {
+  id: string;
+  label: string;
+  description: string;
+  price: number | null;
+  interval: 'monthly' | 'yearly';
+};
+
 const PRICING_TYPES = {
   FIXED: 'fixed',
   GROUP: 'group',
@@ -378,6 +386,34 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
   };
 
   const [specificDateInput, setSpecificDateInput] = useState('');
+
+  const buildSubscriptionOption = useCallback(
+    (overrides?: Partial<VinSubscriptionOptionForm>): VinSubscriptionOptionForm => {
+      const optionId =
+        typeof overrides?.id === 'string' && overrides.id.trim().length > 0
+          ? overrides.id.trim()
+          : `option-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+
+      return {
+        id: optionId,
+        label: overrides?.label ?? 'Standard plan',
+        description: overrides?.description ?? '',
+        price: typeof overrides?.price === 'number' ? overrides.price : null,
+        interval: overrides?.interval ?? 'monthly',
+      };
+    },
+    [],
+  );
+
+  const subscriptionIntervalOptions = useMemo(
+    () =>
+      [
+        { value: 'monthly', label: 'Monthly', description: 'Charged every month' },
+        { value: 'yearly', label: 'Yearly', description: 'Charged once per year' },
+      ] as const,
+    [],
+  );
+
   const [specificDateTimes, setSpecificDateTimes] = useState<any[]>([]);
   const [monthInput, setMonthInput] = useState('');
   const [monthTimes, setMonthTimes] = useState<any[]>([]);
@@ -531,8 +567,10 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
       vinSubscriptionEnabled: false,
       vinSubscriptionInterval: 'monthly',
       vinSubscriptionPrice: null,
+      vinSubscriptionTerms: '',
+      vinSubscriptionOptions: [buildSubscriptionOption()],
     }),
-    [],
+    [buildSubscriptionOption],
   );
 
   const {
@@ -568,6 +606,8 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
   const vinSubscriptionEnabled = watch('vinSubscriptionEnabled');
   const vinSubscriptionInterval = watch('vinSubscriptionInterval');
   const vinSubscriptionPrice = watch('vinSubscriptionPrice');
+  const vinSubscriptionTerms = watch('vinSubscriptionTerms');
+  const vinSubscriptionOptions = watch('vinSubscriptionOptions');
 
   const {
     fields: customPricingFields,
@@ -576,6 +616,15 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
   } = useFieldArray({
     control,
     name: 'customPricing',
+  });
+
+  const {
+    fields: vinSubscriptionOptionFields,
+    append: appendVinSubscriptionOption,
+    remove: removeVinSubscriptionOption,
+  } = useFieldArray({
+    control,
+    name: 'vinSubscriptionOptions',
   });
 
   const editingListing = initialListing;
@@ -796,6 +845,32 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
         ? [editingListing.imageSrc]
         : [];
 
+    const normalizedSubscriptionOptions = Array.isArray(editingListing.vinSubscriptionOptions)
+      && editingListing.vinSubscriptionOptions.length > 0
+      ? editingListing.vinSubscriptionOptions.map((option: any, index: number) =>
+          buildSubscriptionOption({
+            id: typeof option?.id === 'string' ? option.id : `option-${index + 1}`,
+            label: typeof option?.label === 'string' ? option.label : 'Subscription plan',
+            description: typeof option?.description === 'string' ? option.description : '',
+            price: typeof option?.price === 'number' ? option.price : null,
+            interval: option?.interval === 'yearly' ? 'yearly' : 'monthly',
+          }),
+        )
+      : [
+          buildSubscriptionOption({
+            label: 'Subscription plan',
+            description: '',
+            price:
+              typeof editingListing.vinSubscriptionPrice === 'number'
+                ? editingListing.vinSubscriptionPrice
+                : defaultFormValues.vinSubscriptionPrice ?? null,
+            interval:
+              editingListing.vinSubscriptionInterval === 'yearly'
+                ? 'yearly'
+                : defaultFormValues.vinSubscriptionInterval,
+          }),
+        ];
+
     return {
       formValues: {
         ...defaultFormValues,
@@ -833,6 +908,11 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
           typeof editingListing.vinSubscriptionPrice === 'number'
             ? editingListing.vinSubscriptionPrice
             : defaultFormValues.vinSubscriptionPrice,
+        vinSubscriptionTerms:
+          typeof editingListing.vinSubscriptionTerms === 'string'
+            ? editingListing.vinSubscriptionTerms
+            : defaultFormValues.vinSubscriptionTerms,
+        vinSubscriptionOptions: normalizedSubscriptionOptions,
       },
       locationQueryText:
         resolvedLocation
@@ -845,6 +925,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
     allLocations,
     getByValue,
     flatLocationTypeOptions,
+    buildSubscriptionOption
   ]);
 
   useEffect(() => {
@@ -1095,20 +1176,38 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
         }
       }
 
-      if (vinSubscriptionEnabled) {
-        const validInterval =
-          typeof vinSubscriptionInterval === 'string' &&
-          ['monthly', 'yearly'].includes(vinSubscriptionInterval);
-        const parsedSubscriptionPrice = ensurePositiveNumber(vinSubscriptionPrice);
+      const subscriptionOptions = Array.isArray(vinSubscriptionOptions)
+        ? (vinSubscriptionOptions as VinSubscriptionOptionForm[])
+        : [];
 
-        if (!validInterval) {
-          toast.error('Choose a valid VIN subscription interval.');
-          return;
-        }
+        const normalizedSubscriptionOptions = subscriptionOptions
+        .map((option) => ({
+          id: typeof option.id === 'string' && option.id.trim().length > 0
+            ? option.id.trim()
+            : `option-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+          label: typeof option.label === 'string' ? option.label.trim() : '',
+          description: typeof option.description === 'string' ? option.description.trim() : '',
+          price: ensurePositiveNumber(option.price),
+          interval: option.interval === 'yearly' ? 'yearly' : 'monthly',
+        }))
+        .filter((option) => option.label.length > 0 && option.price);
 
-        if (!parsedSubscriptionPrice) {
-          toast.error('Enter a valid VIN subscription price.');
-          return;
+        if (vinSubscriptionEnabled) {
+        if (normalizedSubscriptionOptions.length === 0) {
+          const validInterval =
+            typeof vinSubscriptionInterval === 'string' &&
+            ['monthly', 'yearly'].includes(vinSubscriptionInterval);
+          const parsedSubscriptionPrice = ensurePositiveNumber(vinSubscriptionPrice);
+
+          if (!validInterval) {
+            toast.error('Choose a valid VIN subscription interval.');
+            return;
+          }
+
+          if (!parsedSubscriptionPrice) {
+            toast.error('Enter a valid VIN subscription price.');
+            return;
+          }
         }
       }
 
@@ -1199,6 +1298,13 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
 
       const normalizedAvailability = normalizeAvailabilityRules(availabilityRules) ?? null;
 
+      const resolvedSubscriptionInterval = vinSubscriptionEnabled
+        ? normalizedSubscriptionOptions[0]?.interval ?? vinSubscriptionInterval
+        : null;
+      const resolvedSubscriptionPrice = vinSubscriptionEnabled
+        ? normalizedSubscriptionOptions[0]?.price ?? ensurePositiveNumber(vinSubscriptionPrice)
+        : null;
+
       const submissionData = {
         title: typeof data.title === 'string' ? data.title.trim() : '',
         description: typeof data.description === 'string' ? data.description.trim() : '',
@@ -1250,10 +1356,16 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
             : null,
         availabilityRules: normalizedAvailability,
         vinSubscriptionEnabled: Boolean(vinSubscriptionEnabled),
-        vinSubscriptionInterval: vinSubscriptionEnabled ? vinSubscriptionInterval : null,
-        vinSubscriptionPrice: vinSubscriptionEnabled
-          ? Math.round(Number(vinSubscriptionPrice ?? 0))
-          : null,
+        vinSubscriptionInterval: resolvedSubscriptionInterval,
+        vinSubscriptionPrice:
+          typeof resolvedSubscriptionPrice === 'number' && resolvedSubscriptionPrice > 0
+            ? Math.round(resolvedSubscriptionPrice)
+            : null,
+        vinSubscriptionTerms:
+          vinSubscriptionEnabled && typeof vinSubscriptionTerms === 'string'
+            ? vinSubscriptionTerms.trim()
+            : '',
+        vinSubscriptionOptions: vinSubscriptionEnabled ? normalizedSubscriptionOptions : [],
       };
 
       const request = isEditing && editingListing
@@ -2305,7 +2417,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
               <div>
                 <h3 className="text-base font-semibold text-neutral-900">VIN subscription</h3>
                 <p className="text-sm text-neutral-500">
-                  Offer a subscription-based VIN card for monthly or yearly access to this service.
+                  Offer subscription plans with billing cadence, pricing, and terms for this experience.
                 </p>
               </div>
               <button
@@ -2333,46 +2445,121 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
                   exit="exit"
                   className="space-y-4"
                 >
-                  <div className="flex flex-col gap-3">
-                    <span className="text-sm font-semibold text-neutral-700">Subscription interval</span>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {[
-                        { value: 'monthly', label: 'Monthly', description: 'Charged every month' },
-                        { value: 'yearly', label: 'Yearly', description: 'Charged once per year' },
-                      ].map((option) => {
-                        const isActive = vinSubscriptionInterval === option.value;
-                        return (
-                          <button
-                            key={option.value}
-                            type="button"
-                            onClick={() => setCustomValue('vinSubscriptionInterval', option.value)}
-                            className={clsx(
-                              'rounded-2xl border p-4 text-left shadow-sm transition',
-                              isActive
-                                ? 'border-black bg-white shadow-md shadow-black/10'
-                                : 'border-neutral-200 bg-white/80 hover:border-black/30',
-                            )}
-                          >
-                            <p className="text-sm font-semibold text-neutral-900">{option.label}</p>
-                            <p className="text-xs text-neutral-500">{option.description}</p>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
                   <Input
-                    id="vinSubscriptionPrice"
-                    name="vinSubscriptionPrice"
-                    label={`Price per ${vinSubscriptionInterval === 'yearly' ? 'year' : 'month'}`}
-                    type="number"
-                    formatPrice
+                    id="vinSubscriptionTerms"
+                    name="vinSubscriptionTerms"
+                    label="Terms & conditions"
+                    textarea
                     disabled={isLoading}
                     register={register}
                     errors={errors}
-                    required={vinSubscriptionEnabled}
-                    inputClassName="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
+
+                  <div className="flex flex-col gap-3">
+                    <span className="text-sm font-semibold text-neutral-700">Subscription plans</span>
+                    <div className="space-y-4">
+                      {vinSubscriptionOptionFields.map((field, index) => {
+                        const currentInterval =
+                          Array.isArray(vinSubscriptionOptions) && vinSubscriptionOptions[index]?.interval === 'yearly'
+                            ? 'yearly'
+                            : 'monthly';
+                        return (
+                          <motion.div
+                            key={field.id}
+                            variants={itemFade}
+                            className="rounded-2xl border border-neutral-200 bg-white/80 p-4 shadow-sm"
+                          >
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <Input
+                                id={`vinSubscriptionOptions.${index}.label`}
+                                name={`vinSubscriptionOptions.${index}.label`}
+                                label="Plan name"
+                                disabled={isLoading}
+                                register={register}
+                                errors={errors}
+                                required={vinSubscriptionEnabled}
+                              />
+                              <Input
+                                id={`vinSubscriptionOptions.${index}.price`}
+                                name={`vinSubscriptionOptions.${index}.price`}
+                                label="Price"
+                                type="number"
+                                formatPrice
+                                disabled={isLoading}
+                                register={register}
+                                errors={errors}
+                                required={vinSubscriptionEnabled}
+                                inputClassName="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              />
+                            </div>
+
+                            <div className="mt-3 flex flex-col gap-2">
+                              <span className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                                Billing interval
+                              </span>
+                              <div className="grid gap-3 sm:grid-cols-2">
+                                {subscriptionIntervalOptions.map((option) => {
+                                  const isActive = currentInterval === option.value;
+                                  return (
+                                    <button
+                                      key={option.value}
+                                      type="button"
+                                      onClick={() =>
+                                        setCustomValue(`vinSubscriptionOptions.${index}.interval`, option.value)
+                                      }
+                                      className={clsx(
+                                        'rounded-2xl border p-3 text-left text-sm shadow-sm transition',
+                                        isActive
+                                          ? 'border-black bg-white shadow-md shadow-black/10'
+                                          : 'border-neutral-200 bg-white/80 hover:border-black/30',
+                                      )}
+                                    >
+                                      <p className="text-sm font-semibold text-neutral-900">{option.label}</p>
+                                      <p className="text-xs text-neutral-500">{option.description}</p>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+
+                            <div className="mt-3">
+                              <Input
+                                id={`vinSubscriptionOptions.${index}.description`}
+                                name={`vinSubscriptionOptions.${index}.description`}
+                                label="Plan description"
+                                textarea
+                                disabled={isLoading}
+                                register={register}
+                                errors={errors}
+                              />
+                            </div>
+
+                            {vinSubscriptionOptionFields.length > 1 && (
+                              <div className="mt-3 flex justify-end">
+                                <button
+                                  type="button"
+                                  onClick={() => removeVinSubscriptionOption(index)}
+                                  className="text-sm font-semibold text-rose-500 hover:text-rose-600"
+                                >
+                                  Remove plan
+                                </button>
+                              </div>
+                            )}
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                    <motion.button
+                      type="button"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => appendVinSubscriptionOption(buildSubscriptionOption({ label: 'New plan', price: 20 }))}
+                      className="self-start rounded-full border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-700 transition hover:border-neutral-400 hover:text-neutral-900"
+                    >
+                      Add another plan
+                    </motion.button>
+                  </div>
+
                 </motion.div>
               )}
             </AnimatePresence>

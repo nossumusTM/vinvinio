@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import Button from '@/app/(marketplace)/components/Button';
 import useCurrencyFormatter from '@/app/(marketplace)/hooks/useCurrencyFormatter';
 import useLoginModal from '@/app/(marketplace)/hooks/useLoginModal';
-import type { SafeListing, SafeUser } from '@/app/(marketplace)/types';
+import type { SafeListing, SafeUser, VinSubscriptionOption } from '@/app/(marketplace)/types';
 
 interface VinSubscriptionCardProps {
   listing: SafeListing;
@@ -30,8 +30,40 @@ const VinSubscriptionCard = ({ listing, hostName, currentUser }: VinSubscription
   const [isLoading, setIsLoading] = useState(false);
   const [issuedCardId, setIssuedCardId] = useState<string | null>(null);
 
-  const interval = listing.vinSubscriptionInterval ?? 'monthly';
-  const price = listing.vinSubscriptionPrice ?? 0;
+  const subscriptionOptions = useMemo<VinSubscriptionOption[]>(() => {
+    if (Array.isArray(listing.vinSubscriptionOptions) && listing.vinSubscriptionOptions.length > 0) {
+      return listing.vinSubscriptionOptions;
+    }
+
+    if (listing.vinSubscriptionInterval && listing.vinSubscriptionPrice) {
+      return [
+        {
+          id: `${listing.id}-legacy`,
+          label: 'Subscription plan',
+          description: null,
+          price: listing.vinSubscriptionPrice,
+          interval: listing.vinSubscriptionInterval,
+        },
+      ];
+    }
+
+    return [];
+  }, [listing.id, listing.vinSubscriptionInterval, listing.vinSubscriptionOptions, listing.vinSubscriptionPrice]);
+
+  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(
+    subscriptionOptions[0]?.id ?? null,
+  );
+
+  const selectedOption = subscriptionOptions.find((option) => option.id === selectedOptionId) ?? subscriptionOptions[0];
+
+  useEffect(() => {
+    if (!selectedOptionId && subscriptionOptions[0]?.id) {
+      setSelectedOptionId(subscriptionOptions[0].id);
+    }
+  }, [selectedOptionId, subscriptionOptions]);
+
+  const interval = selectedOption?.interval ?? 'monthly';
+  const price = selectedOption?.price ?? 0;
 
   const intervalLabel = interval === 'yearly' ? 'year' : 'month';
   const fullIntervalLabel = interval === 'yearly' ? 'Yearly' : 'Monthly';
@@ -50,15 +82,24 @@ const VinSubscriptionCard = ({ listing, hostName, currentUser }: VinSubscription
 
     setIsLoading(true);
     try {
-      const response = await axios.post('/api/subscriptions', { listingId: listing.id });
-      setIssuedCardId(response.data?.vinCardId ?? null);
-      toast.success('Subscription activated! Your VIN card is ready.', {
-        iconTheme: {
-          primary: '#2200ffff',
-          secondary: '#fff',
-        },
+      if (!selectedOption?.id) {
+        toast.error('Select a subscription plan.');
+        return;
+      }
+
+      const response = await axios.post('/api/subscriptions/checkout', {
+        listingId: listing.id,
+        optionId: selectedOption.id,
       });
-      router.push('/profile');
+      const sessionUrl = response.data?.url;
+      if (!sessionUrl) {
+        throw new Error('Unable to start checkout.');
+      }
+      if (typeof window !== 'undefined') {
+        window.location.href = sessionUrl;
+      } else {
+        router.push(sessionUrl);
+      }
     } catch (error: any) {
       const message = error?.response?.data?.message || error?.response?.data || 'Unable to start subscription.';
       toast.error(typeof message === 'string' ? message : 'Unable to start subscription.');
@@ -90,24 +131,59 @@ const VinSubscriptionCard = ({ listing, hostName, currentUser }: VinSubscription
           </span>
         </div>
 
-        <div className="rounded-2xl border border-neutral-100 bg-white p-4 shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-sm font-semibold text-neutral-900">{formatConverted(price)}</p>
-              <p className="text-xs text-neutral-500">Billed per {intervalLabel}</p>
+        <div className="space-y-3">
+          {subscriptionOptions.length > 1 && (
+            <div className="flex flex-col gap-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Choose a plan</p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {subscriptionOptions.map((option) => {
+                  const isActive = option.id === selectedOption?.id;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => setSelectedOptionId(option.id)}
+                      className={`rounded-2xl border p-3 text-left text-sm shadow-sm transition ${
+                        isActive
+                          ? 'border-black bg-white shadow-md shadow-black/10'
+                          : 'border-neutral-200 bg-white/80 hover:border-black/30'
+                      }`}
+                    >
+                      <p className="text-sm font-semibold text-neutral-900">{option.label}</p>
+                      {option.description && <p className="text-xs text-neutral-500">{option.description}</p>}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            {savings > 0 && (
-              <div className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                Save {formatConverted(savings)}
+            )}
+
+          <div className="rounded-2xl border border-neutral-100 bg-white p-4 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-neutral-900">{formatConverted(price)}</p>
+                <p className="text-xs text-neutral-500">Billed per {intervalLabel}</p>
+              </div>
+              {savings > 0 && (
+                <div className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                  Save {formatConverted(savings)}
+                </div>
+              )}
+            </div>
+            {issuedCardId && (
+              <div className="mt-3 text-xs font-semibold text-neutral-600">
+                VIN card ID: <span className="text-neutral-900">{issuedCardId}</span>
               </div>
             )}
           </div>
-          {issuedCardId && (
-            <div className="mt-3 text-xs font-semibold text-neutral-600">
-              VIN card ID: <span className="text-neutral-900">{issuedCardId}</span>
-            </div>
-          )}
         </div>
+
+        {listing.vinSubscriptionTerms && (
+          <div className="rounded-2xl border border-neutral-100 bg-neutral-50 p-4 text-xs text-neutral-600">
+            <p className="font-semibold uppercase tracking-wide text-neutral-500">Terms & conditions</p>
+            <p className="mt-2 whitespace-pre-line">{listing.vinSubscriptionTerms}</p>
+          </div>
+        )}
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-neutral-500">

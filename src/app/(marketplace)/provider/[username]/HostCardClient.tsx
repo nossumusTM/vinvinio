@@ -64,6 +64,7 @@ type HostSubscriptionSummary = {
   vinCardId: string;
   interval: 'monthly' | 'yearly';
   price: number;
+  optionLabel?: string | null;
   startDate: string;
   endDate: string;
   listing: {
@@ -1094,6 +1095,11 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                                   <p className="mt-1 text-xs text-neutral-500">
                                     VIN card ID: <span className="font-semibold text-neutral-700">{subscription.vinCardId}</span>
                                   </p>
+                                  {subscription.optionLabel && (
+                                    <p className="mt-1 text-xs text-neutral-500">
+                                      Plan: <span className="font-semibold text-neutral-700">{subscription.optionLabel}</span>
+                                    </p>
+                                  )}
                                 </div>
                                 <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold text-neutral-700">
                                   {intervalLabel}

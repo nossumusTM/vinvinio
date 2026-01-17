@@ -202,6 +202,8 @@ model Listing {
   vinSubscriptionEnabled Boolean     @default(false)
   vinSubscriptionInterval SubscriptionInterval?
   vinSubscriptionPrice  Int?
+  vinSubscriptionTerms  String?
+  vinSubscriptionOptions Json?
 
   moderationNoteText        String?
   moderationNoteAttachments Json?
@@ -229,6 +231,9 @@ model Subscription {
   active     Boolean  @default(true)
   startDate  DateTime @default(now())
   endDate    DateTime
+  optionId   String?
+  optionLabel String?
+  optionDescription String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 

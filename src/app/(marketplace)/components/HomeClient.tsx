@@ -8,7 +8,7 @@ import ListingCard from "@/app/(marketplace)/components/listings/ListingCard";
 import EmptyState from "@/app/(marketplace)/components/EmptyState";
 import ListingFilter, { GridSize } from "@/app/(marketplace)/components/listings/ListingFilter";
 import ClientOnly from "@/app/(marketplace)/components/ClientOnly";
-import { useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import axios from "axios";
 import { SafeUser } from "@/app/(marketplace)/types";
 import toast from "react-hot-toast";
@@ -48,6 +48,8 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
   const [categoriesVisible, setCategoriesVisible] = useState(true);
   const [isMapOpen, setIsMapOpen] = useState(false);
   const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
 
   const [isMobile, setIsMobile] = useState(false);
   const detectionInFlightRef = useRef(false);
@@ -203,10 +205,37 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
         latlng,
         city: detection.city,
       });
+
+      const currentLocationValue = searchParams?.get('locationValue');
+      if (currentLocationValue !== detection.locationValue) {
+        const parsedQuery = qs.parse(searchParams?.toString() ?? '');
+        const url = qs.stringifyUrl(
+          {
+            url: pathname ?? '/',
+            query: {
+              ...parsedQuery,
+              locationValue: detection.locationValue,
+            },
+          },
+          { skipNull: true, skipEmptyString: true },
+        );
+        router.replace(url, { scroll: false });
+      }
     }
 
     markApplied();
-  }, [geoAccepted, detection, geoApplied, setLanguage, setCurrency, setSearchLocation, markApplied]);
+}, [
+    geoAccepted,
+    detection,
+    geoApplied,
+    setLanguage,
+    setCurrency,
+    setSearchLocation,
+    markApplied,
+    pathname,
+    router,
+    searchParams,
+  ]);
 
   useEffect(() => {
     const mq = window.matchMedia?.('(max-width: 767px)');

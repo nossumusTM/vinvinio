@@ -172,6 +172,14 @@ export type SafeUser = Simplify<
 type Pricingish = Listing extends { pricingType: infer P } ? P | null : string | null;
 type Statusish  = (Listing extends { status: infer S } ? S : string) | 'awaiting_reapproval';
 
+export type VinSubscriptionOption = {
+  id: string;
+  label: string;
+  description?: string | null;
+  price: number;
+  interval: 'monthly' | 'yearly';
+};
+
 export type SafeListing = Simplify<
   Omit<Listing, "createdAt" | "updatedAt"> & {
     createdAt: string;
@@ -182,6 +190,8 @@ export type SafeListing = Simplify<
     vinSubscriptionEnabled?: boolean;
     vinSubscriptionInterval?: 'monthly' | 'yearly' | null;
     vinSubscriptionPrice?: number | null;
+    vinSubscriptionTerms?: string | null;
+    vinSubscriptionOptions?: VinSubscriptionOption[] | null;
 
     // Keep your custom fields, but make them permissive
     hostDescription?: string | null;

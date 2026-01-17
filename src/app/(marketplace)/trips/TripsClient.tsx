@@ -685,18 +685,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
           return (
               <div
                 key={reservation.id}
-                role={listingPath ? 'button' : undefined}
-                tabIndex={listingPath ? 0 : -1}
-                aria-label={listingPath ? `Open ${reservation.listing?.title ?? 'listing'} details` : undefined}
-                onClick={() => listingPath && handleCardNavigation()}
-                onKeyDown={(event) => {
-                  if (!listingPath) return;
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    handleCardNavigation();
-                  }
-                }}
-                className="relative bg-white rounded-3xl shadow-md hover:shadow-lg transition duration-300 overflow-hidden flex flex-col cursor-pointer focus-visible:ring-2 focus-visible:ring-black"
+                className="relative bg-white rounded-3xl shadow-md hover:shadow-lg transition duration-300 overflow-hidden flex flex-col"
               >
               {/* ✅ Status Label with fallback */}
               {reservation.status === 'cancelled' ? (
@@ -709,13 +698,21 @@ const TripsClient: React.FC<TripsClientProps> = ({
                 </div>
               )}
               {Array.isArray(reservation.listing.imageSrc) && reservation.listing.imageSrc.length > 0 && (
-                <Image
-                  src={reservation.listing.imageSrc[0]}
-                  alt="Listing"
-                  className="w-full h-48 object-cover"
-                  width={500}
-                  height={500}
-                />
+                <button
+                  type="button"
+                  onClick={() => listingPath && handleCardNavigation()}
+                  className="w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+                  aria-label={listingPath ? `Open ${reservation.listing?.title ?? 'listing'} details` : undefined}
+                  disabled={!listingPath}
+                >
+                  <Image
+                    src={reservation.listing.imageSrc[0]}
+                    alt="Listing"
+                    className="w-full h-48 object-cover"
+                    width={500}
+                    height={500}
+                  />
+                </button>
               )}
 
               {reservation.status === 'cancelled' ? (
@@ -729,8 +726,15 @@ const TripsClient: React.FC<TripsClientProps> = ({
               )}
 
               <div className="px-4 pt-2 pb-6 flex flex-col gap-2 text-black flex-1">
-
-                <div className="p-4 text-lg font-semibold">{reservation.listing.title}</div>
+                <button
+                  type="button"
+                  onClick={() => listingPath && handleCardNavigation()}
+                  className="p-4 text-left text-lg font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+                  aria-label={listingPath ? `Open ${reservation.listing?.title ?? 'listing'} details` : undefined}
+                  disabled={!listingPath}
+                >
+                  {reservation.listing.title}
+                </button>
                 
 
               {/* Reservation Meta — stacked, left-aligned (same as ReservationCard) */}
@@ -1082,7 +1086,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
                           className="hidden"
                           onChange={(e) => handleReviewImageUpload(reservation.id, e.target.files)}
                         />
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-col items-center gap-3">
                           <button
                             type="button"
                             onClick={() => document.getElementById(`review-images-${reservation.id}`)?.click()}

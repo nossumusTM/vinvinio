@@ -94,35 +94,36 @@ const ReservationCard: React.FC<ReservationCardProps> = ({
 
   return (
     <div
-      role={cardIsInteractive ? 'button' : undefined}
-      tabIndex={cardIsInteractive ? 0 : -1}
-      onClick={() => cardIsInteractive && onNavigate?.()}
-      onKeyDown={(event) => {
-        if (!cardIsInteractive) return;
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          onNavigate?.();
-        }
-      }}
-      className={`relative bg-white rounded-3xl shadow-md hover:shadow-lg transition duration-300 overflow-hidden ${
-        cardIsInteractive ? 'cursor-pointer focus-visible:ring-2 focus-visible:ring-black' : ''
-      }`}
-      aria-label={cardIsInteractive ? `Open ${reservation.listing?.title ?? 'reservation'}` : undefined}
+      className="relative bg-white rounded-3xl shadow-md hover:shadow-lg transition duration-300 overflow-hidden"
     >
       {Array.isArray(reservation.listing?.imageSrc) && reservation.listing.imageSrc.length > 0 && (
-        <Image
-          src={reservation.listing.imageSrc[0]}
-          alt="Listing"
-          className="w-full h-48 object-cover"
-          width={500}
-          height={500}
-        />
+        <button
+          type="button"
+          onClick={() => cardIsInteractive && onNavigate?.()}
+          className="w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+          aria-label={cardIsInteractive ? `Open ${reservation.listing?.title ?? 'listing'}` : undefined}
+          disabled={!cardIsInteractive}
+        >
+          <Image
+            src={reservation.listing.imageSrc[0]}
+            alt="Listing"
+            className="w-full h-48 object-cover"
+            width={500}
+            height={500}
+          />
+        </button>
       )}
 
       <div className="px-4 pt-2 pb-24 flex flex-col gap-2 text-black">
-        <div className="pb-4 text-lg font-semibold">
+        <button
+          type="button"
+          onClick={() => cardIsInteractive && onNavigate?.()}
+          className="pb-4 text-left text-lg font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+          aria-label={cardIsInteractive ? `Open ${reservation.listing?.title ?? 'listing'}` : undefined}
+          disabled={!cardIsInteractive}
+        >
           {reservation.listing?.title}
-        </div>
+        </button>
 
         {/* Meta blocks */}
         <div className="pt-2 pb-2 w-full max-w-md p-4 rounded-xl md:mx-0 mx-auto">

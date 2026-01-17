@@ -21,6 +21,24 @@ interface PhoneNumberInputProps {
 
 const priorityCountries = ['IT', 'US', 'GB', 'FR', 'ES', 'DE', 'CA', 'AU'];
 
+const preloadImages = (sources: string[]) => {
+  if (typeof window === 'undefined') {
+    return Promise.resolve([]);
+  }
+
+  return Promise.all(
+    sources.map(
+      (src) =>
+        new Promise((resolve) => {
+          const img = new window.Image();
+          img.onload = () => resolve(true);
+          img.onerror = () => resolve(false);
+          img.src = src;
+        }),
+    ),
+  );
+};
+
 const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
   countryCode,
   onCountryChange,
@@ -68,6 +86,7 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
   }, [countryOptions, countryCode]);
 
   const [flagSrc, setFlagSrc] = useState<string | null>(null);
+  const [flagsReady, setFlagsReady] = useState(false);
 
   useEffect(() => {
     if (!selectedCountry?.value) {
@@ -78,6 +97,34 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
     setFlagSrc(`/flags/${selectedCountry.value.toLowerCase()}.svg`);
   }, [selectedCountry?.value]);
 
+  const flagSources = useMemo(
+    () => countryOptions.map((country) => `/flags/${country.value.toLowerCase()}.svg`),
+    [countryOptions],
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const preload = async () => {
+      if (!flagSources.length) {
+        setFlagsReady(true);
+        return;
+      }
+
+      setFlagsReady(false);
+      await preloadImages(flagSources);
+      if (!cancelled) {
+        setFlagsReady(true);
+      }
+    };
+
+    void preload();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [flagSources]);
+
   return (
     <div className="flex flex-col gap-2">
       <label htmlFor={inputId} className="text-sm font-medium text-neutral-700">
@@ -85,7 +132,7 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
       </label>
       <div className="flex flex-row gap-2 sm:flex-row">
        <div className="relative w-full sm:max-w-[180px]">
-        {selectedCountry && flagSrc && (
+        {selectedCountry && flagSrc && flagsReady && (
           <div className="pointer-events-none absolute left-3 top-1/2 flex -translate-y-1/2 items-center">
             <Image
               src={flagSrc}

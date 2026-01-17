@@ -45,6 +45,8 @@ export async function POST(request: Request) {
     vinSubscriptionEnabled,
     vinSubscriptionInterval,
     vinSubscriptionPrice,
+    vinSubscriptionTerms,
+    vinSubscriptionOptions,
   } = body;
 
   if (
@@ -89,11 +91,39 @@ export async function POST(request: Request) {
     ? Math.round(Number(vinSubscriptionPrice))
     : null;
 
+    const normalizedVinSubscriptionTerms =
+    typeof vinSubscriptionTerms === 'string' && vinSubscriptionTerms.trim().length > 0
+      ? vinSubscriptionTerms.trim()
+      : null;
+
+  const normalizedVinSubscriptionOptions = Array.isArray(vinSubscriptionOptions)
+    ? vinSubscriptionOptions
+        .map((option: any, index: number) => ({
+          id:
+            typeof option?.id === 'string' && option.id.trim().length > 0
+              ? option.id.trim()
+              : `option-${index + 1}`,
+          label: typeof option?.label === 'string' ? option.label.trim() : '',
+          description: typeof option?.description === 'string' ? option.description.trim() : '',
+          price: Math.round(Number(option?.price ?? 0)),
+          interval:
+            typeof option?.interval === 'string' && ['monthly', 'yearly'].includes(option.interval)
+              ? option.interval
+              : null,
+        }))
+        .filter((option) => option.label && option.interval && option.price > 0)
+    : [];
+
+  const resolvedVinSubscriptionInterval =
+    normalizedVinSubscriptionOptions[0]?.interval ?? normalizedVinSubscriptionInterval;
+  const resolvedVinSubscriptionPrice =
+    normalizedVinSubscriptionOptions[0]?.price ?? parsedVinSubscriptionPrice;
+
   if (normalizedVinSubscriptionEnabled) {
-    if (!normalizedVinSubscriptionInterval) {
+    if (!resolvedVinSubscriptionInterval) {
       return new NextResponse('Subscription interval must be monthly or yearly', { status: 400 });
     }
-    if (!Number.isFinite(parsedVinSubscriptionPrice) || (parsedVinSubscriptionPrice ?? 0) <= 0) {
+    if (!Number.isFinite(resolvedVinSubscriptionPrice) || (resolvedVinSubscriptionPrice ?? 0) <= 0) {
       return new NextResponse('Subscription price must be a positive number', { status: 400 });
     }
   }
@@ -233,8 +263,10 @@ export async function POST(request: Request) {
       seoKeywords: { set: normalizedSeoKeywords },
       availabilityRules: availabilityRules ? { ...availabilityRules } : null,
       vinSubscriptionEnabled: normalizedVinSubscriptionEnabled,
-      vinSubscriptionInterval: normalizedVinSubscriptionInterval,
-      vinSubscriptionPrice: parsedVinSubscriptionPrice,
+      vinSubscriptionInterval: resolvedVinSubscriptionInterval,
+      vinSubscriptionPrice: resolvedVinSubscriptionPrice,
+      vinSubscriptionTerms: normalizedVinSubscriptionTerms,
+      vinSubscriptionOptions: normalizedVinSubscriptionOptions,
       status: 'pending',
       user: {
         connect: {
