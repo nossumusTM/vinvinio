@@ -845,6 +845,14 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
         ? [editingListing.imageSrc]
         : [];
 
+    const normalizeInterval = (
+      value: unknown,
+    ): 'monthly' | 'yearly' | undefined => {
+      if (value === 'yearly') return 'yearly';
+      if (value === 'monthly') return 'monthly';
+      return undefined;
+    };
+
     const normalizedSubscriptionOptions = Array.isArray(editingListing.vinSubscriptionOptions)
       && editingListing.vinSubscriptionOptions.length > 0
       ? editingListing.vinSubscriptionOptions.map((option: any, index: number) =>
@@ -853,7 +861,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
             label: typeof option?.label === 'string' ? option.label : 'Subscription plan',
             description: typeof option?.description === 'string' ? option.description : '',
             price: typeof option?.price === 'number' ? option.price : null,
-            interval: option?.interval === 'yearly' ? 'yearly' : 'monthly',
+            interval: normalizeInterval(option?.interval) ?? 'monthly',
           }),
         )
       : [
@@ -865,9 +873,9 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
                 ? editingListing.vinSubscriptionPrice
                 : defaultFormValues.vinSubscriptionPrice ?? null,
             interval:
-              editingListing.vinSubscriptionInterval === 'yearly'
-                ? 'yearly'
-                : defaultFormValues.vinSubscriptionInterval,
+              normalizeInterval(editingListing.vinSubscriptionInterval) ??
+              normalizeInterval(defaultFormValues.vinSubscriptionInterval) ??
+              'monthly',
           }),
         ];
 
@@ -903,7 +911,10 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
         groupSize: editingListing.groupSize ?? null,
         customPricing: normalizedCustomPricing,
         vinSubscriptionEnabled: Boolean(editingListing.vinSubscriptionEnabled),
-        vinSubscriptionInterval: editingListing.vinSubscriptionInterval ?? defaultFormValues.vinSubscriptionInterval,
+        vinSubscriptionInterval:
+          normalizeInterval(editingListing.vinSubscriptionInterval) ??
+          normalizeInterval(defaultFormValues.vinSubscriptionInterval) ??
+          'monthly',
         vinSubscriptionPrice:
           typeof editingListing.vinSubscriptionPrice === 'number'
             ? editingListing.vinSubscriptionPrice
@@ -1714,6 +1725,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
                   (location?.latlng as [number, number]) ??
                   ([41.9028, 12.4964] as [number, number])
                 }
+                allowFullscreen
               />
             </div>
           </div>

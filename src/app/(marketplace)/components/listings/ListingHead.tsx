@@ -341,7 +341,12 @@ const ListingHead: React.FC<ListingHeadProps> = ({
           body: JSON.stringify({ listingId: id }),
         });
         const data = await res.json();
-        setReviews(data || []);
+        const normalizedReviews = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.reviews)
+          ? data.reviews
+          : [];
+        setReviews(normalizedReviews);
       } catch (err) {
         console.error('Failed to fetch reviews:', err);
       }
@@ -382,7 +387,7 @@ const ListingHead: React.FC<ListingHeadProps> = ({
   }, [reviews]);
 
   const averageRating = useMemo(() => {
-    if (reviews.length === 0) return 0;
+    if (!Array.isArray(reviews) || reviews.length === 0) return 0;
     const total = reviews.reduce((sum, review) => sum + review.rating, 0);
     return total / reviews.length;
   }, [reviews]);

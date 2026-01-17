@@ -164,7 +164,7 @@ const ReviewsModal: React.FC<ReviewsModalProps> = ({
                       null,
                       review.role
                     );
-                    const displayLegalName = review.legalName || review.userName || 'Anonymous';
+                    // const displayLegalName = review.legalName || review.userName || 'Anonymous';
                     const displayUsername = review.username ? `@${review.username}` : null;
 
                     return (
@@ -227,13 +227,13 @@ const ReviewsModal: React.FC<ReviewsModalProps> = ({
                               href={reviewProfileHref}
                               className="text-sm font-semibold text-neutral-800 hover:underline"
                             >
-                              {displayLegalName}
-                              {displayUsername ? ` · ${displayUsername}` : ''}
+                              {displayUsername}
+                              {/* {displayUsername ? ` · ${displayUsername}` : ''} */}
                             </Link>
                           ) : (
                             <p className="text-sm font-semibold text-neutral-800">
-                              {displayLegalName}
-                              {displayUsername ? ` · ${displayUsername}` : ''}
+                              {displayUsername}
+                              {/* {displayUsername ? ` · ${displayUsername}` : ''} */}
                             </p>
                           )}
                           <p className="text-xs text-neutral-500">

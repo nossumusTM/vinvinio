@@ -23,6 +23,9 @@ interface ListingsMapOverlayProps {
   highlightedListingId?: string | null;
   highlightedCoords?: L.LatLngTuple | null;
   highlightedLabel?: string | null;
+  highlightedIcon?: L.Icon | L.DivIcon;
+  initialUserLocation?: L.LatLngTuple | null;
+  startNearbyOnly?: boolean;
 }
 
 const DEFAULT_CENTER: L.LatLngTuple = [41.8719, 12.5674];
@@ -107,12 +110,12 @@ const MapZoomControls = ({
   onZoomIn: () => void;
   onZoomOut: () => void;
 }) => (
-  <div className="absolute bottom-6 right-6 z-20 flex flex-col gap-2">
+  <div className="absolute bottom-6 left-6 z-20 flex flex-col gap-2">
     <button
       type="button"
       onClick={onZoomIn}
       aria-label="Zoom in"
-      className="flex h-11 w-11 items-center justify-center rounded-full border border-neutral-200 bg-white/90 text-neutral-800 shadow-lg backdrop-blur transition hover:border-neutral-300"
+      className="flex h-8 w-8 items-center justify-center rounded-full bg-white/30 text-neutral-800 shadow-lg backdrop-blur transition"
     >
       <FiPlus />
     </button>
@@ -120,7 +123,7 @@ const MapZoomControls = ({
       type="button"
       onClick={onZoomOut}
       aria-label="Zoom out"
-      className="flex h-11 w-11 items-center justify-center rounded-full border border-neutral-200 bg-white/90 text-neutral-800 shadow-lg backdrop-blur transition hover:border-neutral-300"
+      className="flex h-8 w-8 items-center justify-center rounded-full bg-white/30 text-neutral-800 shadow-lg backdrop-blur transition"
     >
       <FiMinus />
     </button>
@@ -240,14 +243,17 @@ const ListingsMapOverlay = ({
   highlightedListingId,
   highlightedCoords,
   highlightedLabel,
+  highlightedIcon,
+  initialUserLocation,
+  startNearbyOnly = false,
 }: ListingsMapOverlayProps) => {
   const [listings, setListings] = useState<SafeListing[]>(initialListings);
   const [loadingListings, setLoadingListings] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
   const [markerColor, setMarkerColor] = useState(COLOR_OPTIONS[0].value);
-  const [userLocation, setUserLocation] = useState<L.LatLngTuple | null>(null);
-  const [nearbyOnly, setNearbyOnly] = useState(false);
+  const [userLocation, setUserLocation] = useState<L.LatLngTuple | null>(initialUserLocation ?? null);
+  const [nearbyOnly, setNearbyOnly] = useState(startNearbyOnly);
   const [coordsMap, setCoordsMap] = useState<Record<string, L.LatLngTuple>>({});
 
   const hasFetchedRef = useRef(false);
@@ -266,6 +272,16 @@ const ListingsMapOverlay = ({
     if (!highlightedListingId) return;
     setSelectedListingId(highlightedListingId);
   }, [highlightedListingId, isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    if (initialUserLocation) {
+      setUserLocation(initialUserLocation);
+      if (startNearbyOnly) {
+        setNearbyOnly(true);
+      }
+    }
+  }, [initialUserLocation, isOpen, startNearbyOnly]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -448,7 +464,7 @@ const ListingsMapOverlay = ({
           <MapReady onReady={handleMapReady} />
           <MapUpdater center={activeCenter} />
           {highlightedCoords && (
-            <Marker position={highlightedCoords} icon={buildHighlightIcon()}>
+            <Marker position={highlightedCoords} icon={highlightedIcon ?? buildHighlightIcon()}>
               {highlightedLabel && (
                 <Popup>
                   <div className="text-sm font-semibold text-neutral-800">{highlightedLabel}</div>

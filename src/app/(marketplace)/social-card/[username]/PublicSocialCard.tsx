@@ -116,7 +116,7 @@ const PublicSocialCard: React.FC<PublicSocialCardProps> = ({
     );
 
     if (withCities.length === 0) {
-      return <p className="text-sm text-white/70">Destinations not added yet.</p>;
+      return <p className="text-sm text-black/30">Destinations not added yet.</p>;
     }
 
     return (

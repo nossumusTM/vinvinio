@@ -91,7 +91,7 @@ export default async function RootLayout({
         </ClientOnly>
         <SessionProviderWrapper>
           <Suspense fallback={<Loader />}>
-            <main className="flex flex-col flex-1 pb-0 pt-28">
+            <main className="flex flex-col flex-1 pb-0 pt-36 pb-14">
               <div className="flex-1">
                 {children}
                 </div>

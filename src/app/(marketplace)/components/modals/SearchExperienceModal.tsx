@@ -264,6 +264,7 @@ const SearchExperienceModal = () => {
                 city={location?.city ?? 'Rome'}
                 country={location?.label ?? 'Italy'}
                 center={(location?.latlng as [number, number]) ?? ([41.9028, 12.4964] as [number, number])}
+                allowFullscreen
               />
             </div>
           </div>

@@ -966,7 +966,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                             </div>
                             
                             {/* Individual Reviews */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 p-4">
+                            <div className="items-center flex justify-center w-full grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 p-4">
                             {reviews.slice(0, 6).map((review, i) => {
                                 const reviewImages = Array.isArray(review.images)
                                     ? review.images.filter(Boolean)
@@ -976,7 +976,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                                     null,
                                     review.role
                                 );
-                                const displayLegalName = review.legalName || review.userName || 'Anonymous';
+                                // const displayLegalName = review.legalName || review.userName || 'Anonymous';
                                 const displayUsername = review.username ? `@${review.username}` : null;
 
                                 return (
@@ -1057,13 +1057,13 @@ const ListingClient: React.FC<ListingClientProps> = ({
                                             href={reviewProfileHref}
                                             className="text-sm font-semibold text-neutral-800 hover:underline"
                                         >
-                                            {displayLegalName}
-                                            {displayUsername ? ` · ${displayUsername}` : ''}
+                                            {displayUsername}
+                                            {/* {displayUsername ? ` · ${displayUsername}` : ''} */}
                                         </Link>
                                     ) : (
                                         <p className="text-sm font-semibold text-neutral-800">
-                                            {displayLegalName}
-                                            {displayUsername ? ` · ${displayUsername}` : ''}
+                                            {displayUsername}
+                                            {/* {displayUsername ? ` · ${displayUsername}` : ''} */}
                                         </p>
                                     )}
                                     <p className="text-xs text-neutral-500">
