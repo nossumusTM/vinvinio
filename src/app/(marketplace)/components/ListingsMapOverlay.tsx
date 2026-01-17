@@ -424,7 +424,10 @@ const ListingsMapOverlay = ({
         const nextCoords: L.LatLngTuple = [position.coords.latitude, position.coords.longitude];
         setUserLocation(nextCoords);
         setNearbyOnly(true);
-        mapRef.current?.setView(nextCoords, 12, { animate: true });
+        const map = getActiveMap();
+        if (map) {
+          map.setView(nextCoords, 12, { animate: true });
+        }
       },
       () => {
         setNearbyOnly(false);
@@ -433,17 +436,39 @@ const ListingsMapOverlay = ({
     );
   };
 
+  const getActiveMap = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) return null;
+    const container = map.getContainer?.();
+    if (!container || !container.isConnected) return null;
+    const { _loaded } = map as L.Map & { _loaded?: boolean };
+    if (_loaded === false) return null;
+    return map;
+  }, []);
+
   const handleMapReady = useCallback((mapInstance: L.Map) => {
     mapRef.current = mapInstance;
   }, []);
 
   const handleZoomIn = () => {
-    mapRef.current?.zoomIn();
+    const map = getActiveMap();
+    if (map) {
+      map.zoomIn();
+    }
   };
 
   const handleZoomOut = () => {
-    mapRef.current?.zoomOut();
+    const map = getActiveMap();
+    if (map) {
+      map.zoomOut();
+    }
   };
+
+  useEffect(() => {
+    if (!isOpen) {
+      mapRef.current = null;
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -644,7 +669,10 @@ const ListingsMapOverlay = ({
                             setSelectedListingId(listing.id);
                             const coords = coordsMap[listing.id];
                             if (coords) {
-                              mapRef.current?.setView(coords, 12, { animate: true });
+                            const map = getActiveMap();
+                              if (map) {
+                                map.setView(coords, 12, { animate: true });
+                              }
                             }
                           }}
                           className="rounded-full border border-neutral-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-neutral-600 transition hover:border-neutral-300"
