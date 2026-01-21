@@ -15,6 +15,46 @@ function looksLikeObjectId(value?: string) {
 }
 
 type SafePricingTier = { minGuests: number; maxGuests: number; price: number };
+type SafeVinSubscriptionOption = {
+  id: string;
+  label: string;
+  description: string | null;
+  price: number;
+  interval: 'monthly' | 'yearly';
+};
+
+const normalizeVinSubscriptionOptions = (value: unknown): SafeVinSubscriptionOption[] => {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((option) => {
+      const id = typeof option?.id === 'string' && option.id.trim().length > 0
+        ? option.id.trim()
+        : null;
+      const label = typeof option?.label === 'string' ? option.label.trim() : '';
+      const description = typeof option?.description === 'string'
+        ? option.description.trim()
+        : '';
+      const price = Math.round(Number(option?.price ?? 0));
+      const interval =
+        typeof option?.interval === 'string' && ['monthly', 'yearly'].includes(option.interval)
+          ? option.interval
+          : null;
+
+      if (!id || !label || !interval || !Number.isFinite(price) || price <= 0) {
+        return null;
+      }
+
+      return {
+        id,
+        label,
+        description: description.length > 0 ? description : null,
+        price,
+        interval,
+      };
+    })
+    .filter((option): option is SafeVinSubscriptionOption => Boolean(option));
+};
 
 export default async function getListingById(params: IParams) {
   try {
@@ -98,6 +138,9 @@ export default async function getListingById(params: IParams) {
     const normalizedBasePrice = pricingSnapshot.basePrice > 0
       ? pricingSnapshot.basePrice
       : Number(listingWithSlug.price ?? 0);
+    const normalizedVinSubscriptionOptions = normalizeVinSubscriptionOptions(
+      (listingWithSlug as any).vinSubscriptionOptions,
+    );
 
     return {
       ...listingWithSlug, // includes slug, etc.
@@ -130,6 +173,8 @@ export default async function getListingById(params: IParams) {
         pricingSnapshot.tiers.length > 0
           ? (pricingSnapshot.tiers as SafePricingTier[])
           : null,
+      vinSubscriptionOptions:
+        normalizedVinSubscriptionOptions.length > 0 ? normalizedVinSubscriptionOptions : null,
       moderationNoteText,
       moderationNoteAttachments,
       createdAt: listingWithSlug.createdAt.toString(),

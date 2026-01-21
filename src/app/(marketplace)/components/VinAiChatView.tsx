@@ -1001,7 +1001,13 @@ const guidedComplete = criteriaMet || guidedStep === 'done';
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-900 text-white">
               <RiSpaceShipFill className="h-5 w-5" />
             </div>
-            <div className="min-w-0 flex-1 rounded-3xl border border-neutral-200 bg-white px-4 py-4 shadow-sm">
+            <div
+              className={clsx(
+                'min-w-0 rounded-3xl border border-neutral-200 bg-gradient-to-br from-white via-slate-50 to-sky-50 px-4 py-4 shadow-sm',
+                // responsive "bubble" sizing
+                'w-fit max-w-[92%] sm:max-w-[70%] md:max-w-[50%] lg:max-w-[46%]'
+              )}
+            >
               {guidedStepContent}
             </div>
           </motion.div>

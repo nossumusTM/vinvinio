@@ -59,7 +59,7 @@ const Map: React.FC<MapProps> = ({ center, city, country, allowFullscreen = fals
       L.divIcon({
         html: renderToStaticMarkup(
           <div className="flex items-center justify-center">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/30 shadow-lg ring-1 ring-white/60 backdrop-blur">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-transparent shadow-lg ring-1 ring-white/60 backdrop-blur-sm">
               <FaMapMarkerAlt className="h-6 w-6 drop-shadow-sm" color="#2200ffff" />
             </div>
           </div>
@@ -70,6 +70,16 @@ const Map: React.FC<MapProps> = ({ center, city, country, allowFullscreen = fals
       }),
     [],
   );
+
+  const getActiveMap = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) return null;
+    const container = map.getContainer?.();
+    if (!container || !container.isConnected) return null;
+    const { _loaded, _mapPane } = map as L.Map & { _loaded?: boolean; _mapPane?: HTMLElement };
+    if (!_mapPane || _loaded === false) return null;
+    return map;
+  }, []);
 
   const openOverlay = useCallback(() => {
     if (!allowFullscreen) return;
@@ -133,14 +143,13 @@ const Map: React.FC<MapProps> = ({ center, city, country, allowFullscreen = fals
 
   useEffect(() => {
     const onResize = () => {
-      const map = mapRef.current as L.Map | null;
-      const container = (map as any)?._container;
-      if (!map || !container) return;
+      const map = getActiveMap();
+      if (!map) return;
       map.invalidateSize();
     };
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
-  }, []);
+  }, [getActiveMap]);
   // if (!isClient) return null;
 
   useEffect(() => {
@@ -177,16 +186,24 @@ const Map: React.FC<MapProps> = ({ center, city, country, allowFullscreen = fals
   }, [center, city, country]);
 
   useEffect(() => {
-    if (!isMapReady || !mapRef.current) return;
-    mapRef.current.setView(effectiveCenter, 10, { animate: false });
-  }, [effectiveCenter, isMapReady]);
+    if (!isMapReady) return;
+    const map = getActiveMap();
+    if (!map) return;
+    map.setView(effectiveCenter, 10, { animate: false });
+  }, [effectiveCenter, getActiveMap, isMapReady]);
 
   const handleZoomIn = () => {
-    mapRef.current?.zoomIn();
+  const map = getActiveMap();
+    if (map) {
+      map.zoomIn();
+    }
   };
 
   const handleZoomOut = () => {
-    mapRef.current?.zoomOut();
+  const map = getActiveMap();
+    if (map) {
+      map.zoomOut();
+    }
   };
 
   const ListingsMapOverlay = useMemo(
@@ -227,10 +244,8 @@ const Map: React.FC<MapProps> = ({ center, city, country, allowFullscreen = fals
               mapRef.current = mapInstance;
 
               window.setTimeout(() => {
-                const map = mapRef.current as L.Map | null;
-                // Guard: map might be gone or not fully initialized yet
-                const container = (map as any)?._container;
-                if (!map || !container) return;
+                const map = getActiveMap();
+                if (!map) return;
 
                 try {
                   map.invalidateSize();

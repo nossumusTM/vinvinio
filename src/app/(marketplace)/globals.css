@@ -310,3 +310,15 @@ body:not(.has-announcement-bar) #layout-content-wrapper {
     transform: translate3d(-6%, -4%, 0) scale(1);
   }
 }
+
+.leaflet-control-zoom {
+  display: none!important;
+}
+
+.leaflet-bar {
+  display: none!important;
+}
+
+.leaflet-control {
+  display: none!important;
+}

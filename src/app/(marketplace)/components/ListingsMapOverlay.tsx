@@ -33,13 +33,9 @@ const PAGE_SIZE = 100;
 const MAX_FETCHED = 500;
 const NEARBY_RADIUS_KM = 30;
 const DESCRIPTION_MAX_CHARS = 180;
+const SUGGESTION_DESCRIPTION_MAX_CHARS = 150;
+const DEFAULT_MARKER_COLOR = '#2200ffff';
 const VIDEO_EXTENSIONS = /\.(mp4|webm|ogg)$/i;
-
-const COLOR_OPTIONS = [
-  { label: 'Ocean', value: '#2563eb' },
-  { label: 'Forest', value: '#15803d' },
-  { label: 'Sunset', value: '#f97316' },
-];
 
 const buildHighlightIcon = () =>
   L.divIcon({
@@ -149,11 +145,16 @@ const getListingImages = (listing: SafeListing) => {
   return sources.filter((src) => !VIDEO_EXTENSIONS.test(src));
 };
 
-const buildListingSnippet = (listing: SafeListing) => {
+const buildListingSnippet = (listing: SafeListing, maxChars: number = DESCRIPTION_MAX_CHARS) => {
   const raw = `${listing.description ?? ''}`.replace(/\s+/g, ' ').trim();
-  if (!raw) return 'A thoughtful, tailored experience shaped around your pace and style.';
-  if (raw.length <= DESCRIPTION_MAX_CHARS) return raw;
-  return `${raw.slice(0, DESCRIPTION_MAX_CHARS).trimEnd()}…`;
+    if (!raw) return 'A thoughtful, tailored experience shaped around your pace and style.';
+    if (raw.length <= maxChars) return raw;
+  return `${raw.slice(0, maxChars).trimEnd()}…`;
+};
+
+const getRandomMarkerColor = () => {
+  const hue = Math.floor(Math.random() * 360);
+  return `hsl(${hue} 78% 52%)`;
 };
 
 const ListingImageSlider = ({
@@ -251,7 +252,7 @@ const ListingsMapOverlay = ({
   const [loadingListings, setLoadingListings] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
-  const [markerColor, setMarkerColor] = useState(COLOR_OPTIONS[0].value);
+  const [markerColors, setMarkerColors] = useState<Record<string, string>>({});
   const [userLocation, setUserLocation] = useState<L.LatLngTuple | null>(initialUserLocation ?? null);
   const [nearbyOnly, setNearbyOnly] = useState(startNearbyOnly);
   const [coordsMap, setCoordsMap] = useState<Record<string, L.LatLngTuple>>({});
@@ -417,6 +418,11 @@ const ListingsMapOverlay = ({
     [listings, selectedListingId],
   );
 
+  const getListingMarkerColor = useCallback(
+    (listingId: string) => markerColors[listingId] ?? DEFAULT_MARKER_COLOR,
+    [markerColors],
+  );
+
   const handleUseLocation = () => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
@@ -464,6 +470,10 @@ const ListingsMapOverlay = ({
     }
   };
 
+  const stopPropagation = (event: React.SyntheticEvent) => {
+    event.stopPropagation();
+  };
+
   useEffect(() => {
     if (!isOpen) {
       mapRef.current = null;
@@ -473,7 +483,11 @@ const ListingsMapOverlay = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-white">
+    <div className="fixed inset-0 z-50 bg-white"
+      onClick={stopPropagation}
+      onMouseDown={stopPropagation}
+      onTouchStart={stopPropagation}
+      >
       <div className="absolute inset-0">
         <MapContainer
           center={activeCenter}
@@ -500,15 +514,20 @@ const ListingsMapOverlay = ({
           {filteredListings.map((listing) => {
             const coords = coordsMap[listing.id];
             if (!coords) return null;
+            if (highlightedListingId && listing.id === highlightedListingId) return null;
             const listingHref = hrefForListing(listing);
             return (
               <Marker
                 key={listing.id}
                 position={coords}
-                icon={buildTagIcon(markerColor)}
+                icon={buildTagIcon(getListingMarkerColor(listing.id))}
                 eventHandlers={{
                   click: () => {
                     setSelectedListingId(listing.id);
+                    setMarkerColors((prev) => ({
+                      ...prev,
+                      [listing.id]: getRandomMarkerColor(),
+                    }));
                   },
                 }}
               >
@@ -516,7 +535,7 @@ const ListingsMapOverlay = ({
                   <div className="space-y-1 text-sm">
                     <Link
                       href={listingHref}
-                      className="font-semibold text-neutral-600 transition hover:text-neutral-800"
+                      className="block truncate font-semibold text-neutral-700 transition hover:text-neutral-900"
                     >
                       {listing.title}
                     </Link>
@@ -545,11 +564,20 @@ const ListingsMapOverlay = ({
         <MapZoomControls onZoomIn={handleZoomIn} onZoomOut={handleZoomOut} />
       </div>
 
+      <button
+        type="button"
+        onClick={onClose}
+        className="absolute right-6 top-6 z-30 flex h-10 w-10 items-center justify-center rounded-full bg-neutral-900 text-white shadow-lg"
+        aria-label="Close map"
+      >
+        <IoClose size={18} />
+      </button>
+
       {selectedListing && (
         <div className="absolute bottom-6 left-1/2 z-20 w-[92vw] max-w-xl -translate-x-1/2">
           <div className="rounded-2xl border border-neutral-200 bg-white/95 p-4 shadow-xl backdrop-blur">
             <div className="flex items-start justify-between gap-3">
-              <div className="flex-1 space-y-2">
+              <div className="min-w-0 flex-1 space-y-2">
                 <div className="flex items-center gap-2 text-xs text-neutral-500">
                   <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
                     {(selectedListing.primaryCategory ||
@@ -565,16 +593,30 @@ const ListingsMapOverlay = ({
                     ).toString()}
                   </span>
                 </div>
-                <p className="text-sm leading-relaxed text-neutral-500 line-clamp-2">
+                <div className="space-y-1 text-sm text-neutral-500">
                   <Link
                     href={hrefForListing(selectedListing)}
-                    className="font-semibold text-neutral-600 transition hover:text-neutral-800"
+                    className="block truncate font-semibold text-neutral-700 transition hover:text-neutral-900"
                   >
                     {selectedListing.title}
                   </Link>
-                  <span className="text-neutral-400"> · </span>
-                  <span>{buildListingSnippet(selectedListing)}</span>
-                </p>
+                  <p className="text-sm leading-relaxed text-neutral-500 line-clamp-2">
+                    {buildListingSnippet(selectedListing)}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-500">
+                    <span className="flex items-center gap-1 font-semibold text-neutral-700">
+                      <span className="text-yellow-500">★</span>
+                      {typeof selectedListing.avgRating === 'number'
+                        ? selectedListing.avgRating.toFixed(1)
+                        : 'New'}
+                    </span>
+                    <span className="text-neutral-400">·</span>
+                    <span>
+                      {(selectedListing.reviewsCount ?? 0).toLocaleString()} review
+                      {(selectedListing.reviewsCount ?? 0) === 1 ? '' : 's'}
+                    </span>
+                  </div>
+                </div>
               </div>
               <button
                 type="button"
@@ -602,14 +644,6 @@ const ListingsMapOverlay = ({
 
       <div className="absolute inset-x-0 top-0 z-10 flex flex-col items-center gap-4 px-4 py-4 sm:px-8">
         <div className="flex w-full max-w-3xl items-center gap-3 rounded-2xl bg-white/90 p-3 shadow-lg backdrop-blur">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-900 text-white"
-            aria-label="Close map"
-          >
-            <IoClose size={18} />
-          </button>
           <div className="flex flex-1 flex-col gap-2">
             <input
               value={searchQuery}
@@ -642,7 +676,7 @@ const ListingsMapOverlay = ({
                           <ListingImageSlider
                             images={listingImages}
                             title={listing.title}
-                            className="h-20 w-28"
+                            className="h-40 w-56"
                             imageClassName="rounded-lg"
                             showIndicators={false}
                           />
@@ -655,12 +689,12 @@ const ListingsMapOverlay = ({
                           <p className="text-[11px] leading-relaxed text-neutral-500 line-clamp-2">
                             <Link
                               href={listingHref}
-                              className="font-semibold text-neutral-600 transition hover:text-neutral-800"
+                              className="block truncate font-semibold text-neutral-700 transition hover:text-neutral-900"
                             >
                               {listing.title}
                             </Link>
                             <span className="text-neutral-400"> · </span>
-                            <span>{buildListingSnippet(listing)}</span>
+                            <span>{buildListingSnippet(listing, SUGGESTION_DESCRIPTION_MAX_CHARS)}</span>
                           </p>
                         </div>
                         <button
@@ -669,7 +703,7 @@ const ListingsMapOverlay = ({
                             setSelectedListingId(listing.id);
                             const coords = coordsMap[listing.id];
                             if (coords) {
-                            const map = getActiveMap();
+                              const map = getActiveMap();
                               if (map) {
                                 map.setView(coords, 12, { animate: true });
                               }
@@ -716,21 +750,20 @@ const ListingsMapOverlay = ({
           </div>
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">
-              Tag color
+              Activities
             </span>
-            {COLOR_OPTIONS.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                aria-label={`Set tag color ${option.label}`}
-                className={clsx(
-                  'h-5 w-5 rounded-full border-2 transition',
-                  markerColor === option.value ? 'border-neutral-900' : 'border-transparent',
-                )}
-                style={{ backgroundColor: option.value }}
-                onClick={() => setMarkerColor(option.value)}
-              />
-            ))}
+            <span
+              className="h-4 w-4 rounded-full border border-neutral-200"
+              style={{ backgroundColor: DEFAULT_MARKER_COLOR }}
+              aria-hidden
+            />
+            <button
+              type="button"
+              onClick={() => setMarkerColors({})}
+              className="rounded-full border border-neutral-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-neutral-600 transition hover:border-neutral-300"
+            >
+              Reset
+            </button>
           </div>
         </div>
       </div>
