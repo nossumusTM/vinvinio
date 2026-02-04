@@ -41,7 +41,7 @@ const SearchExperience = () => {
   // ];
 
   const ROTATING_ITEMS = [
-    'Ask Force AI ',
+    'Ask Ai anything.',
     "What's to do?",
     'Help to book.',
   ];
@@ -318,7 +318,7 @@ const SearchExperience = () => {
   return (
     <div className='items-center justify-center flex flex-col'>
       <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-neutral-400 md:hidden">
-        ASK FORCE AI
+        Ask AI anything
       </p>
     <motion.button
           type="button"

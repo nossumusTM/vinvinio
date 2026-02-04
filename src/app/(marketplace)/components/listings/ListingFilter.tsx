@@ -196,7 +196,7 @@ const ListingFilter: React.FC<ListingFilterProps> = ({ gridSize, onGridChange })
         </div> */}
 
         {/* GRID TOGGLE — DESKTOP/TABLET (Grid 2 / Grid 4 / Grid 6) */}
-        <div className="hidden md:flex items-center gap-2 bg-white py-1.5 px-2 rounded-full shadow-md">
+        {/* <div className="hidden md:flex items-center gap-2 bg-white py-1.5 px-2 rounded-full shadow-md">
           {[2, 4, 6].map(size => (
             <button
               key={size}
@@ -214,10 +214,10 @@ const ListingFilter: React.FC<ListingFilterProps> = ({ gridSize, onGridChange })
               <span>{size}</span>
             </button>
           ))}
-        </div>
+        </div> */}
 
         {/* CATEGORY PILL */}
-        {category && (
+        {/* {category && (
           <button
             type="button"
             onClick={handleClearCategory}
@@ -233,7 +233,7 @@ const ListingFilter: React.FC<ListingFilterProps> = ({ gridSize, onGridChange })
               </span>
             </div>
           </button>
-        )}
+        )} */}
       </div>
     </div>
   );

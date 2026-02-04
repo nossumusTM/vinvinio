@@ -8,6 +8,7 @@ import ListingCard from "@/app/(marketplace)/components/listings/ListingCard";
 import EmptyState from "@/app/(marketplace)/components/EmptyState";
 import ListingFilter, { GridSize } from "@/app/(marketplace)/components/listings/ListingFilter";
 import ClientOnly from "@/app/(marketplace)/components/ClientOnly";
+import Header from "@/app/(marketplace)/components/Header";
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import axios from "axios";
 import { SafeUser } from "@/app/(marketplace)/types";
@@ -394,11 +395,38 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
   }, [gridSize]);
 
   const topPadClass = categoriesVisible ? 'pt-36 md:pt-32' : 'pt-20 md:pt-20';
+  const selectedCategory = searchParams?.get('category') || '';
 
   // drop sm:grid-cols-1 so mobile can show multiple columns
   // const gridBaseClasses = `listingscontainer ${categoriesVisible ? 'listingscontainer--withCategories' : 'listingscontainer--collapsed'} ${topPadClass} grid max-w-screen-2xl mx-auto relative z-10`;
-  const gridBaseClasses =
-  `p-3 mb-6 md:mb-8 md:p-0 listingscontainer ${categoriesVisible ? 'listingscontainer--withCategories' : 'listingscontainer--collapsed'} ${topPadClass} grid max-w-screen-2xl mx-auto relative z-10 transition-[padding] duration-300 ease-out`;
+  const basePadClasses =
+  `p-3 mb-6 md:mb-8 md:p-0 listingscontainer ${categoriesVisible ? 'listingscontainer--withCategories' : 'listingscontainer--collapsed'} ${topPadClass} max-w-screen-2xl mx-auto relative z-10 transition-[padding] duration-300 ease-out`;
+  const gridBaseClasses = `${basePadClasses} grid`;
+
+  const groupedListings = useMemo(() => {
+    if (!listings) return [];
+
+    const grouped = new Map<string, any[]>();
+
+    listings.forEach((listing) => {
+      const rawCategory = Array.isArray(listing.category)
+        ? listing.category[0]
+        : listing.category;
+      const category = (listing.primaryCategory || rawCategory || 'General').toString();
+      const bucket = grouped.get(category) ?? [];
+      bucket.push(listing);
+      grouped.set(category, bucket);
+    });
+
+    return Array.from(grouped.entries()).map(([category, items]) => ({
+      category,
+      listings: items,
+    }));
+  }, [listings]);
+
+  const horizontalCardWidthClass = compact
+    ? 'min-w-[220px] max-w-[220px]'
+    : 'min-w-[280px] max-w-[280px]';
 
   if (!listings && !isFiltering) {
     return (
@@ -464,28 +492,55 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
             </button> */}
           </div>
 
-          <div className={`${gridBaseClasses} ${gapClass} ${gridColumnsClass}`}>
-            {listings ? (
-              <>
-                {listings.map((listing: any) => (
-                  <ListingCard
-                    key={listing.id}
-                    data={listing}
-                    currentUser={currentUser}
-                    compact={compact}  // 👈 pass compact
-                  />
-                ))}
-                {loadingMore &&
-                  Array.from({ length: LOAD_MORE_SKELETON_COUNT }).map((_, i) => (
-                    <ListingCardSkeleton key={`load-skeleton-${i}`} compact={compact} />
+         {listings ? (
+            selectedCategory ? (
+              <div className={basePadClasses}>
+                <Header title={selectedCategory} />
+                <div className={`mt-6 grid ${gapClass} ${gridColumnsClass}`}>
+                  {listings.map((listing: any) => (
+                    <ListingCard
+                      key={listing.id}
+                      data={listing}
+                      currentUser={currentUser}
+                      compact={compact}  // 👈 pass compact
+                    />
                   ))}
-              </>
+                  {loadingMore &&
+                    Array.from({ length: LOAD_MORE_SKELETON_COUNT }).map((_, i) => (
+                      <ListingCardSkeleton key={`load-skeleton-${i}`} compact={compact} />
+                    ))}
+                </div>
+              </div>
             ) : (
-              Array.from({ length: INITIAL_SKELETON_COUNT }).map((_, i) => (
+              <div className={`${basePadClasses} flex flex-col gap-12`}>
+                {groupedListings.map((group) => (
+                  <section key={group.category} className="flex flex-col gap-4">
+                    <Header title={group.category} />
+                    <div className="flex gap-6 overflow-x-auto pb-3 scroll-smooth">
+                      {group.listings.map((listing: any) => (
+                        <div
+                          key={listing.id}
+                          className={`flex-shrink-0 ${horizontalCardWidthClass}`}
+                        >
+                          <ListingCard
+                            data={listing}
+                            currentUser={currentUser}
+                            compact={compact}  // 👈 pass compact
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                ))}
+              </div>
+            )
+          ) : (
+            <div className={`${gridBaseClasses} ${gapClass} ${gridColumnsClass}`}>
+              {Array.from({ length: INITIAL_SKELETON_COUNT }).map((_, i) => (
                 <ListingCardSkeleton key={`filter-skeleton-${i}`} compact={compact} />
-              ))
-            )}
-          </div>
+             ))}
+            </div>
+          )}
 
           {listings && hasMore && !isFiltering && (
             <div className="flex justify-center mt-20 md:mt-20">

@@ -961,7 +961,7 @@ const {
             <RiSpaceShipFill className="h-4 w-4" />
           </div>
           <div className="flex flex-col">
-            <h2 className="text-sm font-semibold text-neutral-900">Start with Force AI</h2>
+            <h2 className="text-sm font-semibold text-neutral-900">Start with AI Vin</h2>
             <p className="text-xs text-neutral-500">Ask anything you need for.</p>
           </div>
         </div>

@@ -988,8 +988,8 @@ const ListingCard: React.FC<ListingCardProps> = ({
         event.stopPropagation();
         handleTouchCancel();
       }}
-      className={`col-span-1 cursor-pointer group shadow-md hover:shadow-lg transition-shadow duration-300 rounded-2xl
-                  ${compact ? 'p-4' : 'p-10'}`}
+      className={`col-span-1 cursor-pointer group shadow-md duration-300 rounded-2xl
+                  ${compact ? 'p-4' : 'p-8'}`}
     >
       <div className={`flex flex-col ${compact ? 'gap-1.5' : 'gap-2'} w-full`}>
         <div

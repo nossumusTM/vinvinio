@@ -64,9 +64,9 @@ const getTimeGreeting = (date = new Date()) => {
 
 const pickWelcomeVariant = (timeGreeting: string) => {
   const variants = [
-    `## ${timeGreeting}, I'm AI Force 👋`,
-    `## ${timeGreeting}! AI Force here 👋`,
-    `## ${timeGreeting} — I’m AI Force 👋`,
+    `## ${timeGreeting}, I'm AI Vin 👋`,
+    `## ${timeGreeting}! AI Vin here 👋`,
+    `## ${timeGreeting} — I’m AI Vin 👋`,
   ];
   return variants[Math.floor(Math.random() * variants.length)] ?? variants[0];
 };

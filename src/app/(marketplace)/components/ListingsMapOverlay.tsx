@@ -41,6 +41,7 @@ const DESCRIPTION_MAX_CHARS = 180;
 const SUGGESTION_DESCRIPTION_MAX_CHARS = 150;
 const DEFAULT_MARKER_COLOR = '#2200ffff';
 const VIDEO_EXTENSIONS = /\.(mp4|webm|ogg)$/i;
+const CITY_ZOOM = 10;
 
 const buildHighlightIcon = () =>
   L.divIcon({
@@ -84,12 +85,19 @@ const buildUserIcon = () =>
     iconAnchor: [13, 13],
   });
 
-const MapUpdater = ({ center }: { center: L.LatLngTuple }) => {
+const MapUpdater = ({
+  center,
+  zoom,
+}: {
+  center: L.LatLngTuple;
+  zoom?: number;
+}) => {
   const map = useMap();
 
   useEffect(() => {
-    map.setView(center, Math.max(map.getZoom(), 10), { animate: true });
-  }, [center, map]);
+    const nextZoom = zoom ?? Math.max(map.getZoom(), 10);
+    map.setView(center, nextZoom, { animate: true });
+  }, [center, map, zoom]);
 
   return null;
 };
@@ -116,7 +124,7 @@ const MapZoomControls = ({
       type="button"
       onClick={onZoomIn}
       aria-label="Zoom in"
-      className="flex h-8 w-8 items-center justify-center rounded-full bg-white/30 text-neutral-800 shadow-lg backdrop-blur transition"
+      className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-neutral-800 shadow-lg"
     >
       <FiPlus />
     </button>
@@ -124,7 +132,7 @@ const MapZoomControls = ({
       type="button"
       onClick={onZoomOut}
       aria-label="Zoom out"
-      className="flex h-8 w-8 items-center justify-center rounded-full bg-white/30 text-neutral-800 shadow-lg backdrop-blur transition"
+      className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-neutral-800 shadow-lg"
     >
       <FiMinus />
     </button>
@@ -252,6 +260,7 @@ const ListingsMapOverlay = ({
   const [showResults, setShowResults] = useState(true);
   const [searchByCity, setSearchByCity] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<CountrySelectValue | null>(null);
+  const [resolvedCityCoords, setResolvedCityCoords] = useState<L.LatLngTuple | null>(null);
 
   const hasFetchedRef = useRef(false);
   const coordsMapRef = useRef<Record<string, L.LatLngTuple>>({});
@@ -365,13 +374,12 @@ const ListingsMapOverlay = ({
   }, [getByValue, isOpen, listings, resolveListingQuery]);
 
   const normalizedQuery = searchQuery.trim().toLowerCase();
-  const locationQuery = useMemo(() => {
-    if (!selectedLocation) return '';
-    const tokens = [selectedLocation.city, selectedLocation.label, selectedLocation.region]
+  const locationTokens = useMemo(() => {
+    if (!selectedLocation) return [];
+    return [selectedLocation.city, selectedLocation.label, selectedLocation.region]
       .filter(Boolean)
-      .join(' ')
-      .toLowerCase();
-    return tokens.trim();
+      .map((token) => token!.toLowerCase().trim())
+      .filter(Boolean);
   }, [selectedLocation]);
 
   const filteredListings = useMemo(() => {
@@ -385,8 +393,8 @@ const ListingsMapOverlay = ({
           .filter(Boolean)
           .join(' ')
           .toLowerCase();
-        if (!locationQuery) return false;
-        return cityTokens.includes(locationQuery);
+        if (!locationTokens.length) return false;
+        return locationTokens.some((token) => cityTokens.includes(token));
       }
       if (!normalizedQuery) return true;
       const tokens = [
@@ -412,18 +420,18 @@ const ListingsMapOverlay = ({
     };
 
     return listings.filter((listing) => matchesQuery(listing) && matchesLocation(listing));
-  }, [coordsMap, listings, locationQuery, nearbyOnly, normalizedQuery, searchByCity, userLocation]);
+  }, [coordsMap, listings, locationTokens, nearbyOnly, normalizedQuery, searchByCity, userLocation]);
 
   const suggestions = useMemo(
     () =>
-      filteredListings.slice(
-        0,
-        normalizedQuery || nearbyOnly || (searchByCity && locationQuery) ? 8 : 0,
-      ),
-    [filteredListings, locationQuery, nearbyOnly, normalizedQuery, searchByCity],
+      filteredListings.slice(0, normalizedQuery || nearbyOnly || (searchByCity && locationTokens.length) ? 8 : 0),
+    [filteredListings, locationTokens.length, nearbyOnly, normalizedQuery, searchByCity],
   );
 
   const activeCenter = useMemo(() => {
+    if (searchByCity && resolvedCityCoords) {
+      return resolvedCityCoords;
+    }
     if (searchByCity && selectedLocation?.latlng?.length === 2) {
       return [selectedLocation.latlng[0], selectedLocation.latlng[1]] as L.LatLngTuple;
     }
@@ -525,13 +533,63 @@ const ListingsMapOverlay = ({
     if (!searchByCity || !selectedLocation?.latlng?.length) return;
     const map = getActiveMap();
     if (map) {
+      const targetCoords =
+        resolvedCityCoords ?? ([selectedLocation.latlng[0], selectedLocation.latlng[1]] as L.LatLngTuple);
       map.setView(
-        [selectedLocation.latlng[0], selectedLocation.latlng[1]],
-        10,
+        targetCoords,
+        CITY_ZOOM,
         { animate: true },
       );
     }
-  }, [getActiveMap, isOpen, searchByCity, selectedLocation]);
+  }, [getActiveMap, isOpen, resolvedCityCoords, searchByCity, selectedLocation]);
+useEffect(() => {
+    if (!isOpen) return;
+    if (!searchByCity || !selectedLocation) {
+      setResolvedCityCoords(null);
+      return;
+    }
+
+    const query = [selectedLocation.city, selectedLocation.label]
+      .filter(Boolean)
+      .join(', ')
+      .trim();
+
+    if (!query) {
+      setResolvedCityCoords(null);
+      return;
+    }
+
+    let cancelled = false;
+    const controller = new AbortController();
+
+    const resolveCityCoords = async () => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=en&q=${encodeURIComponent(query)}`,
+          { signal: controller.signal },
+        );
+        if (!res.ok) return;
+        const data = (await res.json()) as Array<{ lat: string; lon: string }>;
+        if (data[0]?.lat && data[0]?.lon) {
+          const tuple: L.LatLngTuple = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+          if (!cancelled) {
+            setResolvedCityCoords(tuple);
+          }
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.warn('Failed to resolve selected city coordinates', error);
+        }
+      }
+    };
+
+    resolveCityCoords();
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [isOpen, searchByCity, selectedLocation]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -560,7 +618,10 @@ const ListingsMapOverlay = ({
             // attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           />
           <MapReady onReady={handleMapReady} />
-          <MapUpdater center={activeCenter} />
+          <MapUpdater
+            center={activeCenter}
+            zoom={searchByCity && selectedLocation?.latlng?.length === 2 ? CITY_ZOOM : undefined}
+          />
           {highlightedCoords && (
             <Marker position={highlightedCoords} icon={highlightedIcon ?? buildHighlightIcon()}>
               {highlightedLabel && (
@@ -626,7 +687,7 @@ const ListingsMapOverlay = ({
       <button
         type="button"
         onClick={onClose}
-        className="absolute right-6 top-6 z-30 flex h-10 w-10 items-center justify-center rounded-full bg-neutral-900 text-white shadow-lg"
+        className="absolute right-6 bottom-10 z-30 flex h-10 w-10 items-center justify-center rounded-full bg-white text-black shadow-lg"
         aria-label="Close map"
       >
         <IoClose size={18} />
@@ -702,7 +763,7 @@ const ListingsMapOverlay = ({
       <div className="absolute inset-x-0 top-0 z-10 flex flex-col items-center gap-4 px-4 py-4 sm:px-8">
        <div className="flex w-full max-w-3xl flex-col gap-3 rounded-2xl bg-white/90 p-3 shadow-lg backdrop-blur">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+            <div className="px-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">
               Search mode
             </div>
             <button
@@ -714,7 +775,7 @@ const ListingsMapOverlay = ({
               }}
               className={clsx(
                 'relative flex items-center gap-3 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wide transition',
-                searchByCity ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-neutral-200 bg-white text-neutral-600',
+                searchByCity ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-neutral-200 bg-white text-blue-700',
               )}
             >
               <span className={clsx('transition', searchByCity && 'text-neutral-400')}>
@@ -722,13 +783,13 @@ const ListingsMapOverlay = ({
               </span>
               <div
                 className={clsx(
-                  'relative h-6 w-12 rounded-full border transition',
-                  searchByCity ? 'border-emerald-300 bg-emerald-200' : 'border-neutral-200 bg-neutral-100',
+                  'relative h-6 w-12 overflow-hidden rounded-full transition',
+                  searchByCity ? 'bg-blue-600' : 'border-neutral-200 bg-neutral-100',
                 )}
               >
                 <motion.span
-                  className="absolute top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-white shadow"
-                  animate={{ x: searchByCity ? 24 : 2 }}
+                  className="absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow"
+                  animate={{ x: searchByCity ? 24 : 0 }}
                   transition={{ duration: 0.25 }}
                 />
               </div>
@@ -769,19 +830,19 @@ const ListingsMapOverlay = ({
                     <input
                       value={searchQuery}
                       onChange={(event) => setSearchQuery(event.target.value)}
-                      placeholder="Search services by title, category, or keyword"
-                      className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-2 pr-24 text-sm text-neutral-900 shadow-sm focus:border-neutral-400 focus:outline-none"
+                      placeholder="Search by title, category, or keyword"
+                      className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-2 pr-18 text-sm text-neutral-900 shadow-sm focus:border-neutral-400 focus:outline-none"
                     />
                     <div className="absolute right-2 flex items-center gap-1">
                       <button
                         type="button"
                         onClick={handleUseLocation}
-                        className="flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-700 shadow-sm hover:border-neutral-300"
+                        className="flex h-8 w-8 items-center justify-center bg-white text-neutral-700"
                         aria-label="Use current location"
                       >
                         <LuLocateFixed className="text-neutral-700" />
                       </button>
-                      <button
+                      {/* <button
                         type="button"
                         onClick={() => setNearbyOnly((prev) => !prev)}
                         className={clsx(
@@ -792,79 +853,114 @@ const ListingsMapOverlay = ({
                         )}
                       >
                         Nearby
-                      </button>
+                      </button> */}
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
-              {(suggestions.length > 0 || nearbyOnly) && showResults && (
-                <div className="max-h-[60vh] overflow-y-auto rounded-xl border border-neutral-100 bg-white shadow-sm">
-                  {suggestions.length === 0 && nearbyOnly ? (
-                    <div className="px-4 py-3 text-xs text-neutral-500">
-                      No nearby listings found within {NEARBY_RADIUS_KM} km.
-                    </div>
-                  ) : (
-                    suggestions.map((listing) => {
-                      const providerName = listing.user?.name ?? 'Provider';
-                      const providerImage = listing.user?.image ?? '';
-                      return (
-                        <button
-                          key={listing.id}
-                          type="button"
-                          onClick={() => handleResultClick(listing)}
-                          className={clsx(
-                            'relative w-full border-b border-neutral-100 p-3 text-left transition hover:bg-neutral-50',
-                            selectedListingId === listing.id && 'bg-neutral-50',
-                          )}
-                        >
-                          <div className="flex items-start gap-3">
-                            <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-100 text-xs font-semibold text-neutral-600">
-                              {providerImage ? (
-                                <Image
-                                  src={providerImage}
-                                  alt={providerName}
-                                  width={44}
-                                  height={44}
-                                  className="h-full w-full object-cover"
-                                />
-                              ) : (
-                                <span>{getInitials(providerName)}</span>
+              <AnimatePresence initial={false}>
+                {(suggestions.length > 0 || nearbyOnly) && showResults && (
+                  <motion.div
+                    key="listing-results"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="max-h-[60vh] overflow-y-auto rounded-xl border border-neutral-100 bg-white shadow-sm">
+                      {suggestions.length === 0 && nearbyOnly ? (
+                        <div className="px-4 py-3 text-xs text-neutral-500">
+                          No nearby listings found within {NEARBY_RADIUS_KM} km.
+                        </div>
+                      ) : (
+                        suggestions.map((listing) => {
+                          const providerName = listing.user?.name ?? 'Provider';
+                          const providerImage = listing.user?.image ?? '';
+                          return (
+                            <button
+                              key={listing.id}
+                              type="button"
+                              onClick={() => handleResultClick(listing)}
+                              className={clsx(
+                                'relative w-full border-b border-neutral-100 p-3 text-left transition hover:bg-neutral-50',
+                                selectedListingId === listing.id && 'bg-neutral-50',
                               )}
-                            </div>
-                            <div className="flex flex-1 flex-col gap-1">
-                              <div className="flex flex-wrap items-center gap-2 text-[11px] text-neutral-500">
-                                <span className="font-semibold text-neutral-700">{providerName}</span>
-                                <span className="text-yellow-500">★</span>
-                                <span>
-                                  {typeof listing.avgRating === 'number'
-                                    ? listing.avgRating.toFixed(1)
-                                    : 'New'}
-                                </span>
-                                <span className="text-neutral-300">|</span>
-                                <span>
-                                  {(listing.reviewsCount ?? 0).toLocaleString()} review
-                                  {(listing.reviewsCount ?? 0) === 1 ? '' : 's'}
-                                </span>
-                                <span className="text-neutral-300">|</span>
-                                <span>
-                                  {(listing.bookingCount ?? 0).toLocaleString()} booking
-                                  {(listing.bookingCount ?? 0) === 1 ? '' : 's'}
-                                </span>
+                             >
+                              <div className="flex items-start gap-3">
+                                <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-100 text-xs font-semibold text-neutral-600">
+                                  {providerImage ? (
+                                    <Image
+                                      src={providerImage}
+                                      alt={providerName}
+                                      width={44}
+                                      height={44}
+                                      className="h-full w-full object-cover"
+                                    />
+                                  ) : (
+                                    <span>{getInitials(providerName)}</span>
+                                  )}
+                                </div>
+                                <div className="flex flex-1 flex-col gap-1">
+                                  <div className="flex flex-wrap items-center gap-2 text-[11px] text-neutral-500">
+                                    <span className="font-semibold text-neutral-700">{providerName}</span>
+                                    <span className="text-yellow-500">★</span>
+                                    <span>
+                                      {typeof listing.avgRating === 'number'
+                                        ? listing.avgRating.toFixed(1)
+                                        : 'New'}
+                                    </span>
+                                    <span className="text-neutral-300">|</span>
+                                    <span>
+                                      {(listing.reviewsCount ?? 0).toLocaleString()} review
+                                      {(listing.reviewsCount ?? 0) === 1 ? '' : 's'}
+                                    </span>
+                                    <span className="text-neutral-300">|</span>
+                                    <span>
+                                      {(listing.bookingCount ?? 0).toLocaleString()} booking
+                                      {(listing.bookingCount ?? 0) === 1 ? '' : 's'}
+                                    </span>
+                                  </div>
+                                  <p className="text-sm font-semibold text-neutral-900">
+                                    {listing.title}
+                                  </p>
+                                  <p className="text-xs text-neutral-500 line-clamp-2">
+                                    {buildListingSnippet(listing, SUGGESTION_DESCRIPTION_MAX_CHARS)}
+                                  </p>
+                                </div>
                               </div>
-                              <p className="text-sm font-semibold text-neutral-900">
-                                {listing.title}
-                              </p>
-                              <p className="text-xs text-neutral-500 line-clamp-2">
-                                {buildListingSnippet(listing, SUGGESTION_DESCRIPTION_MAX_CHARS)}
-                              </p>
-                            </div>
-                          </div>
-                        </button>
-                      );
-                    })
-                  )}
+                              </button>
+                          );
+                        })
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              {/* <div className="flex w-full items-center justify-between rounded-2xl bg-white/90 px-4 py-3 text-xs text-neutral-600 shadow-sm backdrop-blur">
+                <div>
+                  {filteredListings.length} listing{filteredListings.length === 1 ? '' : 's'} on map
+                  {nearbyOnly && userLocation ? ` within ${NEARBY_RADIUS_KM} km` : ''}
+                  {loadingListings ? ' · Fetching more results…' : ''}
                 </div>
-              )}
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">
+                    Activities
+                  </span>
+                  <span
+                    className="h-4 w-4 rounded-full border border-neutral-200"
+                    style={{ backgroundColor: DEFAULT_MARKER_COLOR }}
+                    aria-hidden
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setMarkerColors({})}
+                    className="rounded-full border border-neutral-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-neutral-600 transition hover:border-neutral-300"
+                  >
+                    Reset
+                  </button>
+                </div>
+              </div> */}
             </div>
             <button
               type="button"
@@ -895,16 +991,15 @@ const ListingsMapOverlay = ({
               </motion.div>
             </button>
           </div>
-        </div>
-        <div className="flex w-full max-w-3xl items-center justify-between rounded-2xl bg-white/90 px-4 py-3 text-xs text-neutral-600 shadow-sm backdrop-blur">
+          <div className="flex w-full max-w-3xl items-center justify-between rounded-2xl bg-white/90 px-4 py-3 text-xs text-neutral-600 shadow-sm backdrop-blur">
           <div>
-            {filteredListings.length} listing{filteredListings.length === 1 ? '' : 's'} on map
+            {filteredListings.length} listing{filteredListings.length === 1 ? '' : 's'}
             {nearbyOnly && userLocation ? ` within ${NEARBY_RADIUS_KM} km` : ''}
             {loadingListings ? ' · Fetching more results…' : ''}
           </div>
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">
-              Activities
+              Pin
             </span>
             <span
               className="h-4 w-4 rounded-full border border-neutral-200"
@@ -919,6 +1014,7 @@ const ListingsMapOverlay = ({
               Reset
             </button>
           </div>
+        </div>
         </div>
       </div>
     </div>
