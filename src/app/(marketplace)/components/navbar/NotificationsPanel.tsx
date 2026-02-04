@@ -312,7 +312,7 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isOpen, onClose
           if (actor?.id) {
             messenger.openChat({
               id: actor.id,
-              name: actor.name ?? actor.username ?? 'Vuola user',
+              name: actor.name ?? actor.username ?? 'Vinvin user',
               image: actor.image ?? undefined,
             });
           } else {
@@ -409,7 +409,7 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isOpen, onClose
         <AnimatePresence mode="popLayout">
         {notifications.map((notification, idx) => {
           const meta = notificationMeta[notification.type] ?? fallbackMeta;
-          const actorName = notification.actor?.name ?? notification.actor?.username ?? 'Vuola user';
+          const actorName = notification.actor?.name ?? notification.actor?.username ?? 'Vinvin user';
           const actorHandle = notification.actor?.username;
           const isDismissPending = pendingDismissals.has(notification.id);
 

@@ -89,7 +89,7 @@ if (!imageLoaded) return null;
         <div className="flex flex-col items-center justify-center gap-4 text-center">
         <Image
             src="/images/paperplane.png"
-            alt="Vuola Promo"
+            alt="Vinvin Promo"
             width={352} // equivalent to w-88 (88 * 4 = 352px)
             height={240} // or set a specific height like 240
             className="h-auto mb-2"

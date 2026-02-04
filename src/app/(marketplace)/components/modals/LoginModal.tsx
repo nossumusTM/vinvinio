@@ -583,7 +583,7 @@ const LoginModal = () => {
               }
               subtitle={
                 selectedMethod === 'email'
-                  ? 'Use the email and password associated with your Vuola account.'
+                  ? 'Use the email and password associated with your Vinvin account.'
                   : 'Enter the phone number linked to your Vinvin account.'
               }
             />
@@ -802,7 +802,7 @@ const LoginModal = () => {
 
             <div className="rounded-3xl bg-neutral-100 p-5 text-center text-neutral-800 shadow-lg mt-0">
               <p className="text-xs uppercase tracking-[0.35em] text-black/60">
-                New on Vuola?
+                New on Vinvin?
               </p>
               <p className="mt-2 text-sm text-black/80">
                 Create an account to unlock exclusive experiences tailored for you.
@@ -832,6 +832,16 @@ const LoginModal = () => {
             onClick={() => setStep('altOptions')}
             disabled={isLoading}
           />
+          <div className="flex items-center justify-center gap-2 text-xs text-neutral-500">
+            <span>Don’t have an account?</span>
+            <button
+              type="button"
+              onClick={onToggleRegister}
+              className="font-semibold text-neutral-800 underline-offset-4 transition hover:underline"
+            >
+              Register
+            </button>
+          </div>
         </div>
   );
 

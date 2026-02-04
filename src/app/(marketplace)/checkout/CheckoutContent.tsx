@@ -340,7 +340,7 @@ const handleSubmit = async () => {
 
             await axios.post('/api/email/booking', {
                 to: email,
-                subject: 'Your Vuola Booking Confirmation',
+                subject: 'Your Vinvin Booking Confirmation',
                 listingId,
                 html: `
                   <div style="font-family: Arial, sans-serif; color: #111827; background: #f9fafb; padding: 24px;">
@@ -356,7 +356,7 @@ const handleSubmit = async () => {
                         <li><strong>Total paid:</strong> ${formatConverted(total)}</li>
                       </ul>
                       <p style="margin: 0 0 16px;">If you have questions, reply to this email and we'll be happy to help.</p>
-                      <p style="margin: 0;">Safe travels,<br/>The Vuola Team</p>
+                      <p style="margin: 0;">Safe travels,<br/>The Vinvin Team</p>
                     </div>
                   </div>
                 `,

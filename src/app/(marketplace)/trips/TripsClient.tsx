@@ -52,7 +52,7 @@ type SubmittedReview = {
 
 const REVIEW_MAX_IMAGES = 5;
 const REVIEW_MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
-const reviewUploadPreset = 'vuolapreset';
+const reviewUploadPreset = 'vinvinpreset';
 const reviewCloudName = 'dlomv0hbe';
 
 const TripsClient: React.FC<TripsClientProps> = ({

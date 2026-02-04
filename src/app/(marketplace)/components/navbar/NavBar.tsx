@@ -132,7 +132,7 @@ if (!hasMounted) {
             <motion.div layout className="flex items-center justify-between w-full relative gap-4">
               {/* Centered logo on desktop, left on mobile */}
               <div className="flex-shrink-0 md:absolute md:left-1/2 md:-translate-x-1/2">
-                <Logo />
+                <Logo currentUser={currentUser} />
               </div>
 
               {/* Search left on desktop, centered on mobile/tablet */}

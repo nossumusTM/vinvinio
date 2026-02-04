@@ -6,19 +6,26 @@ import { AnimatePresence, motion } from "framer-motion";
 import useSearchExperienceModal from "@/app/(marketplace)/hooks/useSearchExperienceModal";
 import { AI_FORCE_ASSISTANT } from "@/app/(marketplace)/hooks/useVinAiChat";
 import useMessenger from "@/app/(marketplace)/hooks/useMessager";
+import useLoginModal from "@/app/(marketplace)/hooks/useLoginModal";
 import { RiSpaceShipFill } from "react-icons/ri";
 import { TiRefreshOutline } from "react-icons/ti";
 import { TbLayoutBottombarCollapseFilled } from "react-icons/tb";
 import { HiMap } from "react-icons/hi";
 import { useRouter, usePathname } from 'next/navigation';
 import { createPortal } from "react-dom";
+import type { SafeUser } from "@/app/(marketplace)/types";
 
-const Logo = () => {
+interface LogoProps {
+  currentUser?: SafeUser | null;
+}
+
+const Logo: React.FC<LogoProps> = ({ currentUser }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const messenger = useMessenger();
   const searchModal = useSearchExperienceModal();
+  const loginModal = useLoginModal();
   const [mounted, setMounted] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const pathname = usePathname();
@@ -46,6 +53,12 @@ const Logo = () => {
   }, []);
 
   const handleAskForceAi = () => {
+    if (!currentUser) {
+      loginModal.onOpen();
+      setIsMenuOpen(false);
+      return;
+    }
+
     messenger.openChat(AI_FORCE_ASSISTANT);
     setIsMenuOpen(false);
   };
@@ -83,7 +96,7 @@ const Logo = () => {
         {/* Desktop Logo (shown on md and up) */}
         <Image
           src="/images/vinvinlogo2.png"
-          alt="Vuola Logo Desktop"
+          alt="Vinvin Logo Desktop"
           width={30}
           height={30}
           priority
@@ -95,7 +108,7 @@ const Logo = () => {
         {/* Mobile Logo (shown below md breakpoint) */}
         <Image
           src="/images/vinvinlogo2.png"
-          alt="Vuola Logo Mobile"
+          alt="Vinvin Logo Mobile"
           width={30}
           height={30}
           priority

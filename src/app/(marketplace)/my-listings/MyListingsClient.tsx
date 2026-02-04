@@ -537,7 +537,7 @@ const MyListingsClient: React.FC<MyListingsClientProps> = ({ listings, currentUs
         <header className="space-y-2">
           <Heading
             title="Listingplace"
-            subtitle={`Manage every experience you publish on Vuola, ${currentUser.name || currentUser.email || ''}`}
+            subtitle={`Manage every experience you publish on Vinvin, ${currentUser.name || currentUser.email || ''}`}
           />
         </header>
 

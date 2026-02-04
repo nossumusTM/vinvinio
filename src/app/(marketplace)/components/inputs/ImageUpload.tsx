@@ -191,7 +191,7 @@ import Sortable from 'sortablejs';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
 
-const uploadPreset = 'vuolapreset';
+const uploadPreset = 'vinvinpreset';
 const cloudName = 'dlomv0hbe';
 
 interface ImageUploadProps {

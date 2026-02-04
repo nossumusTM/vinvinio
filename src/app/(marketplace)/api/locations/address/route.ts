@@ -31,7 +31,7 @@ export async function GET(request: Request) {
   try {
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'vuola-app/1.0 (https://vuola.app)',
+        'User-Agent': 'vinvin-app/1.0 (https://vinvin.app)',
         Accept: 'application/json',
       },
       cache: 'no-store',

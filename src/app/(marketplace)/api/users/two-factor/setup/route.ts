@@ -24,7 +24,7 @@ export async function POST() {
 
     const { secret } = createTotpSecret();
     const label = user.email ?? user.id;
-    const issuer = 'Vuola';
+    const issuer = 'Vinvin';
     const otpauthUrl = buildOtpAuthURL({ secret, label, issuer });
 
     await prisma.user.update({

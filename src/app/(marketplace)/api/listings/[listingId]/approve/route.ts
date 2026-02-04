@@ -57,21 +57,21 @@ export async function POST(
         });
 
         await transporter.sendMail({
-          from: `"Vuola Moderation" <${emailUser}>`,
+          from: `"Vinvin Moderation" <${emailUser}>`,
           to: recipientEmail,
           subject: "🎉 Your Experience Listing Has Been Approved!",
           html: `
             <div style="font-family: 'Nunito', Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; overflow: hidden;">
               <link href="https://fonts.googleapis.com/css2?family=Nunito&display=swap" rel="stylesheet">
               <div style="padding: 24px;">
-                <img src="https://vuola.eu/images/vuoiaggiologo.png" alt="Vuoiaggio Logo" style="width: 140px; margin: 0 auto 20px; display: block;" />
+                <img src="https://vinvin.io/images/vuoiaggiologo.png" alt="Vuoiaggio Logo" style="width: 140px; margin: 0 auto 20px; display: block;" />
                 <h2 style="text-align: center;">Your Experience is Now Live! 🚀</h2>
                 <p style="font-size: 16px;">Hi ${listingWithSlug.user?.name || "there"},</p>
                 <p style="font-size: 14px; margin-bottom: 16px;">
-                  Your listing <strong>${listingWithSlug.title}</strong> has been approved and is now live on Vuola.
+                  Your listing <strong>${listingWithSlug.title}</strong> has been approved and is now live on Vinvin.
                 </p>
                 <p style="font-size: 14px;">Guests can now discover and book your experience!</p>
-                <p style="margin-top: 32px;">Thank you for being part of the Vuola community! ✨</p>
+                <p style="margin-top: 32px;">Thank you for being part of the Vinvin community! ✨</p>
 
                 <p style="margin: 6px 0;"><strong>View your listing:</strong>
                   <a href="${listingUrl}"

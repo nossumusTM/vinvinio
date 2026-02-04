@@ -147,7 +147,7 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
 
         <select
           className={twMerge(
-            'w-full appearance-none uppercase rounded-xl bg-white py-3 pl-10 pr-10 text-xs font-medium text-neutral-800 shadow-md transition focus:border-black focus:outline-none focus:ring-1 focus:ring-black',
+            'w-full appearance-none uppercase rounded-2xl bg-white py-3 pl-10 pr-10 text-xs font-medium text-neutral-800 shadow-md transition',
             disabled ? 'opacity-60' : ''
           )}
           value={selectedCountry?.value ?? ''}
@@ -171,9 +171,9 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
           inputMode="tel"
           autoComplete="tel"
           className={twMerge(
-            'w-full rounded-xl bg-white px-4 py-2 text-base font-light text-neutral-900 shadow-md transition focus:border-black focus:outline-none focus:ring-1 focus:ring-black',
+            'w-full rounded-xl bg-white px-4 py-2 text-base font-light text-neutral-900 shadow-md transition',
             disabled ? 'opacity-60' : '',
-            error ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-400/70' : ''
+            error ? 'border-rose-500' : ''
           )}
           placeholder="Your phone number"
           value={value}

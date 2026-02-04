@@ -28,7 +28,7 @@ const FAQ: React.FC<FAQProps> = ({ items }) => {
       {/* <div className="absolute w-full flex justify-center items-center top-1/2 -translate-y-1/2 pointer-events-none z-0">
         <Image
           src="/images/question.png"
-          alt="Vuola Logo"
+          alt="Vinvin Logo"
           width={300}
           height={300}
           priority

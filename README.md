@@ -1,4 +1,4 @@
-# Vuola Repository Notes
+# Vinvin Repository Notes
 
 ## Syncing with GitHub
 

@@ -1443,7 +1443,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
     : 'Back';
 
   const heading = headingOverride ?? {
-    title: isEditing ? 'Update your experience' : 'Become a Vuola partner',
+    title: isEditing ? 'Update your experience' : 'Become a Vinvin partner',
     subtitle: isEditing
       ? 'Review each section to make sure your activity stays accurate for travellers.'
       : 'Complete every section to publish a compelling experience and start hosting.',

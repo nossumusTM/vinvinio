@@ -181,27 +181,27 @@
 //       const senderName = currentUser.name || 'Someone';
 
 //       await transporter.sendMail({
-//         from: `"Vuola Messenger" <${process.env.EMAIL_USER}>`,
+//         from: `"Vinvin Messenger" <${process.env.EMAIL_USER}>`,
 //         to: recipient.email,
 //         subject: `You've received a new message from ${senderName}`,
 //         html: `
 //           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 24px; color: #333;">
-//             <img src="https://vuola.eu/images/vuoiaggiologo.png" alt="Vuola Logo" style="height: 40px; margin-bottom: 24px;" />
+//             <img src="https://vinvin.io/images/vuoiaggiologo.png" alt="Vinvin Logo" style="height: 40px; margin-bottom: 24px;" />
 //             <h2 style="color: #3604ff;">New message from ${senderName}</h2>
 
 //             <p>Hi <strong>${recipient.name || 'there'}</strong>,</p>
-//             <p>You’ve just received a new message on Vuola:</p>
+//             <p>You’ve just received a new message on Vinvin:</p>
 
 //             <blockquote style="margin: 16px 0; padding: 16px; background: #f9f9f9; border-left: 4px solid #3604ff;">
 //               <p style="margin: 0;">"${text}"</p>
 //               <small style="color: #666;">Sent on ${timeSent}</small>
 //             </blockquote>
 
-//             <p>To respond, just open Vuola and click the Messenger icon in the corner to continue chatting.</p>
+//             <p>To respond, just open Vinvin and click the Messenger icon in the corner to continue chatting.</p>
 
-//             <p style="margin-top: 32px;">Thanks for staying connected with <strong>Vuola</strong> 💙</p>
+//             <p style="margin-top: 32px;">Thanks for staying connected with <strong>Vinvin</strong> 💙</p>
 
-//             <p style="font-size: 13px; color: #888; margin-top: 40px;">Vuola Travel Network.<br/>
+//             <p style="font-size: 13px; color: #888; margin-top: 40px;">Vinvin Services Network.<br/>
 //             P.IVA 16694941003<br/>
 //             Via Novacella 18, Rome, RM, Italy<br/>
 //             🇮🇹 +39 371 528 4911<br/>
@@ -347,21 +347,21 @@ export async function POST(req: Request) {
       const senderName = currentUser.name || 'Someone';
 
       await transporter.sendMail({
-        from: `"Vuola Messenger" <${process.env.EMAIL_USER}>`,
+        from: `"Vinvin Messenger" <${process.env.EMAIL_USER}>`,
         to: recipient.email,
         subject: `You've received a new message from ${senderName}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 24px; color: #333;">
-              <img src="https://vuola.eu/images/vuoiaggiologo.png" alt="Vuola Logo" style="height: 40px; margin-bottom: 24px;" />
+              <img src="https://vinvin.io/images/vuoiaggiologo.png" alt="Vinvin Logo" style="height: 40px; margin-bottom: 24px;" />
               <h2 style="color: #3604ff;">New message from ${senderName}</h2>
               <p>Hi <strong>${recipient.name || 'there'}</strong>,</p>
-              <p>You’ve just received a new message on Vuola:</p>
+              <p>You’ve just received a new message on Vinvin:</p>
               <blockquote style="margin: 16px 0; padding: 16px; background: #f9f9f9; border-left: 4px solid #3604ff;">
                 <p style="margin: 0;">"${fallbackText}"</p>
                 <small style="color: #666;">Sent on ${timeSent}</small>
               </blockquote>
-              <p>To respond, just open Vuola and click the Messenger icon in the corner to continue chatting.</p>
-              <p style="margin-top: 32px;">Thanks for staying connected with <strong>Vuola</strong> 💙</p>
+              <p>To respond, just open Vinvin and click the Messenger icon in the corner to continue chatting.</p>
+              <p style="margin-top: 32px;">Thanks for staying connected with <strong>Vinvin</strong> 💙</p>
             </div>
         `,
       });

@@ -99,7 +99,7 @@ import { useRouter } from "next/navigation";
 
         axios.post('/api/register', formData)
             .then(() => {
-                toast.success('Welcome to Vuola! Please sign in to start exploring.', {
+                toast.success('Welcome to Vinvin! Please sign in to start exploring.', {
                      iconTheme: {
                          primary: '#2200ffff',
                          secondary: '#fff',
@@ -326,17 +326,16 @@ import { useRouter } from "next/navigation";
         
     const footerContent = (
       <div className="mt-4 flex flex-col gap-4">
-        {/* <hr className="border-neutral-200" />
-        <div className="rounded-3xl border border-neutral-100 bg-neutral-100 p-5 text-center shadow-sm">
-          <p className="text-sm text-neutral-600">Already have an account?</p>
+        <div className="flex items-center justify-center gap-2 text-xs text-neutral-500">
+          <span>Already have an account?</span>
           <button
             type="button"
             onClick={onToggle}
-            className="mt-3 inline-flex items-center justify-center rounded-full bg-neutral-900 px-6 py-2 text-sm font-semibold text-white shadow-md transition hover:bg-neutral-800"
+            className="font-semibold text-neutral-800 underline-offset-4 transition hover:underline"
           >
-            Sign in
+            Login
           </button>
-        </div> */}
+        </div>
       </div>
     );
  

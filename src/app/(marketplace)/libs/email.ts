@@ -12,14 +12,14 @@ export const sendResetPasswordEmail = async (to: string, link: string) => {
     });
 
   await transporter.sendMail({
-    from: `"Vuola Support" <${process.env.EMAIL_SERVER_USER}>`,
+    from: `"Vinvin Support" <${process.env.EMAIL_SERVER_USER}>`,
     to,
     subject: 'Reset Your Password',
     html: `
         <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; text-align: center; padding: 40px 24px;">
             <img 
-            src="https://vuola.eu/images/vuoiaggiologo.png" 
-            alt="Vuola Logo" 
+            src="https://vinvin.io/images/vuoiaggiologo.png" 
+            alt="Vinvin Logo" 
             style="width: 140px; margin-bottom: 32px;" 
             />
 

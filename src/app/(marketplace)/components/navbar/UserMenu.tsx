@@ -331,7 +331,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
               cursor-pointer
             "
           >
-            Vuola Passcode
+            Vinvin Passcode
           </div>
         )} */}
 

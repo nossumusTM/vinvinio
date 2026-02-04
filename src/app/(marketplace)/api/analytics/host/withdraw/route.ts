@@ -52,22 +52,22 @@ export async function POST(req: Request) {
       });
 
       await transporter.sendMail({
-        from: `"Vuola Finance" <${process.env.EMAIL_USER}>`,
+        from: `"Vinvin Finance" <${process.env.EMAIL_USER}>`,
         to: user.email,
         subject: '💸 Host earnings withdrawn successfully',
         html: `
           <div style="font-family: 'Nunito', Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; overflow: hidden;">
             <link href="https://fonts.googleapis.com/css2?family=Nunito&display=swap" rel="stylesheet">
             <div style="padding: 24px;">
-              <img src="https://vuola.eu/images/vuoiaggiologo.png" alt="Vuola Logo" style="width: 140px; margin: 0 auto 20px; display: block;" />
+              <img src="https://vinvin.io/images/vuoiaggiologo.png" alt="Vinvin Logo" style="width: 140px; margin: 0 auto 20px; display: block;" />
               <h2 style="text-align: center; color: #000;">Host Withdrawal Processed</h2>
               <p style="font-size: 16px;">Hi ${user.name || 'there'},</p>
               <p style="font-size: 14px; margin-bottom: 16px;">
-                🎉 Your hosting revenue withdrawal has been processed on <strong>Vuola</strong>.
+                🎉 Your hosting revenue withdrawal has been processed on <strong>Vinvin</strong>.
               </p>
               <p style="font-size: 14px; margin-bottom: 12px;">Your booking and revenue counters have been reset.</p>
-              <p style="font-size: 14px;">Thank you for hosting with Vuola! 🧳</p>
-              <p style="margin-top: 32px;">— Vuola Team</p>
+              <p style="font-size: 14px;">Thank you for hosting with Vinvin! 🧳</p>
+              <p style="margin-top: 32px;">— Vinvin Team</p>
               <hr style="margin-top: 40px;" />
             </div>
           </div>

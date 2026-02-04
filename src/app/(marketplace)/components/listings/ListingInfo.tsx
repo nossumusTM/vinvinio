@@ -326,11 +326,10 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                       </div>
 
                       <span className="text-[11px] font-medium text-white/85 drop-shadow-sm tracking-wide">
-                        (
-                        <span className="text-sm font-semibold">
+                        <span className="text-sm font-semibold bg-neutral-100 rounded-xl aspect-square p-2">
                           {reviewCount}
                         </span>
-                        ){" "}
+                        {" "}
                         TOTAL REVIEW{reviewCount !== 1 ? "S" : ""}
                       </span>
                     </div>

@@ -53,14 +53,14 @@ export async function POST(req: Request) {
     const listingUrl = `${baseUrl}${resolvedPath && resolvedPath.startsWith('/') ? resolvedPath : `/${resolvedPath ?? ''}`}`;
 
     const info = await transporter.sendMail({
-      from: `"Vuola Booking" <${process.env.EMAIL_USER}>`,
+      from: `"Vinvin Booking" <${process.env.EMAIL_USER}>`,
       to: hostEmail,
-      subject: 'New Booking Received on Vuola',
+      subject: 'New Booking Received on Vinvin',
       html: `
         <div style="font-family: 'Nunito', Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; overflow: hidden;">
           <link href="https://fonts.googleapis.com/css2?family=Nunito&display=swap" rel="stylesheet">
         <div style="font-family: 'Nunito', Arial, sans-serif; color: #333;">
-          <img src="https://vuola.eu/images/vuoiaggiologo.png" alt="Vuola Logo" style="width: 140px; margin: 24px auto 0; display: block;" />
+          <img src="https://vinvin.io/images/vuoiaggiologo.png" alt="Vinvin Logo" style="width: 140px; margin: 24px auto 0; display: block;" />
 
           <div style="padding: 24px;">
             <p style="font-size: 16px; text-align: left; margin-bottom: 8px;">Dear ${hostName || 'Host'},</p>
@@ -87,7 +87,7 @@ export async function POST(req: Request) {
                 ${listingId ? `<span style="display: inline-block; margin-left: 8px; color: #6b7280; font-size: 12px;">ID: ${listingId}</span>` : ''}
             </p>
 
-            <p style="margin-top: 32px;">Thanks for hosting with <strong>Vuola</strong>! ✨</p>
+            <p style="margin-top: 32px;">Thanks for hosting with <strong>Vinvin</strong>! ✨</p>
           </div>
         </div>
         </div>

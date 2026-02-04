@@ -206,7 +206,7 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
   };
 
   const supportTopics = ['Booking', 'Cancellation', 'Payment', 'Refund'];
-  const uploadPreset = 'vuolapreset';
+  const uploadPreset = 'vinvinpreset';
   const cloudName = 'dlomv0hbe';
   const MAX_UPLOAD_SIZE = 5 * 1024 * 1024;
 

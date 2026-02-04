@@ -11,10 +11,15 @@ import { IoClose } from 'react-icons/io5';
 import { LuLocateFixed } from 'react-icons/lu';
 import { FiMinus, FiPlus } from 'react-icons/fi';
 import clsx from 'clsx';
+import Slider from 'react-slick';
+import { AnimatePresence, motion } from 'framer-motion';
 
 import type { SafeListing } from '@/app/(marketplace)/types';
 import useCountries from '@/app/(marketplace)/hooks/useCountries';
 import { hrefForListing } from '@/app/(marketplace)/libs/links';
+import CountrySearchSelect, {
+  type CountrySelectValue,
+} from '@/app/(marketplace)/components/inputs/CountrySearchSelect';
 
 interface ListingsMapOverlayProps {
   isOpen: boolean;
@@ -147,8 +152,8 @@ const getListingImages = (listing: SafeListing) => {
 
 const buildListingSnippet = (listing: SafeListing, maxChars: number = DESCRIPTION_MAX_CHARS) => {
   const raw = `${listing.description ?? ''}`.replace(/\s+/g, ' ').trim();
-    if (!raw) return 'A thoughtful, tailored experience shaped around your pace and style.';
-    if (raw.length <= maxChars) return raw;
+  if (!raw) return 'A thoughtful, tailored experience shaped around your pace and style.';
+  if (raw.length <= maxChars) return raw;
   return `${raw.slice(0, maxChars).trimEnd()}…`;
 };
 
@@ -157,82 +162,70 @@ const getRandomMarkerColor = () => {
   return `hsl(${hue} 78% 52%)`;
 };
 
-const ListingImageSlider = ({
+const getInitials = (value?: string | null) => {
+  if (!value) return '??';
+  return value
+    .split(' ')
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+};
+
+const listingMediaSliderSettings = {
+  infinite: true,
+  speed: 500,
+  autoplay: true,
+  autoplaySpeed: 3200,
+  slidesToShow: 1,
+  slidesToScroll: 1,
+  arrows: false,
+  dots: true,
+  swipeToSlide: true,
+  touchMove: true,
+  mobileFirst: true,
+  responsive: [
+    {
+      breakpoint: 768,
+      settings: {
+        slidesToShow: 1,
+      },
+    },
+    {
+      breakpoint: 9999,
+      settings: {
+        slidesToShow: 1,
+      },
+    },
+  ],
+};
+
+const ListingMediaSlider = ({
   images,
   title,
   className,
-  imageClassName,
-  showIndicators = true,
 }: {
   images: string[];
   title: string;
   className?: string;
-  imageClassName?: string;
-  showIndicators?: boolean;
 }) => {
-  const [activeIndex, setActiveIndex] = useState(0);
   const safeImages = images.length > 0 ? images : ['/placeholder.jpg'];
 
-  useEffect(() => {
-    setActiveIndex(0);
-  }, [images.length]);
-
-  const handlePrev = (event: MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setActiveIndex((prev) => (prev - 1 + safeImages.length) % safeImages.length);
-  };
-
-  const handleNext = (event: MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setActiveIndex((prev) => (prev + 1) % safeImages.length);
-  };
-
   return (
-    <div className={clsx('relative overflow-hidden rounded-xl bg-neutral-100', className)}>
-      <Image
-        src={safeImages[activeIndex]}
-        alt={title}
-        fill
-        sizes="(max-width: 640px) 80vw, 320px"
-        className={clsx('object-cover', imageClassName)}
-      />
-      {safeImages.length > 1 && (
-        <>
-          <div className="absolute inset-0 flex items-center justify-between px-2">
-            <button
-              type="button"
-              onClick={handlePrev}
-              aria-label="Previous image"
-              className="flex h-7 w-7 items-center justify-center rounded-full bg-black/30 text-white transition hover:bg-black/50"
-            >
-              ‹
-            </button>
-            <button
-              type="button"
-              onClick={handleNext}
-              aria-label="Next image"
-              className="flex h-7 w-7 items-center justify-center rounded-full bg-black/30 text-white transition hover:bg-black/50"
-            >
-              ›
-            </button>
+    <div className={clsx('overflow-hidden rounded-2xl', className)}>
+      <Slider {...listingMediaSliderSettings}>
+        {safeImages.map((src, index) => (
+          <div key={`${title}-${index}`} className="relative h-52 w-full sm:h-56">
+            <Image
+              src={src}
+              alt={title}
+              fill
+              sizes="(max-width: 640px) 90vw, 480px"
+              className="object-cover"
+            />
           </div>
-          {showIndicators && (
-            <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-1">
-              {safeImages.map((_, index) => (
-                <span
-                  key={`${title}-dot-${index}`}
-                  className={clsx(
-                    'h-1.5 w-1.5 rounded-full bg-white/60',
-                    index === activeIndex && 'bg-white',
-                  )}
-                />
-              ))}
-            </div>
-          )}
-        </>
-      )}
+          ))}
+      </Slider>
     </div>
   );
 };
@@ -256,6 +249,9 @@ const ListingsMapOverlay = ({
   const [userLocation, setUserLocation] = useState<L.LatLngTuple | null>(initialUserLocation ?? null);
   const [nearbyOnly, setNearbyOnly] = useState(startNearbyOnly);
   const [coordsMap, setCoordsMap] = useState<Record<string, L.LatLngTuple>>({});
+  const [showResults, setShowResults] = useState(true);
+  const [searchByCity, setSearchByCity] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<CountrySelectValue | null>(null);
 
   const hasFetchedRef = useRef(false);
   const coordsMapRef = useRef<Record<string, L.LatLngTuple>>({});
@@ -369,9 +365,29 @@ const ListingsMapOverlay = ({
   }, [getByValue, isOpen, listings, resolveListingQuery]);
 
   const normalizedQuery = searchQuery.trim().toLowerCase();
+  const locationQuery = useMemo(() => {
+    if (!selectedLocation) return '';
+    const tokens = [selectedLocation.city, selectedLocation.label, selectedLocation.region]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+    return tokens.trim();
+  }, [selectedLocation]);
 
   const filteredListings = useMemo(() => {
     const matchesQuery = (listing: SafeListing) => {
+      if (searchByCity) {
+        const cityTokens = [
+          listing.locationDescription,
+          listing.locationValue,
+          listing.meetingPoint,
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+        if (!locationQuery) return false;
+        return cityTokens.includes(locationQuery);
+      }
       if (!normalizedQuery) return true;
       const tokens = [
         listing.title,
@@ -396,14 +412,21 @@ const ListingsMapOverlay = ({
     };
 
     return listings.filter((listing) => matchesQuery(listing) && matchesLocation(listing));
-  }, [coordsMap, listings, nearbyOnly, normalizedQuery, userLocation]);
+  }, [coordsMap, listings, locationQuery, nearbyOnly, normalizedQuery, searchByCity, userLocation]);
 
   const suggestions = useMemo(
-    () => filteredListings.slice(0, normalizedQuery || nearbyOnly ? 8 : 0),
-    [filteredListings, nearbyOnly, normalizedQuery],
+    () =>
+      filteredListings.slice(
+        0,
+        normalizedQuery || nearbyOnly || (searchByCity && locationQuery) ? 8 : 0,
+      ),
+    [filteredListings, locationQuery, nearbyOnly, normalizedQuery, searchByCity],
   );
 
   const activeCenter = useMemo(() => {
+    if (searchByCity && selectedLocation?.latlng?.length === 2) {
+      return [selectedLocation.latlng[0], selectedLocation.latlng[1]] as L.LatLngTuple;
+    }
     if (highlightedCoords) return highlightedCoords;
     if (selectedListingId && coordsMap[selectedListingId]) {
       return coordsMap[selectedListingId];
@@ -411,7 +434,15 @@ const ListingsMapOverlay = ({
     if (userLocation) return userLocation;
     const firstListing = filteredListings.find((listing) => coordsMap[listing.id]);
     return firstListing ? coordsMap[firstListing.id] : DEFAULT_CENTER;
-  }, [coordsMap, filteredListings, highlightedCoords, selectedListingId, userLocation]);
+  }, [
+    coordsMap,
+    filteredListings,
+    highlightedCoords,
+    searchByCity,
+    selectedListingId,
+    selectedLocation,
+    userLocation,
+  ]);
 
   const selectedListing = useMemo(
     () => listings.find((listing) => listing.id === selectedListingId) ?? null,
@@ -473,6 +504,34 @@ const ListingsMapOverlay = ({
   const stopPropagation = (event: React.SyntheticEvent) => {
     event.stopPropagation();
   };
+
+  const handleResultClick = (listing: SafeListing) => {
+    setSelectedListingId(listing.id);
+    setMarkerColors((prev) => ({
+      ...prev,
+      [listing.id]: getRandomMarkerColor(),
+    }));
+    const coords = coordsMap[listing.id];
+    if (coords) {
+      const map = getActiveMap();
+      if (map) {
+        map.setView(coords, 12, { animate: true });
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+    if (!searchByCity || !selectedLocation?.latlng?.length) return;
+    const map = getActiveMap();
+    if (map) {
+      map.setView(
+        [selectedLocation.latlng[0], selectedLocation.latlng[1]],
+        10,
+        { animate: true },
+      );
+    }
+  }, [getActiveMap, isOpen, searchByCity, selectedLocation]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -631,11 +690,9 @@ const ListingsMapOverlay = ({
               href={hrefForListing(selectedListing)}
               className="mt-3 block"
             >
-              <ListingImageSlider
+              <ListingMediaSlider
                 images={getListingImages(selectedListing)}
                 title={selectedListing.title}
-                className="h-48 w-full"
-                imageClassName="rounded-xl"
               />
             </Link>
           </div>
@@ -643,102 +700,199 @@ const ListingsMapOverlay = ({
       )}
 
       <div className="absolute inset-x-0 top-0 z-10 flex flex-col items-center gap-4 px-4 py-4 sm:px-8">
-        <div className="flex w-full max-w-3xl items-center gap-3 rounded-2xl bg-white/90 p-3 shadow-lg backdrop-blur">
-          <div className="flex flex-1 flex-col gap-2">
-            <input
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Search services by title, category, or keyword"
-              className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm text-neutral-900 shadow-sm focus:border-neutral-400 focus:outline-none"
-            />
-            {(suggestions.length > 0 || nearbyOnly) && (
-              <div className="max-h-56 overflow-y-auto rounded-xl border border-neutral-100 bg-white shadow-sm">
-                {suggestions.length === 0 && nearbyOnly ? (
-                  <div className="px-4 py-3 text-xs text-neutral-500">
-                    No nearby listings found within {NEARBY_RADIUS_KM} km.
-                  </div>
-                ) : (
-                  suggestions.map((listing) => {
-                    const listingHref = hrefForListing(listing);
-                    const listingImages = getListingImages(listing);
-                    return (
-                      <div
-                        key={listing.id}
-                        className={clsx(
-                          'flex items-start justify-between gap-3 border-b border-neutral-100 px-4 py-3 text-left text-sm transition hover:bg-neutral-50',
-                          selectedListingId === listing.id && 'bg-neutral-50',
-                        )}
-                      >
-                        <Link
-                          href={listingHref}
-                          className="shrink-0"
-                        >
-                          <ListingImageSlider
-                            images={listingImages}
-                            title={listing.title}
-                            className="h-40 w-56"
-                            imageClassName="rounded-lg"
-                            showIndicators={false}
-                          />
-                        </Link>
-                        <div className="flex flex-1 flex-col gap-1">
-                          <span className="text-xs text-neutral-500">
-                            {(listing.primaryCategory || listing.category?.[0] || 'Service').toString()} ·{' '}
-                            {(listing.locationDescription || listing.locationValue || '').toString()}
-                          </span>
-                          <p className="text-[11px] leading-relaxed text-neutral-500 line-clamp-2">
-                            <Link
-                              href={listingHref}
-                              className="block truncate font-semibold text-neutral-700 transition hover:text-neutral-900"
-                            >
-                              {listing.title}
-                            </Link>
-                            <span className="text-neutral-400"> · </span>
-                            <span>{buildListingSnippet(listing, SUGGESTION_DESCRIPTION_MAX_CHARS)}</span>
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedListingId(listing.id);
-                            const coords = coordsMap[listing.id];
-                            if (coords) {
-                              const map = getActiveMap();
-                              if (map) {
-                                map.setView(coords, 12, { animate: true });
-                              }
-                            }
-                          }}
-                          className="rounded-full border border-neutral-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-neutral-600 transition hover:border-neutral-300"
-                        >
-                          Focus
-                        </button>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            )}
-          </div>
-          <div className="flex flex-row items-end gap-2">
+       <div className="flex w-full max-w-3xl flex-col gap-3 rounded-2xl bg-white/90 p-3 shadow-lg backdrop-blur">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+              Search mode
+            </div>
             <button
               type="button"
-              onClick={handleUseLocation}
-              className="flex items-center gap-2 rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-xs font-medium text-neutral-800 shadow-sm hover:border-neutral-300"
-            >
-              <LuLocateFixed className="text-neutral-700" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setNearbyOnly((prev) => !prev)}
+              onClick={() => {
+                setSearchByCity((prev) => !prev);
+                setSearchQuery('');
+                setSelectedLocation(null);
+              }}
               className={clsx(
-                'rounded-2xl border px-3 py-1 text-[11px] font-semibold uppercase tracking-wide transition',
-                nearbyOnly
-                  ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                  : 'border-neutral-200 bg-white text-neutral-500',
+                'relative flex items-center gap-3 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wide transition',
+                searchByCity ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-neutral-200 bg-white text-neutral-600',
               )}
             >
-              {nearbyOnly ? 'Nearby' : 'Nearby'}
+              <span className={clsx('transition', searchByCity && 'text-neutral-400')}>
+                Services
+              </span>
+              <div
+                className={clsx(
+                  'relative h-6 w-12 rounded-full border transition',
+                  searchByCity ? 'border-emerald-300 bg-emerald-200' : 'border-neutral-200 bg-neutral-100',
+                )}
+              >
+                <motion.span
+                  className="absolute top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-white shadow"
+                  animate={{ x: searchByCity ? 24 : 2 }}
+                  transition={{ duration: 0.25 }}
+                />
+              </div>
+              <span className={clsx('transition', !searchByCity && 'text-neutral-400')}>
+                Location
+              </span>
+            </button>
+          </div>
+          <div className="flex w-full items-center gap-3">
+            <div className="flex flex-1 flex-col gap-2">
+              <AnimatePresence mode="wait">
+                {searchByCity ? (
+                  <motion.div
+                    key="location-search"
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 6 }}
+                    transition={{ duration: 0.2 }}
+                    className="w-full"
+                  >
+                    <CountrySearchSelect
+                      value={selectedLocation}
+                      onChange={(value) => {
+                        setSelectedLocation(value ?? null);
+                        setSearchQuery(value?.label ?? '');
+                      }}
+                    />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="service-search"
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 6 }}
+                    transition={{ duration: 0.2 }}
+                    className="relative flex items-center"
+                  >
+                    <input
+                      value={searchQuery}
+                      onChange={(event) => setSearchQuery(event.target.value)}
+                      placeholder="Search services by title, category, or keyword"
+                      className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-2 pr-24 text-sm text-neutral-900 shadow-sm focus:border-neutral-400 focus:outline-none"
+                    />
+                    <div className="absolute right-2 flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={handleUseLocation}
+                        className="flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-700 shadow-sm hover:border-neutral-300"
+                        aria-label="Use current location"
+                      >
+                        <LuLocateFixed className="text-neutral-700" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNearbyOnly((prev) => !prev)}
+                        className={clsx(
+                          'flex h-8 items-center rounded-full border px-3 text-[10px] font-semibold uppercase tracking-wide transition',
+                          nearbyOnly
+                            ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                            : 'border-neutral-200 bg-white text-neutral-500',
+                        )}
+                      >
+                        Nearby
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              {(suggestions.length > 0 || nearbyOnly) && showResults && (
+                <div className="max-h-[60vh] overflow-y-auto rounded-xl border border-neutral-100 bg-white shadow-sm">
+                  {suggestions.length === 0 && nearbyOnly ? (
+                    <div className="px-4 py-3 text-xs text-neutral-500">
+                      No nearby listings found within {NEARBY_RADIUS_KM} km.
+                    </div>
+                  ) : (
+                    suggestions.map((listing) => {
+                      const providerName = listing.user?.name ?? 'Provider';
+                      const providerImage = listing.user?.image ?? '';
+                      return (
+                        <button
+                          key={listing.id}
+                          type="button"
+                          onClick={() => handleResultClick(listing)}
+                          className={clsx(
+                            'relative w-full border-b border-neutral-100 p-3 text-left transition hover:bg-neutral-50',
+                            selectedListingId === listing.id && 'bg-neutral-50',
+                          )}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-100 text-xs font-semibold text-neutral-600">
+                              {providerImage ? (
+                                <Image
+                                  src={providerImage}
+                                  alt={providerName}
+                                  width={44}
+                                  height={44}
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <span>{getInitials(providerName)}</span>
+                              )}
+                            </div>
+                            <div className="flex flex-1 flex-col gap-1">
+                              <div className="flex flex-wrap items-center gap-2 text-[11px] text-neutral-500">
+                                <span className="font-semibold text-neutral-700">{providerName}</span>
+                                <span className="text-yellow-500">★</span>
+                                <span>
+                                  {typeof listing.avgRating === 'number'
+                                    ? listing.avgRating.toFixed(1)
+                                    : 'New'}
+                                </span>
+                                <span className="text-neutral-300">|</span>
+                                <span>
+                                  {(listing.reviewsCount ?? 0).toLocaleString()} review
+                                  {(listing.reviewsCount ?? 0) === 1 ? '' : 's'}
+                                </span>
+                                <span className="text-neutral-300">|</span>
+                                <span>
+                                  {(listing.bookingCount ?? 0).toLocaleString()} booking
+                                  {(listing.bookingCount ?? 0) === 1 ? '' : 's'}
+                                </span>
+                              </div>
+                              <p className="text-sm font-semibold text-neutral-900">
+                                {listing.title}
+                              </p>
+                              <p className="text-xs text-neutral-500 line-clamp-2">
+                                {buildListingSnippet(listing, SUGGESTION_DESCRIPTION_MAX_CHARS)}
+                              </p>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowResults((prev) => !prev)}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-md transition-transform duration-300"
+              aria-label={showResults ? 'Collapse results' : 'Expand results'}
+            >
+              <motion.div
+                animate={{ rotate: showResults ? 0 : 180 }}
+                transition={{ duration: 0.3 }}
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="text-black"
+                >
+                  <path
+                    d="M6 14l6-6 6 6"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </motion.div>
             </button>
           </div>
         </div>

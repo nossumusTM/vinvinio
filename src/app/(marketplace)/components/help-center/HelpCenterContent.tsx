@@ -32,7 +32,7 @@ const faqItems = [
       'Yes. Go to Reservations from your profile to adjust your booking. Our cancellation policy is summarized below, and the Operator can help with special cases.',
   },
   {
-    question: 'What if I am new to Vuola?',
+    question: 'What if I am new to Vinvin?',
     answer:
       'Browse experiences without an account. When you are ready to book or chat with an Operator, you can quickly create an account or log in.',
   },
@@ -89,7 +89,7 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
     () => (
       <div className="space-y-5 text-sm leading-relaxed text-gray-700">
         <p>
-          Thank you for choosing to book your experience through <strong>Vuola</strong>. Plans can change, so our cancellation
+          Thank you for choosing to book your experience through <strong>Vinvin</strong>. Plans can change, so our cancellation
           policy is designed to be fair and transparent while respecting the time and effort of our hosts.
         </p>
         <h3 className="text-base font-semibold">Cancellation Rules for Guests</h3>
@@ -140,15 +140,15 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
     () => (
       <div className="space-y-5 text-sm leading-relaxed text-gray-700">
         <p>
-          Welcome to the <strong>Vuola Network Promoters Program</strong> — an opportunity for creators and travel enthusiasts to
+          Welcome to the <strong>Vinvin Network Promoters Program</strong> — an opportunity for creators and travel enthusiasts to
           grow with our platform. Join to share experiences and earn from your community.
         </p>
         <h3 className="text-base font-semibold">How to Become a Promoter</h3>
         <p>
-          Email us at <a className="text-blue-600 underline" href="mailto:promoters@Vuola.it">promoters@Vuola.it</a> to get
+          Email us at <a className="text-blue-600 underline" href="mailto:promoters@vinvin.io">promoters@vinvin.io</a> to get
           started and receive your referral dashboard.
         </p>
-        <h3 className="text-base font-semibold">Earning with Vuola</h3>
+        <h3 className="text-base font-semibold">Earning with Vinvin</h3>
         <p>
           Earn <strong>10% of total revenue</strong> from bookings made with your referral ID. Earnings calculate monthly and are
           based directly on confirmed bookings.
@@ -165,8 +165,8 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
         </p>
         <p>
           Need assistance? Reach our team at{' '}
-          <a className="text-blue-600 underline" href="mailto:promoters@Vuola.it">
-            promoters@Vuola.it
+          <a className="text-blue-600 underline" href="mailto:promoters@vinvin.io">
+            promoters@vinvin.io
           </a>
           .
         </p>
@@ -179,7 +179,7 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
     () => (
       <div className="space-y-5 text-sm leading-relaxed text-gray-700">
         <p>
-          The Vuola Playbook is your guide to being a respectful guest, collaborative host, or thoughtful promoter. It keeps our
+          The Vinvin Playbook is your guide to being a respectful guest, collaborative host, or thoughtful promoter. It keeps our
           community safe, inclusive, and delightful for everyone.
         </p>
         <h3 className="text-base font-semibold">Respect every interaction</h3>
@@ -192,7 +192,7 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
           Operator.
         </p>
         <h3 className="text-base font-semibold">Payments stay on-platform</h3>
-        <p>Complete transactions through Vuola to stay protected by our payment and cancellation coverage.</p>
+        <p>Complete transactions through Vinvin to stay protected by our payment and cancellation coverage.</p>
       </div>
     ),
     [],
@@ -202,7 +202,7 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
     () => (
       <div className="space-y-5 text-sm leading-relaxed text-gray-700">
         <p>
-          At <strong>Vuola Network Srls</strong>, we respect your privacy and protect your personal data across bookings, chats,
+          At <strong>Vinvin Network Srls</strong>, we respect your privacy and protect your personal data across bookings, chats,
           and payments.
         </p>
         <h3 className="text-base font-semibold">1. Information We Collect</h3>
@@ -249,7 +249,7 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
     () => (
       <div className="space-y-5 text-sm leading-relaxed text-gray-700">
         <p>
-          Welcome to <strong>Vuola Network Srls</strong>. By accessing or using our platform, you agree to comply with these
+          Welcome to <strong>Vinvin Network Srls</strong>. By accessing or using our platform, you agree to comply with these
           Terms of Service.
         </p>
         <h3 className="text-base font-semibold">1. Use of Our Services</h3>
@@ -271,12 +271,12 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
         </ul>
         <h3 className="text-base font-semibold">4. Intellectual Property</h3>
         <p>
-          All content on the platform is owned or licensed by Vuola Network and protected by law. Do not copy or distribute our
+          All content on the platform is owned or licensed by Vinvin Network and protected by law. Do not copy or distribute our
           content without consent.
         </p>
         <h3 className="text-base font-semibold">5. Limitation of Liability</h3>
         <p>
-          Vuola is not responsible for direct or indirect damages from using our services. We act as a booking intermediary and
+          Vinvin is not responsible for direct or indirect damages from using our services. We act as a booking intermediary and
           do not control host or guest conduct.
         </p>
         <h3 className="text-base font-semibold">6. Termination</h3>
@@ -293,12 +293,12 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
     () => (
       <div className="space-y-5 text-sm leading-relaxed text-gray-700">
         <p>
-          These payment terms outline how charges, payouts, and refunds work on Vuola. They complement our Terms of Service and
+          These payment terms outline how charges, payouts, and refunds work on Vinvin. They complement our Terms of Service and
           Cancellation Policy.
         </p>
         <h3 className="text-base font-semibold">Charges & Authorizations</h3>
         <p>
-          You authorize Vuola to charge the payment method on file at booking confirmation. Some bookings may place a temporary
+          You authorize Vinvin to charge the payment method on file at booking confirmation. Some bookings may place a temporary
           authorization before final capture.
         </p>
         <h3 className="text-base font-semibold">Payout Timing</h3>
@@ -448,7 +448,7 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
                 <LuBadgeHelp className="h-4 w-4" />
               </div>
               <div>
-                <p className="text-lg font-semibold text-neutral-900">Privacy at Vuola</p>
+                <p className="text-lg font-semibold text-neutral-900">Privacy at Vinvin</p>
                 <p className="text-sm text-neutral-600">How we keep your personal data safe across bookings, chats, and payments.</p>
                 <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-sky-700">
                   Open section
@@ -467,7 +467,7 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
               </div>
               <div>
                 <p className="text-lg font-semibold text-neutral-900">Terms of service</p>
-                <p className="text-sm text-neutral-600">The rules of the road for guests, promoters, and hosts collaborating on Vuola.</p>
+                <p className="text-sm text-neutral-600">The rules of the road for guests, promoters, and hosts collaborating on Vinvin.</p>
                 <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-sky-700">
                   Open section
                   <span className="transition group-hover:translate-x-0.5">→</span>
@@ -607,7 +607,7 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
 
       <Modal
         isOpen={isPrivacyOpen}
-        title="Privacy at Vuola"
+        title="Privacy at vinvin"
         onClose={() => setIsPrivacyOpen(false)}
         onSubmit={() => setIsPrivacyOpen(false)}
         actionLabel="Close"

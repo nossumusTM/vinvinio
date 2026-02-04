@@ -34,7 +34,7 @@ interface VinAiSearchWidgetProps {
 
 const quickPrompts = ['Where?', 'When?', 'Who?', 'Show listings'];
 
-const uploadPreset = 'vuolapreset';
+const uploadPreset = 'vinvinpreset';
 const cloudName = 'dlomv0hbe';
 const MAX_UPLOAD_SIZE = 5 * 1024 * 1024;
 
