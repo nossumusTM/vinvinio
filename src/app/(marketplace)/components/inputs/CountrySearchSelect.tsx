@@ -435,7 +435,7 @@ const CountrySearchSelect = forwardRef<CountrySearchSelectHandle, CountrySelectP
     }}
     onKeyDown={handleKeyDown}
     placeholder=""
-    className="w-full pt-0.5 pr-9 bg-transparent text-[16px] md:text-[14px] font-medium text-neutral-900 placeholder:text-neutral-400 focus:outline-none"
+    className="w-full pt-0.5 pr-9 bg-transparent text-[16px] md:text-[14px] font-medium text-neutral-900 placeholder:text-xs placeholder:text-neutral-400 focus:outline-none"
     autoComplete="off"
     inputMode="search"
   />

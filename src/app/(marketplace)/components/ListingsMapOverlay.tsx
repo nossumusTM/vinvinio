@@ -17,6 +17,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import type { SafeListing } from '@/app/(marketplace)/types';
 import useCountries from '@/app/(marketplace)/hooks/useCountries';
 import { hrefForListing } from '@/app/(marketplace)/libs/links';
+import { categories } from '@/app/(marketplace)/components/navbar/Categories';
 import CountrySearchSelect, {
   type CountrySelectValue,
 } from '@/app/(marketplace)/components/inputs/CountrySearchSelect';
@@ -268,6 +269,10 @@ const ListingsMapOverlay = ({
   const mapRef = useRef<L.Map | null>(null);
 
   const { getByValue } = useCountries();
+  const categoryIconMap = useMemo(
+    () => new Map(categories.map((category) => [category.label, category.icon])),
+    [],
+  );
 
   useEffect(() => {
     coordsMapRef.current = coordsMap;
@@ -278,6 +283,11 @@ const ListingsMapOverlay = ({
     if (!highlightedListingId) return;
     setSelectedListingId(highlightedListingId);
   }, [highlightedListingId, isOpen]);
+
+  useEffect(() => {
+    if (!searchByCity || !selectedLocation) return;
+    setShowResults(false);
+  }, [searchByCity, selectedLocation]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -515,6 +525,7 @@ const ListingsMapOverlay = ({
 
   const handleResultClick = (listing: SafeListing) => {
     setSelectedListingId(listing.id);
+    setShowResults(false);
     setMarkerColors((prev) => ({
       ...prev,
       [listing.id]: getRandomMarkerColor(),
@@ -651,7 +662,7 @@ useEffect(() => {
                   },
                 }}
               >
-                <Popup>
+                {/* <Popup>
                   <div className="space-y-1 text-sm">
                     <Link
                       href={listingHref}
@@ -666,7 +677,7 @@ useEffect(() => {
                       {listing.meetingPoint || listing.locationDescription || listing.locationValue}
                     </div>
                   </div>
-                </Popup>
+                </Popup> */}
               </Marker>
             );
           })}
@@ -725,7 +736,7 @@ useEffect(() => {
                   </p>
                   <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-500">
                     <span className="flex items-center gap-1 font-semibold text-neutral-700">
-                      <span className="text-yellow-500">★</span>
+                      <span className="text-blue-800">★</span>
                       {typeof selectedListing.avgRating === 'number'
                         ? selectedListing.avgRating.toFixed(1)
                         : 'New'}
@@ -761,15 +772,19 @@ useEffect(() => {
       )}
 
       <div className="absolute inset-x-0 top-0 z-10 flex flex-col items-center gap-4 px-4 py-4 sm:px-8">
-       <div className="flex w-full max-w-3xl flex-col gap-3 rounded-2xl bg-white/90 p-3 shadow-lg backdrop-blur">
+       <div className="flex w-full max-w-3xl flex-col gap-3 rounded-2xl bg-white/10 p-3 shadow-lg backdrop-blur">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="px-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">
+            <div className="px-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">
               Search mode
             </div>
             <button
               type="button"
               onClick={() => {
-                setSearchByCity((prev) => !prev);
+                setSearchByCity((prev) => {
+                  const next = !prev;
+                  setShowResults(next ? false : true);
+                  return next;
+                });
                 setSearchQuery('');
                 setSelectedLocation(null);
               }}
@@ -798,7 +813,7 @@ useEffect(() => {
               </span>
             </button>
           </div>
-          <div className="flex w-full items-center gap-3">
+          <div className="flex w-full items-start gap-3">
             <div className="flex flex-1 flex-col gap-2">
               <AnimatePresence mode="wait">
                 {searchByCity ? (
@@ -868,7 +883,7 @@ useEffect(() => {
                     transition={{ duration: 0.2 }}
                     className="overflow-hidden"
                   >
-                    <div className="max-h-[60vh] overflow-y-auto rounded-xl border border-neutral-100 bg-white shadow-sm">
+                    <div className="max-h-[25vh] overflow-y-auto rounded-xl border border-neutral-100 bg-white shadow-sm shadow-inner">
                       {suggestions.length === 0 && nearbyOnly ? (
                         <div className="px-4 py-3 text-xs text-neutral-500">
                           No nearby listings found within {NEARBY_RADIUS_KM} km.
@@ -877,6 +892,8 @@ useEffect(() => {
                         suggestions.map((listing) => {
                           const providerName = listing.user?.name ?? 'Provider';
                           const providerImage = listing.user?.image ?? '';
+                          const categoryLabel = (listing.primaryCategory || listing.category?.[0] || '').toString();
+                          const CategoryIcon = categoryIconMap.get(categoryLabel);
                           return (
                             <button
                               key={listing.id}
@@ -904,7 +921,7 @@ useEffect(() => {
                                 <div className="flex flex-1 flex-col gap-1">
                                   <div className="flex flex-wrap items-center gap-2 text-[11px] text-neutral-500">
                                     <span className="font-semibold text-neutral-700">{providerName}</span>
-                                    <span className="text-yellow-500">★</span>
+                                    <span className="text-blue-800">★</span>
                                     <span>
                                       {typeof listing.avgRating === 'number'
                                         ? listing.avgRating.toFixed(1)
@@ -924,6 +941,12 @@ useEffect(() => {
                                   <p className="text-sm font-semibold text-neutral-900">
                                     {listing.title}
                                   </p>
+                                  {categoryLabel && (
+                                    <span className="inline-flex w-fit items-center gap-1 rounded-lg bg-white px-2 py-1 text-[11px] font-semibold text-neutral-700 shadow-sm">
+                                      {CategoryIcon && <CategoryIcon className="h-3 w-3" aria-hidden />}
+                                      <span>{categoryLabel}</span>
+                                    </span>
+                                  )}
                                   <p className="text-xs text-neutral-500 line-clamp-2">
                                     {buildListingSnippet(listing, SUGGESTION_DESCRIPTION_MAX_CHARS)}
                                   </p>
@@ -962,38 +985,40 @@ useEffect(() => {
                 </div>
               </div> */}
             </div>
-            <button
-              type="button"
-              onClick={() => setShowResults((prev) => !prev)}
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-md transition-transform duration-300"
-              aria-label={showResults ? 'Collapse results' : 'Expand results'}
-            >
-              <motion.div
-                animate={{ rotate: showResults ? 0 : 180 }}
-                transition={{ duration: 0.3 }}
+            {!searchByCity && (
+              <button
+                type="button"
+                onClick={() => setShowResults((prev) => !prev)}
+                className="mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-md transition-transform duration-300"
+                aria-label={showResults ? 'Collapse results' : 'Expand results'}
               >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="text-black"
+                <motion.div
+                  animate={{ rotate: showResults ? 0 : 180 }}
+                  transition={{ duration: 0.3 }}
                 >
-                  <path
-                    d="M6 14l6-6 6 6"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </motion.div>
-            </button>
+                   <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="text-black"
+                  >
+                    <path
+                      d="M6 14l6-6 6 6"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </motion.div>
+              </button>
+            )}
           </div>
-          <div className="flex w-full max-w-3xl items-center justify-between rounded-2xl bg-white/90 px-4 py-3 text-xs text-neutral-600 shadow-sm backdrop-blur">
+          <div className="flex w-full max-w-3xl items-center justify-between rounded-2xl bg-white/90 px-4 py-3 text-xs font-semibold text-neutral-600 shadow-sm backdrop-blur">
           <div>
-            {filteredListings.length} listing{filteredListings.length === 1 ? '' : 's'}
+            {filteredListings.length} Listing{filteredListings.length === 1 ? '' : 's'}
             {nearbyOnly && userLocation ? ` within ${NEARBY_RADIUS_KM} km` : ''}
             {loadingListings ? ' · Fetching more results…' : ''}
           </div>
