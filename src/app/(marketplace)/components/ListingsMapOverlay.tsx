@@ -7,8 +7,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { IoClose } from 'react-icons/io5';
-import { LuLocateFixed } from 'react-icons/lu';
+import { LuLocateFixed, LuTag } from 'react-icons/lu';
+import type { IconType } from 'react-icons';
 import { FiMinus, FiPlus } from 'react-icons/fi';
 import clsx from 'clsx';
 import Slider from 'react-slick';
@@ -59,18 +61,22 @@ const buildHighlightIcon = () =>
     popupAnchor: [0, -30],
   });
 
-const buildTagIcon = (color: string) =>
+const buildCategoryIcon = (Icon: IconType, color: string) =>
   L.divIcon({
-    className: 'listing-tag-icon',
-    html: `
-      <svg width="34" height="34" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M13.2 7h16.6c1.1 0 2.1.4 2.9 1.2l9.1 9.1c1.6 1.6 1.6 4.2 0 5.8L25.1 39.8c-1.6 1.6-4.2 1.6-5.8 0L7.1 27.7c-.8-.8-1.2-1.8-1.2-2.9V11.2C5.9 9 7.8 7 10 7h3.2z" fill="${color}"/>
-        <circle cx="25.2" cy="18.6" r="4.2" fill="white" fill-opacity="0.85"/>
-      </svg>
-    `,
-    iconSize: [34, 34],
-    iconAnchor: [17, 34],
-    popupAnchor: [0, -30],
+    className: 'listing-category-icon',
+    html: renderToStaticMarkup(
+      <div className="flex items-center justify-center">
+        <div
+          className="flex h-10 w-10 items-center justify-center rounded-full shadow-lg ring-2 ring-white/70"
+          style={{ backgroundColor: color }}
+        >
+          <Icon className="h-5 w-5 text-white drop-shadow" />
+        </div>
+      </div>,
+    ),
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+    popupAnchor: [0, -32],
   });
 
 const buildUserIcon = () =>
@@ -164,6 +170,15 @@ const buildListingSnippet = (listing: SafeListing, maxChars: number = DESCRIPTIO
   if (!raw) return 'A thoughtful, tailored experience shaped around your pace and style.';
   if (raw.length <= maxChars) return raw;
   return `${raw.slice(0, maxChars).trimEnd()}…`;
+};
+
+const resolveListingCategoryIcon = (listing: SafeListing) => {
+  const label = (listing.primaryCategory || listing.category?.[0] || '').toString();
+  if (!label) return LuTag;
+  const match = categories.find(
+    (category) => category.label.toLowerCase() === label.toLowerCase(),
+  );
+  return match?.icon ?? LuTag;
 };
 
 const getRandomMarkerColor = () => {
@@ -467,6 +482,16 @@ const ListingsMapOverlay = ({
     [listings, selectedListingId],
   );
 
+  const selectedCategoryLabel = useMemo(() => {
+    if (!selectedListing) return '';
+    return (selectedListing.primaryCategory || selectedListing.category?.[0] || '').toString();
+  }, [selectedListing]);
+
+  const SelectedCategoryIcon = useMemo(() => {
+    if (!selectedCategoryLabel) return null;
+    return (categoryIconMap.get(selectedCategoryLabel) ?? null) as IconType | null;
+  }, [categoryIconMap, selectedCategoryLabel]);
+
   const getListingMarkerColor = useCallback(
     (listingId: string) => markerColors[listingId] ?? DEFAULT_MARKER_COLOR,
     [markerColors],
@@ -651,7 +676,10 @@ useEffect(() => {
               <Marker
                 key={listing.id}
                 position={coords}
-                icon={buildTagIcon(getListingMarkerColor(listing.id))}
+                icon={buildCategoryIcon(
+                  resolveListingCategoryIcon(listing),
+                  getListingMarkerColor(listing.id),
+                )}
                 eventHandlers={{
                   click: () => {
                     setSelectedListingId(listing.id);
@@ -710,11 +738,12 @@ useEffect(() => {
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1 space-y-2">
                 <div className="flex items-center gap-2 text-xs text-neutral-500">
-                  <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
-                    {(selectedListing.primaryCategory ||
-                      selectedListing.category?.[0] ||
-                      'Service')?.toString()}
-                  </span>
+                  {selectedCategoryLabel && (
+                    <span className="inline-flex w-fit items-center gap-1 text-nowrap rounded-lg bg-white px-2 py-1 text-[11px] font-semibold text-neutral-700 shadow-sm">
+                      {SelectedCategoryIcon && <SelectedCategoryIcon className="h-3 w-3" aria-hidden />}
+                      <span>{selectedCategoryLabel}</span>
+                    </span>
+                  )}
                   <span className="truncate">
                     {(
                       selectedListing.locationDescription ||

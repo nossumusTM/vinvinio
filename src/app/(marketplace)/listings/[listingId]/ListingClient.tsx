@@ -483,9 +483,9 @@ const ListingClient: React.FC<ListingClientProps> = ({
         return (
             <div className="space-y-4">
                 {baseContent}
-                <div className="rounded-3xl border border-emerald-100 bg-emerald-50/80 p-4 text-sm text-emerald-700 shadow-sm">
-                    <p className="text-xs uppercase tracking-[0.3em] text-emerald-500">VIN subscription available</p>
-                    <p className="mt-2 text-base font-semibold text-emerald-900">
+                <div className="rounded-3xl border border-blue-100 bg-blue-50/80 p-4 text-sm text-blue-700 shadow-sm">
+                    <p className="text-xs uppercase tracking-[0.3em] text-blue-500">VIN subscription available</p>
+                    <p className="mt-2 text-base font-semibold text-blue-900">
                         {subscriptionInfo.formattedPrice} / {subscriptionInfo.intervalLabel}
                     </p>
                 </div>

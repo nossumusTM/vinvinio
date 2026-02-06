@@ -978,7 +978,7 @@ const CategoriesInner: React.FC = () => {
                         closeReasonRef.current = 'dismiss';
                         setFiltersOpen(false);
                       }}
-                      className="rounded-full border border-neutral-200 p-2 text-neutral-500 transition hover:text-neutral-900"
+                      className="rounded-full shadow-md p-2 text-neutral-500 transition hover:text-neutral-900"
                       aria-label="Close filters"
                     >
                       <LuChevronLeft className="h-4 w-4" aria-hidden="true" />
@@ -1136,7 +1136,7 @@ const CategoriesInner: React.FC = () => {
                     <button
                       type="button"
                       onClick={handleFiltersClear}
-                      className="w-full rounded-full border border-neutral-200 py-3 text-sm font-semibold text-neutral-700 transition hover:border-neutral-300"
+                      className="w-full rounded-full border py-3 text-sm font-semibold text-neutral-700 transition hover:border-neutral-300"
                     >
                       Clear filters
                     </button>

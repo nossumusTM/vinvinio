@@ -103,12 +103,12 @@ const LocationConsentModal = () => {
     accept();
   };
 
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('[geo] consent modal state', {
-      hasDetection: !!detection,
-      isOpen,
-    });
-  }
+  // if (process.env.NODE_ENV !== 'production') {
+  //   console.log('[geo] consent modal state', {
+  //     hasDetection: !!detection,
+  //     isOpen,
+  //   });
+  // }
 
   const detectedCountry = useMemo(() => {
     if (!detection?.countryCode) {

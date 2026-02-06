@@ -178,7 +178,7 @@ export default function LandingPartnerPage() {
             {storytellingCards.map((card) => (
               <div
                 key={card.title}
-                className="group flex flex-col gap-4 rounded-3xl border border-transparent bg-white/90 p-6 shadow-xl shadow-slate-200 transition hover:-translate-y-1 hover:border-blue-200"
+                className="group flex flex-col gap-4 rounded-3xl border border-transparent bg-white/90 p-6 shadow-md shadow-slate-200 transition hover:-translate-y-1 hover:shadow-lg"
               >
                 <div className="relative h-16 w-16 overflow-hidden rounded-2xl bg-blue-50 p-3 shadow-inner">
                   <Image

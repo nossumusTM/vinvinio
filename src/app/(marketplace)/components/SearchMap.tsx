@@ -9,6 +9,8 @@ import { createPortal } from 'react-dom';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { FaMapMarkerAlt } from 'react-icons/fa';
 import { FiMaximize2, FiMinus, FiPlus } from 'react-icons/fi';
+import { MdFullscreen } from "react-icons/md";
+import { GrFormLocation } from "react-icons/gr";
 
 import { useMapEvent } from 'react-leaflet';
 
@@ -60,7 +62,7 @@ const Map: React.FC<MapProps> = ({ center, city, country, allowFullscreen = fals
         html: renderToStaticMarkup(
           <div className="flex items-center justify-center">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-transparent shadow-lg ring-1 ring-white/60 backdrop-blur-sm">
-              <FaMapMarkerAlt className="h-6 w-6 drop-shadow-sm" color="#2200ffff" />
+              <GrFormLocation className="h-9 w-9 drop-shadow-sm" color="#2200ffff" />
             </div>
           </div>
         ),
@@ -275,10 +277,10 @@ const Map: React.FC<MapProps> = ({ center, city, country, allowFullscreen = fals
         <button
           type="button"
           onClick={openOverlay}
-          className="absolute right-3 top-3 z-20 inline-flex items-center justify-center rounded-full bg-white/30 backdrop-blur p-2 text-neutral-700 shadow-md transition hover:bg-white/50"
+          className="absolute right-3 top-3 z-20 inline-flex items-center justify-center rounded-full bg-white/10 backdrop-blur p-2 text-neutral-700 shadow-md transition hover:bg-white/50"
           aria-label="Open fullscreen map"
         >
-          <FiMaximize2 className="h-4 w-4" />
+          <MdFullscreen className="h-4 w-4" />
         </button>
       )}
 
@@ -288,7 +290,7 @@ const Map: React.FC<MapProps> = ({ center, city, country, allowFullscreen = fals
             type="button"
             onClick={handleZoomIn}
             aria-label="Zoom in"
-            className="flex h-8 w-8 items-center justify-center rounded-full  bg-white/30 text-neutral-800 shadow-lg backdrop-blur transition hover:bg-white/50"
+            className="flex h-8 w-8 items-center justify-center rounded-full  bg-white/10 text-neutral-800 shadow-lg backdrop-blur transition hover:bg-white/50"
           >
             <FiPlus />
           </button>
@@ -296,7 +298,7 @@ const Map: React.FC<MapProps> = ({ center, city, country, allowFullscreen = fals
             type="button"
             onClick={handleZoomOut}
             aria-label="Zoom out"
-            className="flex h-8 w-8 items-center justify-center rounded-full  bg-white/30 text-neutral-800 shadow-lg backdrop-blur transition hover:bg-white/50"
+            className="flex h-8 w-8 items-center justify-center rounded-full  bg-white/10 text-neutral-800 shadow-lg backdrop-blur transition hover:bg-white/50"
           >
             <FiMinus />
           </button>

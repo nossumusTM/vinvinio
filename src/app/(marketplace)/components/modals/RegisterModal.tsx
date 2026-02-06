@@ -3,8 +3,10 @@
 import axios from "axios";
 import { MdOutlineModeOfTravel } from "react-icons/md";
 import { GiWingfoot } from "react-icons/gi";
+import { MdNaturePeople } from "react-icons/md";
 import { BiNavigation } from "react-icons/bi";
 import { BsPlugin } from "react-icons/bs";
+import { MdUsb } from "react-icons/md";
 import { PiBarcode } from "react-icons/pi";
 import { useCallback, useState, useEffect, useMemo } from "react";
 import ConfirmPopup from "../ConfirmPopup";
@@ -188,7 +190,7 @@ import { useRouter } from "next/navigation";
           <>
             <Heading
               title={`Continue as a ${
-                role === 'customer' ? 'Traveller' : role === 'host' ? 'Host' : 'Promoter'
+                role === 'customer' ? 'Customer' : role === 'host' ? 'Provider' : 'Promoter'
               }`}
               subtitle="Choose your journey to move forward"
               center
@@ -196,9 +198,9 @@ import { useRouter } from "next/navigation";
 
             <div className="flex justify-center items-center gap-2 flex-wrap pt-6">
               {([
-                { key: 'customer' as const, icon: <GiWingfoot size={14} />, label: 'Visitor' },
-                { key: 'host' as const, icon: <BsPlugin size={14} />, label: 'Provider' },
-                // { key: 'promoter' as const, icon: <PiBarcode size={14} />, label: 'Promoter' },
+                { key: 'customer' as const, icon: <MdNaturePeople size={24} />, label: 'Customer' },
+                { key: 'host' as const, icon: <MdUsb size={24} />, label: 'Provider' },
+                { key: 'promoter' as const, icon: <PiBarcode size={24} />, label: 'Promoter' },
               ]).map(({ key, icon, label }) => {
                 const isActive = role === key;
 
@@ -214,10 +216,10 @@ import { useRouter } from "next/navigation";
                     disabled={isLoading}
                     className={`
                       inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium
-                      border transition
+                      shadow-md transition
                       ${isActive
-                        ? 'bg-sky-50/60 text-neutral-900'
-                        : 'bg-white text-neutral-800 hover:border-neutral-400'}
+                        ? 'bg-neutral-50/60 text-neutral-900'
+                        : 'bg-white text-neutral-800 hover:shadow-lg'}
                     `}
                   >
                     <span className="text-xl">{icon}</span>

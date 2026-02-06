@@ -147,7 +147,7 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
 
         <select
           className={twMerge(
-            'w-full appearance-none uppercase rounded-2xl bg-white py-3 pl-10 pr-10 text-xs font-medium text-neutral-800 shadow-md transition',
+            'w-full appearance-none uppercase rounded-xl bg-white py-3 pl-10 pr-10 text-xs font-medium text-neutral-800 shadow-md transition',
             disabled ? 'opacity-60' : ''
           )}
           value={selectedCountry?.value ?? ''}

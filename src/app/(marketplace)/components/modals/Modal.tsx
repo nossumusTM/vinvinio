@@ -226,7 +226,10 @@ const Modal: React.FC<ModalProps> = ({
                       hover:opacity-70
                       transition
                       absolute
-                      left-9
+                      right-9
+                      shadow-inner
+                      rounded-full
+                      hover:text-black
                     "
                     onClick={handleClose}
                   >

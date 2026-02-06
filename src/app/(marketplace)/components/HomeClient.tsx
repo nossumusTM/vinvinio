@@ -48,6 +48,8 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
   const [gridSize, setGridSize] = useState<GridSize>(4);
   const [categoriesVisible, setCategoriesVisible] = useState(true);
   const [isMapOpen, setIsMapOpen] = useState(false);
+  const [pinnedCategories, setPinnedCategories] = useState<string[]>([]);
+  const [categoryUsage, setCategoryUsage] = useState<Record<string, number>>({});
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
@@ -333,6 +335,69 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
   }, []);
 
   useEffect(() => {
+    let isActive = true;
+
+    const fetchPinnedCategories = async () => {
+      try {
+        const response = await axios.get('/api/categories/pinned');
+        if (!isActive) return;
+
+        const pinned = Array.isArray(response.data?.data)
+          ? response.data.data.filter((label: unknown) => typeof label === 'string')
+          : [];
+        setPinnedCategories(pinned);
+      } catch (error) {
+        console.error('[PINNED_CATEGORIES]', error);
+      }
+    };
+
+    fetchPinnedCategories();
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const fetchUsage = async () => {
+      try {
+        const response = await axios.get('/api/categories/usage');
+        if (!isActive) return;
+
+        const usageEntries = Array.isArray(response.data?.data)
+          ? response.data.data
+          : [];
+
+        const usage = (
+          usageEntries as Array<{ category?: string; bookingCount?: number }>
+        ).reduce(
+          (acc, entry) => {
+            if (
+              entry &&
+              typeof entry.category === 'string' &&
+              typeof entry.bookingCount === 'number'
+            ) {
+              acc[entry.category] = entry.bookingCount;
+            }
+            return acc;
+          },
+          {} as Record<string, number>,
+        );
+
+        setCategoryUsage(usage);
+      } catch (error) {
+        console.error('[CATEGORY_USAGE]', error);
+      }
+    };
+
+    fetchUsage();
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  useEffect(() => {
     const handleMapOpen = () => setIsMapOpen(true);
     window.addEventListener('listings-map:open', handleMapOpen as EventListener);
     return () => window.removeEventListener('listings-map:open', handleMapOpen as EventListener);
@@ -400,8 +465,30 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
   // drop sm:grid-cols-1 so mobile can show multiple columns
   // const gridBaseClasses = `listingscontainer ${categoriesVisible ? 'listingscontainer--withCategories' : 'listingscontainer--collapsed'} ${topPadClass} grid max-w-screen-2xl mx-auto relative z-10`;
   const basePadClasses =
-  `p-3 mb-6 md:mb-8 md:p-0 listingscontainer ${categoriesVisible ? 'listingscontainer--withCategories' : 'listingscontainer--collapsed'} ${topPadClass} max-w-screen-2xl mx-auto relative z-10 transition-[padding] duration-300 ease-out`;
+  `mb-6 md:mb-8 md:p-0 listingscontainer ${categoriesVisible ? 'listingscontainer--withCategories' : 'listingscontainer--collapsed'} ${topPadClass} max-w-screen-2xl mx-auto relative z-10 transition-[padding] duration-300 ease-out`;
   const gridBaseClasses = `${basePadClasses} grid`;
+
+  const getListingBookingCount = useCallback((listing: any) => {
+    if (typeof listing?.bookingCount === 'number') return listing.bookingCount;
+    if (typeof listing?.user?.allTimeBookingCount === 'number') {
+      return listing.user.allTimeBookingCount;
+    }
+    return 0;
+  }, []);
+
+  const sortedListings = useMemo(() => {
+    if (!listings) return null;
+
+    return [...listings].sort((a, b) => {
+      const puntiDiff = Number(b.punti ?? 0) - Number(a.punti ?? 0);
+      if (puntiDiff !== 0) return puntiDiff;
+
+      const bookingDiff = getListingBookingCount(b) - getListingBookingCount(a);
+      if (bookingDiff !== 0) return bookingDiff;
+
+      return 0;
+    });
+  }, [getListingBookingCount, listings]);
 
   const groupedListings = useMemo(() => {
     if (!listings) return [];
@@ -418,15 +505,53 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
       grouped.set(category, bucket);
     });
 
-    return Array.from(grouped.entries()).map(([category, items]) => ({
-      category,
-      listings: items,
-    }));
-  }, [listings]);
+    const pinnedSet = new Set(pinnedCategories);
+    const pinnedOrder = new Map(pinnedCategories.map((label, index) => [label, index]));
+
+    const groups = Array.from(grouped.entries()).map(([category, items]) => {
+      const fallbackCount = items.reduce(
+        (acc, item) => acc + getListingBookingCount(item),
+        0,
+      );
+      const bookingCount = categoryUsage[category] ?? fallbackCount;
+
+      return {
+        category,
+        listings: items,
+        bookingCount,
+        pinned: pinnedSet.has(category),
+        pinnedIndex: pinnedOrder.get(category) ?? null,
+      };
+    });
+
+    const trendingCategory =
+      groups.length > 0
+        ? [...groups].sort((a, b) => b.bookingCount - a.bookingCount)[0]
+        : null;
+
+    return groups.sort((a, b) => {
+      const aIsTrending = trendingCategory?.category === a.category && a.bookingCount > 0;
+      const bIsTrending = trendingCategory?.category === b.category && b.bookingCount > 0;
+
+      if (aIsTrending && !bIsTrending) return -1;
+      if (!aIsTrending && bIsTrending) return 1;
+
+      if (a.pinned && !b.pinned) return -1;
+      if (!a.pinned && b.pinned) return 1;
+
+      if (a.pinned && b.pinned) {
+        return (a.pinnedIndex ?? 0) - (b.pinnedIndex ?? 0);
+      }
+
+      const diff = b.bookingCount - a.bookingCount;
+      if (diff !== 0) return diff;
+      return a.category.localeCompare(b.category);
+    });
+  }, [categoryUsage, getListingBookingCount, listings, pinnedCategories, sortedListings]);
 
   const horizontalCardWidthClass = compact
-    ? 'min-w-[220px] max-w-[220px]'
-    : 'min-w-[280px] max-w-[280px]';
+    ? 'min-w-[290px] max-w-[290px]'
+    : 'min-w-[320px] max-w-[320px]';
 
   if (!listings && !isFiltering) {
     return (
@@ -497,7 +622,7 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
               <div className={basePadClasses}>
                 <Header title={selectedCategory} />
                 <div className={`mt-6 grid ${gapClass} ${gridColumnsClass}`}>
-                  {listings.map((listing: any) => (
+                  {(sortedListings ?? listings).map((listing: any) => (
                     <ListingCard
                       key={listing.id}
                       data={listing}
@@ -516,7 +641,7 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
                 {groupedListings.map((group) => (
                   <section key={group.category} className="flex flex-col gap-4">
                     <Header title={group.category} />
-                    <div className="flex gap-6 overflow-x-auto pb-3 scroll-smooth">
+                    <div className="flex gap-6 overflow-x-auto pb-6 scroll-smooth">
                       {group.listings.map((listing: any) => (
                         <div
                           key={listing.id}

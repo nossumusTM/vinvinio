@@ -12,6 +12,10 @@ import {
 } from 'react-hook-form';
 import { FcGoogle } from 'react-icons/fc';
 import { FiMail, FiPhone } from 'react-icons/fi';
+import { TbBrandGmail } from "react-icons/tb";
+import { GrMail } from "react-icons/gr";
+import { IoCellular } from "react-icons/io5";
+import { GiVibratingSmartphone } from "react-icons/gi";
 
 import useRegisterModal from '@/app/(marketplace)/hooks/useRegisterModal';
 import useLoginModal from '@/app/(marketplace)/hooks/useLoginModal';
@@ -39,13 +43,13 @@ const methodOptions: Array<{
     key: 'email',
     title: 'Email address',
     description: 'Use your email and password to sign in.',
-    icon: <FiMail className="text-lg" />,
+    icon: <GrMail className="text-3xl" />,
   },
   {
     key: 'phone',
     title: 'Phone number',
     description: 'Authenticate with the phone number on your account.',
-    icon: <FiPhone className="text-lg" />,
+    icon: <GiVibratingSmartphone className="text-3xl" />,
   },
 ];
 
@@ -516,7 +520,6 @@ const LoginModal = () => {
             <Heading
               title="How would you like to sign in?"
               subtitle="Choose your preferred method and continue."
-              center
             />
             <div className="grid gap-3 sm:grid-cols-2">
               {methodOptions.map((option) => {
@@ -536,7 +539,7 @@ const LoginModal = () => {
                       flex h-full flex-col gap-2 text-neutral-800 rounded-2xl p-4 text-left transition
                       ${
                         active
-                          ? 'bg-sky-50/60 text-neutral-800 shadow-md shadow-neutral-900/20'
+                          ? 'bg-neutral-50/60 text-neutral-800 shadow-md shadow-neutral-900/20'
                           : 'bg-white text-neutral-800 shadow-md hover:border-neutral-400 hover:shadow-lg'
                       }
                     `}
@@ -544,7 +547,7 @@ const LoginModal = () => {
                     <div className="flex items-center gap-3">
                       <span
                         className={`aspect-square flex h-10 w-10 items-center justify-center rounded-xl text-base font-medium ${
-                          active ? 'bg-white/50 text-neutral-800' : 'bg-sky-50/60 text-neutral-800'
+                          active ? 'bg-white/50 text-neutral-800' : 'bg-neutral-50/60 text-neutral-800'
                         }`}
                       >
                         {option.icon}
@@ -800,7 +803,7 @@ const LoginModal = () => {
 
             <hr className='my-2 mx-2' />
 
-            <div className="rounded-3xl bg-neutral-100 p-5 text-center text-neutral-800 shadow-lg mt-0">
+            <div className="rounded-3xl  p-5 text-center text-neutral-800  mt-0">
               <p className="text-xs uppercase tracking-[0.35em] text-black/60">
                 New on Vinvin?
               </p>
@@ -810,7 +813,7 @@ const LoginModal = () => {
               <button
                 type="button"
                 onClick={onToggleRegister}
-                className="mt-4 inline-flex items-center justify-center rounded-full bg-white px-6 py-2 text-sm font-semibold text-neutral-900 shadow-md transition hover:bg-white/90"
+                className="mt-4 inline-flex items-center justify-center rounded-xl bg-white px-6 py-2 text-sm font-semibold text-neutral-900 shadow-md transition hover:bg-white/90"
               >
                 Create an account
               </button>

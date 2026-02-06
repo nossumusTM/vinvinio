@@ -318,14 +318,21 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
     [],
   );
 
+  const fastRoutes = [
+    { label: 'Payments & invoices', onClick: () => setIsPaymentTermsOpen(true) },
+    { label: 'Reservation changes', onClick: () => setIsCancellationOpen(true) },
+    { label: 'Hosting support', onClick: () => setIsUserPlaybookOpen(true) },
+    { label: 'Promoter earnings', onClick: () => setIsPromoterGuideOpen(true) },
+  ];
+
   return (
-    <div className="bg-white">
+    <div className="bg-white pt-5">
       <Container>
-        <div className="py-14 md:py-20">
-          <div className="flex flex-col gap-10 rounded-3xl border border-neutral-100 bg-white px-6 py-10 shadow-xl md:px-10">
+        <div className="">
+          <div className="flex flex-col gap-10 rounded-3xl border border-neutral-100 bg-white/80 px-6 py-10 shadow-xl md:px-10">
             <div className="grid items-center gap-6 lg:grid-cols-[1.1fr_0.9fr]">
               <div className="space-y-4 text-neutral-900">
-                <div className="inline-flex items-center gap-2 rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-800 ring-1 ring-sky-100">
+                <div className="inline-flex items-center gap-2 rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold text-neutral-700 ring-1 ring-neutral-200">
                   <LuSparkles className="h-4 w-4" />
                   Help Center
                 </div>
@@ -337,28 +344,28 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
                   <button
                     type="button"
                     onClick={handleOpenChat}
-                    className="inline-flex items-center gap-2 rounded-full bg-neutral-900 px-4 py-2 text-sm font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl"
+                    className="inline-flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2 text-sm font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl"
                   >
                     <LuLifeBuoy className="h-4 w-4" />
                     Chat with Operator
                   </button>
                   <Link
                     href="/trips"
-                    className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm font-semibold text-neutral-800 transition hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md"
+                    className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-semibold text-neutral-800 transition hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md"
                   >
                     Browse trips
                   </Link>
                 </div>
               </div>
 
-              <div className="grid gap-4 rounded-2xl border border-neutral-100 bg-sky-50/60 p-6 shadow-lg">
+              <div className="grid gap-4 rounded-2xl border border-neutral-100 bg-neutral-100/60 p-6 shadow-lg">
                 <div className="flex items-start gap-3">
-                  <div className="mt-1 rounded-full bg-white p-2 text-sky-700 shadow-sm">
+                  <div className="mt-1 rounded-full bg-white p-2 text-neutral-700 shadow-sm">
                     <LuBadgeHelp className="h-5 w-5" />
                   </div>
                   <div className="space-y-1">
-                    <p className="text-sm font-semibold uppercase tracking-wide text-sky-800">24/7 care</p>
-                    <p className="text-lg font-semibold">Get a human response — not a bot</p>
+                    <p className="text-sm font-semibold uppercase tracking-wide text-neutral-700">24/7 care</p>
+                    <p className="text-lg font-semibold">Real experts. Real answers. Zero bots.</p>
                     <p className="text-sm text-neutral-700">Operators reply directly in Messenger with your booking context.</p>
                   </div>
                 </div>
@@ -366,15 +373,21 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
                 <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-neutral-100">
                   <p className="text-xs uppercase tracking-wide text-neutral-500">Fast routes</p>
                   <div className="mt-3 grid grid-cols-2 gap-3 text-sm font-semibold text-neutral-800">
-                    <div className="rounded-xl bg-sky-50 p-3 ring-1 ring-sky-100">Payments & invoices</div>
-                    <div className="rounded-xl bg-sky-50 p-3 ring-1 ring-sky-100">Reservation changes</div>
-                    <div className="rounded-xl bg-sky-50 p-3 ring-1 ring-sky-100">Hosting support</div>
-                    <div className="rounded-xl bg-sky-50 p-3 ring-1 ring-sky-100">Promoter earnings</div>
+                    {fastRoutes.map((route) => (
+                      <button
+                        key={route.label}
+                        type="button"
+                        onClick={route.onClick}
+                        className="rounded-xl border border-neutral-100 bg-neutral-50 p-3 text-left transition hover:-translate-y-0.5 hover:bg-white hover:shadow-sm"
+                      >
+                        {route.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3 rounded-2xl border border-neutral-100 bg-white p-4 shadow-sm">
-                  <div className="rounded-full bg-sky-50 p-2 text-sky-700">
+                  <div className="rounded-full bg-neutral-100 p-2 text-neutral-700">
                     <LuLifeBuoy className="h-5 w-5" />
                   </div>
                   <div>
@@ -393,7 +406,7 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
                   key={card.title}
                   className="rounded-2xl border border-neutral-100 bg-white p-5 shadow-md transition hover:-translate-y-1 hover:shadow-xl"
                 >
-                  <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-800">
+                  <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 text-neutral-700">
                     {card.icon}
                   </div>
                   <p className="text-lg font-semibold text-neutral-900">{card.title}</p>
@@ -405,13 +418,13 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
         </div>
       </Container>
 
-      <Container>
-        <div className="space-y-10 rounded-2xl border border-neutral-100 bg-white p-6 pb-12 shadow-xl" id="policies">
+      <Container className='pt-20'>
+        <div className="space-y-10 rounded-2xl border border-neutral-100 bg-white/80 p-6 pb-12 shadow-xl" id="policies">
           <div id="privacy" className="relative -top-24 h-0" aria-hidden />
           <div id="terms" className="relative -top-24 h-0" aria-hidden />
           <div id="promoter-guide" className="relative -top-24 h-0" aria-hidden />
           <div className="space-y-2">
-            <p className="text-sm font-semibold text-sky-700">Resource library</p>
+            <p className="text-sm font-semibold text-neutral-700">Resource library</p>
             <h2 className="text-2xl font-bold text-neutral-900">Need the fine print?</h2>
             <p className="text-sm text-neutral-600">
               Jump to any section below. Each card links directly to the detailed notes inside our footer policies.
@@ -422,9 +435,9 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
             <button
               type="button"
               onClick={() => setIsCancellationOpen(true)}
-              className="group flex items-start gap-3 rounded-2xl border border-neutral-100 bg-white p-5 text-left shadow-md transition hover:-translate-y-1 hover:border-sky-200 hover:shadow-xl"
+              className="group flex items-start gap-3 rounded-2xl border border-neutral-100 bg-white p-5 text-left shadow-md transition hover:-translate-y-1 hover:border-neutral-200 hover:shadow-xl"
             >
-              <div className="mt-1 rounded-full bg-sky-50 p-2 text-sky-700">
+              <div className="mt-1 rounded-full bg-neutral-100 p-2 text-neutral-700">
                 <LuBadgeHelp className="h-4 w-4" />
               </div>
               <div>
@@ -432,7 +445,7 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
                 <p className="text-sm text-neutral-600">
                   Understand timelines, refunds, and what to do when plans change suddenly.
                 </p>
-                <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-sky-700">
+                <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-neutral-700">
                   Open section
                   <span className="transition group-hover:translate-x-0.5">→</span>
                 </span>
@@ -442,15 +455,15 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
             <button
               type="button"
               onClick={() => setIsPrivacyOpen(true)}
-              className="group flex items-start gap-3 rounded-2xl border border-neutral-100 bg-white p-5 text-left shadow-md transition hover:-translate-y-1 hover:border-sky-200 hover:shadow-xl"
+              className="group flex items-start gap-3 rounded-2xl border border-neutral-100 bg-white p-5 text-left shadow-md transition hover:-translate-y-1 hover:border-neutral-200 hover:shadow-xl"
             >
-              <div className="mt-1 rounded-full bg-sky-50 p-2 text-sky-700">
+              <div className="mt-1 rounded-full bg-neutral-100 p-2 text-neutral-700">
                 <LuBadgeHelp className="h-4 w-4" />
               </div>
               <div>
                 <p className="text-lg font-semibold text-neutral-900">Privacy at Vinvin</p>
                 <p className="text-sm text-neutral-600">How we keep your personal data safe across bookings, chats, and payments.</p>
-                <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-sky-700">
+                <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-neutral-700">
                   Open section
                   <span className="transition group-hover:translate-x-0.5">→</span>
                 </span>
@@ -460,15 +473,15 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
             <button
               type="button"
               onClick={() => setIsTermsOpen(true)}
-              className="group flex items-start gap-3 rounded-2xl border border-neutral-100 bg-white p-5 text-left shadow-md transition hover:-translate-y-1 hover:border-sky-200 hover:shadow-xl"
+              className="group flex items-start gap-3 rounded-2xl border border-neutral-100 bg-white p-5 text-left shadow-md transition hover:-translate-y-1 hover:border-neutral-200 hover:shadow-xl"
             >
-              <div className="mt-1 rounded-full bg-sky-50 p-2 text-sky-700">
+              <div className="mt-1 rounded-full bg-neutral-100 p-2 text-neutral-700">
                 <LuBadgeHelp className="h-4 w-4" />
               </div>
               <div>
                 <p className="text-lg font-semibold text-neutral-900">Terms of service</p>
                 <p className="text-sm text-neutral-600">The rules of the road for guests, promoters, and hosts collaborating on Vinvin.</p>
-                <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-sky-700">
+                <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-neutral-700">
                   Open section
                   <span className="transition group-hover:translate-x-0.5">→</span>
                 </span>
@@ -478,15 +491,15 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
             <button
               type="button"
               onClick={() => setIsPromoterGuideOpen(true)}
-              className="group flex items-start gap-3 rounded-2xl border border-neutral-100 bg-white p-5 text-left shadow-md transition hover:-translate-y-1 hover:border-sky-200 hover:shadow-xl"
+              className="group flex items-start gap-3 rounded-2xl border border-neutral-100 bg-white p-5 text-left shadow-md transition hover:-translate-y-1 hover:border-neutral-200 hover:shadow-xl"
             >
-              <div className="mt-1 rounded-full bg-sky-50 p-2 text-sky-700">
+              <div className="mt-1 rounded-full bg-neutral-100 p-2 text-neutral-700">
                 <LuBadgeHelp className="h-4 w-4" />
               </div>
               <div>
                 <p className="text-lg font-semibold text-neutral-900">Promoter guide</p>
                 <p className="text-sm text-neutral-600">Earn by sharing experiences — payouts, referrals, and best practices.</p>
-                <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-sky-700">
+                <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-neutral-700">
                   Open section
                   <span className="transition group-hover:translate-x-0.5">→</span>
                 </span>
@@ -496,15 +509,15 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
             <button
               type="button"
               onClick={() => setIsUserPlaybookOpen(true)}
-              className="group flex items-start gap-3 rounded-2xl border border-neutral-100 bg-white p-5 text-left shadow-md transition hover:-translate-y-1 hover:border-sky-200 hover:shadow-xl"
+              className="group flex items-start gap-3 rounded-2xl border border-neutral-100 bg-white p-5 text-left shadow-md transition hover:-translate-y-1 hover:border-neutral-200 hover:shadow-xl"
             >
-              <div className="mt-1 rounded-full bg-sky-50 p-2 text-sky-700">
+              <div className="mt-1 rounded-full bg-neutral-100 p-2 text-neutral-700">
                 <LuBadgeHelp className="h-4 w-4" />
               </div>
               <div>
                 <p className="text-lg font-semibold text-neutral-900">User&apos;s Playbook</p>
                 <p className="text-sm text-neutral-600">Etiquette, safety, and platform best practices in one place.</p>
-                <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-sky-700">
+                <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-neutral-700">
                   Open section
                   <span className="transition group-hover:translate-x-0.5">→</span>
                 </span>
@@ -514,15 +527,15 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
             <button
               type="button"
               onClick={() => setIsPaymentTermsOpen(true)}
-              className="group flex items-start gap-3 rounded-2xl border border-neutral-100 bg-white p-5 text-left shadow-md transition hover:-translate-y-1 hover:border-sky-200 hover:shadow-xl"
+              className="group flex items-start gap-3 rounded-2xl border border-neutral-100 bg-white p-5 text-left shadow-md transition hover:-translate-y-1 hover:border-neutral-200 hover:shadow-xl"
             >
-              <div className="mt-1 rounded-full bg-sky-50 p-2 text-sky-700">
+              <div className="mt-1 rounded-full bg-neutral-100 p-2 text-neutral-700">
                 <LuBadgeHelp className="h-4 w-4" />
               </div>
               <div>
                 <p className="text-lg font-semibold text-neutral-900">Payment terms</p>
                 <p className="text-sm text-neutral-600">How payments flow, from authorizations to refunds.</p>
-                <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-sky-700">
+                <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-neutral-700">
                   Open section
                   <span className="transition group-hover:translate-x-0.5">→</span>
                 </span>
@@ -532,13 +545,13 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
         </div>
       </Container>
 
-      <Container className='py-14 md:py-20'>
-        <div className="grid gap-8 pb-16 lg:grid-cols-[1.1fr_0.9fr] items-stretch">
+      <Container className="py-14 md:py-20">
+        <div className="grid items-stretch gap-8 lg:grid-cols-[1.1fr_0.9fr]">
             {/* Left: FAQs */}
             <div className="flex h-full flex-col space-y-6 rounded-2xl border border-neutral-100 bg-white p-6 shadow-lg">
             <div className="flex items-center justify-between gap-4">
                 <div>
-                <p className="text-sm font-semibold text-sky-700">Guided answers</p>
+                <p className="text-sm font-semibold text-neutral-700">Guided answers</p>
                 <h2 className="text-2xl font-bold text-neutral-900">Popular FAQs</h2>
                 </div>
                 {/* <span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-800">
@@ -554,14 +567,10 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
             <div className="flex h-full flex-col space-y-4 rounded-2xl border border-neutral-100 bg-white p-6 shadow-lg">
             <div className="flex items-center justify-between gap-4">
                 <div>
-                <p className="text-sm font-semibold text-sky-700">Stay in the loop</p>
-                <h2 className="text-2xl font-bold text-neutral-900">
-                    Newsletter
-                </h2>
+                <p className="text-sm font-semibold text-neutral-700">Stay in the loop</p>
+                <h2 className="text-2xl font-bold text-neutral-900">Newsletter</h2>
                 </div>
-                <span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-800">
-                Recommended
-                </span>
+                                <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold text-neutral-700">Recommended</span>
             </div>
             <div className="flex flex-1 items-start justify-center pt-4">
                 <Newsletter />
@@ -570,10 +579,10 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
         </div>
         </Container>
 
-        <Container>
+        {/* <Container>
                 <p className="text-[11px] font-semibold text-black text-center">Vinvin | Experience World Beyond the Ordinary © 2026</p>
                 <p className="text-[8px] font-semibold text-neutral-800 text-center">P.IVA 16688948322 | All Rights Reserved. </p>
-        </Container>
+        </Container> */}
 
       <Modal
         isOpen={isCancellationOpen}
@@ -582,7 +591,7 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
         onSubmit={() => setIsCancellationOpen(false)}
         actionLabel="Close"
         body={cancellationContent}
-        className=""
+        className="max-h-[70vh] overflow-y-auto sm:max-h-[65vh]"
       />
 
       <Modal
@@ -592,7 +601,7 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
         onSubmit={() => setIsPromoterGuideOpen(false)}
         actionLabel="Close"
         body={promotersGuideContent}
-        className=""
+        className="max-h-[70vh] overflow-y-auto sm:max-h-[65vh]"
       />
 
       <Modal
@@ -602,7 +611,7 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
         onSubmit={() => setIsUserPlaybookOpen(false)}
         actionLabel="Close"
         body={userPlaybookContent}
-        className=""
+        className="max-h-[70vh] overflow-y-auto sm:max-h-[65vh]"
       />
 
       <Modal
@@ -612,7 +621,7 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
         onSubmit={() => setIsPrivacyOpen(false)}
         actionLabel="Close"
         body={privacyPolicyContent}
-        className=""
+        className="max-h-[70vh] overflow-y-auto sm:max-h-[65vh]"
       />
 
       <Modal
@@ -622,7 +631,7 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
         onSubmit={() => setIsTermsOpen(false)}
         actionLabel="Close"
         body={termsContent}
-        className=""
+        className="max-h-[70vh] overflow-y-auto sm:max-h-[65vh]"
       />
 
       <Modal
@@ -632,7 +641,7 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
         onSubmit={() => setIsPaymentTermsOpen(false)}
         actionLabel="Close"
         body={paymentTermsContent}
-        className=""
+        className="max-h-[70vh] overflow-y-auto sm:max-h-[65vh]"
       />
     </div>
   );

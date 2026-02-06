@@ -3377,7 +3377,7 @@ const coverImage = useMemo(() => {
       <div className="rounded-3xl overflow-visible shadow-xl border border-neutral-100 bg-white">
         <div className="relative z-0 h-56 sm:h-64 md:h-72 overflow-visible">
           {/* ROLE SWITCH — bottom-center over the cover */}
-          {currentUser?.role !== 'promoter' && (
+          {/* {currentUser?.role !== 'promoter' && (
           <div className="absolute left-1/2 -bottom-6 translate-x-[-50%] z-[99999]">
             <Switch.Group as="div" className="flex flex-col items-center">
               <Switch
@@ -3393,7 +3393,7 @@ const coverImage = useMemo(() => {
                   'focus-visible:ring-4 focus-visible:ring-black/10 focus-visible:ring-offset-2 focus-visible:ring-offset-white',
                   (!canToggleRole || roleUpdating) && 'cursor-not-allowed opacity-60'
                 )}
-              >
+              > */}
                 {/* BORDER PULSE — remounts on each state to retrigger animation */}
                 {/* <motion.div
                   key={isHostView ? 'pulse-host' : 'pulse-guest'}
@@ -3405,13 +3405,13 @@ const coverImage = useMemo(() => {
                   animate={{ opacity: 0, scale: 1.18 }}
                   transition={{ duration: 0.45, ease: 'easeOut' }}
                 /> */}
-                <span
+                {/* <span
                   aria-hidden
                   className="pointer-events-none absolute inset-1 rounded-full bg-white"
-                />
+                /> */}
 
                 {/* SLIDING PILL */}
-                <div className="relative z-10 grid w-full grid-cols-2 px-4 text-[8px] font-semibold uppercase tracking-[0.18em]">
+                {/* <div className="relative z-10 grid w-full grid-cols-2 px-4 text-[8px] font-semibold uppercase tracking-[0.18em]">
                   <span
                     className={twMerge(
                       'text-center transition-colors duration-300',
@@ -3428,17 +3428,13 @@ const coverImage = useMemo(() => {
                   >
                     Provider
                   </span>
-                </div>
+                </div> */}
 
-                <motion.span
+                {/* <motion.span
                   layout
                   initial={false}
                   transition={{ type: 'spring', stiffness: 340, damping: 26 }}
                   className={twMerge(
-                    // 'pointer-events-none absolute left-[3px] top-[3px] z-20',
-                    // 'flex h-[26px] w-[34px] items-center justify-center rounded-full',
-                    // 'px-[5px] text-[8px] font-semibold uppercase tracking-wide leading-none whitespace-nowrap',
-                    // isHostView ? 'bg-white text-neutral-900' : 'bg-[#000] text-white'
                     'absolute top-1 bottom-1 left-1 z-20 flex w-[108px] items-center justify-center rounded-xl',
                     'bg-gradient-to-b from-white to-[#e3e6ed]',
                     'border border-white/50 text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-800'
@@ -3446,12 +3442,12 @@ const coverImage = useMemo(() => {
                   animate={{ x: isHostView ? 113 : 0 }}
                 >
                   {isHostView ? 'Provider' : 'Visitor'}
-                </motion.span>
-              </Switch>
+                </motion.span> */}
+              {/* </Switch>
             </Switch.Group>
 
               </div>
-            )}
+            )} */}
 
                 {coverImage ? (
                   <NextImage
@@ -3468,7 +3464,7 @@ const coverImage = useMemo(() => {
                     priority
                   />
                 ) : (
-                  <div className="absolute inset-0 bg-neutral-200" />
+                  <div className="absolute inset-0 bg-neutral-200 rounded-2xl" />
                 )}
 
                 <div className="rounded-3xl absolute inset-0 z-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />

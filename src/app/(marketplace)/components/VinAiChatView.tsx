@@ -896,7 +896,7 @@ const guidedComplete = criteriaMet || guidedStep === 'done';
         <button
           type="button"
           onClick={handleBackAction}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 text-neutral-700 transition hover:border-neutral-300 hover:bg-neutral-100"
+          className="flex h-9 w-9 items-center justify-center rounded-full shadow-md text-neutral-700 transition hover:shadow-lg hover:bg-neutral-100"
           aria-label="Back"
         >
           <LuArrowLeft className="h-5 w-5" />
@@ -916,7 +916,7 @@ const guidedComplete = criteriaMet || guidedStep === 'done';
             type="button"
             onClick={clear}
             className={clsx(
-              'flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 text-neutral-500 transition hover:border-neutral-300 hover:bg-neutral-50',
+              'flex h-8 w-8 items-center justify-center rounded-full shadow-md text-neutral-500 transition hover:shadow-lg hover:bg-neutral-100',
               isFullscreen ? 'h-8 w-8 gap-2 px-2 py-1' : 'h-8 w-8 justify-center',
             )}
             aria-label="Reset chat"
@@ -928,7 +928,7 @@ const guidedComplete = criteriaMet || guidedStep === 'done';
             <button
               type="button"
               onClick={handleCloseAction}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 text-neutral-500 transition hover:border-neutral-300 hover:bg-neutral-50"
+              className="flex h-8 w-8 items-center justify-center rounded-full shadow-md text-neutral-500 transition hover:border-neutral-300 hover:shadow-lg hover:bg-neutral-100"
               aria-label="Close"
             >
               <LuX className="h-4 w-4" />
@@ -1005,7 +1005,7 @@ const guidedComplete = criteriaMet || guidedStep === 'done';
               className={clsx(
                 'min-w-0 rounded-3xl border border-neutral-200 bg-gradient-to-br from-white via-slate-50 to-sky-50 px-4 py-4 shadow-sm',
                 // responsive "bubble" sizing
-                'w-fit max-w-[92%] sm:max-w-[70%] md:max-w-[50%] lg:max-w-[46%]'
+                'w-full max-w-[100%] sm:max-w-[70%] md:max-w-[80%] lg:max-w-[77%]'
               )}
             >
               {guidedStepContent}

@@ -16,8 +16,8 @@ const MyListingsEmptyState = () => {
         // subtitle="Create your first experience to see it listed here."
       />
 
-      <div className="w-full max-w-3xl">
-        <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-xl transition hover:shadow-2xl dark:border-neutral-800 dark:bg-neutral-900 md:p-8">
+      <div className="w-full max-w-3xl p-10">
+        <div className="rounded-2xl bg-white p-6 shadow-md transition hover:shadow-lg dark:border-neutral-800 dark:bg-neutral-900 md:p-8">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="space-y-2">
               <p className="text-sm font-semibold uppercase tracking-wide text-[#2200ff] dark:text-amber-400">
