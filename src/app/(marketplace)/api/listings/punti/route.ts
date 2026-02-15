@@ -6,6 +6,7 @@ import prisma from "@/app/(marketplace)/libs/prismadb";
 
 export async function POST(request: Request) {
   const currentUser = await getCurrentUser();
+  const moderationEnabled = process.env.NODE_ENV !== "production";
 
   // if (!currentUser || currentUser.role !== "moder") {
   if (!currentUser) {
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
     }
 
     const isOwner = currentUser.role === "host" && listing.userId === currentUser.id;
-    const isModerator = currentUser.role === "moder";
+    const isModerator = moderationEnabled && currentUser.role === "moder";
 
     if (!isOwner && !isModerator) {
       return new NextResponse("Unauthorized", { status: 403 });

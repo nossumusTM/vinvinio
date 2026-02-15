@@ -70,11 +70,11 @@ const STATUS_STYLES: Record<TabKey, { label: string; badgeClass: string }> = {
 };
 
 const TAB_ITEMS = [
-  { key: 'approved',            label: 'Live experiences',        ping: 'bg-emerald-300', dot: 'bg-emerald-500' },
+  { key: 'approved',            label: 'Live services',           ping: 'bg-emerald-300', dot: 'bg-emerald-500' },
   { key: 'pending',             label: 'Awaiting review',         ping: 'bg-amber-300',  dot: 'bg-amber-500'  },
   { key: 'revision',            label: 'Revision requests',       ping: 'bg-blue-400',   dot: 'bg-blue-600'   },
   { key: 'awaiting_reapproval', label: 'Awaiting re-approval',    ping: 'bg-purple-400', dot: 'bg-purple-600' },
-  { key: 'inactive',            label: 'Inactive experiences',    ping: 'bg-neutral-300',dot: 'bg-neutral-500'},
+  { key: 'inactive',            label: 'Inactive services',       ping: 'bg-neutral-300',dot: 'bg-neutral-500'},
   { key: 'rejected',            label: 'Rejected',                ping: 'bg-rose-300',   dot: 'bg-rose-600'   },
 ] as const satisfies readonly { key: TabKey; label: string; ping: string; dot: string }[];
 
@@ -537,13 +537,13 @@ const MyListingsClient: React.FC<MyListingsClientProps> = ({ listings, currentUs
         <header className="space-y-2">
           <Heading
             title="Listingplace"
-            subtitle={`Manage every experience you publish on Vinvin, ${currentUser.name || currentUser.email || ''}`}
+            subtitle={`Manage every service you publish on Vinvin, ${currentUser.name || currentUser.email || ''}`}
           />
         </header>
 
         {listings.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50/70 p-10 text-center text-neutral-500">
-            You haven&apos;t created any listings yet. Submit your first experience to see it here.
+            You haven&apos;t created any listings yet. Submit your first service to see it here.
           </div>
         ) : (
           <div className="space-y-6">

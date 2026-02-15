@@ -106,12 +106,12 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
 
   const handleReserve = () => {
     if (!listingId) {
-      toast.error('This experience is currently unavailable.');
+      toast.error('This service is currently unavailable.');
       return;
     }
 
     if (!dateRange.startDate) {
-      toast.error('Please select a date for your experience.');
+      toast.error('Please select a date for your service.');
       return;
     }
 
@@ -170,7 +170,7 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
 
       if (diffHours < hoursInAdvance) {
         toast.error(
-          `This experience must be booked at least ${hoursInAdvance} hour${
+          `This service must be booked at least ${hoursInAdvance} hour${
             hoursInAdvance === 1 ? '' : 's'
           } in advance.`,
         );

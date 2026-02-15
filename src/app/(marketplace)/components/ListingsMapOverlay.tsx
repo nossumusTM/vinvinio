@@ -167,7 +167,7 @@ const getListingImages = (listing: SafeListing) => {
 
 const buildListingSnippet = (listing: SafeListing, maxChars: number = DESCRIPTION_MAX_CHARS) => {
   const raw = `${listing.description ?? ''}`.replace(/\s+/g, ' ').trim();
-  if (!raw) return 'A thoughtful, tailored experience shaped around your pace and style.';
+  if (!raw) return 'A thoughtful, tailored service shaped around your pace and style.';
   if (raw.length <= maxChars) return raw;
   return `${raw.slice(0, maxChars).trimEnd()}…`;
 };

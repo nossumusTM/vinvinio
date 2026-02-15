@@ -191,13 +191,14 @@ export async function POST(request: Request) {
 async function handleRegistration(request: Request) {
   const body = await request.json();
   const { email, name, password, role, phone } = body;
+  const allowedRoles = new Set(["customer", "host", "promoter"]);
 
   if (!email || !name || !password || !role || !phone) {
     return NextResponse.json("Missing required fields", { status: 400 });
   }
 
-  if (role === "moder") {
-    return NextResponse.json("Registration with 'moder' role is not allowed.", {
+  if (!allowedRoles.has(String(role))) {
+    return NextResponse.json("Role is not allowed.", {
       status: 403,
     });
   }

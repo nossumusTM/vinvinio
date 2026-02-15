@@ -35,7 +35,20 @@ const NavBar: React.FC<NavBarProps> = ({ currentUser }) => {
   const isListingPage = pathname?.startsWith('/listings/') || pathname?.startsWith('/services/');
   const isCheckoutPage = pathname?.startsWith('/checkout');
   const isHomePage = pathname === '/';
-  const keepVisible = isListingPage || isCheckoutPage;
+  const fixedNavbarRoutes = [
+    '/landing-partner',
+    '/become-a-partner',
+    '/trips',
+    '/wishlist',
+    '/favorites',
+    '/reservations',
+  ];
+
+  const isFixedNavbarRoute = fixedNavbarRoutes.some((route) =>
+    pathname === route || pathname?.startsWith(`${route}/`)
+  );
+
+  const keepVisible = isListingPage || isCheckoutPage || isFixedNavbarRoute;
 
   const navbarVariants: Variants = {
     hidden:   { y: -120, opacity: 0 },

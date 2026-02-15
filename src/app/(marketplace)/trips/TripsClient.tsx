@@ -147,7 +147,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
     "Unexpected emergency",
     "Date/time conflict",
     "Issue with host",
-    "Prefer different experience",
+    "Prefer different service",
     "Other"
   ];
 

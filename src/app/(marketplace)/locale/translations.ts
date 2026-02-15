@@ -41,7 +41,7 @@ export const translations: Record<LanguageCode, Record<TranslationKey, string>> 
     regionCurrencyLabel: 'Region / Currency',
     chooseLanguage: 'Language',
     selectRegionCurrency: 'Region & Currency',
-    personaliseExperience: 'Personalise your experience',
+    personaliseExperience: 'Personalise your service',
     done: 'Done',
     search: 'Search',
     next: 'Next',

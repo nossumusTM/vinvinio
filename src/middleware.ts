@@ -15,8 +15,10 @@ type RateLimitState = {
 };
 
 const rateLimitRules: RateLimitRule[] = [
+  { pattern: /^\/api\/auth\/(signin|callback\/credentials)/i, limit: 20 },
   { pattern: /^\/api\/register/i, limit: 15 },
   { pattern: /^\/api\/password-reset/i, limit: 12 },
+  { pattern: /^\/api\/email\/(resetpassword|confirmreset|setpassword)/i, limit: 12 },
   { pattern: /^\/api\/users\/(request-email-verification|request-phone-verification)/i, limit: 12 },
   { pattern: /^\/api\/users\/two-factor/i, limit: 20 },
   { pattern: /^\/api\/checkout/i, limit: 40 },
@@ -79,6 +81,12 @@ function applySecurityHeaders(response: Response) {
    response.headers.set("X-Content-Type-Options", "nosniff");
    response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
    response.headers.set("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
+   if (process.env.NODE_ENV === "production") {
+    response.headers.set(
+      "Strict-Transport-Security",
+      "max-age=31536000; includeSubDomains; preload"
+    );
+   }
    return response;
  }
 
@@ -87,7 +95,10 @@ const authMiddleware = withAuth({
     signIn: "/",
   },
   callbacks: {
-    authorized: ({ token }) => Boolean(token),
+    authorized: ({ token }) => {
+      const jwt = token as { blocked?: boolean; isSuspended?: boolean } | null;
+      return Boolean(jwt && !jwt.blocked && !jwt.isSuspended);
+    },
   },
 });
 

@@ -6,6 +6,10 @@ import prisma from '@/app/(marketplace)/libs/prismadb';
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
+  if (process.env.NODE_ENV === 'production') {
+    return new NextResponse('Not Found', { status: 404 });
+  }
+
   const currentUser = await getCurrentUser();
 
   if (!currentUser || currentUser.role !== 'moder') {

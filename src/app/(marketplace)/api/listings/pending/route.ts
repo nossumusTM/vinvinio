@@ -8,6 +8,10 @@ import { Prisma } from "@prisma/client";
 type ModerationStatus = 'pending' | 'revision' | 'awaiting_reapproval';
 
 export async function GET(request: NextRequest) {
+  if (process.env.NODE_ENV === 'production') {
+    return new NextResponse('Not Found', { status: 404 });
+  }
+
   const currentUser = await getCurrentUser();
 
   if (!currentUser || currentUser.role !== 'moder') {

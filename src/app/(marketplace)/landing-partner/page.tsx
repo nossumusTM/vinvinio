@@ -1,9 +1,11 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import type { IconType } from 'react-icons';
 
 import { IoArrowRedoSharp } from "react-icons/io5";
 import { VscDebugStart } from "react-icons/vsc";
 import { GoBroadcast } from "react-icons/go";
+import { LuMapPin, LuPalette } from "react-icons/lu";
 
 const guidanceHighlights = [
   {
@@ -14,12 +16,12 @@ const guidanceHighlights = [
   {
     title: 'Set guest size with intention',
     description:
-      'Let travellers know the maximum number of guests and whether you thrive with intimate circles or lively groups.',
+      'Let users know the maximum number of guests and whether you thrive with intimate circles or lively groups.',
   },
   {
     title: 'Define group style and vibe',
     description:
-      'Is your experience relaxed and mindful, adventurous and high-energy, or perfect for creative collaborators? Be descriptive.',
+      'Is your service relaxed and mindful, adventurous and high-energy, or perfect for creative collaborators? Be descriptive.',
   },
   {
     title: 'Detail what guests should prepare',
@@ -30,30 +32,30 @@ const guidanceHighlights = [
 
 const storytellingCards = [
   {
-    image: '/images/paperplane_confetti.png',
+    icon: LuPalette,
     title: 'Paint the journey',
     description:
-      'Outline each stage of the experience—arrival, main activity, celebratory send-off—so guests can envision the flow.',
+      'Outline each stage of the service—arrival, main activity, celebratory send-off—so guests can envision the flow.',
   },
   {
-    image: '/images/customerservice.png',
+    icon: GoBroadcast,
     title: 'Communicate care',
     description:
       'Explain how you stay in touch before the activity, greet everyone warmly, and follow up with memories or photos.',
   },
   {
-    image: '/images/location.png',
+    icon: LuMapPin,
     title: 'Map the setting',
     description:
       'Provide exact meeting points, transportation tips, and insider neighbourhood stories to build anticipation.',
   },
   {
-    image: '/images/info.png',
+    icon: VscDebugStart,
     title: 'Set expectations',
     description:
       'Clarify what’s included, optional add-ons, and any weather considerations so guests arrive prepared.',
   },
-];
+] as Array<{ icon: IconType; title: string; description: string }>;
 
 const formSteps = [
   {
@@ -66,7 +68,7 @@ const formSteps = [
   },
   {
     heading: '3. Personalise the group style.',
-    body: 'Mention the type of travellers you thrive with—families, creatives, teammates—and how you adapt the dynamic for them.',
+    body: 'Mention the type of users you thrive with—families, creatives, teammates—and how you adapt the dynamic for them.',
   },
   {
     heading: '4. Showcase expertise.',
@@ -88,12 +90,12 @@ export default function LandingPartnerPage() {
               Vinvin Host Spotlight
             </span>
             <h1 className="mt-6 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
-              Inspire travellers with unforgettable experiences
+              Inspire users with unforgettable services
             </h1>
             <p className="mt-6 text-lg text-slate-600 sm:text-xl">
               Before you complete the Become a Host form, take a moment to craft your story. Use the activity
               form to paint a vivid picture of what guests will do, highlight your ideal guest size and group
-              style, and share the small touches that make your experience stand out.
+              style, and share the small touches that make your service stand out.
             </p>
             <div className="mt-10 grid gap-6 sm:grid-cols-2">
               {guidanceHighlights.map((item) => (
@@ -148,7 +150,7 @@ export default function LandingPartnerPage() {
                 </div>
                 <div className="rounded-2xl bg-white p-5 shadow-lg shadow-blue-100">
                   <p className="text-sm font-semibold uppercase tracking-wide text-blue-600">
-                    Guest experience checklist
+                    Guest service checklist
                   </p>
                   <ul className="mt-3 space-y-2 text-sm text-slate-600">
                     <li>• Clarify age ranges, accessibility, and any skill levels required.</li>
@@ -180,14 +182,8 @@ export default function LandingPartnerPage() {
                 key={card.title}
                 className="group flex flex-col gap-4 rounded-3xl border border-transparent bg-white/90 p-6 shadow-md shadow-slate-200 transition hover:-translate-y-1 hover:shadow-lg"
               >
-                <div className="relative h-16 w-16 overflow-hidden rounded-2xl bg-blue-50 p-3 shadow-inner">
-                  <Image
-                    src={card.image}
-                    alt={card.title}
-                    width={64}
-                    height={64}
-                    className="h-full w-full object-contain"
-                  />
+                <div className="relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-blue-50 p-3 shadow-inner text-[#0000ff]">
+                  <card.icon className="h-8 w-8" aria-hidden="true" />
                 </div>
                 <h3 className="text-lg font-semibold text-slate-900">{card.title}</h3>
                 <p className="text-sm text-slate-600">{card.description}</p>
@@ -203,7 +199,7 @@ export default function LandingPartnerPage() {
                 Ready to impress?
               </p>
               <h3 className="mt-3 text-2xl font-semibold text-slate-900">
-                Launch your experience with confidence
+                Launch your service with confidence
               </h3>
               <p className="mt-2 text-sm text-slate-600">
                 We’ll guide you through the activity form, guest size, pricing, and imagery—step by step. You can

@@ -34,7 +34,7 @@ const faqItems = [
   {
     question: 'What if I am new to Vinvin?',
     answer:
-      'Browse experiences without an account. When you are ready to book or chat with an Operator, you can quickly create an account or log in.',
+      'Browse services without an account. When you are ready to book or chat with an Operator, you can quickly create an account or log in.',
   },
   {
     question: 'How can I become a host or promoter?',
@@ -56,7 +56,7 @@ const featureCards = [
   },
   {
     title: 'Community know-how',
-    description: 'Insider tips on joining as a promoter, hosting unforgettable experiences, and keeping guests happy.',
+    description: 'Insider tips on joining as a promoter, hosting unforgettable services, and keeping guests happy.',
     icon: <RiTeamLine className="h-5 w-5" />,
   },
 ];
@@ -89,7 +89,7 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
     () => (
       <div className="space-y-5 text-sm leading-relaxed text-gray-700">
         <p>
-          Thank you for choosing to book your experience through <strong>Vinvin</strong>. Plans can change, so our cancellation
+          Thank you for choosing to book your service through <strong>Vinvin</strong>. Plans can change, so our cancellation
           policy is designed to be fair and transparent while respecting the time and effort of our hosts.
         </p>
         <h3 className="text-base font-semibold">Cancellation Rules for Guests</h3>
@@ -101,14 +101,14 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
           <div>
             <p className="font-medium">1. No Refund (Within 24 Hours of Booking Date):</p>
             <p>
-              Cancellations made <strong>within 24 hours</strong> of the scheduled experience will <strong>not</strong> be
+              Cancellations made <strong>within 24 hours</strong> of the scheduled service will <strong>not</strong> be
               eligible for any refund, regardless of the reason.
             </p>
           </div>
           <div>
             <p className="font-medium">2. 50% Refund (Within 3 Business Days):</p>
             <p>
-              Cancellations made <strong>within 3 business days</strong> of the scheduled experience will receive a
+              Cancellations made <strong>within 3 business days</strong> of the scheduled service will receive a
               <strong>50% refund</strong> of the total booking amount.
             </p>
           </div>
@@ -124,7 +124,7 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
         <ul className="list-inside list-disc space-y-1">
           <li>Refunds process within 5–10 business days after cancellation approval.</li>
           <li>Business days are Monday through Friday, excluding public holidays.</li>
-          <li>No refunds are available once the experience has started.</li>
+          <li>No refunds are available once the service has started.</li>
           <li>
             In rare cases of emergency or unforeseen events, guests may contact support with documentation for further
             consideration.
@@ -140,8 +140,8 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
     () => (
       <div className="space-y-5 text-sm leading-relaxed text-gray-700">
         <p>
-          Welcome to the <strong>Vinvin Network Promoters Program</strong> — an opportunity for creators and travel enthusiasts to
-          grow with our platform. Join to share experiences and earn from your community.
+          Welcome to the <strong>Vinvin Network Promoters Program</strong> — an opportunity for creators and service enthusiasts to
+          grow with our platform. Join to share services and earn from your community.
         </p>
         <h3 className="text-base font-semibold">How to Become a Promoter</h3>
         <p>
@@ -185,7 +185,7 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
         <h3 className="text-base font-semibold">Respect every interaction</h3>
         <p>Be punctual, kind, and communicative with hosts, guests, and Operators. Share changes early so we can help.</p>
         <h3 className="text-base font-semibold">Keep listings and profiles accurate</h3>
-        <p>Use clear photos, honest descriptions, and up-to-date contact details so travelers know what to expect.</p>
+        <p>Use clear photos, honest descriptions, and up-to-date contact details so users know what to expect.</p>
         <h3 className="text-base font-semibold">Safety first</h3>
         <p>
           Follow local guidelines, avoid sharing sensitive information outside the platform, and report any issues directly to an
@@ -215,12 +215,12 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
             <strong>Usage Data:</strong> How you interact with the platform, page visits, preferences, and search activity.
           </li>
           <li>
-            <strong>Device & Location:</strong> Anonymized device data and location (with consent) to improve your experience.
+            <strong>Device & Location:</strong> Anonymized device data and location (with consent) to improve your service usage.
           </li>
         </ul>
         <h3 className="text-base font-semibold">2. How We Use Your Data</h3>
         <ul className="list-inside list-disc space-y-1">
-          <li>Process bookings and deliver tailored travel experiences.</li>
+          <li>Process bookings and deliver tailored services.</li>
           <li>Send confirmations, updates, and service notifications.</li>
           <li>Improve our platform through analytics and feedback.</li>
           <li>Ensure security, prevent fraud, and meet legal obligations.</li>
@@ -336,7 +336,7 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
                   <LuSparkles className="h-4 w-4" />
                   Help Center
                 </div>
-                <h1 className="text-3xl font-bold leading-tight md:text-4xl">Experience and provide with total confidence</h1>
+                <h1 className="text-3xl font-bold leading-tight md:text-4xl">Provide services with total confidence</h1>
                 <p className="text-base text-neutral-700 md:text-lg">
                   Find quick answers, open our policy windows, and reach a real Operator in one streamlined place.
                 </p>
@@ -498,7 +498,7 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
               </div>
               <div>
                 <p className="text-lg font-semibold text-neutral-900">Promoter guide</p>
-                <p className="text-sm text-neutral-600">Earn by sharing experiences — payouts, referrals, and best practices.</p>
+                <p className="text-sm text-neutral-600">Earn by sharing services — payouts, referrals, and best practices.</p>
                 <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-neutral-700">
                   Open section
                   <span className="transition group-hover:translate-x-0.5">→</span>
@@ -580,7 +580,7 @@ const HelpCenterContent = ({ currentUser }: HelpCenterContentProps) => {
         </Container>
 
         {/* <Container>
-                <p className="text-[11px] font-semibold text-black text-center">Vinvin | Experience World Beyond the Ordinary © 2026</p>
+                <p className="text-[11px] font-semibold text-black text-center">Vinvin | Services Beyond the Ordinary © 2026</p>
                 <p className="text-[8px] font-semibold text-neutral-800 text-center">P.IVA 16688948322 | All Rights Reserved. </p>
         </Container> */}
 

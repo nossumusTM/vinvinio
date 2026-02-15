@@ -79,7 +79,7 @@ const VinSubscriptionCard = ({ listing, hostName, currentUser }: VinSubscription
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-neutral-400">VIN Subscription</p>
             <h3 className="mt-2 text-lg font-semibold text-neutral-900">
-              {fullIntervalLabel} VIN card for {hostName ? hostName : 'this experience'}
+              {fullIntervalLabel} VIN card for {hostName ? hostName : 'this service'}
             </h3>
             <p className="mt-1 text-sm text-neutral-500">
               Get monthly access with a dedicated VIN card ID and priority support.

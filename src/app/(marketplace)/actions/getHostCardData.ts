@@ -162,7 +162,7 @@ export default async function getHostCardData(identifier: string, currentUserId?
     listingTitle:
       review.listing?.title ??
       listingsWithSlug.find((listing) => listing.id === review.listingId)?.title ??
-      'Experience',
+      'Service',
     reviewerName: review.userName ?? review.user?.name ?? 'Guest',
     reviewerImage: review.user?.image ?? null,
   }));
@@ -185,4 +185,3 @@ export default async function getHostCardData(identifier: string, currentUserId?
     isFollowing,
   };
 }
-

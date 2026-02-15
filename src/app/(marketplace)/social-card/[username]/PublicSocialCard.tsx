@@ -350,7 +350,7 @@ const PublicSocialCard: React.FC<PublicSocialCardProps> = ({
                             <dd>{formatDate(booking.createdAt)}</dd>
                           </div>
                           <div className="flex items-center justify-between">
-                            <dt className="uppercase tracking-[0.2em] text-neutral-400">Experience date</dt>
+                            <dt className="uppercase tracking-[0.2em] text-neutral-400">Service date</dt>
                             <dd>{formatDate(booking.startDate)}</dd>
                           </div>
                         </dl>

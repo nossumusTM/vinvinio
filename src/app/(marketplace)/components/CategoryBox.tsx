@@ -70,7 +70,7 @@ const CategoryBoxInner: React.FC<CategoryBoxProps> = ({
       aria-pressed={selected}
       title={description}
       className={clsx(
-        'relative flex h-[100px] w-[100px] shrink-0 flex-col items-center justify-center rounded-2xl bg-white p-4 text-neutral-600 shadow-md transition-all duration-300',
+        'relative flex min-h-[124px] w-[108px] shrink-0 flex-col items-center justify-start rounded-2xl bg-white p-3 text-neutral-600 shadow-md transition-all duration-300',
         selected
           ? 'text-neutral-900 shadow-xl shadow-neutral-400/60'
           : 'hover:shadow-lg hover:shadow-neutral-300/50'
@@ -136,14 +136,14 @@ const CategoryBoxInner: React.FC<CategoryBoxProps> = ({
 
       {/* fixed-height label area so long titles don't resize the tile */}
       <span
-        className="mt-4 block h-10 w-full px-1 text-center text-[8px] font-semibold uppercase leading-tight tracking-wide text-neutral-700 line-clamp-2 overflow-hidden"
+        className="mt-3 block w-full px-1 text-center text-[8px] font-semibold uppercase leading-tight tracking-wide text-neutral-700 break-words [overflow-wrap:anywhere]"
       >
         {label}
       </span>
 
       {/* booking count, added under the label; styling above untouched */}
       {bookingsLabel && (
-        <span className="text-[8px] font-medium text-neutral-500 border-b">
+        <span className="mt-1 text-[8px] font-medium text-neutral-500 border-b">
           {bookingsLabel}
         </span>
       )}

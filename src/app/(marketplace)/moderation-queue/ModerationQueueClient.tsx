@@ -574,7 +574,7 @@ const ModerationQueueClient = () => {
               <p className="font-semibold text-neutral-900">{priceSummary}</p>
             </div>
             <div className="rounded-xl bg-neutral-50 px-3 py-2 transition duration-300 ease-out">
-              <p className="text-xs uppercase text-neutral-500">Experience length</p>
+              <p className="text-xs uppercase text-neutral-500">Service length</p>
               <p className="font-semibold text-neutral-900">{experienceLabel}</p>
             </div>
             <div className="rounded-xl bg-neutral-50 px-3 py-2 transition duration-300 ease-out">
@@ -650,7 +650,7 @@ const ModerationQueueClient = () => {
                 <div className="rounded-xl bg-neutral-50 px-3 py-2 text-xs text-neutral-600">
                   Revision updates
                   <p className="text-neutral-500">
-                    The host has resubmitted updates for this experience. Compare the latest details before approving the changes.
+                    The host has resubmitted updates for this service. Compare the latest details before approving the changes.
                   </p>
                 </div>
               </div>

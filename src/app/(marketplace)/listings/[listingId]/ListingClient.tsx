@@ -445,7 +445,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                 baseContent = (
                     <div className="space-y-3 text-sm text-neutral-600">
                     <p>
-                        This experience uses a flat group price. The total stays the same and currently
+                        This service uses a flat group price. The total stays the same and currently
                         covers your selection of {guestCount} guest{guestCount === 1 ? '' : 's'}.
                     </p>
                     <div className="rounded-3xl border border-neutral-200 bg-white/90 p-4 shadow-sm">

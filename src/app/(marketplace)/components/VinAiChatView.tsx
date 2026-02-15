@@ -119,7 +119,7 @@ const AudioPlayer: React.FC<{ src: string; durationMs?: number | null }> = ({ sr
       <div className="flex-1 space-y-1">
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-white shadow-inner">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-400 transition-[width] duration-150"
+            className="h-full rounded-full bg-blue-500 transition-[width] duration-150"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -501,7 +501,7 @@ const guidedComplete = criteriaMet || guidedStep === 'done';
     setGuidedProgress((prev) => ({ ...prev, date: true }));
 
     const timeLabel = guidedTime ? ` at ${guidedTime}` : '';
-    await handleSend(`Travel dates: ${start}${end !== start ? ` to ${end}` : ''}${timeLabel}.`);
+    await handleSend(`Service dates: ${start}${end !== start ? ` to ${end}` : ''}${timeLabel}.`);
   }, [guidedDateRange, guidedTime]);
 
   const handleGuidedGuestsNext = useCallback(async () => {
@@ -656,7 +656,7 @@ const guidedComplete = criteriaMet || guidedStep === 'done';
     const labelMap: Record<Exclude<keyof typeof detailEdits, 'guests'>, string> = {
       location: 'Location',
       category: 'Category',
-      dates: 'Travel dates',
+      dates: 'Service dates',
     };
     const currentValueMap: Record<Exclude<keyof typeof detailEdits, 'guests'>, string> = {
       location: memory?.location ?? '',
@@ -767,7 +767,7 @@ const guidedComplete = criteriaMet || guidedStep === 'done';
         <div className="space-y-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">Step 3</p>
-            <h3 className="text-sm font-semibold text-neutral-900">Select your travel date</h3>
+            <h3 className="text-sm font-semibold text-neutral-900">Select your service date</h3>
             <p className="mt-1 text-xs text-neutral-500">Choose the dates that fit your trip.</p>
           </div>
           <Calendar
@@ -795,7 +795,7 @@ const guidedComplete = criteriaMet || guidedStep === 'done';
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">Step 4</p>
             <h3 className="text-sm font-semibold text-neutral-900">How many guests?</h3>
-            <p className="mt-1 text-xs text-neutral-500">Let us tailor the experience to your group size.</p>
+            <p className="mt-1 text-xs text-neutral-500">Let us tailor the service to your group size.</p>
           </div>
           <div className="rounded-2xl border border-neutral-100 bg-neutral-50 px-3 py-2">
             <Counter
@@ -939,7 +939,7 @@ const guidedComplete = criteriaMet || guidedStep === 'done';
 
       <div
         ref={scrollRef}
-        className="flex-1 min-h-0 space-y-4 overflow-y-auto bg-neutral-50 px-4 py-5"
+        className="flex-1 min-h-0 space-y-4 overflow-y-auto px-4 py-5"
         >
           
         <AnimatePresence>
@@ -967,7 +967,7 @@ const guidedComplete = criteriaMet || guidedStep === 'done';
                     'inline-flex w-fit max-w-[78%] flex-col rounded-2xl px-4 py-3 text-[15px] shadow-sm backdrop-blur',
                     isUser
                       ? 'bg-white text-neutral-800 ring-1 ring-neutral-100'
-                      : 'bg-gradient-to-br from-white via-slate-50 to-sky-50 text-neutral-900 shadow-[0_12px_32px_rgba(15,23,42,0.08)]'
+                      : 'bg-white text-neutral-900 shadow-[0_12px_32px_rgba(15,23,42,0.08)]'
                   )}
                 >
                   {renderMessageContent(message)}
@@ -1003,7 +1003,7 @@ const guidedComplete = criteriaMet || guidedStep === 'done';
             </div>
             <div
               className={clsx(
-                'min-w-0 rounded-3xl border border-neutral-200 bg-gradient-to-br from-white via-slate-50 to-sky-50 px-4 py-4 shadow-sm',
+                'min-w-0 rounded-3xl border border-neutral-200 bg-white px-4 py-4 shadow-sm',
                 // responsive "bubble" sizing
                 'w-full max-w-[100%] sm:max-w-[70%] md:max-w-[80%] lg:max-w-[77%]'
               )}
@@ -1042,7 +1042,7 @@ const guidedComplete = criteriaMet || guidedStep === 'done';
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-900 text-white">
               <RiSpaceShipFill className="h-5 w-5" />
             </div>
-            <div className="min-w-0 flex-1 rounded-2xl border border-sky-100 bg-gradient-to-br from-white via-sky-50 to-white px-4 py-4 shadow-sm">
+            <div className="min-w-0 flex-1 rounded-2xl border border-sky-100 bg-white px-4 py-4 shadow-sm">
               <div className="flex items-start justify-between gap-4">
                 <div>
                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-sky-500">Confirmed Details</p>
@@ -1189,9 +1189,9 @@ const guidedComplete = criteriaMet || guidedStep === 'done';
                     className="group relative overflow-hidden rounded-2xl border border-neutral-100 text-left shadow-sm"
                   >
                     <div
-                      className="absolute inset-0 bg-cover bg-center"
+                      className="absolute inset-0 bg-cover bg-center bg-black/55 bg-blend-multiply"
                       style={{
-                        backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.65) 70%), url(${card.image})`,
+                        backgroundImage: `url(${card.image})`,
                       }}
                     />
                     <div className="relative flex h-full flex-col justify-between space-y-3 p-4 text-white">
@@ -1240,7 +1240,7 @@ const guidedComplete = criteriaMet || guidedStep === 'done';
       <div ref={bottomRef} />
       </div>
 
-      <div className="space-y-4 border-t bg-white px-4 py-3 shadow-inner">
+      <div className="space-y-4 border-t px-4 py-3">
         <div className="flex items-center justify-between text-[11px] text-neutral-500 px-1">
           <span className="font-medium text-neutral-700">Hold the send button to speak (speech-to-text).</span>
           {(isListening || isSending) && (

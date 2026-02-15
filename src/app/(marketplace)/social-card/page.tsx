@@ -18,7 +18,7 @@ const SocialCardPage = async () => {
       <ClientOnly>
         <EmptyState
           title="Unavailable"
-          subtitle="The social card is currently available for travellers only."
+          subtitle="The social card is currently available for users only."
         />
       </ClientOnly>
     );
@@ -32,4 +32,3 @@ const SocialCardPage = async () => {
 };
 
 export default SocialCardPage;
-

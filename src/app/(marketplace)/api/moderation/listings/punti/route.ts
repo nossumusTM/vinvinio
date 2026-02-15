@@ -4,6 +4,10 @@ import { updateListingPunti } from "@/app/(marketplace)/libs/partnerMetrics";
 import { MAX_PARTNER_POINT_VALUE } from "@/app/(marketplace)/constants/partner";
 
 export async function POST(request: Request) {
+  if (process.env.NODE_ENV === 'production') {
+    return new NextResponse('Not Found', { status: 404 });
+  }
+
   const currentUser = await getCurrentUser();
 
   if (!currentUser || currentUser.role !== "moder") {

@@ -235,7 +235,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
           (v) => typeof v === 'string' && (v.includes('.mp4') || v.includes('video')),
         );
         if (alreadyHasVideo) {
-          toast.error('You can only upload one video per experience.');
+          toast.error('You can only upload one video per service.');
           continue;
         }
 

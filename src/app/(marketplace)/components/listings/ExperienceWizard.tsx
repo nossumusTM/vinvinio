@@ -1420,14 +1420,14 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
   }, [step, isEditing]);
 
   const stepsMeta = [
-    { id: STEPS.CATEGORY, title: 'Category', description: 'Experience type', icon: FiList },
+    { id: STEPS.CATEGORY, title: 'Category', description: 'Service type', icon: FiList },
     { id: STEPS.LOCATION, title: 'Location', description: 'Where it happens', icon: FiMapPin },
     { id: STEPS.INFO1, title: 'Details', description: 'Group basics', icon: FiUsers },
     { id: STEPS.INFO2, title: 'Logistics', description: 'Duration & meeting point', icon: FiClock },
     { id: STEPS.INFO3, title: 'Languages', description: 'Accessibility', icon: FiGlobe },
     { id: STEPS.FILTERS, title: 'Filters', description: 'Match the right guests', icon: FiSliders },
     { id: STEPS.IMAGES, title: 'Media', description: 'Photos & video', icon: FiImage },
-    { id: STEPS.DESCRIPTION, title: 'Story', description: 'Describe the experience', icon: FiFileText },
+    { id: STEPS.DESCRIPTION, title: 'Story', description: 'Describe the service', icon: FiFileText },
     { id: STEPS.PRICE, title: 'Pricing', description: 'How guests pay', icon: FiDollarSign },
   ] as const;
 
@@ -1443,10 +1443,10 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
     : 'Back';
 
   const heading = headingOverride ?? {
-    title: isEditing ? 'Update your experience' : 'Become a Vinvin partner',
+    title: isEditing ? 'Update your service' : 'Become a Vinvin partner',
     subtitle: isEditing
-      ? 'Review each section to make sure your activity stays accurate for travellers.'
-      : 'Complete every section to publish a compelling experience and start hosting.',
+      ? 'Review each section to make sure your activity stays accurate for users.'
+      : 'Complete every section to publish a compelling service and start hosting.',
   };
 
   const hasSavedDrafts = savedDrafts.length > 0;
@@ -1672,7 +1672,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
     bodyContent = (
       <div className="flex flex-col gap-6">
         <Heading
-          title="What type of experience are you offering?"
+          title="What type of service are you offering?"
           subtitle="Select one category to continue"
         />
 
@@ -1737,10 +1737,10 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
   if (step === STEPS.INFO1) {
     bodyContent = (
       <div className="flex flex-col gap-8 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-        <Heading title="Experience details" subtitle="Tell us about your event style and group size" />
+        <Heading title="Service details" subtitle="Tell us about your event style and group size" />
         <Input
           id="hostDescription"
-          label="Describe your experience as a host"
+          label="Describe your service as a host"
           disabled={isLoading}
           register={register}
           errors={errors}
@@ -1763,7 +1763,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
       <div className="flex flex-col gap-8 min-h-[80vh] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
         <Heading title="Event logistics" subtitle="Duration and meeting point" />
         <div className="flex flex-col gap-2">
-          <label className="text-md font-medium">How long is your experience?</label>
+          <label className="text-md font-medium">How long is your service?</label>
           <Select
             options={hourOptions}
             value={watch('experienceHour')}
@@ -2008,7 +2008,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
         <Heading title="Languages and location" subtitle="Help guests know what to expect" />
 
         <div className="flex flex-col gap-2">
-          <label className="text-md font-medium">Which languages can you provide the experience in?</label>
+          <label className="text-md font-medium">Which languages can you provide the service in?</label>
           <Select
             options={languageOptions}
             value={watch('languages')}
@@ -2068,7 +2068,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
       <div className="flex flex-col gap-8 max-h-[40vh] md:max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
         <Heading
           title="Categorise your listing"
-          subtitle="Match your experience with the right audience and improve discovery."
+          subtitle="Match your service with the right audience and improve discovery."
         />
 
         {/* Group style (multi-select) */}
@@ -2089,7 +2089,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
             }}
           />
           <p className="text-xs text-neutral-500">
-            Pick all styles that fit your experience.
+            Pick all styles that fit your service.
           </p>
         </div>
 
@@ -2164,7 +2164,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
               menu: (base) => ({ ...base, zIndex: 9999 }),
             }}
           />
-          <p className="text-xs text-neutral-500">Use extra tags to help travellers find you. They are optional.</p>
+          <p className="text-xs text-neutral-500">Use extra tags to help users find you. They are optional.</p>
         </div>
       </div>
     );
@@ -2193,7 +2193,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
         <Heading title="Describe your event" subtitle="Make it exciting and fun!" />
         <Input
           id="title"
-          label="Experience Headline"
+          label="Service Headline"
           disabled={isLoading}
           register={register}
           errors={errors}
@@ -2217,7 +2217,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
       <div className="flex flex-col gap-8">
         <Heading
           title="Pricing"
-          subtitle="Choose how guests will be charged for your experience"
+          subtitle="Choose how guests will be charged for your service"
         />
 
         <div className="flex flex-col gap-3">
@@ -2429,7 +2429,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
               <div>
                 <h3 className="text-base font-semibold text-neutral-900">VIN subscription</h3>
                 <p className="text-sm text-neutral-500">
-                  Offer subscription plans with billing cadence, pricing, and terms for this experience.
+                  Offer subscription plans with billing cadence, pricing, and terms for this service.
                 </p>
               </div>
               <button
@@ -2642,7 +2642,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
                 <div className="space-y-1">
                   <h2 className="text-lg font-semibold text-neutral-900">Saved services</h2>
                   <p className="text-sm text-neutral-500">
-                    Pick up where you left off or keep track of draft experiences you are still building.
+                    Pick up where you left off or keep track of draft services you are still building.
                   </p>
                 </div>
                 <span className="text-sm font-semibold text-neutral-500">
@@ -2662,7 +2662,7 @@ const ExperienceWizard: React.FC<ExperienceWizardProps> = ({
                       const fallbackTitle =
                         typeof draft.data?.title === 'string' && draft.data.title.trim().length > 0
                           ? draft.data.title.trim()
-                          : 'Untitled experience';
+                          : 'Untitled service';
                       const displayTitle = draft.title ?? fallbackTitle;
                       const updatedLabel = draft.updatedAt
                         ? new Date(draft.updatedAt).toLocaleString()

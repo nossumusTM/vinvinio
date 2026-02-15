@@ -124,7 +124,7 @@ const AudioPlayer: React.FC<{ src: string; durationMs?: number | null }> = ({ sr
       <div className="flex-1 space-y-1">
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-white shadow-inner">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-400 transition-[width] duration-150"
+            className="h-full rounded-full bg-blue-500 transition-[width] duration-150"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -566,7 +566,7 @@ const {
     const end = guidedDateRange.endDate?.toLocaleDateString() ?? start;
     setGuidedProgress((prev) => ({ ...prev, date: true }));
     const timeLabel = guidedTime ? ` at ${guidedTime}` : '';
-    await handleSend(`Travel dates: ${start}${end !== start ? ` to ${end}` : ''}${timeLabel}.`);
+    await handleSend(`Service dates: ${start}${end !== start ? ` to ${end}` : ''}${timeLabel}.`);
   }, [guidedDateRange, guidedTime]);
 
   const handleGuidedGuestsNext = useCallback(async () => {
@@ -749,7 +749,7 @@ const {
     const labelMap: Record<Exclude<keyof typeof detailEdits, 'guests'>, string> = {
       location: 'Location',
       category: 'Category',
-      dates: 'Travel dates',
+      dates: 'Service dates',
     };
     const currentValueMap: Record<Exclude<keyof typeof detailEdits, 'guests'>, string> = {
       location: memory?.location ?? '',
@@ -884,7 +884,7 @@ const {
         <div className="space-y-3">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-400">Step 3</p>
-            <h3 className="text-xs font-semibold text-neutral-900">Select your travel date</h3>
+            <h3 className="text-xs font-semibold text-neutral-900">Select your service date</h3>
             <p className="mt-1 text-[11px] text-neutral-500">Choose the dates that fit your trip.</p>
           </div>
           <Calendar
@@ -957,7 +957,7 @@ const {
         <div className="flex flex-col md:flex-row items-center justify-between gap-3">
         <div className="flex flex-col md:flex-row items-center justify-between gap-3">
         <div className="hidden md:flex flex items-center gap-2">
-          <div className="flex h-9 w-9 aspect-square items-center justify-center rounded-xl bg-gradient-to-br from-white via-slate-50 to-sky-50 to-white text-[#2200ffff]">
+          <div className="flex h-9 w-9 aspect-square items-center justify-center rounded-xl bg-white text-[#2200ffff]">
             <RiSpaceShipFill className="h-4 w-4" />
           </div>
           <div className="flex flex-col">
@@ -1026,7 +1026,7 @@ const {
                   'inline-flex w-fit max-w-[78%] rounded-2xl px-3 py-2 text-[13px] shadow-sm',
                   message.role === 'user'
                     ? 'bg-neutral-900 text-white'
-                    : 'bg-gradient-to-br from-white via-slate-50 to-sky-50 text-neutral-900'
+                    : 'bg-white text-neutral-900'
                 )}
               >
                 {renderMessageContent(message)}
@@ -1206,8 +1206,8 @@ const {
                   className="group relative overflow-hidden rounded-2xl border border-neutral-100 text-left shadow-sm"
                 >
                   <div
-                    className="absolute inset-0 bg-cover bg-center"
-                    style={{ backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.65) 70%), url(${card.image})` }}
+                    className="absolute inset-0 bg-cover bg-center bg-black/55 bg-blend-multiply"
+                    style={{ backgroundImage: `url(${card.image})` }}
                   />
                   <div className="relative flex h-full flex-col justify-between space-y-2 p-3 text-white">
                     <div className="inline-flex w-fit items-center gap-2 rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide">
@@ -1388,10 +1388,14 @@ const {
                   h-[100dvh] sm:h-full
                   rounded-none sm:rounded-3xl
                 "
-                initial={{ y: 24, scale: 0.985, opacity: 0 }}
-                animate={{ y: 0, scale: 1, opacity: 1 }}
-                exit={{ y: 24, scale: 0.985, opacity: 0 }}
-                transition={{ type: 'spring', stiffness: 260, damping: 28 }}
+                // initial={{ y: 24, scale: 0.985, opacity: 0 }}
+                // animate={{ y: 0, scale: 1, opacity: 1 }}
+                // exit={{ y: 24, scale: 0.985, opacity: 0 }}
+                // transition={{ type: 'spring', stiffness: 260, damping: 28 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2 }}
               >
                 <VinAiChatView
                   onBack={() => setIsExpanded(false)}

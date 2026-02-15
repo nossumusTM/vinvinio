@@ -279,7 +279,7 @@ const RentModal = () => {
         <Modal
             disabled={isLoading}
             isOpen={rentModal.isOpen}
-            title="Add experience!"
+            title="Add service!"
             actionLabel={actionLabel}
             onSubmit={handleSubmit(onSubmit)}
             secondaryActionLabel={secondaryActionLabel}

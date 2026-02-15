@@ -607,14 +607,14 @@ useEffect(() => {
                 It’s independent from whether you use a partnership commission or a subscription,
                 and reflects{" "}
                 <span className="font-semibold text-neutral-900">
-                  how useful and attractive your experience is for travellers.
+                  how useful and attractive your service is for users.
                 </span>
               </p>
 
               <p className="text-start text-[13px] leading-relaxed text-neutral-600 max-w-sm">
                 Higher vin points help your listings appear{" "}
                 <span className="font-semibold text-neutral-900">
-                  ahead of similar-rated experiences
+                  ahead of similar-rated services
                 </span>{" "}
                 and unlock access to the{" "}
                 <span className="font-semibold text-indigo-600">VinVin AI Whitelist</span>,
@@ -701,7 +701,7 @@ useEffect(() => {
                 </div>
                 <p className="text-[11px] text-neutral-500">
                   Closer to <span className="font-semibold">100%</span> means your listing will sit
-                  among the most relevant experiences in its segment.
+                  among the most relevant services in its segment.
                 </p>
               </div>
 
@@ -720,7 +720,7 @@ useEffect(() => {
                 </div>
                 <p className="text-[11px] text-neutral-500">
                   Your VinVin score interacts with our recommendation algorithm to position you
-                  among experiences with similar ratings but higher relevance.
+                  among services with similar ratings but higher relevance.
                 </p>
               </div>
             </div>
@@ -2134,12 +2134,12 @@ const coverImage = useMemo(() => {
     {
       question: 'Do I need to provide a phone number?',
       answer:
-        'Phone number is optional. However, adding it can help in urgent communication between you and your host or guest, especially during travel.',
+        'Phone number is optional. However, adding it can help in urgent communication between you and your host or guest, especially around bookings.',
     },
     {
       question: 'Why should I provide a preferred contact method?',
       answer:
-        'Choosing a preferred contact method helps us know how to best reach you, and ensures smoother communication between you, travelers, and hosts. Format e.g, Whatsapp: +1212 555 4567 / Telegram: @username',
+        'Choosing a preferred contact method helps us know how to best reach you, and ensures smoother communication between users and hosts. Format e.g, Whatsapp: +1212 555 4567 / Telegram: @username',
     },
     {
       question: 'How can I update my legal name?',
@@ -2198,8 +2198,8 @@ const coverImage = useMemo(() => {
         'Absolutely. You can delete your stored card or transfer method at any time and update it with new credentials as needed.',
     },
     {
-      question: 'Are these settings relevant for travelers?',
-      answer: 'Only the payment method section is relevant for travelers — it lets you store your card for faster checkout. The withdrawal section is only for hosts and promoters who receive payouts.',
+      question: 'Are these settings relevant for users?',
+      answer: 'Only the payment method section is relevant for users — it lets you store your card for faster checkout. The withdrawal section is only for hosts and promoters who receive payouts.',
     }    
   ];  
 

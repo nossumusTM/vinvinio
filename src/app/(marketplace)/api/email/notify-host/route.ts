@@ -3,9 +3,25 @@ import nodemailer from 'nodemailer';
 import prisma from '@/app/(marketplace)/libs/prismadb';
 import { ensureListingSlug } from '@/app/(marketplace)/libs/ensureListingSlug';
 import { hrefForListing } from '@/app/(marketplace)/libs/links';
+import getCurrentUser from '@/app/(marketplace)/actions/getCurrentUser';
 
 export async function POST(req: Request) {
   try {
+    const currentUser = await getCurrentUser();
+    const internalToken = process.env.INTERNAL_API_TOKEN;
+    const headerToken = req.headers.get('x-internal-api-token');
+    const hasValidInternalToken =
+      Boolean(internalToken) &&
+      typeof headerToken === 'string' &&
+      headerToken.length > 0 &&
+      headerToken === internalToken;
+
+    // If INTERNAL_API_TOKEN is configured, require either an authenticated user
+    // or a valid internal token for server-to-server calls.
+    if (!currentUser && internalToken && !hasValidInternalToken) {
+      return new NextResponse('Unauthorized', { status: 401 });
+    }
+
     const {
       hostEmail,
       hostName,
@@ -65,7 +81,7 @@ export async function POST(req: Request) {
           <div style="padding: 24px;">
             <p style="font-size: 16px; text-align: left; margin-bottom: 8px;">Dear ${hostName || 'Host'},</p>
             <p style="text-align: left; font-size: 14px; color: #555; margin-bottom: 20px;">
-              🎉 A new booking has been made for your experience <strong>${listingTitle}</strong>.
+              🎉 A new booking has been made for your service <strong>${listingTitle}</strong>.
             </p>
 
             <div style="background: #f3f4f6; padding: 16px 20px; border-radius: 12px; margin-bottom: 24px;">

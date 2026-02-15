@@ -2,10 +2,20 @@
 
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
+import getCurrentUser from '@/app/(marketplace)/actions/getCurrentUser';
 
 export async function POST(req: Request) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) {
+    return new NextResponse('Unauthorized', { status: 401 });
+  }
+
   const body = await req.json();
   const { to, subject, html } = body;
+
+  if (!to || !subject || !html) {
+    return new NextResponse('Missing required fields', { status: 400 });
+  }
 
   try {
     const transporter = nodemailer.createTransport({

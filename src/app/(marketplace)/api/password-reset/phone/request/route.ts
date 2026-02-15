@@ -22,7 +22,8 @@ export async function POST(request: Request) {
     });
 
     if (!user) {
-      return NextResponse.json({ error: 'No user found for this phone number' }, { status: 404 });
+      // Avoid leaking whether a phone number exists.
+      return NextResponse.json({ success: true });
     }
 
     await sendVerificationCode(sanitizedPhone);

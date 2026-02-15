@@ -36,7 +36,7 @@ export async function generateMetadata({ params, searchParams }: PageProps) {
       where: { id: extractListingId(searchParams) },
     }));
 
-  if (!listing) return { title: "Experience not found" };
+  if (!listing) return { title: "Service not found" };
 
   const ensured = await ensureListingSlug(listing as any);
   const { categorySegment, slug } = canonicalSegmentsForListing(ensured);

@@ -7,6 +7,10 @@ import { findUserIdByHandle } from '@/app/(marketplace)/libs/userHandles';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
+  if (process.env.NODE_ENV === 'production') {
+    return new NextResponse('Not Found', { status: 404 });
+  }
+
   const currentUser = await getCurrentUser();
 
   if (!currentUser || currentUser.role !== 'moder') {

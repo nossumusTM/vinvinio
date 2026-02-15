@@ -11,6 +11,10 @@ export async function POST(
   req: Request,
   { params }: { params: IParams }
 ) {
+  if (process.env.NODE_ENV === 'production') {
+    return new NextResponse("Not Found", { status: 404 });
+  }
+
   const currentUser = await getCurrentUser();
 
   if (!currentUser || currentUser.role !== 'moder') {
@@ -72,7 +76,7 @@ export async function POST(
         await transporter.sendMail({
           from: `"Vinvin Moderation" <${emailUser}>`,
           to: recipientEmail,
-          subject: "❌ Your Experience Listing Has Been Rejected",
+          subject: "❌ Your Service Listing Has Been Rejected",
           html: `
             <div style="font-family: 'Nunito', Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; overflow: hidden;">
               <link href="https://fonts.googleapis.com/css2?family=Nunito&display=swap" rel="stylesheet">

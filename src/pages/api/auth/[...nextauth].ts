@@ -14,6 +14,11 @@ import {
 import prisma from "@/app/(marketplace)/libs/prismadb";
 
 const LOGIN_TIMEOUT_MS = 10_000;
+const IS_PRODUCTION = process.env.NODE_ENV === "production";
+
+if (IS_PRODUCTION && !process.env.NEXTAUTH_SECRET) {
+  throw new Error("NEXTAUTH_SECRET is required in production");
+}
 
 export const authOptions: AuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -73,13 +78,6 @@ export const authOptions: AuthOptions = {
           throw error;
         }
 
-          console.log('AUTH DEBUG user', {
-            method,
-            found: !!user,
-            dbPhone: user?.phone,
-            dbEmail: user?.email,
-          });
-
         if (!user || !user?.hashedPassword) {
           throw new Error("Invalid credentials");
         }
@@ -102,6 +100,10 @@ export const authOptions: AuthOptions = {
             throw new Error("Two-factor code required");
           }
 
+          if (!/^\d{6}$/.test(totpCode)) {
+            throw new Error("Invalid or expired two-factor code");
+          }
+
           const isValidTotp = verifyTotp(totpCode, user.twoFactorSecret);
 
           if (!isValidTotp) {
@@ -119,21 +121,101 @@ export const authOptions: AuthOptions = {
   debug: process.env.NODE_ENV === "development",
   session: {
     strategy: "jwt",
+    maxAge: 60 * 60 * 24 * 7, // 7 days
+    updateAge: 60 * 60 * 24, // refresh JWT every 24h
   },
-  // callbacks: {
-  //   async signIn({ user, account }) {
-  //     const existingUser = await prisma.user.findUnique({
-  //       where: { email: user.email! },
-  //     });
-  
-  //     if (!existingUser) {
-  //       // ❌ Not registered yet
-  //       return '/register?promptRole=true'; // redirect to a custom register step
-  //     }
-  
-  //     return true; // ✅ Allow login
-  //   },
-  // },  
+  callbacks: {
+    async signIn({ user, account, profile }) {
+      if (!user?.email) {
+        return false;
+      }
+
+      const existingUser = await prisma.user.findUnique({
+        where: { email: user.email.toLowerCase() },
+        select: {
+          id: true,
+          role: true,
+          isSuspended: true,
+          twoFactorEnabled: true,
+        },
+      });
+
+      if (!existingUser) {
+        return account?.provider !== "credentials";
+      }
+
+      if (existingUser.isSuspended) {
+        return false;
+      }
+
+      if (IS_PRODUCTION && existingUser.role === "moder") {
+        return false;
+      }
+
+      const provider = account?.provider ?? "credentials";
+      const isCredentials = provider === "credentials";
+
+      // Prevent bypassing credential 2FA via social providers.
+      if (!isCredentials && existingUser.twoFactorEnabled) {
+        return false;
+      }
+
+      // If provider exposes email verification state, require it.
+      if (!isCredentials && profile && typeof profile === "object") {
+        const candidate = profile as Record<string, unknown>;
+        const emailVerified =
+          typeof candidate.email_verified === "boolean"
+            ? candidate.email_verified
+            : typeof candidate.verified_email === "boolean"
+              ? candidate.verified_email
+              : undefined;
+
+        if (emailVerified === false) {
+          return false;
+        }
+      }
+
+      return true;
+    },
+    async jwt({ token, user }) {
+      const userId = (typeof user?.id === "string" ? user.id : undefined) ?? token.sub;
+      if (!userId) {
+        return token;
+      }
+
+      const dbUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          role: true,
+          isSuspended: true,
+        },
+      });
+
+      if (!dbUser) {
+        token.blocked = true;
+        return token;
+      }
+
+      token.sub = dbUser.id;
+      token.role = dbUser.role;
+      token.isSuspended = dbUser.isSuspended;
+      token.blocked = dbUser.isSuspended || (IS_PRODUCTION && dbUser.role === "moder");
+
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        const sessionUser = session.user as typeof session.user & {
+          id?: string;
+          role?: string;
+        };
+        sessionUser.id = typeof token.sub === "string" ? token.sub : sessionUser.id;
+        sessionUser.role = typeof token.role === "string" ? token.role : sessionUser.role;
+      }
+      return session;
+    },
+  },
   secret: process.env.NEXTAUTH_SECRET,
 };
 

@@ -808,7 +808,7 @@ const LoginModal = () => {
                 New on Vinvin?
               </p>
               <p className="mt-2 text-sm text-black/80">
-                Create an account to unlock exclusive experiences tailored for you.
+                Create an account to unlock exclusive services tailored for you.
               </p>
               <button
                 type="button"

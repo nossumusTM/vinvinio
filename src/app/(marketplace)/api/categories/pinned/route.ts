@@ -22,6 +22,10 @@ export async function GET() {
 }
 
 export async function PUT(req: Request) {
+  if (process.env.NODE_ENV === 'production') {
+    return new NextResponse('Not Found', { status: 404 });
+  }
+
   const currentUser = await getCurrentUser();
 
   if (!currentUser || currentUser.role !== 'moder') {

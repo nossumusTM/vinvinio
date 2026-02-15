@@ -31,7 +31,7 @@ const CATEGORY_MATCHERS = [
   { label: 'Water Activities', keywords: ['water', 'boat', 'sailing', 'surf', 'snorkel', 'dive', 'beach'] },
   { label: 'Food, Drinks & Culinary', keywords: ['food', 'drink', 'wine', 'tasting', 'culinary', 'cook', 'chef'] },
   { label: 'Culture & History', keywords: ['culture', 'history', 'museum', 'heritage', 'landmark'] },
-  { label: 'Art, Design & Photography', keywords: ['art', 'design', 'photo', 'photography', 'gallery'] },
+  { label: 'Art, Design & Creative Craft', keywords: ['art', 'design', 'gallery', 'painting', 'sculpture', 'craft'] },
   { label: 'Music, Nightlife & Social', keywords: ['music', 'nightlife', 'party', 'social', 'dj'] },
   { label: 'Sports, Fitness & Well-Being', keywords: ['fitness', 'sport', 'yoga', 'wellness', 'spa'] },
   { label: 'Workshops & Skill-Learning', keywords: ['workshop', 'class', 'lesson', 'learning', 'craft'] },
@@ -508,7 +508,7 @@ const buildFollowUpReply = (params: {
 
   const prompts = {
     location: 'Destination (choose a city or country, or tap “Use my location”).',
-    category: `What kind of experience are you looking for? ${focusLine}`,
+    category: `What kind of service are you looking for? ${focusLine}`,
     dates: 'Your dates (e.g., Jan 7 to Jan 10 2026) so I can check availability.',
     guests: 'How many people are traveling (solo, with a friend, family of four, etc.). You can reply with just a number.',
   };
@@ -518,7 +518,7 @@ const buildFollowUpReply = (params: {
       ? `• [done] Destination: ${params.location}.`
       : `• [todo] ${prompts.location}`,
     params.category
-      ? `• [done] Experience: ${params.category}.`
+      ? `• [done] Service: ${params.category}.`
       : `• [todo] ${prompts.category}`,
     params.dateRange
       ? `• [done] Dates: ${formatDateRangeLabel(params.dateRange)}.`
@@ -706,13 +706,13 @@ const formatHobbyHighlight = (hobby: string, location: string) => {
     return `Explore ${location}'s heritage tours that align with your ${hobby} passion.`;
   }
   if (/(music|nightlife|dj|concert)/.test(lower)) {
-    return `Line up live music and nightlife experiences in ${location} that fit ${hobby}.`;
+    return `Line up live music and nightlife services in ${location} that fit ${hobby}.`;
   }
   if (/(nature|outdoor|hike|trek|adventure)/.test(lower)) {
     return `Curate outdoor excursions around ${location} that suit your ${hobby} vibe.`;
   }
   if (/(wellness|spa|yoga|fitness)/.test(lower)) {
-    return `Blend wellness experiences in ${location} that complement ${hobby}.`;
+    return `Blend wellness services in ${location} that complement ${hobby}.`;
   }
   return `Find ${location} activities that spotlight your interest in ${hobby}.`;
 };
@@ -1033,11 +1033,11 @@ export async function POST(request: Request) {
     listingsTier === 'noAvailability'
       ? `I couldn’t confirm availability for ${formatDateRangeLabel(resolvedDateRange)} yet, but here are the closest matches.`
       : listingsTier === 'noGuests'
-      ? `I couldn’t match the exact guest count, but these experiences fit your other preferences.`
+      ? `I couldn’t match the exact guest count, but these services fit your other preferences.`
       : listingsTier === 'noCategory'
-      ? `I couldn’t find an exact category match, but these experiences align with your location and keywords.`
+      ? `I couldn’t find an exact category match, but these services align with your location and keywords.`
       : listingsTier === 'locationOnly'
-      ? `I couldn’t match the full criteria, but these are top experiences in ${resolvedLocation}.`
+      ? `I couldn’t match the full criteria, but these are top services in ${resolvedLocation}.`
       : '';
 
   return NextResponse.json({

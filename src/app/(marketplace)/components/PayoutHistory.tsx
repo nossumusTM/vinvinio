@@ -187,7 +187,7 @@ const PayoutHistory: React.FC<PayoutHistoryProps> = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-full border border-neutral-200 p-2 text-neutral-500 transition hover:text-neutral-900"
+                  className="rounded-full shadow-md hover:shadow-lg p-2 text-neutral-500 transition hover:text-neutral-900 hover:bg-neutral-100"
                   aria-label="Close payout history"
                 >
                   <AiOutlineClose className="h-4 w-4" />

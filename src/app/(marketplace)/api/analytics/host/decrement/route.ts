@@ -8,8 +8,12 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   const currentUser = await getCurrentUser();
+  const moderationEnabled = process.env.NODE_ENV !== 'production';
 
-  if (!currentUser || (currentUser.role !== 'host' && currentUser.role !== 'moder')) {
+  if (
+    !currentUser ||
+    (currentUser.role !== 'host' && (currentUser.role !== 'moder' || !moderationEnabled))
+  ) {
     return new NextResponse('Unauthorized', { status: 403 });
   }
 

@@ -353,7 +353,7 @@ export async function GET(request: Request) {
 
     guestReservations.forEach((reservation) => {
       const { listing } = reservation;
-      const listingTitle = listing?.title ?? 'your experience';
+      const listingTitle = listing?.title ?? 'your service';
       const hostName = listing?.user?.name ?? listing?.user?.username ?? 'the host';
       const stayRange = formatDateRange(reservation.startDate, reservation.endDate);
 

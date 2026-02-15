@@ -462,7 +462,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                         {languages.join(', ')}
                         </p>
                         <p className="text-sm text-neutral-600">
-                         Offers these languages to make your experience comfortable.
+                         Offers these languages to make your service comfortable.
                         </p>
                     </div>
                     </div>
@@ -479,7 +479,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                         {experienceHour} hour{experienceHour > 1 ? 's' : ''}
                         </p>
                         <p className="text-sm text-neutral-600">
-                        Approximate duration of the full experience from start to finish.
+                        Approximate duration of the full service from start to finish.
                         </p>
                     </div>
                     </div>
@@ -495,7 +495,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                         {hoursInAdvance} hour{hoursInAdvance === 1 ? '' : 's'} notice required
                       </p>
                       <p className="text-sm text-neutral-600">
-                        Guests must book this experience at least that many hours before start time.
+                        Guests must book this service at least that many hours before start time.
                       </p>
                     </div>
                   </div>
@@ -617,7 +617,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
 
             <div className="ml-0">
                 <div className="ml-4">
-                    <Heading title="About experience" />
+                    <Heading title="About service" />
                 </div>
                 <div className="mr-2 px-4 py-5 text-md md:p-5 text-neutral-600 text-justify whitespace-pre-line">
                 {description}
@@ -635,7 +635,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                 <section className="p-2 mt-6">
                   <div className="rounded-2xl bg-white p-2 space-y-5">
                     <h3 className="text-lg font-semibold text-neutral-900 mb-2 w-fit border-b">
-                      Experience details
+                      Service details
                     </h3>
 
                     {/* Group style */}

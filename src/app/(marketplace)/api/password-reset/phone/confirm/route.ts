@@ -23,6 +23,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'New password is required' }, { status: 400 });
     }
 
+    if (newPassword.length < 8) {
+      return NextResponse.json({ error: 'Password must be at least 8 characters.' }, { status: 400 });
+    }
+
     const sanitizedPhone = phone.trim();
 
     const user = await prisma.user.findFirst({
@@ -31,7 +35,7 @@ export async function POST(request: Request) {
     });
 
     if (!user) {
-      return NextResponse.json({ error: 'No user found for this phone number' }, { status: 404 });
+      return NextResponse.json({ error: 'Invalid verification code' }, { status: 400 });
     }
 
     const verification = await checkVerificationCode(sanitizedPhone, code.trim());

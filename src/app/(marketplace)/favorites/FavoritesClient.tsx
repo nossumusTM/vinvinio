@@ -19,7 +19,7 @@ const FavoritesClient: React.FC<FavoritesClientProps> = ({
                 <div className="mb-8 space-y-4 rounded-3xl border border-neutral-200 bg-white/90 shadow-md p-6">
                     <Heading
                         title="Bookmarks"
-                        subtitle="Experiences You've Saved"
+                        subtitle="Services You've Saved"
                     />
                     </div>
                 <div

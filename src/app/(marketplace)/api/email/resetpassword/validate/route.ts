@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/app/(marketplace)/libs/prismadb';
+import crypto from 'crypto';
+
+const hashResetToken = (token: string) =>
+  crypto.createHash('sha256').update(token).digest('hex');
 
 export async function POST(req: Request) {
   try {
@@ -10,7 +14,7 @@ export async function POST(req: Request) {
     }
 
     const record = await prisma.passwordResetToken.findUnique({
-      where: { token },
+      where: { token: hashResetToken(token) },
     });
 
     const isExpired = !record || new Date(record.expires) < new Date();

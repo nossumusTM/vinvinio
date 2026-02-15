@@ -716,7 +716,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
       badgeClass: 'bg-amber-500/95 text-white',
       noteTitle: 'New submission',
       noteBody:
-        'This experience is awaiting its first moderation review. Approve it to go live or request changes from the host.',
+        'This service is awaiting its first moderation review. Approve it to go live or request changes from the host.',
       tabLabel: 'Pending listings',
       tabPing: 'bg-emerald-400',
       tabDot: 'bg-emerald-500',
@@ -728,7 +728,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
       badgeClass: 'bg-blue-600/90 text-white',
       noteTitle: 'Revision updates',
       noteBody:
-        'The host has resubmitted updates for this experience. Compare the latest details before approving the changes.',
+        'The host has resubmitted updates for this service. Compare the latest details before approving the changes.',
       tabLabel: 'Revision requests',
       tabPing: 'bg-amber-400',
       tabDot: 'bg-amber-500',
@@ -1406,7 +1406,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
         span: false,
       },
       {
-        label: 'Experience length',
+        label: 'Service length',
         value:
           typeof listing.experienceHour === 'number' || (typeof listing.experienceHour === 'string' && listing.experienceHour)
             ? `${listing.experienceHour} hours`

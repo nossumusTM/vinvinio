@@ -210,6 +210,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
   }, [currentUser?.id]);  
 
   const userRole = currentUser?.role;
+  const moderationEnabled = process.env.NODE_ENV !== 'production';
 
   useEffect(() => {
     if (!currentUser?.id) {
@@ -423,7 +424,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
           <div className="flex flex-col cursor-pointer">
             {currentUser ? (
               <>
-                {(userRole === 'customer' || userRole === 'promoter' || userRole === 'host' || userRole === 'moder') && (
+                {(userRole === 'customer' || userRole === 'promoter' || userRole === 'host') && (
                   <>
                     <MenuItem
                       label="Messenger"
@@ -464,7 +465,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
               cursor-pointer
             "
           >
-            Add Experience
+            Add Service
           </div>
         )} */}
                   </>
@@ -536,7 +537,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                       }}
                       href="/favorites"
                     />
-                    {(userRole === 'promoter' || userRole === 'promoter' || userRole === 'host' || userRole === 'moder') && (
+                    {(userRole === 'promoter' || userRole === 'promoter' || userRole === 'host') && (
                         <>
                         <hr className="my-2" />
                           <MenuItem label="Dashboard"
@@ -617,10 +618,10 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                   </>
                 )}
 
-                {userRole === 'moder' && (
+                {moderationEnabled && userRole === 'moder' && (
                   <>
                     <div className="md:hidden">
-                      {/* <MenuItem label="Add Experience"  onClick={() => {
+                      {/* <MenuItem label="Add Service"  onClick={() => {
                       setIsOpen(false);
                       onRent();
                     }} /> */}
@@ -640,7 +641,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser, showLocaleInMenu = fal
                       }}
                       href="/favorites"
                     />
-                    {(userRole === 'moder') && (
+                    {moderationEnabled && userRole === 'moder' && (
                         <>
                           <MenuItem label="Account"
                             onClick={() => {

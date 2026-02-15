@@ -83,7 +83,7 @@ const VoucherCheckoutContent = ({
     <div className="mx-auto w-full max-w-2xl space-y-6 rounded-2xl bg-white p-6 shadow-md">
       <Heading
         title="Vin Voucher Checkout"
-        subtitle="Create a gift voucher for this experience."
+        subtitle="Create a gift voucher for this service."
       />
 
       {listingId && (

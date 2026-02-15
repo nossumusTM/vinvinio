@@ -18,8 +18,8 @@ const BecomePartnerClient: React.FC<BecomePartnerClientProps> = ({ currentUser }
       onCancel={() => router.back()}
       onCompleted={() => router.push('/my-listings')}
       headingOverride={{
-        title: 'Tell us about your experience',
-        subtitle: 'Share every detail so travellers can fall in love with what you offer.',
+        title: 'Tell us about your service',
+        subtitle: 'Share every detail so users can fall in love with what you offer.',
       }}
     />
   );

@@ -37,7 +37,7 @@ import { useRouter } from "next/navigation";
     const loginModal = useLoginModal();
     const { getAll } = useCountries();
     const [isLoading, setIsLoading] = useState(false);
-    const [role, setRole] = useState<'customer' | 'host' | 'promoter' | 'moder'>('customer');
+    const [role, setRole] = useState<'customer' | 'host' | 'promoter'>('customer');
     const [popupMessage, setPopupMessage] = useState<string | null>(null);
     const [step, setStep] = useState(1);
     const [phoneCountry, setPhoneCountry] = useState('IT');
@@ -135,7 +135,7 @@ import { useRouter } from "next/navigation";
                      setPopupMessage("Something went wrong.");
                    }
                  } else if (error.response?.status === 403) {
-                   setPopupMessage("Only administrators can register as a moderator.");
+                   setPopupMessage("Selected role is not allowed.");
                  } else {
                    setPopupMessage("Unexpected error occurred.");
                  }

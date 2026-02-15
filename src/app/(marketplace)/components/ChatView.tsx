@@ -860,7 +860,7 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
   //       <div className="flex items-center gap-3">
   //           <button
   //             onClick={onBack}
-  //             className="flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 text-neutral-700 transition hover:border-neutral-300 hover:bg-neutral-100"
+  //             className="flex h-9 w-9 items-center justify-center rounded-full shadow-md text-neutral-700 transition hover:shadow-lg hover:bg-neutral-100"
   //             aria-label="Back"
   //           >
   //             <LuArrowLeft className="h-5 w-5" />
@@ -1261,7 +1261,7 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
       <div className="flex items-center gap-3">
         <button
           onClick={onBack}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 text-neutral-700 transition hover:border-neutral-300 hover:bg-neutral-100"
+          className="flex h-9 w-9 items-center justify-center rounded-full shadow-md text-neutral-700 transition hover:shadow-lg hover:bg-neutral-100"
           aria-label="Back"
         >
           <LuArrowLeft className="h-5 w-5" />
@@ -1468,7 +1468,7 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
       </div>
 
       {/* Sticky-ish input footer */}
-      <div className="z-10 mt-auto flex flex-col gap-2 border-t bg-white p-3">
+      <div className="z-10 mt-auto flex flex-col gap-2 border-t p-3">
         <div className="flex items-center justify-between px-1 text-[11px] text-neutral-500">
           <span className="font-medium text-neutral-700">
             Hold the send button to record a voice note.
@@ -1580,7 +1580,7 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            className="flex-1 rounded-lg border border-neutral-200 px-4 py-2 text-base shadow-md"
+            className="flex-1 rounded-xl border border-neutral-200 px-4 py-2 text-base shadow-md"
             placeholder="Type your message"
             disabled={isRecording}
           />

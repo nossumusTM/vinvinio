@@ -3,8 +3,18 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 import prisma from '@/app/(marketplace)/libs/prismadb';
 import { computeAggregateMaps } from '@/app/(marketplace)/libs/aggregateTotals';
+import getCurrentUser from '@/app/(marketplace)/actions/getCurrentUser';
 
 export async function POST(req: Request) {
+  if (process.env.NODE_ENV === 'production') {
+    return new NextResponse('Not Found', { status: 404 });
+  }
+
+  const currentUser = await getCurrentUser();
+  if (!currentUser || currentUser.role !== 'moder') {
+    return new NextResponse('Unauthorized', { status: 403 });
+  }
+
   const body = await req.json();
   const { referenceId, totalBooksIncrement = 1, totalRevenueIncrement = 0 } = body;
 

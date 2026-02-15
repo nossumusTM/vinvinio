@@ -585,7 +585,7 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
     <div className="pageadjust max-w-6xl mx-auto py-12 px-4 sm:px-6 lg:px-8 space-y-8">
       {/* <Heading
         title="Host Card"
-        subtitle="A quick glance at the host's experiences and reputation."
+        subtitle="A quick glance at the host's services and reputation."
       /> */}
 
       <div className="rounded-3xl overflow-hidden shadow-xl border border-neutral-200 bg-white">
@@ -887,12 +887,12 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
           {/* STATS → DIRECT MESSAGE → TABS */}
           <div className="flex w-full flex-col md:flex-row md:items-center md:justify-between gap-4">
             {/* LEFT: Followers / Bookings / Likes */}
-            <div className="pb-4 flex w-full flex-row flex-nowrap gap-2 overflow-x-auto scroll-smooth md:w-auto md:flex-wrap md:overflow-visible md:gap-3">
+            <div className="pb-4 grid w-full grid-cols-3 gap-2 md:w-auto md:flex md:flex-row md:flex-nowrap md:gap-3">
               {/* Followers */}
-              <div className="inline-flex shrink-0 min-w-[100px] flex-col rounded-2xl border border-white/15 bg-white/10 px-3 py-2 text-black/90 shadow-md backdrop-blur-md">
+              <div className="inline-flex w-full min-w-0 flex-col rounded-2xl border border-white/15 bg-white/10 px-2 py-2 text-black/90 shadow-md backdrop-blur-md md:w-auto md:min-w-[100px] md:px-3">
                 <div className="flex items-center gap-1">
                   <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-sm" />
-                  <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-black/70">
+                  <p className="truncate text-[9px] font-medium uppercase tracking-[0.1em] text-black/70 md:text-[10px] md:tracking-[0.16em]">
                     Followers
                   </p>
                 </div>
@@ -902,10 +902,10 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
               </div>
 
               {/* Bookings */}
-              <div className="inline-flex shrink-0 min-w-[100px] flex-col rounded-2xl border border-white/15 bg-white/10 px-3 py-2 text-black/90 shadow-md backdrop-blur-md">
+              <div className="inline-flex w-full min-w-0 flex-col rounded-2xl border border-white/15 bg-white/10 px-2 py-2 text-black/90 shadow-md backdrop-blur-md md:w-auto md:min-w-[100px] md:px-3">
                 <div className="flex items-center gap-1">
                   <span className="inline-flex h-1.5 w-1.5 rounded-full bg-sky-400 shadow-sm" />
-                  <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-black/70">
+                  <p className="truncate text-[9px] font-medium uppercase tracking-[0.1em] text-black/70 md:text-[10px] md:tracking-[0.16em]">
                     Bookings
                   </p>
                 </div>
@@ -915,10 +915,10 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
               </div>
 
               {/* Likes */}
-              <div className="inline-flex shrink-0 min-w-[115px] flex-col rounded-2xl border border-white/15 bg-white/10 px-3 py-2 text-black/90 shadow-md backdrop-blur-md">
+              <div className="inline-flex w-full min-w-0 flex-col rounded-2xl border border-white/15 bg-white/10 px-2 py-2 text-black/90 shadow-md backdrop-blur-md md:w-auto md:min-w-[115px] md:px-3">
                 <div className="flex items-center gap-1">
                   <span className="inline-flex h-1.5 w-1.5 rounded-full bg-fuchsia-400 shadow-sm" />
-                  <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-black/70">
+                  <p className="truncate text-[9px] font-medium uppercase tracking-[0.1em] text-black/70 md:text-[10px] md:tracking-[0.16em]">
                     Likes
                   </p>
                 </div>
@@ -999,7 +999,7 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                   >
                     {listings.length === 0 && (
                       <div className="col-span-full rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 p-6 text-center text-sm text-neutral-500">
-                        This host has no live experiences just yet.
+                        This provider has no live services just yet.
                       </div>
                     )}
 

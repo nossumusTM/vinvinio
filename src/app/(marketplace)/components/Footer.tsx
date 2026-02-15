@@ -33,7 +33,7 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
   const cancellationContent = (
     <div className="text-gray-700 text-sm space-y-5 leading-relaxed">
       <p>
-        Thank you for choosing to book your experience through <strong>Vinvin</strong>, your trusted platform for unique local adventures and curated travel experiences. Our mission is to ensure every guest has a seamless and enriching journey. We understand that plans can change, and our cancellation policy is designed to be fair and transparent while respecting the time and effort of our hosts.
+        Thank you for choosing to book your service through <strong>Vinvin</strong>, your trusted platform for unique local adventures and curated services. Our mission is to ensure every guest has a seamless and enriching journey. We understand that plans can change, and our cancellation policy is designed to be fair and transparent while respecting the time and effort of our hosts.
       </p>
   
       <h3 className="text-base font-semibold mt-6">Cancellation Rules for Guests</h3>
@@ -45,14 +45,14 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
         <div>
           <p className="font-medium">1. No Refund (Within 24 Hours of Booking Date):</p>
           <p>
-            Cancellations made <strong>within 24 hours</strong> of the scheduled experience will <strong>not</strong> be eligible for any refund, regardless of the reason. This policy ensures our local hosts are fairly compensated for last-minute disruptions.
+            Cancellations made <strong>within 24 hours</strong> of the scheduled service will <strong>not</strong> be eligible for any refund, regardless of the reason. This policy ensures our local hosts are fairly compensated for last-minute disruptions.
           </p>
         </div>
   
         <div>
           <p className="font-medium">2. 50% Refund (Within 3 Business Days):</p>
           <p>
-            Cancellations made <strong>within 3 business days</strong> of the scheduled experience will receive a <strong>50% refund</strong> of the total booking amount. The remaining amount covers partial compensation to the host and processing fees.
+            Cancellations made <strong>within 3 business days</strong> of the scheduled service will receive a <strong>50% refund</strong> of the total booking amount. The remaining amount covers partial compensation to the host and processing fees.
           </p>
         </div>
   
@@ -68,7 +68,7 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
       <ul className="list-disc list-inside space-y-1">
         <li>Refunds will be processed within 5–10 business days after cancellation approval.</li>
         <li>Business days are Monday through Friday, excluding public holidays.</li>
-        <li>No refunds are available once the experience has started.</li>
+        <li>No refunds are available once the service has started.</li>
         <li>In rare cases of emergency or unforeseen events, guests may contact support with documentation for further consideration.</li>
       </ul>
   
@@ -82,7 +82,7 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
   const promotersGuideContent = (
     <div className="text-gray-700 text-sm space-y-5 leading-relaxed">
       <p>
-        Welcome to the <strong>Vinvin Network Promoters Program</strong> — a unique opportunity for passionate individuals who want to grow with our global travel platform. Whether you&rsquo;re a content creator, travel enthusiast, digital marketer, or just someone who loves connecting people with amazing experiences, we invite you to become a part of our journey.
+        Welcome to the <strong>Vinvin Network Promoters Program</strong> — a unique opportunity for passionate individuals who want to grow with our global services platform. Whether you&rsquo;re a content creator, digital marketer, or just someone who loves connecting people with amazing services, we invite you to become a part of our journey.
       </p>
   
       <h3 className="text-base font-semibold mt-6">How to Become a Promoter</h3>
@@ -97,7 +97,7 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
   
       <h3 className="text-base font-semibold mt-6">Global Community, Local Focus</h3>
       <p>
-        Our platform welcomes promoters from all corners of the world. While our experiences are currently based in Rome, Italy, you can still join our program no matter where you live. Even if you&rsquo;re outside the EU, you are encouraged to share your unique referral ID and drive traffic to our platform.
+        Our platform welcomes promoters from all corners of the world. While our services are currently based in Rome, Italy, you can still join our program no matter where you live. Even if you&rsquo;re outside the EU, you are encouraged to share your unique referral ID and drive traffic to our platform.
       </p>
       <p>
         The more users you engage, the higher your chance to earn. Our referral system tracks navigations and conversions to ensure your efforts are accurately rewarded.
@@ -126,13 +126,13 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
       <ul className="list-disc list-inside space-y-1">
         <li><strong>Personal Data:</strong> When you create an account or make a booking, we collect your name, email, phone number, and billing details.</li>
         <li><strong>Usage Data:</strong> We collect data about your interactions with the platform, such as page visits, preferences, and search activity.</li>
-        <li><strong>Device & Location:</strong> We may collect anonymized device data and location (with your consent) to improve your experience.</li>
+        <li><strong>Device & Location:</strong> We may collect anonymized device data and location (with your consent) to improve your service usage.</li>
       </ul>
   
       <h3 className="text-base font-semibold mt-6">2. How We Use Your Data</h3>
       <p>Your information helps us:</p>
       <ul className="list-disc list-inside space-y-1">
-        <li>Process bookings and deliver tailored travel experiences.</li>
+        <li>Process bookings and deliver tailored services.</li>
         <li>Send booking confirmations, important updates, or service-related notifications.</li>
         <li>Improve our platform through analytics and user feedback.</li>
         <li>Ensure security, prevent fraud, and comply with legal obligations.</li>
@@ -187,7 +187,7 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
   
       <h3 className="text-base font-semibold mt-6">2. Bookings and Payments</h3>
       <ul className="list-disc list-inside space-y-1">
-        <li>When booking an experience, you agree to pay the full amount displayed, including applicable taxes and fees.</li>
+        <li>When booking a service, you agree to pay the full amount displayed, including applicable taxes and fees.</li>
         <li>All bookings are subject to our <strong>Cancellation Policy</strong>, which must be reviewed before confirming a reservation.</li>
         <li>We reserve the right to cancel a booking in cases of fraud, misrepresentation, or availability conflicts.</li>
       </ul>
@@ -195,7 +195,7 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
       <h3 className="text-base font-semibold mt-6">3. User Conduct</h3>
       <ul className="list-disc list-inside space-y-1">
         <li>Users must treat hosts, guests, and our team with respect and courtesy.</li>
-        <li>Disruptive, abusive, or unlawful behavior on the platform or during an experience may result in account suspension or removal.</li>
+        <li>Disruptive, abusive, or unlawful behavior on the platform or during a service may result in account suspension or removal.</li>
       </ul>
   
       <h3 className="text-base font-semibold mt-6">4. Intellectual Property</h3>
@@ -205,7 +205,7 @@ const Footer: React.FC<FooterProps> = ({ currentUser }) => {
   
       <h3 className="text-base font-semibold mt-6">5. Limitation of Liability</h3>
       <p>
-        Vinvin is not responsible for direct or indirect damages arising from the use of our services, including issues during travel or interactions between users. We act solely as a booking intermediary and do not control the conduct of hosts or guests.
+        Vinvin is not responsible for direct or indirect damages arising from the use of our services, including issues during service participation or interactions between users. We act solely as a booking intermediary and do not control the conduct of hosts or guests.
       </p>
   
       <h3 className="text-base font-semibold mt-6">6. Termination</h3>

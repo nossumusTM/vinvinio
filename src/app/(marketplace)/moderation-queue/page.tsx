@@ -7,6 +7,10 @@ import ModerationQueueClient from './ModerationQueueClient';
 export const dynamic = 'force-dynamic';
 
 export default async function ModerationQueuePage() {
+  if (process.env.NODE_ENV === 'production') {
+    redirect('/');
+  }
+
   const currentUser = await getCurrentUser();
 
   if (!currentUser || currentUser.role !== 'moder') {

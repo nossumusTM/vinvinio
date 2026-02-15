@@ -58,7 +58,7 @@ const Newsletter = () => {
         </span>
         <div className="space-y-1">
           <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Weekly dispatch</p>
-          <h3 className="text-xl font-semibold text-neutral-900">Inbox-first travel intel</h3>
+          <h3 className="text-xl font-semibold text-neutral-900">Inbox-first service intel</h3>
           <p className="text-sm text-neutral-600">
             Get early access to drops, spotlighted hosts, and member-only perks. No spam. Just the good stuff.
           </p>
@@ -75,7 +75,7 @@ const Newsletter = () => {
               : 'border-neutral-200 bg-white hover:border-neutral-300'
           }`}
         >
-          Experiences
+          Services
         </button>
         <button
           type="button"

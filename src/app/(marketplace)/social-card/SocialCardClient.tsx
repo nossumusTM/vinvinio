@@ -24,11 +24,11 @@ import VerificationBadge from '@/app/(marketplace)/components/VerificationBadge'
 const FRIENDLY_CONTACT_MESSAGE =
   'Need to make changes to your email, phone, or contact preferences? Head to your Account page.';
 
-const HOBBY_PROMPT = 'Share the hobbies that make you light up when you travel.';
+const HOBBY_PROMPT = 'Share the hobbies that make you light up in everyday life.';
 
-const JOURNEY_PROMPT = 'Tell people a little bit about your professional journey and what inspires your travels.';
+const JOURNEY_PROMPT = 'Tell people a little bit about your professional journey and what inspires your work.';
 
-const PROFESSION_PROMPT = 'Let others know what you do and how you bring experiences to life.';
+const PROFESSION_PROMPT = 'Let others know what you do and how you bring services to life.';
 
 type VisibilityKey =
   | 'image'
@@ -169,7 +169,7 @@ const SocialCardClient: React.FC<SocialCardClientProps> = ({ currentUser }) => {
   const [locationValue, setLocationValue] = useState<CountrySelectValue | null>(null);
   const [hobbyDraft, setHobbyDraft] = useState('');
 
-  const legalName = currentUser.legalName || currentUser.name || 'Anonymous traveller';
+  const legalName = currentUser.legalName || currentUser.name || 'Anonymous user';
   const email = currentUser.email || 'Not provided';
   const phone = currentUser.phone || 'Not provided';
 

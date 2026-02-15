@@ -7,6 +7,10 @@ import { BASE_CURRENCY } from '@/app/(marketplace)/constants/locale';
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
+  if (process.env.NODE_ENV === 'production') {
+    return new NextResponse('Not Found', { status: 404 });
+  }
+
   const currentUser = await getCurrentUser();
   if (!currentUser || currentUser.role !== 'moder') {
     return new NextResponse('Unauthorized', { status: 401 });

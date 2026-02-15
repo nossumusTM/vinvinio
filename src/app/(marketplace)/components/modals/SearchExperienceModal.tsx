@@ -285,7 +285,7 @@ const SearchExperienceModal = () => {
         <div className="rounded-3xl p-[1px]">
           <div className="rounded-[26px] bg-white/80 backdrop-blur">
             {/* <Heading
-              title="Select your travel window"
+              title="Select your service window"
               subtitle="Choose the dates that best match your plans."
             /> */}
             <div className="mt-4 rounded-2xl">
@@ -317,7 +317,7 @@ const SearchExperienceModal = () => {
           <div className="rounded-[26px] bg-white/80 backdrop-blur p-6 shadow-xl">
             <Heading
               title="Who is joining the journey?"
-              subtitle="Let us tailor the experience to your group size."
+              subtitle="Let us tailor the service to your group size."
             />
             <div className="mt-6 rounded-2xl p-4">
               <Counter

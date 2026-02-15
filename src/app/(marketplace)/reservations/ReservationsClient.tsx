@@ -186,7 +186,7 @@ const ReservationsClient: React.FC<ReservationsClientProps> = ({
         <div className="mb-8 space-y-4 rounded-3xl border border-neutral-200 bg-white/90 shadow-md p-6">
           <Heading
             title="Booking Inbox"
-            subtitle="Who said ' YesSsSs! ' to your experience"
+            subtitle="Who said ' YesSsSs! ' to your service"
           />
           <p className="text-xs text-neutral-500">
             Use the filter button at the bottom to narrow down bookings by date, time, and year.

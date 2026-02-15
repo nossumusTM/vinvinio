@@ -100,12 +100,35 @@ type CategoryWithMeta = CategoryDefinition & {
   pinnedIndex: number | null;
 };
 
+const TRENDING_KEYWORDS_FOR_TEST = [
+  'wine tasting',
+  'boat tour',
+  'private chef',
+  'historical tour',
+  'city walk',
+  'sunset cruise',
+  'street food',
+  'museum visit',
+  'wellness retreat',
+  'photography tour',
+  'hiking trail',
+  'cooking class',
+  'nightlife service',
+  'spa day',
+  'art workshop',
+  'cultural immersion',
+  'family friendly',
+  'romantic getaway',
+  'adventure sport',
+  'vip access',
+];
+
 export const categories: CategoryDefinition[] = [
   {
     label: 'Adventure & Outdoor',
     icon: LuMountain,
     description:
-      'Thrilling experiences in the open air, from hiking trails to adrenaline adventures.',
+      'Thrilling services in the open air, from hiking trails to adrenaline adventures.',
   },
   {
     label: 'Nature & Wildlife',
@@ -132,10 +155,10 @@ export const categories: CategoryDefinition[] = [
       'Discover local heritage, stories, and iconic landmarks with expert hosts.',
   },
   {
-    label: 'Art, Design & Photography',
+    label: 'Art, Design & Creative Craft',
     icon: LuPalette,
     description:
-      'Creative workshops and visual explorations for art and design lovers.',
+      'Creative workshops and studio services for art and design lovers.',
   },
   {
     label: 'Music, Nightlife & Social',
@@ -165,7 +188,7 @@ export const categories: CategoryDefinition[] = [
     label: 'Luxury, VIP & Exclusive Access',
     icon: LuGem,
     description:
-      'Premium experiences with special access and elevated service.',
+      'Premium services with special access and elevated quality.',
   },
   {
     label: 'Spirituality, Retreats & Healing',
@@ -852,15 +875,15 @@ const CategoriesInner: React.FC = () => {
             {pinnedReady && (
               <>
                 {/* Filters tile */}
-                <button
-                  type="button"
-                  onClick={() => setFiltersOpen(true)}
-                  className={clsx(
-                    'flex h-[100px] w-[100px] shrink-0 flex-col items-center justify-between bg-white rounded-2xl p-4 text-neutral-600 shadow-md transition-all duration-300 hover:shadow-lg hover:shadow-neutral-300/50',
-                    hasActiveFilters &&
-                      'text-neutral-900 shadow-xl shadow-neutral-400/60',
-                  )}
-                >
+                  <button
+                    type="button"
+                    onClick={() => setFiltersOpen(true)}
+                    className={clsx(
+                      'flex min-h-[124px] w-[108px] shrink-0 flex-col items-center justify-center bg-white rounded-2xl p-3 text-neutral-600 shadow-md transition-all duration-300 hover:shadow-lg hover:shadow-neutral-300/50',
+                      hasActiveFilters &&
+                        'text-neutral-900 shadow-xl shadow-neutral-400/60',
+                    )}
+                  >
                   <div
                     className={clsx(
                       'relative flex h-12 w-12 p-2 items-center justify-center rounded-full bg-black shadow-md shadow-neutral-300/40',
@@ -879,7 +902,7 @@ const CategoriesInner: React.FC = () => {
                     )}
                   </div>
 
-                  <span className="mt-4 block h-10 w-full px-1 text-center text-[10px] font-semibold uppercase leading-tight tracking-wide text-neutral-700">
+                  <span className="mt-2 block w-full px-1 text-center text-[10px] font-semibold uppercase leading-tight tracking-wide text-neutral-700">
                     Filters
                   </span>
                 </button>
@@ -966,7 +989,7 @@ const CategoriesInner: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <h2 className="text-lg font-semibold text-neutral-900">
-                        Refine experiences
+                        Refine services
                       </h2>
                       <p className="text-sm text-neutral-600">
                         Choose filters to surface matching listings.
@@ -978,7 +1001,7 @@ const CategoriesInner: React.FC = () => {
                         closeReasonRef.current = 'dismiss';
                         setFiltersOpen(false);
                       }}
-                      className="rounded-full shadow-md p-2 text-neutral-500 transition hover:text-neutral-900"
+                      className="rounded-full shadow-md p-2 text-neutral-500 transition hover:text-neutral-900 hover:shadow-lg hover:bg-neutral-100"
                       aria-label="Close filters"
                     >
                       <LuChevronLeft className="h-4 w-4" aria-hidden="true" />
@@ -999,7 +1022,7 @@ const CategoriesInner: React.FC = () => {
                             Search by location
                           </h3>
                           <p className="text-xs text-neutral-500">
-                            Find experiences in a specific city or country.
+                            Find services in a specific city or country.
                           </p>
                         </div>
                       </div>
@@ -1016,7 +1039,7 @@ const CategoriesInner: React.FC = () => {
                       id="group-styles"
                       icon={LuUsers}
                       title="By Group Style"
-                      description="Select all group styles that fit your experience."
+                      description="Select all group styles that fit your service."
                       options={GROUP_STYLE_OPTIONS}
                       values={draftFilters.groupStyles}
                       onToggle={(value) =>
@@ -1051,7 +1074,7 @@ const CategoriesInner: React.FC = () => {
                       id="activity-forms"
                       icon={LuActivity}
                       title="By Activity Form"
-                      description="Tell guests how they will move through the experience."
+                      description="Tell guests how they will move through the service."
                       options={ACTIVITY_FORM_OPTIONS}
                       values={draftFilters.activityForms}
                       onToggle={(value) =>
@@ -1075,7 +1098,8 @@ const CategoriesInner: React.FC = () => {
                       id="keywords"
                       icon={LuTag}
                       title="By Keywords"
-                      description="Surface experiences with matching SEO keywords."
+                      description="Surface services with matching SEO keywords."
+                      trendingKeywords={TRENDING_KEYWORDS_FOR_TEST}
                       values={draftFilters.keywords}
                       inputValue={keywordDraft}
                       onInputChange={setKeywordDraft}
@@ -1125,9 +1149,9 @@ const CategoriesInner: React.FC = () => {
                           <span>
                             {previewCount !== null && !previewLoading
                               ? previewCount === 1
-                                ? 'experience'
-                                : 'experiences'
-                              : 'experiences'}
+                                ? 'service'
+                                : 'services'
+                              : 'services'}
                           </span>
                         </span>
                       )}
@@ -1246,6 +1270,7 @@ interface KeywordsSectionProps {
   id?: string;
   title: string;
   description: string;
+  trendingKeywords: string[];
   values: string[];
   inputValue: string;
   onInputChange: (value: string) => void;
@@ -1258,6 +1283,7 @@ const KeywordsSection: React.FC<KeywordsSectionProps> = ({
   id,
   title,
   description,
+  trendingKeywords,
   values,
   inputValue,
   onInputChange,
@@ -1271,6 +1297,42 @@ const KeywordsSection: React.FC<KeywordsSectionProps> = ({
       onAdd(inputValue);
       onInputChange('');
     }
+  };
+
+  const toHashtag = (keyword: string) =>
+    `#${keyword.trim().toLowerCase().replace(/\s+/g, '')}`;
+
+  const pageSize = 10;
+  const [trendingPage, setTrendingPage] = useState(0);
+
+  const totalTrendingPages = Math.max(1, Math.ceil(trendingKeywords.length / pageSize));
+  const visibleTrendingKeywords = useMemo(() => {
+    const start = trendingPage * pageSize;
+    return trendingKeywords.slice(start, start + pageSize);
+  }, [trendingKeywords, trendingPage]);
+
+  useEffect(() => {
+    if (trendingKeywords.length === 0) {
+      setTrendingPage(0);
+      return;
+    }
+
+    if (visibleTrendingKeywords.length === 0 || trendingPage >= totalTrendingPages) {
+      setTrendingPage(0);
+    }
+  }, [
+    trendingKeywords.length,
+    visibleTrendingKeywords.length,
+    trendingPage,
+    totalTrendingPages,
+  ]);
+
+  const handleLoadMoreTrending = () => {
+    setTrendingPage((prev) => {
+      if (trendingKeywords.length === 0) return 0;
+      const next = prev + 1;
+      return next >= totalTrendingPages ? 0 : next;
+    });
   };
 
   return (
@@ -1304,7 +1366,7 @@ const KeywordsSection: React.FC<KeywordsSectionProps> = ({
             key={keyword}
             className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1 text-xs font-medium text-neutral-700"
           >
-            #{keyword}
+            {toHashtag(keyword)}
             <button
               type="button"
               onClick={() => onRemove(keyword)}
@@ -1336,6 +1398,47 @@ const KeywordsSection: React.FC<KeywordsSectionProps> = ({
           className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm focus:border-neutral-400 focus:outline-none focus:ring-0"
         />
       </div>
+
+      {trendingKeywords.length > 0 && (
+        <div className="mt-4 border-t border-neutral-100 pt-4">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+              Trending keywords
+            </p>
+            {trendingKeywords.length > pageSize && (
+              <button
+                type="button"
+                onClick={handleLoadMoreTrending}
+                className="text-xs font-semibold text-neutral-600 underline-offset-2 hover:underline"
+              >
+                Load more
+              </button>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {visibleTrendingKeywords.map((keyword) => {
+              const normalized = keyword.trim().toLowerCase();
+              const isActive = values.includes(normalized);
+
+              return (
+                <button
+                  key={`${keyword}-${trendingPage}`}
+                  type="button"
+                  onClick={() => (isActive ? onRemove(normalized) : onAdd(normalized))}
+                  className={clsx(
+                    'rounded-full px-3 py-1.5 text-xs font-medium transition-all border shadow-sm',
+                    isActive
+                      ? 'bg-neutral-900 text-white border-neutral-900 shadow-md'
+                      : 'bg-white text-neutral-700 border-neutral-200 hover:border-neutral-300 hover:shadow-sm',
+                  )}
+                >
+                  {toHashtag(keyword)}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </section>
   );
 };

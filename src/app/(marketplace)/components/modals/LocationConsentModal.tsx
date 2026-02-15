@@ -1,8 +1,7 @@
 'use client';
 
-import { useMemo, useRef, useEffect } from 'react';
+import { useMemo, useRef } from 'react';
 import { LuGlobe2 } from 'react-icons/lu';
-import Image from 'next/image';
 
 import Modal from './Modal';
 import useGeoLocationExperiment from '@/app/(marketplace)/hooks/useGeoLocationExperiment';
@@ -75,11 +74,6 @@ const LocationConsentModal = () => {
   }));
 
   const { languageCode: selectedLanguageCode, currency: selectedCurrency } = useLocaleSettings();
-
-  const initialLangRef = useRef<string | undefined>(undefined);
-  const initialCurRef  = useRef<string | undefined>(undefined);
-  const userChangedLangRef = useRef(false);
-  const userChangedCurRef  = useRef(false);
 
   // const handleProceed = () => {
   //   if (detection) {
@@ -161,11 +155,18 @@ const LocationConsentModal = () => {
   //   return null;
   // }
 
- const countryLabel = detection?.city
-   ? `${detection.city}, ${detection.country ?? detection.countryCode ?? 'your area'}`
-   : detection?.country ?? detection?.countryCode ?? 'your area';
+  const locationSummary = useMemo(() => {
+    const country = detection?.country ?? detection?.countryCode ?? 'your area';
+    const city = detection?.city?.trim();
 
- const message = `We spotted that you're visiting from ${countryLabel}. Would you like us to tailor the listings to this location?`;
+    if (city) {
+      return `${city}, ${country}`;
+    }
+
+    return country;
+  }, [detection?.city, detection?.country, detection?.countryCode]);
+
+  const message = `We spotted that you're visiting from ${locationSummary}. Would you like us to tailor the listings to this location?`;
 
   const handleLocationChange = (value: CountrySelectValue | undefined) => {
     if (!value || !detection) return;
@@ -183,39 +184,6 @@ const LocationConsentModal = () => {
       locationValue: value.value,
     });
   };
-
-  const flagSrc = useMemo(() => {
-    const code = detection?.countryCode?.toLowerCase();
-    return code ? `/images/flags/${code}.svg` : '/images/flags/_world.svg';
-  }, [detection?.countryCode]);
-
-  const ipAddress = detection?.ip ?? null;
-
-  useEffect(() => {
-    if (localeModal.isOpen && initialCurRef.current === undefined) {
-      initialCurRef.current  = selectedCurrency;
-      initialLangRef.current = selectedLanguageCode;
-    }
-    if (!localeModal.isOpen) {
-      initialCurRef.current = undefined;
-      initialLangRef.current = undefined;
-      userChangedCurRef.current = false;
-      userChangedLangRef.current = false;
-    }
-  }, [localeModal.isOpen]);
-
-  // mark as changed only if user alters values while modal is open
-  useEffect(() => {
-    if (localeModal.isOpen && initialCurRef.current !== undefined && selectedCurrency !== initialCurRef.current) {
-      userChangedCurRef.current = true;
-    }
-  }, [selectedCurrency, localeModal.isOpen]);
-
-  useEffect(() => {
-    if (localeModal.isOpen && initialLangRef.current !== undefined && selectedLanguageCode !== initialLangRef.current) {
-      userChangedLangRef.current = true;
-    }
-  }, [selectedLanguageCode, localeModal.isOpen]);
 
   const currencyFromCountry = (code?: string): string | undefined => {
     if (!code) return;
@@ -247,10 +215,8 @@ const LocationConsentModal = () => {
   // }, [detection?.languageCode, selectedLanguageCode]);
 
   const previewLanguageCode = useMemo(() => {
-    return userChangedLangRef.current
-      ? (selectedLanguageCode ?? EN_CODE)
-      : EN_CODE; // force English until user changes it this session
-  }, [selectedLanguageCode, EN_CODE]);
+    return selectedLanguageCode ?? detection?.languageCode ?? EN_CODE;
+  }, [selectedLanguageCode, detection?.languageCode, EN_CODE]);
 
   // const previewCurrencyCode = useMemo(() => {
   //   const detected = detection?.currencyCode;
@@ -266,7 +232,7 @@ const LocationConsentModal = () => {
   // }, [detection?.currencyCode, selectedCurrency, previewLanguageCode]);
 
   const previewCurrencyCode = useMemo(() => {
-    if (userChangedCurRef.current && selectedCurrency) return selectedCurrency;        // user changed → use selection
+    if (selectedCurrency) return selectedCurrency;
     if (detection?.currencyCode) return detection.currencyCode;                       // use detected (e.g., EUR for IT)
     const byCountry = currencyFromCountry(detection?.countryCode);
     if (byCountry) return byCountry;                                                  // derive from country if needed
@@ -285,6 +251,7 @@ const LocationConsentModal = () => {
       secondaryActionLabel="No, thanks"
       className="px-6"
       submitOnEnter={false}
+      preventOutsideClose={isLocaleOpen}
       body={(
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-3 text-left">
@@ -292,15 +259,8 @@ const LocationConsentModal = () => {
             <p className="text-md md:text-xl text-neutral-600">{message}</p>
             <div className="pb-1 pt-1 flex justify-center items-center">
               <div className="w-fit inline-flex items-center gap-2 rounded-xl shadow-md px-3 py-2 text-md font-medium text-neutral-800">
-                {/* <span className="inline-flex h-4 w-6 overflow-hidden rounded object-cover">
-                  <Image className="h-4 w-6 rounded object-cover" src={flagSrc} alt={`${detection?.countryCode ?? 'World'} flag`} width={16} height={12} />
-                </span> */}
-                <span>
-                  {ipAddress && (
-                    <span className="text-lg inline-flex items-center rounded-md bg-emerald-500/20 px-2 py-[2px] text-[10px] font-semibold text-emerald-600 tracking-wide">
-                      {ipAddress}
-                    </span>
-                  )}
+                <span className="text-sm inline-flex items-center rounded-md bg-emerald-500/20 px-3 py-[4px] font-semibold text-emerald-700">
+                  {locationSummary}
                 </span>
               </div>
             </div>

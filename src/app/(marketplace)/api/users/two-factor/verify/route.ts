@@ -20,6 +20,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Two-factor code is required' }, { status: 400 });
     }
 
+    if (!/^\d{6}$/.test(trimmedCode)) {
+      return NextResponse.json({ error: 'Invalid code format' }, { status: 400 });
+    }
+
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
       select: {

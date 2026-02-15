@@ -21,6 +21,7 @@ import PromoteModal from './components/modals/PromoteModal';
 import ForgetPasswordModal from './components/modals/ForgetPasswordModal';
 import Messenger from './components/Messenger';
 import LocaleHydrator from './components/LocaleHydrator';
+import GlobalLanguageTranslator from './components/GlobalLanguageTranslator';
 
 import ToasterProvider from '@/app/(marketplace)/providers/ToasterProvider';
 import AnnouncementModal from './components/AnnouncementModal';
@@ -38,7 +39,7 @@ import SessionProviderWrapper from './providers/SessionProviderWrapper';
 
 export const metadata = {
   title: 'Vinvin - Experience World Beyond the Ordinary | 2026',
-  description: 'Beyond Experiences & More',
+  description: 'Beyond Services & More',
   icons: {
     icon: [
       { url: '/favicon.svg?v=1.9', type: 'image/svg+xml' },
@@ -76,6 +77,7 @@ export default async function RootLayout({
 
         <ClientOnly>
           <LocaleHydrator />
+          <GlobalLanguageTranslator />
           <ToasterProvider />
           <NavBar currentUser={currentUser} />
           {/* <AnnouncementModal /> */}

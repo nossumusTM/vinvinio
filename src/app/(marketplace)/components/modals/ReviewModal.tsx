@@ -255,7 +255,7 @@ const ReviewsModal: React.FC<ReviewsModalProps> = ({
                 <div className="flex flex-row gap-2 justify-center items-start">
                   <PiQuotesFill className="text-xl md:text-base" />
                   <p className="text-sm text-left md:text-center">
-                    Experience is the dance that moves you closer to the joy and charm behind every moment.
+                    Service is the bridge that moves you closer to the joy and value behind every moment.
                   </p>
                 </div>
               </div>

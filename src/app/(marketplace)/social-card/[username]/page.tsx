@@ -376,7 +376,7 @@ const SocialCardSharePage = async ({
   // Visibility & profile basics
   const visibility = normalizeVisibility((u?.socialCardVisibility as SocialCardVisibility | null) ?? null);
   const visitedPlaces = mapVisitedPlaces(u?.visitedPlaces);
-  const displayedName = u?.legalName || u?.name || 'Anonymous traveller';
+  const displayedName = u?.legalName || u?.name || 'Anonymous user';
   const email = (typeof u?.email === 'string' ? u.email : null) ?? null;
   const phone = (typeof u?.phone === 'string' ? u.phone : null) ?? null;
 
@@ -458,7 +458,7 @@ const SocialCardSharePage = async ({
 
     return {
       id: reservation.id,
-      listingTitle: listing?.title ?? 'Experience',
+      listingTitle: listing?.title ?? 'Service',
       listingHref,
       coverImage,
       startDate: reservation.startDate?.toISOString?.() ?? reservation.startDate?.toString?.() ?? null,
@@ -476,7 +476,7 @@ const SocialCardSharePage = async ({
       rating: review.rating ?? 0,
       comment: review.comment ?? '',
       createdAt: review.createdAt?.toISOString?.() ?? review.createdAt.toString(),
-      listingTitle: listing?.title ?? 'Experience',
+      listingTitle: listing?.title ?? 'Service',
       listingHref,
     } satisfies ReviewSummary;
   });

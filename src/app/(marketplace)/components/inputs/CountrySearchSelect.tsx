@@ -44,7 +44,7 @@ type Suggestion = CountrySelectValue & {
   isPopular?: boolean;
 };
 
-const TAGLINE = 'Activities to do · Experiences to live';
+const TAGLINE = 'Activities to do · Services to explore';
 
 // Rotating placeholder texts (first one is the default)
 const ROTATING_ITEMS = [

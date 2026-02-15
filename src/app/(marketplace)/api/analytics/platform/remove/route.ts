@@ -1,8 +1,18 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/app/(marketplace)/libs/prismadb';
+import getCurrentUser from '@/app/(marketplace)/actions/getCurrentUser';
 
 export async function POST(req: Request) {
   try {
+    if (process.env.NODE_ENV === 'production') {
+      return new NextResponse('Not Found', { status: 404 });
+    }
+
+    const currentUser = await getCurrentUser();
+    if (!currentUser || currentUser.role !== 'moder') {
+      return new NextResponse('Unauthorized', { status: 403 });
+    }
+
     const { reservationId } = await req.json();
 
     const deleted = await prisma.platformEconomy.deleteMany({

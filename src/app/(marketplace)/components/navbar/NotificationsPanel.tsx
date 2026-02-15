@@ -14,6 +14,7 @@ import {
   AiOutlineUpload,
 } from 'react-icons/ai';
 import { BiMessageDetail } from 'react-icons/bi';
+import { RiNotificationLine } from 'react-icons/ri';
 import { LuChevronRight } from 'react-icons/lu';
 import { BsCashCoin, BsStarFill } from 'react-icons/bs';
 import { formatDistanceToNow } from 'date-fns';
@@ -395,7 +396,7 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isOpen, onClose
     if (notifications.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 py-10 text-center">
-          <AiOutlineBell className="h-8 w-8 text-neutral-400" />
+          <RiNotificationLine className="h-8 w-8 text-neutral-400" />
           <div>
             <p className="text-sm font-semibold text-neutral-900">No notifications yet</p>
             <p className="p-4 mt-1 text-xs text-neutral-500">Interactions with your listings and bookings will appear here.</p>
@@ -539,7 +540,7 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isOpen, onClose
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-full border border-neutral-200 p-2 text-neutral-500 transition hover:text-neutral-900"
+                  className="rounded-full shadow-md hover:shadow-lg p-2 text-neutral-500 transition hover:text-neutral-900 hover:bg-neutral-100"
                   aria-label="Close notifications"
                 >
                   {/* <AiOutlineClose className="h-4 w-4" /> */}

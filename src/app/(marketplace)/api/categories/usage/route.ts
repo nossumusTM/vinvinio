@@ -4,9 +4,15 @@ import prisma from '@/app/(marketplace)/libs/prismadb';
 
 export async function GET() {
   try {
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
     const reservations = await prisma.reservation.findMany({
-    where: { status: 'active' },
+    where: {
+      status: 'active',
+      createdAt: {
+        gte: since,
+      },
+    },
     select: {
         listing: {
         select: {

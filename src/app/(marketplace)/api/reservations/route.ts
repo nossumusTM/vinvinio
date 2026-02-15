@@ -288,7 +288,12 @@ async function handleReservationRequest(request: Request) {
     if (listingWithSlug?.user?.email) {
       await fetch(`${process.env.NEXTAUTH_URL}/api/email/notify-host`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(process.env.INTERNAL_API_TOKEN
+            ? { 'x-internal-api-token': process.env.INTERNAL_API_TOKEN }
+            : {}),
+        },
         body: JSON.stringify({
           hostEmail: listingWithSlug.user.email,
           hostName: listingWithSlug.user.name,

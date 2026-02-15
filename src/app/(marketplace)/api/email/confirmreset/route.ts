@@ -3,6 +3,10 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/app/(marketplace)/libs/prismadb';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
+
+const hashResetToken = (token: string) =>
+  crypto.createHash('sha256').update(token).digest('hex');
 
 export async function POST(req: Request) {
   try {
@@ -12,8 +16,12 @@ export async function POST(req: Request) {
       return new NextResponse('Invalid data', { status: 400 });
     }
 
+    if (typeof newPassword !== 'string' || newPassword.length < 8) {
+      return new NextResponse('Password must be at least 8 characters.', { status: 400 });
+    }
+
     const resetToken = await prisma.passwordResetToken.findUnique({
-      where: { token },
+      where: { token: hashResetToken(token) },
       include: { user: true },
     });
 
@@ -25,10 +33,13 @@ export async function POST(req: Request) {
 
     await prisma.user.update({
       where: { id: resetToken.userId },
-      data: { hashedPassword },
+      data: {
+        hashedPassword,
+        passwordUpdatedAt: new Date(),
+      },
     });
 
-    await prisma.passwordResetToken.delete({ where: { id: resetToken.id } });
+    await prisma.passwordResetToken.deleteMany({ where: { userId: resetToken.userId } });
 
     return NextResponse.json({ success: true });
   } catch (err) {

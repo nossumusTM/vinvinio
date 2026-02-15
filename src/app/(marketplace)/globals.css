@@ -182,7 +182,13 @@ body:not(.has-announcement-bar) #layout-content-wrapper {
 }
 
 .pageadjust {
-  margin-top: -30px;
+  margin-top: -60px;
+}
+
+@media (min-width: 768px) {
+  .pageadjust {
+    margin-top: -30px;
+  }
 }
 
 .listingscontainer {
@@ -254,6 +260,27 @@ body:not(.has-announcement-bar) #layout-content-wrapper {
 
 .animated-border > button {
   border-radius: 14px;
+}
+
+/* Hide Google Translate injected chrome so layout stays stable */
+.goog-te-banner-frame.skiptranslate {
+  display: none !important;
+}
+
+body {
+  top: 0 !important;
+}
+
+#goog-gt-tt {
+  display: none !important;
+}
+
+.goog-te-gadget {
+  font-size: 0 !important;
+}
+
+.goog-logo-link {
+  display: none !important;
 }
 
 .animated-border > button {

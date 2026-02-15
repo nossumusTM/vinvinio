@@ -347,7 +347,7 @@ const handleSubmit = async () => {
                     <div style="max-width: 640px; margin: 0 auto; background: white; border-radius: 16px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
                       <h1 style="font-size: 20px; margin-bottom: 12px;">Your booking is confirmed 🎉</h1>
                       <p style="margin: 0 0 16px;">Hi ${legalName || 'guest'},</p>
-                      <p style="margin: 0 0 12px;">Thanks for booking <strong>${listingData?.title || 'your experience'}</strong>. Here are your details:</p>
+                      <p style="margin: 0 0 12px;">Thanks for booking <strong>${listingData?.title || 'your service'}</strong>. Here are your details:</p>
                       <ul style="padding-left: 18px; margin: 0 0 16px;">
                         <li><strong>Dates:</strong> ${formattedDateRange || 'To be confirmed'}</li>
                         <li><strong>Guests:</strong> ${guests}</li>
@@ -356,7 +356,7 @@ const handleSubmit = async () => {
                         <li><strong>Total paid:</strong> ${formatConverted(total)}</li>
                       </ul>
                       <p style="margin: 0 0 16px;">If you have questions, reply to this email and we'll be happy to help.</p>
-                      <p style="margin: 0;">Safe travels,<br/>The Vinvin Team</p>
+                      <p style="margin: 0;">Best regards,<br/>The Vinvin Team</p>
                     </div>
                   </div>
                 `,
