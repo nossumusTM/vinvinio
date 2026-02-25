@@ -39,7 +39,7 @@ const ListingLikeButton: React.FC<ListingLikeButtonProps> = ({
   return (
     <div
       className={clsx(
-        'bg-black/10 group flex items-center gap-2 rounded-full backdrop-blur-sm transition px-3 py-1.5 text-white shadow-md backdrop-blur transition',
+        'bg-white group flex items-center gap-2 rounded-full transition px-3 py-1.5 text-black shadow-md',
         'hover:shadow-lg',
         inline ? 'static' : 'absolute top-3 right-3'
       )}
@@ -49,7 +49,7 @@ const ListingLikeButton: React.FC<ListingLikeButtonProps> = ({
         type="button"
         onClick={handleIconClick}
         disabled={loading}
-        className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 disabled:cursor-not-allowed disabled:opacity-70"
+        className="flex h-7 w-7 items-center justify-center rounded-full bg-white disabled:cursor-not-allowed disabled:opacity-70"
         aria-label={liked ? 'Unlike listing' : 'Like listing'}
       >
         <AnimatePresence mode="wait" initial={false}>
@@ -61,7 +61,7 @@ const ListingLikeButton: React.FC<ListingLikeButtonProps> = ({
               exit={{ scale: 0.4, opacity: 0 }}
               transition={{ duration: 0.15, ease: 'easeOut' }}
             >
-              <AiFillLike size={18} className="text-white drop-shadow-md" />
+              <AiFillLike size={18} className="text-black" />
             </motion.span>
           ) : (
             <motion.span
@@ -71,7 +71,7 @@ const ListingLikeButton: React.FC<ListingLikeButtonProps> = ({
               exit={{ scale: 0.4, opacity: 0 }}
               transition={{ duration: 0.15, ease: 'easeOut' }}
             >
-              <AiOutlineLike size={18} className="text-white drop-shadow-md" />
+              <AiOutlineLike size={18} className="text-black" />
             </motion.span>
           )}
         </AnimatePresence>

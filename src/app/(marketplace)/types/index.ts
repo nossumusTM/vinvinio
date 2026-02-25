@@ -107,6 +107,7 @@ type SafeUserStrict = Omit<
 
   // 🔧 make this optional+nullable so older rows / partial shapes are fine
   alternateRole?: User["role"] | null;
+  isOperator?: boolean;
 
   phone: string | null;
   contact: string | null;

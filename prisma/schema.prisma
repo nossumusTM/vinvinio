@@ -48,6 +48,12 @@ enum NewsletterType {
   updates
 }
 
+enum OperatorRequestStatus {
+  open
+  assigned
+  closed
+}
+
 model User {
   id                String             @id @default(auto()) @map("_id") @db.ObjectId
   name              String?
@@ -59,6 +65,7 @@ model User {
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
   role              Role               @default(customer)
+  isOperator        Boolean            @default(false)
   partnerCommission Int                @default(15)
   platformRelevance Int                @default(0)
   partnerCommissionChangeCount Int     @default(0)
@@ -82,6 +89,8 @@ model User {
 
   sentMessages        Message[]             @relation("SentMessages")
   receivedMessages    Message[]             @relation("ReceivedMessages")
+  operatorRequestsAsRequester OperatorRequest[] @relation("OperatorRequestsAsRequester")
+  operatorRequestsAsOperator  OperatorRequest[] @relation("OperatorRequestsAsOperator")
   removedConversation RemovedConversation[] @relation("Remover")
   wasRemovedByUsers   RemovedConversation[] @relation("Removed")
 
@@ -413,11 +422,31 @@ model Message {
   audioDurationMs Int?
   senderId        String   @db.ObjectId
   recipientId     String   @db.ObjectId
+  operatorRequestId String? @db.ObjectId
   createdAt       DateTime @default(now())
   seen            Boolean  @default(false) // ✅ Add this line
 
   sender    User @relation("SentMessages", fields: [senderId], references: [id])
   recipient User @relation("ReceivedMessages", fields: [recipientId], references: [id])
+}
+
+model OperatorRequest {
+  id          String                @id @default(auto()) @map("_id") @db.ObjectId
+  requesterId String                @db.ObjectId
+  operatorId  String?               @db.ObjectId
+  status      OperatorRequestStatus @default(open)
+  latestMessage String?
+  latestMessageAt DateTime?
+  assignedAt  DateTime?
+  closedAt    DateTime?
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  requester User @relation("OperatorRequestsAsRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  operator  User? @relation("OperatorRequestsAsOperator", fields: [operatorId], references: [id], onDelete: SetNull)
+
+  @@index([requesterId, status])
+  @@index([operatorId, status])
 }
 
 model RemovedConversation {

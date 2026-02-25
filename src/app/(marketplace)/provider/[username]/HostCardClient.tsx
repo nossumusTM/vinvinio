@@ -1148,6 +1148,9 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                     {reviews.slice(0, visibleReviews).map((review) => {
                       const avatarSrc = getReviewAvatarSrc(review);
                       const initial = (review.reviewerName?.[0] || 'U').toUpperCase();
+                      const reviewImages = Array.isArray(review.images)
+                        ? review.images.filter((src): src is string => typeof src === 'string' && src.trim().length > 0)
+                        : [];
 
                       return (
                         <div key={review.id} className="rounded-2xl border border-neutral-200 bg-white shadow-sm hover:shadow-md transition p-5 sm:p-6 space-y-4">
@@ -1200,6 +1203,25 @@ const HostCardClient: React.FC<HostCardClientProps> = ({ host, listings, reviews
                         <p className="text-sm text-neutral-700 leading-relaxed whitespace-pre-line">
                           {review.comment}
                         </p>
+
+                        {reviewImages.length > 0 && (
+                          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                            {reviewImages.map((src, index) => (
+                              <div
+                                key={`${review.id}-image-${index}`}
+                                className="relative aspect-square overflow-hidden rounded-xl bg-neutral-100"
+                              >
+                                <NextImage
+                                  src={src}
+                                  alt={`Review image ${index + 1}`}
+                                  fill
+                                  sizes="(max-width: 640px) 45vw, 180px"
+                                  className="object-cover"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     );
                   })}

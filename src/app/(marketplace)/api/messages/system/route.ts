@@ -2,8 +2,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/app/(marketplace)/libs/prismadb';
 import getCurrentUser from '@/app/(marketplace)/actions/getCurrentUser';
-
-const CUSTOMER_SERVICE_ID = '67ef2895f045b7ff3d0cf6fc';
+import { SUPPORT_OPERATOR_ID } from '@/app/(marketplace)/constants/operator';
 
 export async function POST(request: Request) {
   try {
@@ -28,17 +27,30 @@ export async function POST(request: Request) {
 
     const isSameUserSender = sender === currentUser.id;
     const isSafeSupportEcho =
-      sender === CUSTOMER_SERVICE_ID &&
+      sender === SUPPORT_OPERATOR_ID &&
       recipient === currentUser.id;
 
     if (!isSameUserSender && !isSafeSupportEcho) {
       return new NextResponse('Forbidden sender identity', { status: 403 });
     }
 
+    let operatorRequestId: string | undefined = undefined;
+    if (isSafeSupportEcho) {
+      const request = await prisma.operatorRequest.findFirst({
+        where: {
+          requesterId: recipient,
+          status: { in: ['open', 'assigned'] },
+        },
+        orderBy: { updatedAt: 'desc' },
+      });
+      operatorRequestId = request?.id;
+    }
+
     const newMessage = await prisma.message.create({
       data: {
         senderId: sender,
         recipientId: recipient,
+        operatorRequestId,
         text: bodyText,
         seen: false,
       },

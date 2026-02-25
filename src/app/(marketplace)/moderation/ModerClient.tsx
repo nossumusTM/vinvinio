@@ -250,6 +250,8 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
   const [roleChangeIdentifier, setRoleChangeIdentifier] = useState('');
   const [roleChangeTargetRole, setRoleChangeTargetRole] = useState<'customer' | 'host' | 'promoter'>('customer');
   const [isUpdatingUserRole, setIsUpdatingUserRole] = useState(false);
+  const [operatorIdentifier, setOperatorIdentifier] = useState('');
+  const [isUpdatingOperator, setIsUpdatingOperator] = useState(false);
 
   const [puntiResult, setPuntiResult] = useState<{ added: number; total: number } | null>(null);
   const [currentListingPunti, setCurrentListingPunti] = useState<number | null>(null);
@@ -502,6 +504,44 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
       setIsUpdatingUserRole(false);
     }
   }, [resolveUserId, roleChangeIdentifier, roleChangeTargetRole]);
+
+  const handleOperatorAccess = useCallback(
+    async (assign: boolean) => {
+      const userId = await resolveUserId(operatorIdentifier, 'user');
+
+      if (!userId) {
+        toast.error('Please provide a user identifier.');
+        return;
+      }
+
+      setIsUpdatingOperator(true);
+      try {
+        const response = await axios.post('/api/moderation/users/operator', {
+          userId,
+          assign,
+        });
+
+        const updated = response.data?.user;
+        const targetName = updated?.username || updated?.name || 'User';
+        toast.success(
+          assign
+            ? `${targetName} is now an operator.`
+            : `${targetName} is no longer an operator.`,
+        );
+        setOperatorIdentifier('');
+      } catch (error) {
+        const message = axios.isAxiosError(error)
+          ? typeof error.response?.data === 'string'
+            ? error.response?.data
+            : (error.response?.data as { error?: string })?.error || 'Failed to update operator access.'
+          : 'Failed to update operator access.';
+        toast.error(message);
+      } finally {
+        setIsUpdatingOperator(false);
+      }
+    },
+    [operatorIdentifier, resolveUserId],
+  );
 
   const regionNames = useMemo(() => {
     try {
@@ -1887,9 +1927,41 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
                 {isUpdatingUserRole ? 'Updating…' : 'Update role'}
               </button>
             </div>
+
+            <div className="mt-6 space-y-4 border-t border-neutral-200/70 pt-6">
+              <div>
+                <h3 className="text-base font-semibold text-black">Operator Access</h3>
+                <p className="text-sm text-neutral-600">
+                  Assign or remove operator access by entering username, email, or user ID.
+                </p>
+              </div>
+              <input
+                type="text"
+                placeholder="Enter username, email, or userId"
+                value={operatorIdentifier}
+                onChange={(event) => setOperatorIdentifier(event.target.value)}
+                className="w-full p-2 border rounded-xl"
+              />
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <button
+                  onClick={() => handleOperatorAccess(true)}
+                  disabled={isUpdatingOperator}
+                  className="w-full rounded-xl bg-neutral-900 px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isUpdatingOperator ? 'Updating…' : 'Assign as operator'}
+                </button>
+                <button
+                  onClick={() => handleOperatorAccess(false)}
+                  disabled={isUpdatingOperator}
+                  className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-800 shadow-sm transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isUpdatingOperator ? 'Updating…' : 'Remove operator'}
+                </button>
+              </div>
+            </div>
           </div>
 
-          <div className="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-neutral-200/60">
+          <div className="space-y-4 rounded-2xl bg-white p-6 shadow-lg ring-1 ring-neutral-200/60">
             <h2 className="text-lg font-bold text-black">Moderator Listing Deactivation</h2>
             <p className="text-sm text-neutral-600">
               Deactivate a listing immediately by providing its listing ID. The listing status will be set to inactive.
@@ -1916,7 +1988,7 @@ const ModerationClient: React.FC<ModerationClientProps> = ({ currentUser }) => {
             </button>
           </div>
 
-          <div className="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-neutral-200/60">
+          <div className="space-y-4 rounded-2xl bg-white p-6 shadow-lg ring-1 ring-neutral-200/60">
             <h2 className="text-lg font-bold text-black">Account Suspension Tool</h2>
             <p className="text-sm text-neutral-600">
               Suspend a user account by providing their username or user ID. Suspended users will see a suspension label on their profile.

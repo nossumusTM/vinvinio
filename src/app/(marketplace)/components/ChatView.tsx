@@ -13,6 +13,7 @@ import Avatar from './Avatar';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import { SUPPORT_OPERATOR_ID } from '@/app/(marketplace)/constants/operator';
 
 type Message = {
   id: string;
@@ -147,7 +148,14 @@ const AudioPlayer: React.FC<{ src: string; durationMs?: number | null }> = ({ sr
 
 interface ChatViewProps {
   currentUserId: string;
-  recipient: { id: string; name: string; image?: string; role?: string }; // + role?
+  recipient: {
+    id: string;
+    name: string;
+    image?: string;
+    role?: string;
+    operatorRequestId?: string;
+    requestStatus?: 'open' | 'assigned' | 'closed';
+  };
   onBack: () => void;
 }
 
@@ -179,7 +187,7 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
   const attachmentInputRef = useRef<HTMLInputElement | null>(null);
 
   const router = useRouter();
-  const CUSTOMER_SERVICE_ID = '67ef2895f045b7ff3d0cf6fc';
+  const CUSTOMER_SERVICE_ID = SUPPORT_OPERATOR_ID;
   const isOperator = recipient.id === CUSTOMER_SERVICE_ID;
   const recipientNameClean = recipient?.name?.trim() || null;
 
@@ -668,7 +676,10 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
           await fetch('/api/messages/mark-seen', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ senderId: recipient.id }),
+            body: JSON.stringify({
+              senderId: recipient.id,
+              operatorRequestId: recipient.operatorRequestId,
+            }),
           });
         } catch (error) {
           console.error('Error marking messages as seen:', error);
@@ -762,6 +773,7 @@ const ChatView: React.FC<ChatViewProps> = ({ currentUserId, recipient, onBack })
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           recipientId: recipient.id,
+          operatorRequestId: recipient.operatorRequestId,
           text: composedText,
           attachmentUrl: attachmentPayload?.url,
           attachmentName: attachmentPayload?.name,

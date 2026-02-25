@@ -3368,7 +3368,7 @@ const coverImage = useMemo(() => {
   return (
     <Container className="py-10">
       <motion.div
-        className="pageadjust px-5 space-y-8"
+        className="pageadjust px-2 md:px-6 space-y-8"
         initial="hidden"
         animate="visible"
         variants={pageVariants}
@@ -4849,7 +4849,7 @@ const coverImage = useMemo(() => {
                       <>
                         {/* Flip Card */}
                         <div
-                      className="relative mt-6 h-56 w-[340px] cursor-pointer perspective"
+                      className="relative mt-6 w-full max-w-[340px] aspect-[1.586] cursor-pointer perspective"
                       onClick={() => setIsFlipped((prev) => !prev)}
                     >
                       <div
@@ -5509,7 +5509,7 @@ const coverImage = useMemo(() => {
 
                   {savedPayout ? (
                     <div
-                      className="relative mt-6 h-56 w-[340px] cursor-pointer perspective"
+                      className="relative mt-6 w-full max-w-[340px] aspect-[1.586] cursor-pointer perspective"
                       onClick={() => setIsFlipped((prev) => !prev)}
                     >
                       <div
@@ -5797,7 +5797,7 @@ const coverImage = useMemo(() => {
 
                   {savedPayout ? (
                     <div
-                      className="relative mt-6 h-56 w-[340px] mx-auto cursor-pointer perspective"
+                      className="relative mt-6 w-full max-w-[340px] aspect-[1.586] mx-auto cursor-pointer perspective"
                       onClick={() => setIsFlipped((prev) => !prev)}
                     >
                       <div

@@ -100,6 +100,17 @@ const Map: React.FC<MapProps> = ({ center, city, country, allowFullscreen = fals
   }, [allowFullscreen]);
 
   useEffect(() => {
+    const handleMapOpen = (event: Event) => {
+      if (!allowFullscreen) return;
+      event.preventDefault();
+      openOverlay();
+    };
+
+    window.addEventListener('listings-map:open', handleMapOpen as EventListener);
+    return () => window.removeEventListener('listings-map:open', handleMapOpen as EventListener);
+  }, [allowFullscreen, openOverlay]);
+
+  useEffect(() => {
     setIsClient(true);
   }, []);
 
@@ -327,4 +338,3 @@ const Map: React.FC<MapProps> = ({ center, city, country, allowFullscreen = fals
 };
 
 export default Map;
-

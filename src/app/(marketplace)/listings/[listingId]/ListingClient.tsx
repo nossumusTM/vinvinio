@@ -669,38 +669,6 @@ const ListingClient: React.FC<ListingClientProps> = ({
         };
       }, [listing.id]);
 
-      useEffect(() => {
-        const fetchUserImages = async () => {
-          const updatedReviews = await Promise.all(
-            reviews.map(async (review) => {
-              try {
-                const res = await fetch("/api/users/get-user-image", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ name: review.userName }),
-                });                  
-      
-                const data = await res.json();
-                return {
-                  ...review,
-                  userImage: data.image || null,
-                };
-              } catch (err) {
-                console.warn(`Failed to fetch image for ${review.userName}`, err);
-                return {
-                  ...review,
-                  userImage: null,
-                };
-              }
-            })
-          );
-      
-          setReviews(updatedReviews);
-        };
-      
-        if (Array.isArray(reviews) && reviews.length > 0) fetchUserImages();
-    }, [reviews]);
-
     useEffect(() => {
         const currentQuery = params ? qs.parse(params.toString()) : {};
         const updatedQuery: any = { ...currentQuery };

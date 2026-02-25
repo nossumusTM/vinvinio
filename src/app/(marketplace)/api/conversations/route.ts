@@ -1,179 +1,54 @@
-// // api/conversations/route.ts
-// import { NextResponse } from 'next/server';
-// export const dynamic = 'force-dynamic';
-
-// import getCurrentUser from '@/app/(marketplace)/actions/getCurrentUser';
-// import prisma from '@/app/(marketplace)/libs/prismadb';
-
-// export async function GET() {
-//   const currentUser = await getCurrentUser();
-//   if (!currentUser) return new NextResponse('Unauthorized', { status: 401 });
-
-//   const formatMessagePreview = (msg: any) => {
-//     if (msg?.audioUrl) return '🎤 Voice message';
-//     if (msg?.attachmentName) return `📎 ${msg.attachmentName}`;
-//     if (msg?.text && typeof msg.text === 'string') return msg.text;
-//     return 'New message';
-//   };
-
-//   try {
-//     const rawMessages = await prisma.message.findMany({
-//       where: {
-//         OR: [
-//           { senderId: currentUser.id },
-//           { recipientId: currentUser.id },
-//         ],
-//       },
-//       orderBy: { createdAt: 'desc' },
-//     });
-
-//     const messages = await Promise.all(
-//       rawMessages.map(async (msg) => {
-//         const [sender, recipient] = await Promise.all([
-//           prisma.user.findUnique({
-//             where: { id: msg.senderId },
-//             select: { id: true, name: true, image: true },
-//           }),
-//           prisma.user.findUnique({
-//             where: { id: msg.recipientId },
-//             select: { id: true, name: true, image: true },
-//           }),
-//         ]);
-
-//         if (!sender || !recipient) return null;
-
-//         return { ...msg, sender, recipient };
-//       })
-//     );
-
-//     // ✅ Filter out nulls using a type guard
-//     const filteredMessages = messages.filter(
-//       (m): m is NonNullable<typeof m> => m !== null
-//     );
-
-//     const uniqueConversations = new Map();
-
-//     for (const msg of filteredMessages) {
-//       const isIncoming = msg.recipientId === currentUser.id;
-//       const otherUser = isIncoming ? msg.sender : msg.recipient;
-
-//       if (!otherUser || otherUser.id === currentUser.id) continue;
-
-//       const existing = uniqueConversations.get(otherUser.id);
-//       const CUSTOMER_SERVICE_ID = '67ef2895f045b7ff3d0cf6fc';
-//       const isUnread = isIncoming && !msg.seen;
-
-//       if (!existing) {
-//         let latestMessage = formatMessagePreview(msg);
-//         let showDefaultGreeting = false;
-
-//         if (otherUser.id === CUSTOMER_SERVICE_ID) {
-//           const relatedMsgs = filteredMessages.filter(
-//             (m) =>
-//               (m.senderId === currentUser.id && m.recipientId === CUSTOMER_SERVICE_ID) ||
-//               (m.senderId === CUSTOMER_SERVICE_ID && m.recipientId === currentUser.id)
-//           );
-
-//           const realReplies = relatedMsgs.filter(
-//             (m) =>
-//               m.text &&
-//               !m.text.toLowerCase().includes('please specify the topic') &&
-//               !m.text.toLowerCase().includes('could you please describe your issue')
-//           );
-
-//           if (realReplies.length === 0) {
-//             showDefaultGreeting = true;
-//             latestMessage = '🚀 Ping us anytime!';
-//           }
-//         }
-
-//         uniqueConversations.set(otherUser.id, {
-//           id: otherUser.id,
-//           name: otherUser.name ?? 'Unknown',
-//           image: otherUser.image,
-//           hasUnread: isUnread,
-//           latestMessage,
-//           latestMessageCreatedAt: msg.createdAt,
-//         });
-//       } else {
-//         if (isUnread) existing.hasUnread = true;
-//         if (msg.createdAt > (existing.latestMessageCreatedAt || new Date(0))) {
-//           existing.latestMessage = formatMessagePreview(msg);
-//           existing.latestMessageCreatedAt = msg.createdAt;
-//         }
-//       }
-//     }
-
-//     return NextResponse.json(Array.from(uniqueConversations.values()));
-//   } catch (error) {
-//     console.error('❌ Error in /api/conversations:', error);
-//     return NextResponse.json([], { status: 500 });
-//   }
-// }
-
-// api/conversations/route.ts
 import { NextResponse } from 'next/server';
-export const dynamic = 'force-dynamic';
 
 import getCurrentUser from '@/app/(marketplace)/actions/getCurrentUser';
+import { SUPPORT_OPERATOR_ID } from '@/app/(marketplace)/constants/operator';
 import prisma from '@/app/(marketplace)/libs/prismadb';
 
+export const dynamic = 'force-dynamic';
+
 type MessageType = 'text' | 'attachment' | 'audio';
+
+const detectMessageType = (msg: any): MessageType => {
+  if (msg?.audioUrl) return 'audio';
+  if (msg?.attachmentUrl) return 'attachment';
+  return 'text';
+};
+
+const formatMessagePreview = (msg: any): string => {
+  const type = detectMessageType(msg);
+  if (type === 'audio') return 'Voice note';
+  if (type === 'attachment') return msg?.attachmentName ? `Attachment: ${msg.attachmentName}` : 'Attachment';
+  if (msg?.text && typeof msg.text === 'string') return msg.text;
+  return 'New message';
+};
 
 export async function GET() {
   const currentUser = await getCurrentUser();
   if (!currentUser) return new NextResponse('Unauthorized', { status: 401 });
 
-  const detectMessageType = (msg: any): MessageType => {
-    if (msg?.audioUrl) return 'audio';
-    if (msg?.attachmentUrl) return 'attachment';
-    return 'text';
-  };
-
-  const formatMessagePreview = (msg: any): string => {
-    const type = detectMessageType(msg);
-
-    if (type === 'audio') {
-      // Match ChatView semantics: voice note bubble with mic icon on UI
-      return 'Voice note';
-    }
-
-    if (type === 'attachment') {
-      if (msg?.attachmentName) return `Attachment: ${msg.attachmentName}`;
-      return 'Attachment';
-    }
-
-    if (msg?.text && typeof msg.text === 'string') return msg.text;
-    return 'New message';
-  };
-
   try {
     const rawMessages = await prisma.message.findMany({
       where: {
-        OR: [
-          { senderId: currentUser.id },
-          { recipientId: currentUser.id },
-        ],
+        OR: [{ senderId: currentUser.id }, { recipientId: currentUser.id }],
       },
       orderBy: { createdAt: 'desc' },
+      take: 250,
     });
 
-    // Enrich with sender/recipient safe data
     const messages = await Promise.all(
       rawMessages.map(async (msg) => {
         const [sender, recipient] = await Promise.all([
           prisma.user.findUnique({
             where: { id: msg.senderId },
-            select: { id: true, name: true, image: true },
+            select: { id: true, name: true, image: true, isOperator: true },
           }),
           prisma.user.findUnique({
             where: { id: msg.recipientId },
-            select: { id: true, name: true, image: true },
+            select: { id: true, name: true, image: true, isOperator: true },
           }),
         ]);
 
         if (!sender || !recipient) return null;
-
         return { ...msg, sender, recipient };
       })
     );
@@ -195,70 +70,58 @@ export async function GET() {
       }
     >();
 
-    const CUSTOMER_SERVICE_ID = '67ef2895f045b7ff3d0cf6fc';
-
     for (const msg of filteredMessages) {
       const isIncoming = msg.recipientId === currentUser.id;
-      const otherUser = isIncoming ? msg.sender : msg.recipient;
+      const realOtherUser = isIncoming ? msg.sender : msg.recipient;
+      if (!realOtherUser || realOtherUser.id === currentUser.id) continue;
 
-      if (!otherUser || otherUser.id === currentUser.id) continue;
+      const isSupportMessage = Boolean(msg.operatorRequestId);
+      const normalizedConversationId =
+        !currentUser.isOperator && isSupportMessage ? SUPPORT_OPERATOR_ID : realOtherUser.id;
+      const normalizedName =
+        !currentUser.isOperator && isSupportMessage ? 'Operator' : realOtherUser.name ?? 'Unknown';
+      const normalizedImage =
+        !currentUser.isOperator && isSupportMessage ? '/images/operator.png' : realOtherUser.image;
 
-      const existing = uniqueConversations.get(otherUser.id);
+      const existing = uniqueConversations.get(normalizedConversationId);
       const isUnread = isIncoming && !msg.seen;
 
       if (!existing) {
-        const msgType = detectMessageType(msg);
-        let latestMessage = formatMessagePreview(msg);
-        let latestMessageType: MessageType = msgType;
-        let showDefaultGreeting = false;
-
-        // Special handling for Operator / Customer service
-        if (otherUser.id === CUSTOMER_SERVICE_ID) {
-          const relatedMsgs = filteredMessages.filter(
-            (m) =>
-              (m.senderId === currentUser.id && m.recipientId === CUSTOMER_SERVICE_ID) ||
-              (m.senderId === CUSTOMER_SERVICE_ID && m.recipientId === currentUser.id)
-          );
-
-          const realReplies = relatedMsgs.filter(
-            (m) =>
-              m.text &&
-              !m.text.toLowerCase().includes('please specify the topic') &&
-              !m.text.toLowerCase().includes('could you please describe your issue')
-          );
-
-          if (realReplies.length === 0) {
-            showDefaultGreeting = true;
-            latestMessage = 'Ping us anytime!';
-            latestMessageType = 'text';
-          }
-        }
-
-        uniqueConversations.set(otherUser.id, {
-          id: otherUser.id,
-          name: otherUser.name ?? 'Unknown',
-          image: otherUser.image,
+        uniqueConversations.set(normalizedConversationId, {
+          id: normalizedConversationId,
+          name: normalizedName,
+          image: normalizedImage ?? undefined,
           hasUnread: isUnread,
-          latestMessage,
-          latestMessageType,
+          latestMessage: formatMessagePreview(msg),
+          latestMessageType: detectMessageType(msg),
           latestMessageCreatedAt: msg.createdAt,
         });
-      } else {
-        if (isUnread) {
-          existing.hasUnread = true;
-        }
-
-        if (msg.createdAt > (existing.latestMessageCreatedAt || new Date(0))) {
-          existing.latestMessage = formatMessagePreview(msg);
-          existing.latestMessageType = detectMessageType(msg);
-          existing.latestMessageCreatedAt = msg.createdAt;
-        }
+        continue;
       }
+
+      if (isUnread) existing.hasUnread = true;
+      if (msg.createdAt > existing.latestMessageCreatedAt) {
+        existing.latestMessage = formatMessagePreview(msg);
+        existing.latestMessageType = detectMessageType(msg);
+        existing.latestMessageCreatedAt = msg.createdAt;
+      }
+    }
+
+    if (!currentUser.isOperator && !uniqueConversations.has(SUPPORT_OPERATOR_ID)) {
+      uniqueConversations.set(SUPPORT_OPERATOR_ID, {
+        id: SUPPORT_OPERATOR_ID,
+        name: 'Operator',
+        image: '/images/operator.png',
+        hasUnread: false,
+        latestMessage: 'Ping us anytime!',
+        latestMessageType: 'text',
+        latestMessageCreatedAt: new Date(),
+      });
     }
 
     return NextResponse.json(Array.from(uniqueConversations.values()));
   } catch (error) {
-    console.error('❌ Error in /api/conversations:', error);
+    console.error('[CONVERSATIONS_GET]', error);
     return NextResponse.json([], { status: 500 });
   }
 }

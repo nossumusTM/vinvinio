@@ -355,37 +355,6 @@ const ListingHead: React.FC<ListingHeadProps> = ({
     fetchReviews();
   }, [id]);
 
-  useEffect(() => {
-   const fetchUserImages = async () => {
-     const updatedReviews = await Promise.all(
-       reviews.map(async (review) => {
-         try {
-           const res = await fetch("/api/users/get-user-image", {
-               method: "POST",
-               headers: { "Content-Type": "application/json" },
-               body: JSON.stringify({ name: review.userName }),
-           });                  
-
-           const data = await res.json();
-           return {
-             ...review,
-             userImage: data.image || null,
-           };
-         } catch (err) {
-           console.warn(`Failed to fetch image for ${review.userName}`, err);
-          return {
-            ...review,
-            userImage: null,
-          };
-        }
-      })
-    );
-     setReviews(updatedReviews);
-  };
-
-  if (reviews.length > 0) fetchUserImages();
-  }, [reviews]);
-
   const averageRating = useMemo(() => {
     if (!Array.isArray(reviews) || reviews.length === 0) return 0;
     const total = reviews.reduce((sum, review) => sum + review.rating, 0);

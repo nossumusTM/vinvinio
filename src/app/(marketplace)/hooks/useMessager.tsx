@@ -5,6 +5,8 @@ interface Recipient {
   name: string;
   image?: string;
   role?: string;
+  operatorRequestId?: string;
+  requestStatus?: 'open' | 'assigned' | 'closed';
 }
 
 interface MessengerStore {

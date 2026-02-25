@@ -20,6 +20,7 @@ import { TiPin } from "react-icons/ti";
 import { GiArtificialHive } from "react-icons/gi";
 import { MdOutlineShutterSpeed } from "react-icons/md";
 import useVinAiChat, { AI_FORCE_ASSISTANT } from '../hooks/useVinAiChat';
+import { SUPPORT_OPERATOR_ID } from '@/app/(marketplace)/constants/operator';
 
 interface User {
   id: string;
@@ -30,17 +31,36 @@ interface User {
   latestMessageDate?: string;
   latestMessageCreatedAt?: string;
   latestMessageType?: 'text' | 'attachment' | 'audio';
+  operatorRequestId?: string;
+  requestStatus?: 'open' | 'assigned' | 'closed';
 }
 
 interface ConversationListProps {
   onSelect: (user: User) => void;
   currentUserId: string;
+  isOperator?: boolean;
 }
 
-const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUserId }) => {
+type OperatorRequestItem = {
+  id: string;
+  status: 'open' | 'assigned' | 'closed';
+  latestMessage: string;
+  latestMessageAt: string;
+  requester: {
+    id: string;
+    name?: string | null;
+    image?: string | null;
+    username?: string | null;
+  };
+};
+
+const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUserId, isOperator = false }) => {
   const [users, setUsers] = useState<User[]>([]);
+  const [operatorRequests, setOperatorRequests] = useState<OperatorRequestItem[]>([]);
+  const [requestCounts, setRequestCounts] = useState({ open: 0, assigned: 0, closed: 0 });
+  const [processingRequestId, setProcessingRequestId] = useState<string | null>(null);
   
-  const CUSTOMER_SERVICE_ID = '67ef2895f045b7ff3d0cf6fc';
+  const CUSTOMER_SERVICE_ID = SUPPORT_OPERATOR_ID;
   const VIN_AI_ID = AI_FORCE_ASSISTANT.id;
   
   const [searchQuery, setSearchQuery] = useState('');
@@ -123,7 +143,11 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
         latestMessageType: realCS?.latestMessageType ?? 'text',
       };
 
-      setUsers([customerServiceUser, ...parsed.filter((u: User) => u.id !== CUSTOMER_SERVICE_ID)]);
+      if (isOperator) {
+        setUsers(parsed.filter((u: User) => u.id !== CUSTOMER_SERVICE_ID));
+      } else {
+        setUsers([customerServiceUser, ...parsed.filter((u: User) => u.id !== CUSTOMER_SERVICE_ID)]);
+      }
     }
   
     const fetchConversations = async () => {
@@ -156,7 +180,7 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
   
         // setUsers([mergedCustomerServiceUser, ...otherUsers]);
         // localStorage.setItem(localKey, JSON.stringify([mergedCustomerServiceUser, ...otherUsers]));
-        const shouldIncludeCS = currentUserId !== CUSTOMER_SERVICE_ID;
+        const shouldIncludeCS = !isOperator && currentUserId !== CUSTOMER_SERVICE_ID;
         const updatedList = shouldIncludeCS
           ? [mergedCustomerServiceUser, ...otherUsers]
           : [...otherUsers];
@@ -172,10 +196,159 @@ const ConversationList: React.FC<ConversationListProps> = ({ onSelect, currentUs
     fetchConversations();
     const interval = setInterval(fetchConversations, 5000);
     return () => clearInterval(interval);
-  }, [currentUserId]);  
+  }, [currentUserId, isOperator]);
+
+  useEffect(() => {
+    if (!currentUserId || !isOperator) return;
+
+    const fetchRequests = async () => {
+      try {
+        const res = await fetch('/api/operator-requests', {
+          credentials: 'include',
+        });
+
+        if (!res.ok) return;
+        const payload = await res.json();
+        setRequestCounts(payload?.counts ?? { open: 0, assigned: 0, closed: 0 });
+        setOperatorRequests(Array.isArray(payload?.requests) ? payload.requests : []);
+      } catch (error) {
+        console.error('Failed to fetch operator requests:', error);
+      }
+    };
+
+    fetchRequests();
+    const interval = setInterval(fetchRequests, 5000);
+    return () => clearInterval(interval);
+  }, [currentUserId, isOperator]);
+
+  const patchRequest = async (requestId: string, action: 'accept' | 'close') => {
+    setProcessingRequestId(requestId);
+    try {
+      const res = await fetch('/api/operator-requests', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ requestId, action }),
+      });
+
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data?.request ?? null;
+    } catch (error) {
+      console.error(`Failed to ${action} request:`, error);
+      return null;
+    } finally {
+      setProcessingRequestId(null);
+    }
+  };
+
+  const handleAcceptRequest = async (request: OperatorRequestItem) => {
+    const accepted = await patchRequest(request.id, 'accept');
+    if (!accepted) return;
+
+    setOperatorRequests((prev) =>
+      prev.map((item) =>
+        item.id === request.id ? { ...item, status: 'assigned' } : item
+      )
+    );
+    setRequestCounts((prev) => ({
+      ...prev,
+      open: Math.max(0, prev.open - 1),
+      assigned: prev.assigned + 1,
+    }));
+
+    onSelect({
+      id: request.requester.id,
+      name: request.requester.name || request.requester.username || 'User',
+      image: request.requester.image || undefined,
+      operatorRequestId: request.id,
+      requestStatus: 'assigned',
+    });
+  };
+
+  const handleCloseRequest = async (request: OperatorRequestItem) => {
+    const closed = await patchRequest(request.id, 'close');
+    if (!closed) return;
+
+    setOperatorRequests((prev) => prev.filter((item) => item.id !== request.id));
+    setRequestCounts((prev) => ({
+      ...prev,
+      assigned: Math.max(0, prev.assigned - 1),
+      closed: prev.closed + 1,
+    }));
+  };
 
   return (
     <div className="p-4 space-y-3 overflow-y-auto h-full">
+      {isOperator && (
+        <div className="mb-3 rounded-xl border border-neutral-200 bg-neutral-50 p-3">
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-sm font-semibold text-neutral-900">
+              Requests
+            </p>
+            <p className="text-xs text-neutral-600">
+              Open {requestCounts.open} · Assigned {requestCounts.assigned} · Closed {requestCounts.closed}
+            </p>
+          </div>
+          <div className="space-y-2">
+            {operatorRequests.length === 0 ? (
+              <p className="text-xs text-neutral-500">No active requests.</p>
+            ) : (
+              operatorRequests.slice(0, 6).map((request) => {
+                const isAssigned = request.status === 'assigned';
+                return (
+                  <div
+                    key={request.id}
+                    className="rounded-lg border border-neutral-200 bg-white px-2 py-2"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onSelect({
+                            id: request.requester.id,
+                            name: request.requester.name || request.requester.username || 'User',
+                            image: request.requester.image || undefined,
+                            operatorRequestId: request.id,
+                            requestStatus: request.status,
+                          })
+                        }
+                        className="text-left"
+                      >
+                        <p className="text-sm font-semibold text-neutral-900">
+                          {request.requester.name || request.requester.username || 'User'}
+                        </p>
+                        <p className="max-w-[220px] truncate text-xs text-neutral-600">
+                          {request.latestMessage}
+                        </p>
+                      </button>
+                      {isAssigned ? (
+                        <button
+                          type="button"
+                          onClick={() => handleCloseRequest(request)}
+                          disabled={processingRequestId === request.id}
+                          className="rounded-md border border-neutral-300 px-2 py-1 text-[11px] font-semibold text-neutral-700 transition hover:bg-neutral-100 disabled:opacity-60"
+                        >
+                          Close
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleAcceptRequest(request)}
+                          disabled={processingRequestId === request.id}
+                          className="rounded-md bg-neutral-900 px-2 py-1 text-[11px] font-semibold text-white transition hover:bg-black disabled:opacity-60"
+                        >
+                          Accept
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
       <div className="relative mb-3">
         <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-lg" />
         <input

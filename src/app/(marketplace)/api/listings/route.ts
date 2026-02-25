@@ -409,6 +409,7 @@ export async function GET(request: Request) {
      languages: parseArrayParam(params.languages),
      statuses: parseArrayParam(params.statuses),
     locationValue: params.locationValue ? String(params.locationValue) : undefined,
+    locationQuery: params.locationQuery ? String(params.locationQuery) : undefined,
    };
 
   try {

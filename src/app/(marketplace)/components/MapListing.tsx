@@ -161,6 +161,16 @@ const MapListing: React.FC<MapProps> = ({ center, searchQuery, listing }) => {
     }
   }, [resolvedQuery]);
 
+  useEffect(() => {
+    const handleMapOpen = (event: Event) => {
+      event.preventDefault();
+      setIsOverlayOpen(true);
+    };
+
+    window.addEventListener('listings-map:open', handleMapOpen as EventListener);
+    return () => window.removeEventListener('listings-map:open', handleMapOpen as EventListener);
+  }, []);
+
   if (!isClient) return null;
 
   const position = coordinates || center || [41.8719, 12.5674]; // Default to Italy

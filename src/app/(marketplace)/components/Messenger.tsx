@@ -88,6 +88,7 @@ const Messenger = ({ currentUser }: MessengerProps) => {
               ) : (
                 <ConversationList
                   currentUserId={currentUser.id}
+                  isOperator={Boolean(currentUser.isOperator)}
                   onSelect={(user) => useMessenger.getState().openChat(user)}
                 />
               )}

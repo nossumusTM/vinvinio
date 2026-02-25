@@ -25,6 +25,7 @@ export const buildListingsWhereClause = (params: IListingsParams) => {
     guestCount,
     bathroomCount,
     locationValue,
+    locationQuery,
     startDate,
     endDate,
     category,
@@ -114,6 +115,21 @@ export const buildListingsWhereClause = (params: IListingsParams) => {
 
   if (locationValue) {
     query.locationValue = locationValue;
+  }
+
+  if (locationQuery) {
+    const terms = locationQuery
+      .split(',')
+      .map((part) => part.trim())
+      .filter((part) => part.length >= 3);
+
+    if (terms.length > 0) {
+      query.OR = terms.flatMap((term) => [
+        { locationValue: { contains: term, mode: 'insensitive' } },
+        { locationDescription: { contains: term, mode: 'insensitive' } },
+        { meetingPoint: { contains: term, mode: 'insensitive' } },
+      ]);
+    }
   }
 
   if (startDate && endDate) {

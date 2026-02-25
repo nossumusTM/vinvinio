@@ -23,17 +23,22 @@ interface HeartButtonProps {
     listingId: string
     currentUser?: SafeUser | null
     inline?: boolean;
+    buttonClassName?: string;
+    iconClassName?: string;
 }
 
 const HeartButton: React.FC<HeartButtonProps> = ({
   listingId,
   currentUser,
   inline = false,
+  buttonClassName = '',
+  iconClassName = '',
 }) => {
   const { hasFavorited, toggleFavorite } = useFavorite({
     listingId,
     currentUser,
   });
+  const defaultButtonStyles = 'shadow-md hover:shadow-lg bg-white';
 
   return (
     <button
@@ -44,8 +49,8 @@ const HeartButton: React.FC<HeartButtonProps> = ({
         }}
         aria-label={hasFavorited ? 'Remove from favorites' : 'Save to favorites'}
         className={`
-            p-3 rounded-full shadow-md backdrop-blur-sm transition hover:shadow-lg bg-black/10
-            ${hasFavorited ? 'bg-black/20' : 'bg-black/10'}
+            p-3 rounded-full transition
+            ${buttonClassName || defaultButtonStyles}
             cursor-pointer flex items-center justify-center
         `}
         >
@@ -58,7 +63,7 @@ const HeartButton: React.FC<HeartButtonProps> = ({
                 exit={{ scale: 0.4, opacity: 0 }}
                 transition={{ duration: 0.15, ease: 'easeOut' }}
             >
-                <FaBookmark size={14} className="text-white drop-shadow-md" />
+                <FaBookmark size={14} className={`text-black drop-shadow-md ${iconClassName}`} />
             </motion.span>
             ) : (
             <motion.span
@@ -68,7 +73,7 @@ const HeartButton: React.FC<HeartButtonProps> = ({
                 exit={{ scale: 0.4, opacity: 0 }}
                 transition={{ duration: 0.15, ease: 'easeOut' }}
             >
-                <FaRegBookmark size={14} className="text-white drop-shadow-md" />
+                <FaRegBookmark size={14} className={`text-black drop-shadow-md ${iconClassName}`} />
             </motion.span>
             )}
         </AnimatePresence>

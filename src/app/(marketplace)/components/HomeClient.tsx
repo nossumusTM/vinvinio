@@ -398,7 +398,10 @@ const HomeClient: React.FC<HomeProps> = ({ initialListings, currentUser }) => {
   }, []);
 
   useEffect(() => {
-    const handleMapOpen = () => setIsMapOpen(true);
+    const handleMapOpen = (event: Event) => {
+      event.preventDefault();
+      setIsMapOpen(true);
+    };
     window.addEventListener('listings-map:open', handleMapOpen as EventListener);
     return () => window.removeEventListener('listings-map:open', handleMapOpen as EventListener);
   }, []);

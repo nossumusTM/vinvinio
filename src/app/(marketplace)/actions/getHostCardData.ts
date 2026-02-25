@@ -16,6 +16,7 @@ export interface HostCardReview {
   listingTitle: string;
   reviewerName: string;
   reviewerImage?: string | null;
+  images?: string[];
 }
 
 export interface HostCardData {
@@ -165,6 +166,9 @@ export default async function getHostCardData(identifier: string, currentUserId?
       'Service',
     reviewerName: review.userName ?? review.user?.name ?? 'Guest',
     reviewerImage: review.user?.image ?? null,
+    images: Array.isArray(review.images)
+      ? review.images.filter((src): src is string => typeof src === 'string' && src.trim().length > 0)
+      : [],
   }));
 
   let isFollowing: boolean | undefined;

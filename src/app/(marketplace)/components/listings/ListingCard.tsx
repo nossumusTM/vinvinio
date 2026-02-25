@@ -1035,7 +1035,11 @@ const ListingCard: React.FC<ListingCardProps> = ({
               <span className="text-[10px] tracking-[0.18em] text-neutral-500">VIN POINT</span>
               <span className="text-sm text-black">{Number(data.punti ?? 0)}</span>
             </span> */}
-            <HeartButton listingId={data.id} currentUser={currentUser} />
+            <HeartButton
+              listingId={data.id}
+              currentUser={currentUser}
+              buttonClassName="bg-white hover:bg-white backdrop-blur-none"
+            />
           </div>
 
           {/* ⬇️ Navigation arrows - visible only on hover */}
@@ -1054,10 +1058,10 @@ const ListingCard: React.FC<ListingCardProps> = ({
                     e.stopPropagation();
                     goPrev();
                   }}
-                  className="p-2 shadow-sm hover:shadow-md items-center justify-center rounded-full bg-black/20 backdrop-blur-sm transition"
+                  className="p-2 shadow-sm hover:shadow-md items-center justify-center rounded-full bg-white transition"
                 >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <path d="M15 18l-6-6 6-6" stroke="white" strokeWidth="2"
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M15 18l-6-6 6-6" stroke="black" strokeWidth="2"
                           strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </button>
@@ -1067,10 +1071,10 @@ const ListingCard: React.FC<ListingCardProps> = ({
                     e.stopPropagation();
                     goNext();
                   }}
-                  className="p-2 shadow-sm hover:shadow-md rounded-full bg-black/20 items-center justify-center backdrop-blur-sm transition"
+                  className="p-2 shadow-sm hover:shadow-md rounded-full bg-white items-center justify-center transition"
                 >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <path d="M9 6l6 6-6 6" stroke="white" strokeWidth="2"
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 6l6 6-6 6" stroke="black" strokeWidth="2"
                           strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </button>

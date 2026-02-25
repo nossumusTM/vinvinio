@@ -77,7 +77,10 @@ const Logo: React.FC<LogoProps> = ({ currentUser }) => {
   };
 
   const handleOpenMap = () => {
-    window.dispatchEvent(new CustomEvent('listings-map:open'));
+    const dispatched = window.dispatchEvent(new CustomEvent('listings-map:open', { cancelable: true }));
+    if (dispatched && pathname !== '/map') {
+      router.push('/map');
+    }
     setIsMenuOpen(false);
   };
 

@@ -53,7 +53,7 @@ export async function POST(req: Request) {
     const userIds = [...new Set(reviews.map((r) => r.userId))];
     const users = await prisma.user.findMany({
       where: { id: { in: userIds } },
-      select: { id: true, name: true, username: true, legalName: true, role: true },
+      select: { id: true, name: true, username: true, legalName: true, role: true, image: true },
     });
 
     const userMap = Object.fromEntries(
@@ -64,6 +64,7 @@ export async function POST(req: Request) {
           username: u.username,
           legalName: u.legalName,
           role: u.role,
+          image: u.image,
         },
       ])
     );
@@ -73,10 +74,11 @@ export async function POST(req: Request) {
       rating: r.rating,
       comment: r.comment,
       images: Array.isArray(r.images) ? r.images : [],
-      userName: userMap[r.userId]?.name || 'Anonymous',
+      userName: userMap[r.userId]?.name || r.userName || 'Anonymous',
       username: userMap[r.userId]?.username ?? null,
       legalName: userMap[r.userId]?.legalName ?? null,
       role: userMap[r.userId]?.role ?? null,
+      userImage: userMap[r.userId]?.image ?? null,
       createdAt: r.createdAt,
     }));
 

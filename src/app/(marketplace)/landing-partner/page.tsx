@@ -87,7 +87,7 @@ export default function LandingPartnerPage() {
         <div className="grid gap-12 lg:grid-cols-[1.1fr,0.9fr]">
           <div>
             <span className="inline-flex items-center rounded-full bg-white/80 px-3 py-1 text-sm font-semibold uppercase tracking-wide text-[#0000ff] shadow-sm">
-              Vinvin Host Spotlight
+              Vinvin Provider Spotlight
             </span>
             <h1 className="mt-6 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
               Inspire users with unforgettable services

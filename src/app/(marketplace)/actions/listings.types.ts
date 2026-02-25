@@ -6,6 +6,7 @@ export interface IListingsParams {
   startDate?: string;
   endDate?: string;
   locationValue?: string;
+  locationQuery?: string;
   category?: string;
   sort?: 'rating' | 'priceLow' | 'priceHigh' | 'random' | 'relevance';
   skip?: number;
