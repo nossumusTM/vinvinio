@@ -448,7 +448,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                         This service uses a flat group price. The total stays the same and currently
                         covers your selection of {guestCount} guest{guestCount === 1 ? '' : 's'}.
                     </p>
-                    <div className="rounded-3xl border border-neutral-200 bg-white/90 p-4 shadow-sm">
+                    <div className="rounded-3xl bg-white/90 p-4 shadow-sm">
                         <p className="text-xs uppercase tracking-[0.3em] text-neutral-500">
                         Flat total
                         </p>
@@ -466,7 +466,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                 baseContent = (
                     <div className="space-y-3 text-sm text-neutral-600">
                         <p>Each guest pays the same rate. Adjust the counter to see your total update live.</p>
-                        <div className="rounded-3xl border border-neutral-200 bg-white/90 p-4 shadow-sm">
+                        <div className="rounded-3xl bg-white/90 p-4 shadow-sm">
                             <p className="text-xs uppercase tracking-[0.3em] text-neutral-500">Current selection</p>
                             <p className="text-lg font-semibold text-neutral-900">{guestCount} guest{guestCount === 1 ? '' : 's'}</p>
                             <p className="text-sm text-neutral-500">{formatConverted(perPersonPrice)} per guest</p>
@@ -761,6 +761,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
         return () => observer.disconnect();
         }, []);
 
+
     // const averageRating = useMemo(() => {
     //     if (reviews.length === 0) return 0;
     //     const total = reviews.reduce((sum, review) => sum + review.rating, 0);
@@ -785,7 +786,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
     return (
         <>
         <Container>
-            <div className="max-w-screen-lg mx-auto">
+            <div className="max-w-screen-lg mx-auto pt-14 md:pt-0">
                 <div className="flex flex-col gap-6">
                     <ListingHead
                         title={listing.title}
@@ -861,8 +862,8 @@ const ListingClient: React.FC<ListingClientProps> = ({
                             />
 
                         </div>
-                        <div className="order-first mb-10 md:order-last md:col-span-3">
-                            <div className="md:sticky md:top-32">
+                        <div className="order-first mb-10 md:order-last md:col-span-3 md:pt-14">
+                            <div className="md:sticky md:top-48">
                             <ListingReservation
                                 listingId={listing.id}
                                 price={perPersonPrice}

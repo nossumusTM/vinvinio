@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { MouseEvent } from 'react';
+import type { MouseEvent, ReactNode } from 'react';
 import L from 'leaflet';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -11,7 +11,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { IoClose } from 'react-icons/io5';
 import { LuLocateFixed, LuTag } from 'react-icons/lu';
 import type { IconType } from 'react-icons';
-import { FiChevronLeft, FiChevronRight, FiMinus, FiPlus } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronRight, FiCrosshair, FiMinus, FiPlus } from 'react-icons/fi';
 import clsx from 'clsx';
 import Slider from 'react-slick';
 import type { Settings } from 'react-slick';
@@ -37,6 +37,7 @@ interface ListingsMapOverlayProps {
   startNearbyOnly?: boolean;
   embedded?: boolean;
   className?: string;
+  minimalUI?: boolean;
 }
 
 const DEFAULT_CENTER: L.LatLngTuple = [41.8719, 12.5674];
@@ -146,30 +147,35 @@ const MapZoomWatcher = ({ onZoomChange }: { onZoomChange: (zoom: number) => void
   return null;
 };
 
-const MapZoomControls = ({
+const MapControlBar = ({
   onZoomIn,
   onZoomOut,
+  children,
 }: {
   onZoomIn: () => void;
   onZoomOut: () => void;
+  children?: ReactNode;
 }) => (
-  <div className="absolute bottom-6 left-6 z-20 flex flex-col gap-2">
-    <button
-      type="button"
-      onClick={onZoomIn}
-      aria-label="Zoom in"
-      className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-neutral-800 shadow-lg"
-    >
-      <FiPlus />
-    </button>
-    <button
-      type="button"
-      onClick={onZoomOut}
-      aria-label="Zoom out"
-      className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-neutral-800 shadow-lg"
-    >
-      <FiMinus />
-    </button>
+  <div className="pointer-events-none absolute inset-x-6 bottom-6 z-30 flex items-center justify-between">
+    <div className="pointer-events-auto flex flex-col items-center gap-2">
+      <button
+        type="button"
+        onClick={onZoomIn}
+        aria-label="Zoom in"
+        className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-neutral-800 shadow-lg"
+      >
+        <FiPlus />
+      </button>
+      <button
+        type="button"
+        onClick={onZoomOut}
+        aria-label="Zoom out"
+        className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-neutral-800 shadow-lg"
+      >
+        <FiMinus />
+      </button>
+    </div>
+    <div className="pointer-events-auto flex flex-col items-center gap-2">{children}</div>
   </div>
 );
 
@@ -343,6 +349,7 @@ const ListingsMapOverlay = ({
   startNearbyOnly = false,
   embedded = false,
   className,
+  minimalUI = false,
 }: ListingsMapOverlayProps) => {
   const [listings, setListings] = useState<SafeListing[]>(initialListings);
   const [loadingListings, setLoadingListings] = useState(false);
@@ -789,10 +796,10 @@ const ListingsMapOverlay = ({
   const suggestions = useMemo(() => filteredListings, [filteredListings]);
 
   const activeCenter = useMemo(() => {
-    if (searchByCity && resolvedCityCoords) {
+    if (resolvedCityCoords) {
       return resolvedCityCoords;
     }
-    if (searchByCity && selectedLocation?.latlng?.length === 2) {
+    if (selectedLocation?.latlng?.length === 2 && (searchByCity || selectedLocationSource === 'manual')) {
       return [selectedLocation.latlng[0], selectedLocation.latlng[1]] as L.LatLngTuple;
     }
     if (selectedLocationSource === 'geolocation' && userLocation) {
@@ -821,6 +828,16 @@ const ListingsMapOverlay = ({
     () => listings.find((listing) => listing.id === selectedListingId) ?? null,
     [listings, selectedListingId],
   );
+  const highlightedListingCoords = useMemo(() => {
+    if (!highlightedListingId) return null;
+    return coordsMap[highlightedListingId] ?? null;
+  }, [coordsMap, highlightedListingId]);
+  const focusListingCoords = useMemo(() => {
+    if (highlightedCoords) return highlightedCoords;
+    if (highlightedListingCoords) return highlightedListingCoords;
+    if (selectedListingId && coordsMap[selectedListingId]) return coordsMap[selectedListingId];
+    return null;
+  }, [coordsMap, highlightedCoords, highlightedListingCoords, selectedListingId]);
 
   const selectedCategoryLabel = useMemo(() => {
     if (!selectedListing) return '';
@@ -893,6 +910,16 @@ const ListingsMapOverlay = ({
     }
   };
 
+  const handleFocusListing = useCallback(() => {
+    if (!focusListingCoords) return;
+    const map = getActiveMap();
+    if (!map) return;
+    map.setView(focusListingCoords, Math.max(map.getZoom(), 13), { animate: true });
+    if (highlightedListingId) {
+      setSelectedListingId(highlightedListingId);
+    }
+  }, [focusListingCoords, getActiveMap, highlightedListingId]);
+
   const stopPropagation = (event: React.SyntheticEvent) => {
     event.stopPropagation();
   };
@@ -940,10 +967,12 @@ const ListingsMapOverlay = ({
 
 useEffect(() => {
     if (!isOpen) return;
-    if (!searchByCity || !selectedLocation) {
+    if (!selectedLocation) {
       setResolvedCityCoords(null);
       return;
     }
+
+    if (!searchByCity) return;
 
     if (selectedLocationSource === 'geolocation' && selectedLocation.latlng?.length === 2) {
       setResolvedCityCoords([selectedLocation.latlng[0], selectedLocation.latlng[1]]);
@@ -1119,21 +1148,32 @@ useEffect(() => {
             </Marker>
           )}
         </MapContainer>
-        <MapZoomControls onZoomIn={handleZoomIn} onZoomOut={handleZoomOut} />
+        <MapControlBar onZoomIn={handleZoomIn} onZoomOut={handleZoomOut}>
+          {!embedded && focusListingCoords && (
+            <button
+              type="button"
+              onClick={handleFocusListing}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-black shadow-lg"
+              aria-label="Back to listing location"
+              title="Back to listing location"
+            >
+              <FiCrosshair size={14} />
+            </button>
+          )}
+          {!embedded && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-black shadow-lg"
+              aria-label="Close map"
+            >
+              <IoClose size={15} />
+            </button>
+          )}
+        </MapControlBar>
       </div>
 
-      {!embedded && (
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute right-6 bottom-10 z-30 flex h-10 w-10 items-center justify-center rounded-full bg-white text-black shadow-lg"
-          aria-label="Close map"
-        >
-          <IoClose size={18} />
-        </button>
-      )}
-
-      {selectedListing && (
+      {!minimalUI && selectedListing && (
         <div className="absolute bottom-6 left-1/2 z-20 w-[92vw] max-w-xl -translate-x-1/2">
           <div className="rounded-2xl border border-neutral-200 bg-white/95 p-4 shadow-xl backdrop-blur">
             <div className="flex items-start justify-between gap-3">
@@ -1201,6 +1241,7 @@ useEffect(() => {
         </div>
       )}
 
+      {!minimalUI && (
       <div className="absolute inset-x-0 top-0 z-10 flex flex-col items-center gap-4 px-4 py-4 sm:px-8">
        <div className="flex w-full max-w-3xl flex-col gap-3 rounded-2xl bg-white/10 p-3 shadow-lg backdrop-blur">
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -1546,6 +1587,7 @@ useEffect(() => {
         </div>
         </div>
       </div>
+      )}
     </div>
   );
 };

@@ -33,7 +33,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({ onClick, inline = false }) =>
         transition={{ duration: 0.15, ease: 'easeOut' }}
         whileTap={{ scale: 0.85 }}
       >
-        <RiShareForwardLine size={18} />
+        <RiShareForwardLine size={16} />
       </motion.span>
     </button>
   );

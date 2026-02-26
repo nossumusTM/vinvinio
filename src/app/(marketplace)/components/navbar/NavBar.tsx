@@ -11,6 +11,7 @@ import Search from "./Search";
 import SearchExperience from "./SearchExperience";
 import LocaleButton from "./LocaleButton";
 import UserMenu from "./UserMenu";
+import ListingSectionsNav from "./ListingSectionsNav";
 import { usePathname } from 'next/navigation';
 
 import { motion, type Variants } from 'framer-motion';
@@ -184,7 +185,7 @@ if (!hasMounted) {
         </div>
 
         <div className="relative z-40">
-          <Categories />
+          {isListingPage ? <ListingSectionsNav /> : <Categories />}
         </div>
       </div>
     </motion.div>

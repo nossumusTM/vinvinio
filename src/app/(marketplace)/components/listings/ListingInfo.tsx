@@ -8,7 +8,7 @@ import { BsTranslate } from "react-icons/bs";
 import { RiUserHeartFill } from "react-icons/ri";
 import { GiExtraTime } from "react-icons/gi";
 import LocationDescription from '../LocationDescription';
-import { FiUsers, FiCalendar, FiHeart } from 'react-icons/fi';
+import { FiUsers, FiCalendar, FiHeart, FiBell } from 'react-icons/fi';
 import NextImage from 'next/image';
 
 import { useEffect, useState, useCallback } from "react";
@@ -410,7 +410,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                 </div>
 
                         {hostDescription && (
-                            <div>
+                            <div id="overview-section" className="scroll-mt-40">
                              <div className="ml-4 mt-5">
                                 <Heading title="Overview"/>
                             </div>
@@ -488,7 +488,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                 {typeof hoursInAdvance === 'number' && hoursInAdvance > 0 && (
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 shrink-0 aspect-square shadow-md rounded-2xl flex items-center justify-center">
-                      <GiExtraTime size={20} className="text-neutral-600 mt-1" />
+                      <FiBell size={20} className="text-neutral-600 mt-1" />
                     </div>
                     <div>
                       <p className="text-lg font-medium text-black">
@@ -514,7 +514,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
               (Array.isArray(activityForms) && activityForms.length > 0) ||
               (Array.isArray(seoKeywords) && seoKeywords.length > 0)
             ) && (
-            <div className="p-5 md:col-span-7 rounded-2xl">
+            <div id="service-details-section" className="p-5 md:col-span-7 rounded-2xl scroll-mt-40">
                 <h2 className="text-lg font-semibold mb-2">Service Details</h2>
 
                 {Array.isArray(locationType) && locationType.length > 0 && (
@@ -615,7 +615,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
 
             <hr className="mb-5 mt-2"/>
 
-            <div className="ml-0">
+            <div id="about-service-section" className="ml-0 scroll-mt-40">
                 <div className="ml-4">
                     <Heading title="About service" />
                 </div>
@@ -632,10 +632,10 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                 (Array.isArray(activityForms) && activityForms.length > 0) ||
                 (Array.isArray(seoKeywords) && seoKeywords.length > 0)
               ) && (
-                <section className="p-2 mt-6">
+                <section id="service-format-section" className="p-2 mt-6 scroll-mt-40">
                   <div className="rounded-2xl bg-white p-2 space-y-5">
                     <h3 className="text-lg font-semibold text-neutral-900 mb-2 w-fit border-b">
-                      Service details
+                      Service format
                     </h3>
 
                     {/* Group style */}
@@ -731,7 +731,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
             
             <hr className="mb-2"/>
 
-        <div className="flex flex-col gap-1">
+        <div id="location-section" className="flex flex-col gap-1 scroll-mt-40">
             <div className="ml-4">
                 <Heading title="Location" />
                 </div>

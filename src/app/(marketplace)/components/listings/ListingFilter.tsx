@@ -43,6 +43,16 @@ const ListingFilter: React.FC<ListingFilterProps> = ({ gridSize, onGridChange })
     }
     return false;
   }, [searchParams]);
+  const hasActiveNonCategoryFilters = useMemo(() => {
+    if (!searchParams) return false;
+    const params = new URLSearchParams(searchParams.toString());
+    for (const [key, value] of params.entries()) {
+      if (!value) continue;
+      if (key === 'sort' || key === 'skip' || key === 'take' || key === 'category') continue;
+      return true;
+    }
+    return false;
+  }, [searchParams]);
 
   // you kept these in state previously; dropdownCoords not actually needed since you position fixed
   const shiftLeft = (sort === 'random' || sort === 'rating' || sort === '') ? 25 : -6;
@@ -111,13 +121,15 @@ const ListingFilter: React.FC<ListingFilterProps> = ({ gridSize, onGridChange })
 
   return (
     <div className={`transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-0'}`}>
-      <div className="flex items-center gap-3">
+      <div className="flex justify-center px-2 pb-2 pt-1">
+      <div className="max-w-[calc(100vw-1.5rem)] overflow-x-auto overflow-y-hidden rounded-2xl p-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+      <div className="inline-flex w-max items-center gap-3">
         {/* SORT DROPDOWN */}
         <div className="relative inline-block">
           <div
             ref={buttonRef}
             onClick={() => setIsOpen(prev => !prev)}
-            className="flex items-center gap-2 bg-white py-2 px-4 rounded-full shadow-md hover:shadow-lg transition cursor-pointer font-normal text-neutral-700 text-sm select-none"
+            className="flex items-center gap-2 bg-white py-2 px-4 rounded-full shadow-md transition cursor-pointer font-normal text-neutral-700 text-sm rounded-2xl select-none"
           >
             <PiSortDescending />
             <span className="whitespace-nowrap">
@@ -134,7 +146,7 @@ const ListingFilter: React.FC<ListingFilterProps> = ({ gridSize, onGridChange })
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.15 }}
                 className="fixed z-[9999] bg-white border border-neutral-200 rounded-xl shadow-lg w-max min-w-[200px]"
-                style={{ left: -20 - shiftLeft, top: 50 }}
+                style={{ left: -10 - shiftLeft, top: 60 }}
               >
                 {filterOptions.map((option, index) => (
                   <div
@@ -163,11 +175,22 @@ const ListingFilter: React.FC<ListingFilterProps> = ({ gridSize, onGridChange })
           </AnimatePresence>
         </div>
 
-        {hasActiveFilters && (
+        {category && (
+          <button
+            type="button"
+            onClick={handleClearCategory}
+            className="flex items-center gap-2 bg-white py-2 px-4 rounded-full shadow-md transition cursor-pointer font-normal text-neutral-700 text-sm rounded-2xl"
+          >
+            <RxCross2 className="text-neutral-500" />
+            <span className="whitespace-nowrap">Clear category</span>
+          </button>
+        )}
+
+        {hasActiveFilters && (hasActiveNonCategoryFilters || !category) && (
           <button
             type="button"
             onClick={handleClearFilters}
-            className="flex items-center gap-2 bg-white py-2 px-4 rounded-full shadow-md hover:shadow-lg transition cursor-pointer font-normal text-neutral-700 text-sm"
+            className="flex items-center gap-2 bg-white py-2 px-4 rounded-full shadow-md transition cursor-pointer font-normal text-neutral-700 text-sm rounded-2xl"
           >
             <RxCross2 className="text-neutral-500" />
             <span className="whitespace-nowrap">Clear filters</span>
@@ -216,24 +239,8 @@ const ListingFilter: React.FC<ListingFilterProps> = ({ gridSize, onGridChange })
           ))}
         </div> */}
 
-        {/* CATEGORY PILL */}
-        {/* {category && (
-          <button
-            type="button"
-            onClick={handleClearCategory}
-            className="flex items-center gap-2 bg-white py-1.5 px-4 rounded-full shadow-md hover:shadow-lg transition cursor-pointer text-left"
-          >
-            <RxCross2 className="text-neutral-500" />
-            <div className="flex flex-col leading-tight">
-              <span className="text-[5px] uppercase tracking-wide text-black font-semibold">
-                Selected Category
-              </span>
-              <span className="max-w-[180px] truncate text-xs font-medium text-neutral-700">
-                {category}
-              </span>
-            </div>
-          </button>
-        )} */}
+      </div>
+      </div>
       </div>
     </div>
   );

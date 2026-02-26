@@ -382,17 +382,19 @@ const ListingHead: React.FC<ListingHeadProps> = ({
 
   return (
     <>
-    <div className='flex flex-col md:pt-8 px-0'>
-      <div className="flex flex-col md:flex-row items-start md:items-center gap-3 mb-2">
+    <div id="general-section" className='flex flex-col md:pt-8 px-0 scroll-mt-40'>
+      <div className="flex flex-row items-center gap-3 mb-2">
         <button
           type="button"
           onClick={handleBack}
-          className="mb-2 inline-flex items-center gap-2 rounded-full bg-neutral-50 px-3 py-1 text-sm font-medium text-neutral-700 shadow-sm transition hover:-translate-x-0.5 hover:bg-neutral-100"
+          className="inline-flex shrink-0 items-center gap-2 rounded-full bg-neutral-50 px-3 py-1 text-sm font-medium text-neutral-700 shadow-sm transition hover:-translate-x-0.5 hover:bg-neutral-100"
         >
           <LuArrowLeft className="h-4 w-4" />
           Back
         </button>
-        <Heading title={title} subtitle={''} />
+        <div className="min-w-0">
+          <Heading title={title} subtitle={''} />
+        </div>
       </div>
       <div className='flex flex-row gap-2 items-center'>
 

@@ -56,7 +56,7 @@ const MapZoomControls = ({
       type="button"
       onClick={onZoomIn}
       aria-label="Zoom in"
-      className="flex h-8 w-8 items-center justify-center rounded-full bg-white/30 text-neutral-800 shadow-lg backdrop-blur transition hover:bg-white/50"
+      className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-neutral-800 shadow-lg transition"
     >
       <FiPlus />
     </button>
@@ -64,7 +64,7 @@ const MapZoomControls = ({
       type="button"
       onClick={onZoomOut}
       aria-label="Zoom out"
-      className="flex h-8 w-8 items-center justify-center rounded-full bg-white/30 text-neutral-800 shadow-lg backdrop-blur transition hover:bg-white/50"
+      className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-neutral-800 shadow-lg transition"
     >
       <FiMinus />
     </button>
@@ -85,8 +85,8 @@ const MapListing: React.FC<MapProps> = ({ center, searchQuery, listing }) => {
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   const mapIdRef = useRef(`map-${Math.random().toString(36).substring(2, 9)}`);
 
-  const ListingsMapOverlay = useMemo(
-    () => dynamic(() => import('./ListingsMapOverlay'), { ssr: false }),
+  const ListingMapComponent = useMemo(
+    () => dynamic(() => import('./ListingMapComponent'), { ssr: false }),
     [],
   );
 
@@ -184,7 +184,7 @@ const MapListing: React.FC<MapProps> = ({ center, searchQuery, listing }) => {
         type="button"
         aria-label="Open full map"
         onClick={() => setIsOverlayOpen(true)}
-        className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 bg-white/10 text-neutral-700 shadow-md backdrop-blur transition hover:bg-white/50"
+        className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white text-neutral-700 shadow-md transition"
       >
         <MdFullscreen size={16} />
       </button>
@@ -221,14 +221,13 @@ const MapListing: React.FC<MapProps> = ({ center, searchQuery, listing }) => {
       {isClient && isMapReady && (
         <MapZoomControls onZoomIn={handleZoomIn} onZoomOut={handleZoomOut} />
       )}
-      <ListingsMapOverlay
+      <ListingMapComponent
         isOpen={isOverlayOpen}
         onClose={() => setIsOverlayOpen(false)}
-        initialListings={listing ? [listing] : []}
-        highlightedListingId={listing?.id ?? null}
         highlightedCoords={position as L.LatLngTuple}
         highlightedLabel={highlightLabel}
         highlightedIcon={pinIcon}
+        listing={listing ?? null}
       />
     </div>
   );
